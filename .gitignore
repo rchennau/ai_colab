@@ -1,0 +1,16 @@
+# Ignore database and tmp files
+hcom.db*
+.tmp/
+launches/
+archive/
+bundles/
+env
+identity.toml
+
+# Ignore backup config files
+config.toml.bak
+config.toml.backup
+
+# Ignore random user files or python caches if any
+__pycache__/
+*.pyc

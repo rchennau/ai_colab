@@ -1,0 +1,57 @@
+[terminal]
+active = "default"
+
+[launch]
+tag = ""
+hints = "You are participating in a multi-agent Atari-LX project. Sync your state via hcom bundle 'Atari-LX Plan Sync' if you are out of alignment with conductor/tracks.md. Use 'hcom-kv' to read/write from the shared blackboard (e.g., hcom-kv set current_task 'Optimizing sprite routine')."
+notes = "Atari-LX Engineering: Use conductor/tracks.md as the source of truth. All agents MUST monitor the 'plan-sync' thread for state updates."
+subagent_timeout = 30
+auto_subscribe = "collision"
+
+[launch.gemini]
+args = "-m gemini-3.0"
+
+[launch.qwen]
+args = "-m qwen3-next-80b-a3b-instruct"
+
+[launch.codex]
+args = ""
+sandbox_mode = "workspace"
+system_prompt = ""
+
+[launch.opencode]
+args = ""
+
+[launch.deepseek]
+args = ""
+
+[launch.claude]
+args = ""
+
+[relay]
+url = "mqtts://broker.emqx.io:8883"
+id = "a8cc9080-4338-4678-825f-55bf5a5a861f"
+token = ""
+enabled = true
+
+[preferences]
+timeout = 86400
+auto_approve = true
+name_export = ""
+
+[gemini]
+# hcom configuration
+# Help: hcom config --help
+# Docs: hcom run docs
+
+
+# Atari Development Agent - MCP Server Configuration
+
+[mcpServers.atari-dev-agent]
+command = "python3"
+args = ["-m", "atari_agent.server"]
+cwd = "/home/rchennau/Atari-LX"
+
+[mcpServers.atari-dev-agent.env]
+PYTHONPATH = "/home/rchennau/Atari-LX"
+GOOGLE_API_KEY = "${GOOGLE_API_KEY:-}"
