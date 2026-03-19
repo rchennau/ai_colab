@@ -86,8 +86,8 @@ create_dashboard() {
 
     # Step 4: Setup agent panes
     local agents=()
-    [ "${WITH_QWEN:-true}" == "true" ] && agents+=("qwen")
     [ "${WITH_GEMINI:-true}" == "true" ] && agents+=("gemini")
+    [ "${WITH_QWEN:-true}" == "true" ] && agents+=("qwen")
     [ "${WITH_DEEPSEEK:-false}" == "true" ] && agents+=("deepseek")
     [ "${WITH_CLAUDE:-false}" == "true" ] && agents+=("claude")
     [ "${WITH_NEMO:-false}" == "true" ] && agents+=("nemo")
@@ -119,7 +119,7 @@ create_dashboard() {
 
         print_info "Launching $agent in pane $pane_idx..."
         tmux send-keys -t $SESSION:0.$pane_idx "export HCOM_NAME=$agent_name && $cmd" C-m
-        tmux select-pane -t $SESSION:0.$pane_idx -T "$agent CLI"
+        tmux select-pane -t $SESSION:0.$pane_idx -T "$agent-cli"
     done
 
     # Step 6: Set pane sizes
