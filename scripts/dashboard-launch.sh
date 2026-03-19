@@ -111,12 +111,12 @@ create_dashboard() {
         local cmd=""
 
         case $agent in
-            qwen)     cmd="hcom run qwen" ;;
-            gemini)   cmd="hcom run gemini-hcom" ;;
+            qwen)     cmd="bash $SCRIPT_DIR/qwen-hcom.sh" ;;
+            gemini)   cmd="bash $SCRIPT_DIR/gemini-hcom.sh" ;;
             vllm)     cmd="bash $SCRIPT_DIR/atari-vllm.sh" ;;
-            deepseek) cmd="hcom run deepseek" ;;
-            claude)   cmd="hcom run claude" ;;
-            nemo)     cmd="hcom run nemo" ;;
+            deepseek) cmd="bash $SCRIPT_DIR/deepseek-hcom.sh" ;;
+            claude)   cmd="bash $SCRIPT_DIR/claude-hcom.sh" ;;
+            nemo)     cmd="bash $SCRIPT_DIR/nemo-hcom.sh" ;;
         esac
 
         print_info "Launching $agent in pane $pane_idx..."

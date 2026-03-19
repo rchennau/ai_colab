@@ -26,8 +26,6 @@ def main():
     if args.prompt:
         query_text = args.prompt + " " + query_text
 
-    messages = []
-    
     # Default Atari System Prompt if none provided
     system_prompt = args.system_prompt
     if not system_prompt:
@@ -45,28 +43,80 @@ Atari 800XL Constraints:
 
 When asked to write code, provide well-commented 6502 assembly with memory address locations or standard labels."""
 
-    if system_prompt:
-        messages.append({"role": "system", "content": system_prompt})
-    
-    messages.append({"role": "user", "content": query_text})
+    if query_text.strip():
+        # One-shot mode
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": query_text})
+        
+        try:
+            completion = client.chat.completions.create(
+                model=args.model,
+                messages=messages,
+                temperature=0.2,
+                top_p=1,
+                max_tokens=2048,
+                stream=True
+            )
 
-    try:
-        completion = client.chat.completions.create(
-            model=args.model,
-            messages=messages,
-            temperature=0.2, # Lower temperature for better code generation
-            top_p=1,
-            max_tokens=2048,
-            stream=True
-        )
+            for chunk in completion:
+                if chunk.choices and chunk.choices[0].delta.content is not None:
+                    print(chunk.choices[0].delta.content, end="", flush=True)
+            print()
+        except Exception as e:
+            print(f"\nError: {e}")
+            sys.exit(1)
+    else:
+        # Interactive mode
+        print(f"Connected to remote vLLM ({base_url})")
+        print(f"Model: {args.model}")
+        print("Type '/exit' or '/quit' to end session.")
+        print("-" * 40)
+        
+        chat_history = []
+        if system_prompt:
+            chat_history.append({"role": "system", "content": system_prompt})
+            
+        while True:
+            try:
+                user_input = input("vLLM> ")
+                if user_input.lower() in ["/exit", "/quit"]:
+                    break
+                if not user_input.strip():
+                    continue
+                    
+                chat_history.append({"role": "user", "content": user_input})
+                
+                print("Thinking...", end="\r", flush=True)
+                
+                completion = client.chat.completions.create(
+                    model=args.model,
+                    messages=chat_history,
+                    temperature=0.2,
+                    top_p=1,
+                    max_tokens=2048,
+                    stream=True
+                )
 
-        for chunk in completion:
-            if chunk.choices and chunk.choices[0].delta.content is not None:
-                print(chunk.choices[0].delta.content, end="", flush=True)
-        print()
-    except Exception as e:
-        print(f"\nError: {e}")
-        sys.exit(1)
+                print(" " * 12, end="\r", flush=True) # Clear "Thinking..."
+                
+                assistant_response = ""
+                for chunk in completion:
+                    if chunk.choices and chunk.choices[0].delta.content is not None:
+                        content = chunk.choices[0].delta.content
+                        print(content, end="", flush=True)
+                        assistant_response += content
+                print()
+                chat_history.append({"role": "assistant", "content": assistant_response})
+                
+            except EOFError:
+                break
+            except KeyboardInterrupt:
+                print("\nInterrupted.")
+                continue
+            except Exception as e:
+                print(f"\nError: {e}")
 
 if __name__ == "__main__":
     main()
