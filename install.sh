@@ -68,6 +68,17 @@ if ! has_command tmux; then
     fi
 fi
 
+# Determine shell config file
+SHELL_CONFIG=""
+if [[ "$SHELL" == */zsh ]]; then
+    SHELL_CONFIG="$HOME/.zshrc"
+elif [[ "$SHELL" == */bash ]]; then
+    SHELL_CONFIG="$HOME/.bashrc"
+    if [[ "$OSTYPE" == "darwin"* ]] && [ -f "$HOME/.bash_profile" ]; then
+        SHELL_CONFIG="$HOME/.bash_profile"
+    fi
+fi
+
 # 2. hcom Installation
 if ! has_command hcom; then
     echo -e "\n${YELLOW}hcom (Hook-Comms) is required for agent messaging and coordination.${NC}"
@@ -76,6 +87,12 @@ if ! has_command hcom; then
     if [[ $REPLY =~ ^[Yy]$ || -z $REPLY ]]; then
         echo "Installing hcom..."
         curl -fsSL https://raw.githubusercontent.com/aannoo/hcom/main/install.sh | sh
+        
+        # Source profile to make hcom available in the current script process
+        if [ -n "$SHELL_CONFIG" ] && [ -f "$SHELL_CONFIG" ]; then
+            echo -e "Sourcing $SHELL_CONFIG..."
+            source "$SHELL_CONFIG"
+        fi
     fi
 else
     echo -e "${GREEN}✓ hcom is already installed.${NC}"
@@ -197,10 +214,15 @@ else
     echo -e "${RED}Error: scripts/conductor/install.sh not found.${NC}"
 fi
 
+if [ -n "$SHELL_CONFIG" ] && [ -f "$SHELL_CONFIG" ]; then
+    echo -e "\n${BLUE}Sourcing $SHELL_CONFIG...${NC}"
+    source "$SHELL_CONFIG"
+fi
+
 # 6. Final Verification
 echo -e "\n${BLUE}Installation complete!${NC}"
 echo -e "Some changes may require restarting your terminal or running:"
-echo -e "  source ~/.bashrc  (or ~/.zshrc / ~/.bash_profile)"
+echo -e "  source $SHELL_CONFIG"
 echo ""
-echo -e "${GREEN}Try running 'conductor' to get started.${NC}"
+echo -e "${GREEN}Try running './launch.sh' to get started.${NC}"
 echo -e "Happy collaborating! 🚀"

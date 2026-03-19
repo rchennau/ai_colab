@@ -78,11 +78,19 @@ else
     echo -e "Please manually add $BIN_DIR to your PATH."
 fi
 
+if [ -n "$SHELL_CONFIG" ] && [ -f "$SHELL_CONFIG" ]; then
+    echo -e "\n${BLUE}Sourcing $SHELL_CONFIG...${NC}"
+    source "$SHELL_CONFIG"
+fi
+
 echo ""
 echo -e "${BLUE}Installation complete!${NC}"
 echo ""
 echo -e "${YELLOW}Commands available:${NC}"
-echo -e "  ${GREEN}conductor${NC}         - Launch conductor (auto-detect project)"
+echo -e "  ${GREEN}conductor${NC}         - Launch conductor (global command)"
 echo -e "  ${GREEN}conductor-status${NC}  - Check status"
+echo ""
+echo -e "${GREEN}To launch the full system from this directory, run:${NC}"
+echo -e "  ${BLUE}./launch.sh${NC}"
 echo ""
 echo -e "${GREEN}✓ Ready to use!${NC}"
