@@ -78,10 +78,13 @@ else
     echo -e "Please manually add $BIN_DIR to your PATH."
 fi
 
-if [ -n "$SHELL_CONFIG" ] && [ -f "$SHELL_CONFIG" ]; then
+if [ -n "$SHELL_CONFIG" ] && [ -f "$SHELL_CONFIG" ] && [[ "$SHELL_CONFIG" != *".zshrc" ]]; then
     echo -e "\n${BLUE}Sourcing $SHELL_CONFIG...${NC}"
     source "$SHELL_CONFIG"
 fi
+
+# Manually update the current script's PATH to include the new bin directory
+export PATH="$BIN_DIR:$PATH"
 
 echo ""
 echo -e "${BLUE}Installation complete!${NC}"

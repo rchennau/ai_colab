@@ -21,13 +21,15 @@ conductor-status
 ## Installation
 
 ```bash
-~/.hcom/scripts/conductor/install.sh
+./scripts/conductor/install.sh
 ```
 
 This will:
 - Create symlinks in `~/.local/bin/`
-- Add aliases to `~/.bashrc`
+- Add aliases and environment variables to your shell configuration (`.zshrc`, `.bashrc`, or `.bash_profile`)
 - Make commands available globally
+
+> **Note for Zsh users:** To avoid shell incompatibility issues (e.g., Oh My Zsh), the installer does not automatically source `.zshrc`. You should run `source ~/.zshrc` after the installation completes.
 
 ## Usage
 

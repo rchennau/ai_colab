@@ -10,7 +10,9 @@ A unified environment for coordinating multiple AI agents (Gemini, Claude, Qwen,
     cd ai_colab
     ./install.sh
     ```
-    This script handles all dependencies (hcom, LLM CLIs, tmux, sqlite3, and project-specific tools).
+    This script handles all dependencies (hcom, LLM CLIs, tmux, sqlite3, and project-specific tools). 
+    
+    *Note: Zsh users should run `source ~/.zshrc` after the script finishes to enable aliases and path updates.*
 
 2.  **Launch the Dashboard:**
     ```bash

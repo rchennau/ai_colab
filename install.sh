@@ -89,10 +89,13 @@ if ! has_command hcom; then
         curl -fsSL https://raw.githubusercontent.com/aannoo/hcom/main/install.sh | sh
         
         # Source profile to make hcom available in the current script process
-        if [ -n "$SHELL_CONFIG" ] && [ -f "$SHELL_CONFIG" ]; then
+        # We only source if it's a bash config to avoid Oh My Zsh errors
+        if [ -n "$SHELL_CONFIG" ] && [ -f "$SHELL_CONFIG" ] && [[ "$SHELL_CONFIG" != *".zshrc" ]]; then
             echo -e "Sourcing $SHELL_CONFIG..."
             source "$SHELL_CONFIG"
         fi
+        # Ensure common local paths are in PATH for the rest of the script
+        export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
     fi
 else
     echo -e "${GREEN}✓ hcom is already installed.${NC}"
@@ -214,7 +217,7 @@ else
     echo -e "${RED}Error: scripts/conductor/install.sh not found.${NC}"
 fi
 
-if [ -n "$SHELL_CONFIG" ] && [ -f "$SHELL_CONFIG" ]; then
+if [ -n "$SHELL_CONFIG" ] && [ -f "$SHELL_CONFIG" ] && [[ "$SHELL_CONFIG" != *".zshrc" ]]; then
     echo -e "\n${BLUE}Sourcing $SHELL_CONFIG...${NC}"
     source "$SHELL_CONFIG"
 fi
