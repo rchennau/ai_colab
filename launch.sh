@@ -66,6 +66,7 @@ if [ "$DASHBOARD" = true ]; then
     echo -e "\n${BLUE}Select agents for the Dashboard:${NC}"
     read -p "Include Qwen? [Y/n]: " -n 1 -r; echo ""; [[ $REPLY =~ ^[Nn]$ ]] && DASHBOARD_FLAGS+=" --no-qwen"
     read -p "Include Gemini? [Y/n]: " -n 1 -r; echo ""; [[ $REPLY =~ ^[Nn]$ ]] && DASHBOARD_FLAGS+=" --no-gemini"
+    read -p "Include Atari vLLM? [Y/n]: " -n 1 -r; echo ""; [[ $REPLY =~ ^[Nn]$ ]] && DASHBOARD_FLAGS+=" --no-vllm"
     read -p "Include Claude? [y/N]: " -n 1 -r; echo ""; [[ $REPLY =~ ^[Yy]$ ]] && DASHBOARD_FLAGS+=" --add-claude"
     read -p "Include DeepSeek? [y/N]: " -n 1 -r; echo ""; [[ $REPLY =~ ^[Yy]$ ]] && DASHBOARD_FLAGS+=" --add-deepseek"
     read -p "Include NeMo? [y/N]: " -n 1 -r; echo ""; [[ $REPLY =~ ^[Yy]$ ]] && DASHBOARD_FLAGS+=" --add-nemo"

@@ -88,6 +88,7 @@ create_dashboard() {
     local agents=()
     [ "${WITH_GEMINI:-true}" == "true" ] && agents+=("gemini")
     [ "${WITH_QWEN:-true}" == "true" ] && agents+=("qwen")
+    [ "${WITH_VLLM:-false}" == "true" ] && agents+=("vllm")
     [ "${WITH_DEEPSEEK:-false}" == "true" ] && agents+=("deepseek")
     [ "${WITH_CLAUDE:-false}" == "true" ] && agents+=("claude")
     [ "${WITH_NEMO:-false}" == "true" ] && agents+=("nemo")
@@ -112,6 +113,7 @@ create_dashboard() {
         case $agent in
             qwen)     cmd="hcom run qwen" ;;
             gemini)   cmd="hcom run gemini-hcom" ;;
+            vllm)     cmd="bash $SCRIPT_DIR/atari-vllm.sh" ;;
             deepseek) cmd="hcom run deepseek" ;;
             claude)   cmd="hcom run claude" ;;
             nemo)     cmd="hcom run nemo" ;;
@@ -149,6 +151,7 @@ main() {
     # Defaults
     WITH_QWEN=true
     WITH_GEMINI=true
+    WITH_VLLM=true
     WITH_DEEPSEEK=false
     WITH_CLAUDE=false
     WITH_NEMO=false
@@ -161,6 +164,8 @@ main() {
             --add-claude) WITH_CLAUDE=true; shift ;;
             --add-deepseek) WITH_DEEPSEEK=true; shift ;;
             --add-nemo) WITH_NEMO=true; shift ;;
+            --vllm) WITH_VLLM=true; shift ;;
+            --no-vllm) WITH_VLLM=false; shift ;;
             --conductor) WITH_CONDUCTOR=true; shift ;;
             --bridge) WITH_BRIDGE=true; shift ;;
             --no-qwen) WITH_QWEN=false; shift ;;
@@ -171,6 +176,8 @@ main() {
                 echo "  --add-claude     Include Claude agent"
                 echo "  --add-deepseek   Include DeepSeek agent"
                 echo "  --add-nemo       Include NVIDIA NeMo agent"
+                echo "  --vllm           Include remote vLLM agent (Atari expert)"
+                echo "  --no-vllm        Exclude remote vLLM agent"
                 echo "  --conductor      Include Conductor automation"
                 echo "  --bridge         Include Google Chat bridge"
                 echo "  --no-qwen        Exclude Qwen agent"
