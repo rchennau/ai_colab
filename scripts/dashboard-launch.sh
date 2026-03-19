@@ -71,18 +71,18 @@ create_dashboard() {
 
     # Optional: Start Conductor workflow in background
     if [ "${WITH_CONDUCTOR:-false}" == "true" ]; then
-        tmux new-window -t $SESSION -n "conductor" "bash $SCRIPT_DIR/conductor-workflow.sh"
+        tmux new-window -d -t $SESSION -n "conductor" "bash $SCRIPT_DIR/conductor-workflow.sh"
         print_success "Conductor agent started"
     fi
 
     # Optional: Start Messenger Bridge
     if [ "${WITH_BRIDGE:-false}" == "true" ]; then
-        tmux new-window -t $SESSION -n "bridge" "bash $SCRIPT_DIR/hcom-chat-bridge.sh"
+        tmux new-window -d -t $SESSION -n "bridge" "bash $SCRIPT_DIR/hcom-chat-bridge.sh"
         print_success "Messenger Bridge started"
     fi
 
     # Step 3: Create right column for agents
-    tmux split-window -h -t $SESSION
+    tmux split-window -h -t $SESSION:0
 
     # Step 4: Setup agent panes
     local agents=()
@@ -96,10 +96,10 @@ create_dashboard() {
     if [ $num_agents -gt 1 ]; then
         tmux select-pane -t $SESSION:0.1
         for ((i=1; i<$num_agents; i++)); do
-            tmux split-window -v -t $SESSION
+            tmux split-window -v -t $SESSION:0.1
         done
         # Balance panes
-        tmux select-layout -t $SESSION "main-vertical"
+        tmux select-layout -t $SESSION:0 "main-vertical"
     fi
 
     # Step 5: Launch selected agents
@@ -129,8 +129,6 @@ create_dashboard() {
 
     # Step 7: Select hcom pane
     tmux select-pane -t $SESSION:0.0
-
-    tmux rename-window -t $SESSION "dashboard"
 
     print_success "Dashboard created with $num_agents agents"
 }
