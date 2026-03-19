@@ -69,7 +69,7 @@ if [[ -f "$TRACKS_FILE" ]]; then
             echo "[$(date +%T)] Assigning new worker for track: $NEXT_TRACK"
             
             # Spawn a headless worker
-            SPAWN_OUT=$(hcom 1 qwen --tag worker --headless --go 2>&1 || true)
+            SPAWN_OUT=$(hcom 1 gemini --tag worker --headless --go 2>&1 || true)
             
             # Extract agent name
             NEW_AGENT=$(echo "$SPAWN_OUT" | grep "^Names: " | awk '{print $2}' || true)

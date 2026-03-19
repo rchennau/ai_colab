@@ -75,7 +75,7 @@ while true; do
                 
                 # Spawn a headless worker
                 # We use --tag to identify them easily
-                SPAWN_OUT=$(hcom 1 qwen --tag worker --headless --go 2>&1 || true)
+                SPAWN_OUT=$(hcom 1 gemini --tag worker --headless --go 2>&1 || true)
                 
                 # Extract agent name from output (assuming "Names: <name>")
                 NEW_AGENT=$(echo "$SPAWN_OUT" | grep "^Names: " | awk '{print $2}' || true)

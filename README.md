@@ -37,8 +37,9 @@ All agents communicate via [hcom](https://github.com/aannoo/hcom), a message-pas
 |--------|---------|
 | `./install.sh` | Master installer for dependencies and LLM CLIs. |
 | `./launch.sh` | Unified launcher for the Dashboard and Conductor. |
-| `scripts/conductor-workflow.sh` | Automated background manager for track progress. |
-| `scripts/atari-debate.sh` | Automates technical debates between active agents. |
+| `scripts/*-hcom.sh` | Agent wrappers (Gemini, Qwen, vLLM, etc.) with standardized hcom identity and status tracking. |
+| `scripts/conductor-workflow.sh` | Automated background manager for track progress and worker spawning. |
+| `scripts/atari-debate.sh` | Automates technical debates between active agents (including vLLM Atari expert). |
 
 ## 🕹️ Project Context: Atari-LX
 This repository is pre-configured for **Atari-LX Engineering**, featuring deep integration with the Atari 8-bit hardware environment, shared constants, and automated technical debates for optimized 6502 assembly development.

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Atari-vLLM CLI Wrapper with hcom Integration
+# vLLM CLI Wrapper with hcom Integration
 # Launches a remote vLLM agent specialized for Atari 800XL
 
 set -euo pipefail
@@ -10,9 +10,9 @@ source "$SCRIPT_DIR/utils.sh"
 
 if has_command hcom; then
     # Register with hcom to enable messaging
-    AGENT_NAME="atari-vllm-$$"
-    hcom start --as "$AGENT_NAME" > /dev/null 2>&1 || true
+    AGENT_NAME="${HCOM_NAME:-vllm-$$}"
     export HCOM_NAME="$AGENT_NAME"
+    hcom start --as "$HCOM_NAME" > /dev/null 2>&1 || true
 
     # Ensure relay is running if more than one agent is active
     ACTIVE_AGENTS=$(hcom list --names | wc -w)
@@ -21,11 +21,11 @@ if has_command hcom; then
     fi
 
     # Pulse session to transition from "launching" to "listening"
-    hcom listen --name "$AGENT_NAME" --timeout 1 > /dev/null 2>&1 || true
+    hcom listen --name "$HCOM_NAME" --timeout 1 > /dev/null 2>&1 || true
 fi
 
 # Default model (vLLM expects the model name it was launched with)
-DEFAULT_MODEL="deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct"
+DEFAULT_MODEL="DeepSeek-Code"
 
 # Parse arguments
 VALID_ARGS=()

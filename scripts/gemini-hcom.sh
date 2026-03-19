@@ -12,9 +12,11 @@ source "$SCRIPT_DIR/utils.sh"
 
 # Register with hcom to enable messaging
 if has_command hcom; then
-    AGENT_NAME="gemini-$$"
-    hcom start --as "$AGENT_NAME" > /dev/null 2>&1 || true
+    # Use existing HCOM_NAME if provided (e.g. by launcher), otherwise generate one
+    AGENT_NAME="${HCOM_NAME:-gemini-$$}"
     export HCOM_NAME="$AGENT_NAME"
+
+    hcom start --as "$HCOM_NAME" > /dev/null 2>&1 || true
 
     # Ensure relay is running if more than one agent is active
     ACTIVE_AGENTS=$(hcom list --names | wc -w)
@@ -23,7 +25,7 @@ if has_command hcom; then
     fi
 
     # Pulse session to transition from "launching" to "listening"
-    hcom listen --name "$AGENT_NAME" --timeout 1 > /dev/null 2>&1 || true
+    hcom listen --name "$HCOM_NAME" --timeout 1 > /dev/null 2>&1 || true
 fi
 
 # Default model (can be overridden)

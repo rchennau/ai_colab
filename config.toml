@@ -22,6 +22,9 @@ system_prompt = ""
 [launch.opencode]
 args = ""
 
+[launch.vllm]
+args = ""
+
 [launch.deepseek]
 args = ""
 

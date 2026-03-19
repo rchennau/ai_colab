@@ -51,6 +51,13 @@ create_dashboard() {
     # Step 1: Initialize hcom daemon and relay worker
     print_info "Initializing hcom daemon and relay worker..."
     hcom start > /dev/null 2>&1 || true
+
+    # Ensure hooks are installed for status tracking
+    if ! hcom hooks status | grep -q "installed"; then
+        print_info "Installing hcom hooks for agent status tracking..."
+        hcom hooks add all > /dev/null 2>&1 || true
+    fi
+
     # Start relay daemon if relay is enabled
     if hcom config relay_enabled --json 2>/dev/null | grep -q "true"; then
         hcom relay daemon start > /dev/null 2>&1 || true
@@ -113,7 +120,7 @@ create_dashboard() {
         case $agent in
             qwen)     cmd="bash $SCRIPT_DIR/qwen-hcom.sh" ;;
             gemini)   cmd="bash $SCRIPT_DIR/gemini-hcom.sh" ;;
-            vllm)     cmd="bash $SCRIPT_DIR/atari-vllm.sh" ;;
+            vllm)     cmd="bash $SCRIPT_DIR/vllm-hcom.sh" ;;
             deepseek) cmd="bash $SCRIPT_DIR/deepseek-hcom.sh" ;;
             claude)   cmd="bash $SCRIPT_DIR/claude-hcom.sh" ;;
             nemo)     cmd="bash $SCRIPT_DIR/nemo-hcom.sh" ;;

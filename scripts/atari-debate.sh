@@ -41,7 +41,7 @@ done
 if [[ -z "$WORKERS" ]]; then
     echo "Auto-detecting active agents..."
     # Filter for known dev agents or workers, excluding the current script if it has an identity
-    ACTIVE=$(hcom list --names | grep -E "dev|worker|qwen|gemini|claude|deepseek" | grep -v "judge" | head -n 3 | tr '\n' ',' | sed 's/,$//')
+    ACTIVE=$(hcom list --names | grep -E "dev|worker|qwen|gemini|claude|deepseek|vllm" | grep -v "judge" | head -n 3 | tr '\n' ',' | sed 's/,$//')
     WORKERS="$ACTIVE"
 fi
 

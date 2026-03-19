@@ -12,18 +12,10 @@ source "$SCRIPT_DIR/utils.sh"
 
 # Register with hcom to enable messaging
 if has_command hcom; then
-    AGENT_NAME="qwen-$$"
-    hcom start --as "$AGENT_NAME" > /dev/null 2>&1 || true
+    AGENT_NAME="${HCOM_NAME:-qwen-$$}"
     export HCOM_NAME="$AGENT_NAME"
-
-    # Ensure relay is running if more than one agent is active
-    ACTIVE_AGENTS=$(hcom list --names | wc -w)
-    if [ "$ACTIVE_AGENTS" -gt 1 ]; then
-        hcom relay daemon start > /dev/null 2>&1 || true
-    fi
-
-    # Pulse session to transition from "launching" to "listening"
-    hcom listen --name "$AGENT_NAME" --timeout 1 > /dev/null 2>&1 || true
+    hcom start --as "$HCOM_NAME"
+    hcom listen --name "$HCOM_NAME" --timeout 1
 fi
 
 # Default model (can be overridden)

@@ -18,8 +18,8 @@ This plan enhances the Conductor Agent to actively manage agent spawning and tas
     - If missing or the assigned agent is dead (via `hcom list`), mark as "Unassigned".
 - **Spawn Logic**:
   - If a track is "Unassigned":
-    - Determine model (default: `qwen` for coding tasks).
-    - Execute: `hcom 1 qwen --tag worker --headless --go`.
+    - Determine model (default: `gemini` for coding tasks).
+    - Execute: `hcom 1 gemini --tag worker --headless --go`.
     - Parse the resulting agent name (e.g., `luna`).
     - Update Blackboard: `track_assigned_<track_slug> = <agent_name>`.
     - Update Blackboard: `agent_task_<agent_name> = <track_name>`.
