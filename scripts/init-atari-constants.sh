@@ -4,7 +4,11 @@
 
 set -euo pipefail
 
-KV_TOOL="/home/rchennau/.hcom/scripts/hcom-kv"
+# Find script directory and source utils
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/utils.sh"
+
+KV_TOOL="$SCRIPT_DIR/hcom-kv"
 
 echo "Initializing Atari hardware constants in Blackboard..."
 

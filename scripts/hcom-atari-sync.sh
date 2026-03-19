@@ -4,10 +4,14 @@
 
 set -euo pipefail
 
+# Find script directory and source utils
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/utils.sh"
+
 # Project paths
-PROJECT_ROOT="/home/rchennau/Atari-LX"
+PROJECT_ROOT=$(detect_project_root)
 MAP_FILE="$PROJECT_ROOT/build/bin/atari-lx.map"
-KV_TOOL="/home/rchennau/.hcom/scripts/hcom-kv"
+KV_TOOL="$SCRIPT_DIR/hcom-kv"
 
 echo "Synchronizing Atari-LX build state to Blackboard..."
 
@@ -37,6 +41,6 @@ for seg in CODE RODATA BSS DATA ZEROPAGE CART_INIT; do
 done
 
 # Sync build timestamp
-"$KV_TOOL" set atari_last_build "$(date -Iseconds)"
+"$KV_TOOL" set atari_last_build "$(date '+%Y-%m-%dT%H:%M:%S%z')"
 
 echo "Build sync complete."

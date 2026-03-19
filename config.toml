@@ -50,8 +50,8 @@ name_export = ""
 [mcpServers.atari-dev-agent]
 command = "python3"
 args = ["-m", "atari_agent.server"]
-cwd = "/home/rchennau/Atari-LX"
+cwd = "${HOME}/Atari-LX"
 
 [mcpServers.atari-dev-agent.env]
-PYTHONPATH = "/home/rchennau/Atari-LX"
+PYTHONPATH = "${HOME}/Atari-LX"
 GOOGLE_API_KEY = "${GOOGLE_API_KEY:-}"

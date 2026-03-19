@@ -1,27 +1,32 @@
-#!/usr/bin/env bash                                                          
-# Gemini CLI Wrapper with hcom Integration                                   
-# Launches Gemini CLI with hcom registration                                 
-#                                                                            
-# Usage: gemini-hcom.sh [gemini arguments]                                   
-#                                                                            
-                                                                             
-set -euo pipefail                                                            
-                                                                             
-# Register with hcom to enable messaging                                     
-AGENT_NAME="gemini-$$"                                                       
-hcom start --as "$AGENT_NAME" > /dev/null 2>&1 || true                       
-export HCOM_NAME="$AGENT_NAME"                                               
+#!/usr/bin/env bash
+# Gemini CLI Wrapper with hcom Integration
+# Launches Gemini CLI with hcom registration
+#
+# Usage: gemini-hcom.sh [gemini arguments]
 
-# Ensure relay is running if more than one agent is active
-ACTIVE_AGENTS=$(hcom list --names | wc -w)
-if [ "$ACTIVE_AGENTS" -gt 1 ]; then
-    hcom relay daemon start > /dev/null 2>&1 || true
+set -euo pipefail
+
+# Source utilities
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/utils.sh"
+
+# Register with hcom to enable messaging
+if has_command hcom; then
+    AGENT_NAME="gemini-$$"
+    hcom start --as "$AGENT_NAME" > /dev/null 2>&1 || true
+    export HCOM_NAME="$AGENT_NAME"
+
+    # Ensure relay is running if more than one agent is active
+    ACTIVE_AGENTS=$(hcom list --names | wc -w)
+    if [ "$ACTIVE_AGENTS" -gt 1 ]; then
+        hcom relay daemon start > /dev/null 2>&1 || true
+    fi
+
+    # Pulse session to transition from "launching" to "listening"
+    hcom listen --name "$AGENT_NAME" --timeout 1 > /dev/null 2>&1 || true
 fi
 
-# Pulse session to transition from "launching" to "listening"
-hcom listen --name "$AGENT_NAME" --timeout 1 > /dev/null 2>&1 || true
-                                                                             
-# Default model (can be overridden)                                          
+# Default model (can be overridden)
 DEFAULT_MODEL="gemini-3.0"                                                   
                                                                              
 # Parse arguments                                                            

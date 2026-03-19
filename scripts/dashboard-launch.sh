@@ -9,8 +9,11 @@
 
 set -euo pipefail
 
-SESSION="hcom-dashboard"
+# Find script directory and source utils
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/utils.sh"
+
+SESSION="hcom-dashboard"
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -23,15 +26,15 @@ print_success() { echo -e "${GREEN}✓${NC} $1"; }
 print_warning() { echo -e "${YELLOW}!${NC} $1"; }
 
 check_prereqs() {
-    if ! command -v tmux &> /dev/null; then
-        echo "Error: tmux not found."
+    if ! has_command tmux; then
+        echo -e "${RED}Error: tmux not found.${NC}"
+        echo -e "Please install tmux to use the dashboard."
         exit 1
     fi
-    if ! command -v hcom &> /dev/null; then
-        echo "Error: hcom not found."
+    if ! check_hcom; then
+        echo -e "${RED}Error: hcom is required for the dashboard.${NC}"
         exit 1
     fi
-    # Optional tools - check but don't fail if they are not selected
 }
 
 reconnect() {
@@ -49,15 +52,15 @@ create_dashboard() {
     print_info "Initializing hcom daemon and relay worker..."
     hcom start > /dev/null 2>&1 || true
     # Start relay daemon if relay is enabled
-    if hcom config relay_enabled --json | grep -q "true"; then
+    if hcom config relay_enabled --json 2>/dev/null | grep -q "true"; then
         hcom relay daemon start > /dev/null 2>&1 || true
         print_success "Relay daemon started"
     fi
 
     # Initialize Atari Integration
     print_info "Initializing Deep Atari Integration..."
-    bash ./scripts/init-atari-constants.sh > /dev/null 2>&1 || true
-    bash ./scripts/hcom-atari-sync.sh > /dev/null 2>&1 || true
+    bash "$SCRIPT_DIR/init-atari-constants.sh" > /dev/null 2>&1 || true
+    bash "$SCRIPT_DIR/hcom-atari-sync.sh" > /dev/null 2>&1 || true
     print_success "Hardware context initialized"
 
     sleep 1
@@ -68,13 +71,13 @@ create_dashboard() {
 
     # Optional: Start Conductor workflow in background
     if [ "${WITH_CONDUCTOR:-false}" == "true" ]; then
-        tmux new-window -t $SESSION -n "conductor" "bash ./scripts/conductor-workflow.sh"
+        tmux new-window -t $SESSION -n "conductor" "bash $SCRIPT_DIR/conductor-workflow.sh"
         print_success "Conductor agent started"
     fi
 
     # Optional: Start Messenger Bridge
     if [ "${WITH_BRIDGE:-false}" == "true" ]; then
-        tmux new-window -t $SESSION -n "bridge" "bash ./scripts/hcom-chat-bridge.sh"
+        tmux new-window -t $SESSION -n "bridge" "bash $SCRIPT_DIR/hcom-chat-bridge.sh"
         print_success "Messenger Bridge started"
     fi
 

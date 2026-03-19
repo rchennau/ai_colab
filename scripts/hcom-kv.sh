@@ -4,7 +4,11 @@
 
 set -euo pipefail
 
-DB_PATH="/home/rchennau/.hcom/hcom.db"
+# Find script directory and source utils
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/utils.sh"
+
+DB_PATH=$(get_hcom_db_path)
 
 show_usage() {
     cat << EOF
@@ -20,6 +24,18 @@ EOF
 }
 
 [[ $# -lt 1 ]] && { show_usage; exit 1; }
+
+# Check for dependencies
+check_sqlite3 || exit 1
+
+# If hcom.db doesn't exist, we can't do much unless we create it ourselves
+# But usually hcom handles this.
+if [[ ! -f "$DB_PATH" ]]; then
+    # Ensure directory exists
+    mkdir -p "$(dirname "$DB_PATH")"
+    # Create basic structure if it doesn't exist
+    sqlite3 "$DB_PATH" "CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT);"
+fi
 
 CMD="$1"; shift
 

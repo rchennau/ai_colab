@@ -4,19 +4,25 @@
 
 set -euo pipefail
 
+# Source utilities
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/utils.sh"
+
 # Register with hcom to enable messaging
-AGENT_NAME="nemo-$$"
-hcom start --as "$AGENT_NAME" > /dev/null 2>&1 || true
-export HCOM_NAME="$AGENT_NAME"
+if has_command hcom; then
+    AGENT_NAME="nemo-$$"
+    hcom start --as "$AGENT_NAME" > /dev/null 2>&1 || true
+    export HCOM_NAME="$AGENT_NAME"
 
-# Ensure relay is running if more than one agent is active
-ACTIVE_AGENTS=$(hcom list --names | wc -w)
-if [ "$ACTIVE_AGENTS" -gt 1 ]; then
-    hcom relay daemon start > /dev/null 2>&1 || true
+    # Ensure relay is running if more than one agent is active
+    ACTIVE_AGENTS=$(hcom list --names | wc -w)
+    if [ "$ACTIVE_AGENTS" -gt 1 ]; then
+        hcom relay daemon start > /dev/null 2>&1 || true
+    fi
+
+    # Pulse session to transition from "launching" to "listening"
+    hcom listen --name "$AGENT_NAME" --timeout 1 > /dev/null 2>&1 || true
 fi
-
-# Pulse session to transition from "launching" to "listening"
-hcom listen --name "$AGENT_NAME" --timeout 1 > /dev/null 2>&1 || true
 
 # Default model
 DEFAULT_MODEL="nvidia/llama-3.1-nemotron-70b-instruct"
@@ -46,5 +52,5 @@ if [ "$MODEL_SET" = false ]; then
     VALID_ARGS+=("-m" "$DEFAULT_MODEL")
 fi
 
-# Launch nemo-cli.py with valid arguments
-exec python3 /home/rchennau/.hcom/scripts/nemo-cli.py "${VALID_ARGS[@]}"
+# Launch nemo with valid arguments
+exec nemo "${VALID_ARGS[@]}"

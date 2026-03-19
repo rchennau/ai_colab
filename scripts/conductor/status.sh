@@ -1,29 +1,16 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Global Conductor Status Monitor
 # Works with any project - auto-detects or uses specified project
 
 set -e
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
+# Find script directory and source utils
+# Note: status.sh is in scripts/conductor/
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../utils.sh"
 
 # Auto-detect project
-detect_project() {
-    local dir="$PWD"
-    while [[ "$dir" != "/" ]]; do
-        if [ -f "$dir/conductor/tracks.md" ] || [ -f "$dir/conductor/product.md" ]; then
-            echo "$dir"
-            return 0
-        fi
-        dir="$(dirname "$dir")"
-    done
-    return 1
-}
-
-PROJECT_DIR=$(detect_project 2>/dev/null) || PROJECT_DIR=""
+PROJECT_DIR=$(detect_project_root 2>/dev/null) || PROJECT_DIR=""
 
 echo -e "${BLUE}╔════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║   Conductor Status Monitor            ║${NC}"
@@ -32,18 +19,22 @@ echo ""
 
 # HCOM status
 echo -e "${YELLOW}HCOM Status:${NC}"
-hcom status 2>&1 | grep -E "(agents|terminal)" || echo "  hcom not running"
+if check_hcom; then
+    hcom status 2>&1 | grep -E "(agents|terminal)" || echo "  hcom not running"
+fi
 echo ""
 
 # List conductor agents
 echo -e "${YELLOW}Conductor Agents:${NC}"
-hcom list 2>&1 | grep -E "conductor" || echo "  No conductor agents running"
+if has_command hcom; then
+    hcom list 2>&1 | grep -E "conductor" || echo "  No conductor agents running"
+fi
 echo ""
 
 # Project status
 if [ -n "$PROJECT_DIR" ] && [ -f "$PROJECT_DIR/conductor/tracks.md" ]; then
     echo -e "${YELLOW}Project: ${GREEN}$PROJECT_DIR${NC}"
-    TRACKS_TIME=$(stat -c %y "$PROJECT_DIR/conductor/tracks.md" 2>/dev/null | cut -d'.' -f1)
+    TRACKS_TIME=$(get_file_mtime "$PROJECT_DIR/conductor/tracks.md")
     echo -e "  Tracks updated: ${GREEN}$TRACKS_TIME${NC}"
     
     TOTAL=$(grep -c "^\- \[.\] \*\*Track:" "$PROJECT_DIR/conductor/tracks.md" 2>/dev/null || echo "0")
@@ -52,15 +43,19 @@ if [ -n "$PROJECT_DIR" ] && [ -f "$PROJECT_DIR/conductor/tracks.md" ]; then
     
     echo -e "  Tracks: ${GREEN}$COMPLETE complete${NC}, ${YELLOW}$PLANNING planning${NC}, ${BLUE}$TOTAL total${NC}"
 else
-    echo -e "${YELLOW}Project: ${RED}Not in a project directory${NC}"
+    echo -e "${YELLOW}Project: ${RED}Not in a project directory or tracks.md missing${NC}"
     echo -e "  ${YELLOW}Use -p /path/to project or cd to project${NC}"
 fi
 echo ""
 
 echo -e "${YELLOW}Recent Events:${NC}"
-hcom events 2>&1 | tail -5 | while read line; do
-    echo "  $line"
-done || echo "  No events"
+if has_command hcom; then
+    hcom events 2>&1 | tail -5 | while read line; do
+        echo "  $line"
+    done || echo "  No events"
+else
+    echo "  hcom not available"
+fi
 echo ""
 
 echo -e "${GREEN}Status check complete${NC}"

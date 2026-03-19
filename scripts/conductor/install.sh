@@ -1,28 +1,35 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Global Conductor Agent Installation Script
 # Installs conductor utilities and shell aliases
 
 set -e
 
+# Find script directory and source utils
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../utils.sh"
+
 CONDUCTOR_HOME="$HOME/.hcom/scripts/conductor"
 BIN_DIR="$HOME/.local/bin"
-
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
 
 echo -e "${BLUE}╔════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║   Conductor Agent Installer           ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════╝${NC}"
 echo ""
 
-# Verify installation
-if [ ! -f "$CONDUCTOR_HOME/launch.sh" ]; then
-    echo -e "${RED}Error: Conductor launcher not found${NC}"
+# Check for hcom
+check_hcom || true
+
+# Verify source files exist in current project context
+if [ ! -f "$SCRIPT_DIR/launch.sh" ]; then
+    echo -e "${RED}Error: Conductor launcher not found in $SCRIPT_DIR${NC}"
     exit 1
 fi
+
+# Create conductor home if it doesn't exist
+mkdir -p "$CONDUCTOR_HOME"
+cp "$SCRIPT_DIR/launch.sh" "$CONDUCTOR_HOME/"
+cp "$SCRIPT_DIR/status.sh" "$CONDUCTOR_HOME/"
+cp "$SCRIPT_DIR/../utils.sh" "$HOME/.hcom/scripts/"
 
 # Create bin directory
 mkdir -p "$BIN_DIR"
@@ -35,27 +42,41 @@ echo -e "  ✓ $BIN_DIR/conductor"
 echo -e "  ✓ $BIN_DIR/conductor-status"
 echo ""
 
-# Add to PATH if not already
-if ! echo "$PATH" | grep -q "$BIN_DIR"; then
-    echo -e "${YELLOW}Adding $BIN_DIR to PATH in ~/.bashrc...${NC}"
-    echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+# Determine shell config file
+SHELL_CONFIG=""
+if [[ "$SHELL" == */zsh ]]; then
+    SHELL_CONFIG="$HOME/.zshrc"
+elif [[ "$SHELL" == */bash ]]; then
+    SHELL_CONFIG="$HOME/.bashrc"
+    # Also check .bash_profile for macOS
+    if [[ "$OSTYPE" == "darwin"* ]] && [ -f "$HOME/.bash_profile" ]; then
+        SHELL_CONFIG="$HOME/.bash_profile"
+    fi
 fi
 
-# Add aliases
-if ! grep -q "alias conductor=" ~/.bashrc 2>/dev/null; then
-    cat >> ~/.bashrc << 'ALIAS_EOF'
+if [ -n "$SHELL_CONFIG" ]; then
+    # Add to PATH if not already
+    if ! grep -q "$BIN_DIR" "$SHELL_CONFIG" 2>/dev/null; then
+        echo -e "${YELLOW}Adding $BIN_DIR to PATH in $SHELL_CONFIG...${NC}"
+        echo "export PATH=\"\$HOME/.local/bin:\$PATH\"" >> "$SHELL_CONFIG"
+    fi
+
+    # Add aliases
+    if ! grep -q "alias conductor=" "$SHELL_CONFIG" 2>/dev/null; then
+        cat >> "$SHELL_CONFIG" << 'ALIAS_EOF'
 
 # Conductor Agent
 export CONDUCTOR_HOME="$HOME/.hcom/scripts/conductor"
 alias conductor-status='conductor-status'
 ALIAS_EOF
-    echo -e "  ✓ Aliases added to ~/.bashrc"
+        echo -e "  ✓ Aliases added to $SHELL_CONFIG"
+    else
+        echo -e "  ✓ Aliases already present"
+    fi
 else
-    echo -e "  ✓ Aliases already present"
+    echo -e "${YELLOW}Warning: Could not detect shell config file (tried .bashrc, .zshrc).${NC}"
+    echo -e "Please manually add $BIN_DIR to your PATH."
 fi
-
-# Source bashrc
-source ~/.bashrc 2>/dev/null || true
 
 echo ""
 echo -e "${BLUE}Installation complete!${NC}"
@@ -63,11 +84,5 @@ echo ""
 echo -e "${YELLOW}Commands available:${NC}"
 echo -e "  ${GREEN}conductor${NC}         - Launch conductor (auto-detect project)"
 echo -e "  ${GREEN}conductor-status${NC}  - Check status"
-echo ""
-echo -e "${YELLOW}Usage:${NC}"
-echo -e "  ${GREEN}conductor${NC}                    # Auto-detect project"
-echo -e "  ${GREEN}conductor -p ~/project${NC}       # Specify project"
-echo -e "  ${GREEN}conductor qwen${NC}               # Use Qwen"
-echo -e "  ${GREEN}conductor-status${NC}             # Check status"
 echo ""
 echo -e "${GREEN}✓ Ready to use!${NC}"

@@ -4,6 +4,17 @@
 
 set -euo pipefail
 
+# Find script directory and source utils
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/utils.sh"
+
+# Check for hcom
+if ! has_command hcom; then
+    echo -e "${RED}Error: hcom is required for the automated conductor workflow.${NC}"
+    echo -e "This script orchestrates multiple agents via the hcom messaging system."
+    exit 1
+fi
+
 # Agent registration
 AGENT_NAME="conductor-$(hostname)-$$"
 hcom start --as "$AGENT_NAME" > /dev/null 2>&1 || true
@@ -34,12 +45,14 @@ while true; do
         NEXT_TRACK=$(grep -m 1 "^\- \[ \] \*\*Track:" "$TRACKS_FILE" | sed 's/^- \[ \] \*\*Track: //;s/\*\*.*//')
 
         # Update Shared Blackboard
-        ./scripts/hcom-kv set project_progress "$PERCENT%"
-        ./scripts/hcom-kv set active_track "${NEXT_TRACK:-None}"
-        ./scripts/hcom-kv set conductor_last_run "$(date -Iseconds)"
+        "$SCRIPT_DIR/hcom-kv" set project_progress "$PERCENT%"
+        "$SCRIPT_DIR/hcom-kv" set active_track "${NEXT_TRACK:-None}"
+        # date -Iseconds is GNU, for macOS we should be careful but -Iseconds works in most modern bash/date
+        # Fallback to standard RFC3339 if needed
+        "$SCRIPT_DIR/hcom-kv" set conductor_last_run "$(date '+%Y-%m-%dT%H:%M:%S%z')"
 
         # --- Automated Tasking Section ---
-        MAX_WORKERS=$(./scripts/hcom-kv get conductor_max_workers || echo "1")
+        MAX_WORKERS=$("$SCRIPT_DIR/hcom-kv" get conductor_max_workers || echo "1")
         [ -z "$MAX_WORKERS" ] && MAX_WORKERS=1
         
         CURRENT_WORKERS=$(hcom list --names | grep -c "worker-" || true)
@@ -49,7 +62,7 @@ while true; do
             TRACK_SLUG=$(echo "$NEXT_TRACK" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g;s/--\+/-/g;s/^-//;s/-$//')
             
             # Check if this track is already assigned and if that agent is still alive
-            ASSIGNED_AGENT=$(./scripts/hcom-kv get "track_assigned_$TRACK_SLUG" || true)
+            ASSIGNED_AGENT=$("$SCRIPT_DIR/hcom-kv" get "track_assigned_$TRACK_SLUG" || true)
             AGENT_ALIVE=false
             if [ -n "$ASSIGNED_AGENT" ]; then
                 if hcom list --names | grep -q "\b$ASSIGNED_AGENT\b"; then
@@ -69,8 +82,8 @@ while true; do
 
                 if [ -n "$NEW_AGENT" ]; then
                     echo "[$(date +%T)] Spawned agent $NEW_AGENT for $TRACK_SLUG"
-                    ./scripts/hcom-kv set "track_assigned_$TRACK_SLUG" "$NEW_AGENT"
-                    ./scripts/hcom-kv set "agent_task_$NEW_AGENT" "$NEXT_TRACK"
+                    "$SCRIPT_DIR/hcom-kv" set "track_assigned_$TRACK_SLUG" "$NEW_AGENT"
+                    "$SCRIPT_DIR/hcom-kv" set "agent_task_$NEW_AGENT" "$NEXT_TRACK"
                     
                     # Send initial tasking message
                     hcom send "@$NEW_AGENT" --name "$AGENT_NAME" --intent request --thread "task-handoff" -- \

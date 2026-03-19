@@ -4,6 +4,10 @@
 
 set -euo pipefail
 
+# Find script directory and source utils
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/utils.sh"
+
 usage() {
     echo "Usage: atari-debate <TOPIC> [OPTIONS]"
     echo ""
@@ -12,6 +16,12 @@ usage() {
     echo "  --workers W   Comma-separated agent names (auto-detect if omitted)"
     exit 1
 }
+
+if ! has_command hcom; then
+    echo -e "${RED}Error: hcom is required for debates.${NC}"
+    echo -e "Debates use the hcom messaging system to coordinate between agents."
+    exit 1
+fi
 
 [[ $# -lt 1 ]] && usage
 
@@ -46,8 +56,9 @@ echo "Rounds: $ROUNDS"
 
 # 2. Gather Context from Blackboard
 echo "Gathering project context..."
-BLACKBOARD_CONTEXT=$(/home/rchennau/.hcom/scripts/hcom-kv list | head -n 20)
-BUILD_STATE=$(hcom status | grep "dir:" || echo "Atari-LX project root")
+# Use relative script path for hcom-kv
+BLACKBOARD_CONTEXT=$("$SCRIPT_DIR/hcom-kv" list 2>/dev/null | head -n 20 || echo "No blackboard data")
+BUILD_STATE=$(hcom status 2>/dev/null | grep "dir:" || echo "Atari-LX project root")
 
 FULL_CONTEXT="
 Project State:
