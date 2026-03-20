@@ -89,12 +89,10 @@ if ! has_command hcom; then
         curl -fsSL https://raw.githubusercontent.com/aannoo/hcom/main/install.sh | sh
         
         # Source profile to make hcom available in the current script process
-        # We only source if it's a bash config to avoid Oh My Zsh errors
         if [ -n "$SHELL_CONFIG" ] && [ -f "$SHELL_CONFIG" ] && [[ "$SHELL_CONFIG" != *".zshrc" ]]; then
             echo -e "Sourcing $SHELL_CONFIG..."
             source "$SHELL_CONFIG"
         fi
-        # Ensure common local paths are in PATH for the rest of the script
         export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
     fi
 else
@@ -109,6 +107,7 @@ echo "3) Qwen   (via qwen-code)"
 echo "4) Ollama (local models)"
 echo "5) NeMo   (via openai-python for nemo-cli.py)"
 echo "6) DeepSeek (via deepseek-cli)"
+echo "7) ELC      (via easy-llm-cli for vLLM support)"
 echo "a) All of the above"
 echo "n) None (skip to Conductor setup)"
 echo ""
@@ -117,7 +116,7 @@ read -p "Enter your choices (e.g., 1,2,4 or 'a'): " LLM_CHOICE
 # Process choices
 LLMS_TO_INSTALL=""
 if [[ "$LLM_CHOICE" == "a" ]]; then
-    LLMS_TO_INSTALL="gemini claude qwen ollama nemo deepseek"
+    LLMS_TO_INSTALL="gemini claude qwen ollama nemo deepseek elc"
 elif [[ "$LLM_CHOICE" == "n" ]]; then
     LLMS_TO_INSTALL=""
 else
@@ -127,6 +126,7 @@ else
     [[ "$LLM_CHOICE" == *"4"* ]] && LLMS_TO_INSTALL+=" ollama"
     [[ "$LLM_CHOICE" == *"5"* ]] && LLMS_TO_INSTALL+=" nemo"
     [[ "$LLM_CHOICE" == *"6"* ]] && LLMS_TO_INSTALL+=" deepseek"
+    [[ "$LLM_CHOICE" == *"7"* ]] && LLMS_TO_INSTALL+=" elc"
 fi
 
 # Install Selected LLMs
@@ -190,6 +190,14 @@ for llm in $LLMS_TO_INSTALL; do
                 npm install -g run-deepseek-cli
             else
                 echo -e "  ✓ DeepSeek CLI is already installed."
+            fi
+            ;;
+        elc)
+            if ! has_command elc; then
+                echo -e "\n${BLUE}Installing easy-llm-cli...${NC}"
+                npm install -g easy-llm-cli
+            else
+                echo -e "  ✓ easy-llm-cli is already installed."
             fi
             ;;
     esac

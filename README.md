@@ -37,7 +37,7 @@ All agents communicate via [hcom](https://github.com/aannoo/hcom), a message-pas
 |--------|---------|
 | `./install.sh` | Master installer for dependencies and LLM CLIs. |
 | `./launch.sh` | Unified launcher for the Dashboard and Conductor. |
-| `scripts/*-hcom.sh` | Agent wrappers (Gemini, Qwen, vLLM, etc.) with standardized hcom identity and status tracking. |
+| `scripts/*-hcom.sh` | Agent wrappers (Gemini, Qwen, vLLM via **ELC**, etc.) with standardized hcom identity and status tracking. |
 | `scripts/conductor-workflow.sh` | Automated background manager for track progress and worker spawning. |
 | `scripts/atari-debate.sh` | Automates technical debates between active agents (including vLLM Atari expert). |
 
@@ -57,3 +57,6 @@ Agent wrappers (`*-hcom.sh`) now include a background pulse loop. This ensures t
 
 ### **Configuration Validation**
 If `hcom` warns about an invalid `config.toml`, check for literal `\n` characters or missing `=` signs. Run `hcom status` to verify your configuration is valid.
+
+### **vLLM Integration (via easy-llm-cli)**
+For high-performance local inference, the `vllm_dev` agent now uses **easy-llm-cli (ELC)**. This provides a Gemini-like terminal interface while connecting to your local vLLM OpenAI-compatible server.

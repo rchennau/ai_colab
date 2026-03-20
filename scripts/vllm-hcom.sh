@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# vLLM CLI Wrapper with hcom Integration
+# vLLM CLI Wrapper with hcom Integration (via easy-llm-cli)
 # Launches a remote vLLM agent specialized for Atari 800XL
 
 set -euo pipefail
@@ -8,7 +8,14 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/utils.sh"
 
-if has_command hcom; then
+# --- easy-llm-cli (ELC) Configuration ---
+export USE_CUSTOM_LLM=true
+export CUSTOM_LLM_PROVIDER="openai"
+export CUSTOM_LLM_ENDPOINT="${VLLM_BASE_URL:-http://192.168.0.193:8000/v1}"
+export CUSTOM_LLM_API_KEY="${VLLM_API_KEY:-no-key}"
+
+if has_command hcom;
+ then
     # Register with hcom to enable messaging
     # Use underscore instead of hyphen for hcom 0.7.5 compatibility
     AGENT_NAME="${HCOM_NAME:-vllm_$$}"
@@ -39,7 +46,8 @@ while [[ $# -gt 0 ]]; do
             ;;
         -m|--model)
             MODEL_SET=true
-            VALID_ARGS+=("$1" "$2")
+            VALID_ARGS+=("--model" "$2")
+            export CUSTOM_LLM_MODEL_NAME="$2"
             shift 2
             ;;
         *)
@@ -50,14 +58,9 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ "$MODEL_SET" = false ]; then
-    VALID_ARGS+=("-m" "$DEFAULT_MODEL")
+    export CUSTOM_LLM_MODEL_NAME="$DEFAULT_MODEL"
+    VALID_ARGS+=("--model" "$DEFAULT_MODEL")
 fi
 
-# Launch vllm-cli.py with valid arguments
-# We avoid 'exec' to keep the heartbeat process alive
-if [[ -f "$SCRIPT_DIR/vllm-cli.py" ]]; then
-    python3 "$SCRIPT_DIR/vllm-cli.py" "${VALID_ARGS[@]}"
-else
-    echo "Error: vllm-cli.py not found in $SCRIPT_DIR"
-    exit 1
-fi
+# Launch elc with valid arguments
+elc "${VALID_ARGS[@]}"
