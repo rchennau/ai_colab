@@ -68,3 +68,31 @@ detect_project_root() {
 get_hcom_db_path() {
     echo "${HCOM_DB_PATH:-$HOME/.hcom/hcom.db}"
 }
+
+# hcom Agent Helpers
+
+register_hcom() {
+    local tool_name="$1"
+    if has_command hcom; then
+        # Use underscore instead of hyphen for hcom 0.7.5 compatibility
+        local name="${HCOM_NAME:-${tool_name}_\$\$}"
+        export HCOM_NAME="$name"
+        
+        hcom start --as "$HCOM_NAME" > /dev/null 2>&1 || true
+        hcom listen --name "$HCOM_NAME" --timeout 1 > /dev/null 2>&1 || true
+        return 0
+    fi
+    return 1
+}
+
+start_heartbeat() {
+    if [ -n "${HCOM_NAME:-}" ]; then
+        (while true; do 
+            hcom listen --name "$HCOM_NAME" --timeout 60 > /dev/null 2>&1 || sleep 60
+        done) &
+        local pid=$!
+        trap "kill $pid 2>/dev/null || true" EXIT
+        return 0
+    fi
+    return 1
+}
