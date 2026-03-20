@@ -37,7 +37,8 @@ All agents communicate via [hcom](https://github.com/aannoo/hcom), a message-pas
 |--------|---------|
 | `./install.sh` | Master installer for dependencies and LLM CLIs. |
 | `./launch.sh` | Unified launcher for the Dashboard and Conductor. |
-| `scripts/*-hcom.sh` | Agent wrappers (Gemini, Qwen, vLLM via **ELC**, etc.) with standardized hcom identity and status tracking. |
+| `scripts/agent-wrapper.sh` | The unified core for registration, heartbeats, and roles. |
+| `scripts/*-hcom.sh` | Lightweight wrappers (Gemini, Qwen, vLLM via **ELC**, etc.) with standardized hcom identity and status tracking. |
 | `scripts/conductor-workflow.sh` | Automated background manager for track progress and worker spawning. |
 | `scripts/atari-debate.sh` | Automates technical debates between active agents (including vLLM Atari expert). |
 
@@ -76,3 +77,10 @@ All agents are now pre-configured with the **atari-dev-agent** MCP server. This 
 - Knowledge base searching
 - Interrupt safety checking
 - Emulator screen analysis
+
+### **How to use MCP Tools**
+All agents can now call specialized Atari tools. You can manually trigger them in chat or let the agents use them autonomously:
+- `validate_6502_code(code)`: Checks for common errors (missing CLC/SEC, etc).
+- `count_cycles(code)`: Exact cycle timing for scanline optimization.
+- `search_kb(query)`: Search the Atari-LX knowledge base.
+- `analyze_atari_screen(image_path)`: Visual debugging via OCR/Vision.
