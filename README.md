@@ -60,3 +60,6 @@ If `hcom` warns about an invalid `config.toml`, check for literal `\n` character
 
 ### **vLLM Integration (via easy-llm-cli)**
 For high-performance local inference, the `vllm_dev` agent now uses **easy-llm-cli (ELC)**. This provides a Gemini-like terminal interface while connecting to your local vLLM OpenAI-compatible server.
+
+### **Consolidated Agent Architecture**
+All agents now use a unified `scripts/agent-wrapper.sh` to handle registration, heartbeats, and model selection. This ensures consistent behavior across all providers (Gemini, Qwen, Claude, DeepSeek, NeMo, and ELC/vLLM) and simplifies the codebase by moving common logic into `utils.sh`.
