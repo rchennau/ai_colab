@@ -63,3 +63,16 @@ For high-performance local inference, the `vllm_dev` agent now uses **easy-llm-c
 
 ### **Consolidated Agent Architecture**
 All agents now use a unified `scripts/agent-wrapper.sh` to handle registration, heartbeats, and model selection. This ensures consistent behavior across all providers (Gemini, Qwen, Claude, DeepSeek, NeMo, and ELC/vLLM) and simplifies the codebase by moving common logic into `utils.sh`.
+
+### **Role-Based Multi-Agent Intelligence**
+Agents now have specialized roles and system prompts to optimize their contributions to the Atari-LX project:
+- **Gemini**: Architect & Orchestrator (Project Lead)
+- **Qwen**: Assembly & Hardware Expert (Timing-critical code)
+- **DeepSeek**: Logic & Optimization Specialist (Algorithms & C optimization)
+
+### **Atari-Dev-Agent MCP**
+All agents are now pre-configured with the **atari-dev-agent** MCP server. This provides specialized tools for:
+- 6502 code validation and cycle counting
+- Knowledge base searching
+- Interrupt safety checking
+- Emulator screen analysis

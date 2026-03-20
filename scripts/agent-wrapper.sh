@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Generic Agent Wrapper
-# Consolidates hcom registration and heartbeat
+# Consolidates hcom registration, heartbeat, and atari_agent MCP
 
 set -euo pipefail
 
@@ -11,22 +11,49 @@ source "$SCRIPT_DIR/utils.sh"
 TOOL="$1"
 shift
 
-# Default models
+# 1. Configuration & Role Determination
 case "$TOOL" in
-    gemini)   DEFAULT_MODEL="gemini-3.0" ;;
-    qwen)     DEFAULT_MODEL="qwen3-next-80b-a3b-instruct" ;;
-    claude)   DEFAULT_MODEL="claude-3-5-sonnet" ;;
-    deepseek) DEFAULT_MODEL="deepseek-v3" ;;
-    nemo)     DEFAULT_MODEL="nvidia/llama-3.1-nemotron-70b-instruct" ;;
-    vllm)     DEFAULT_MODEL="DeepSeek-Code" ;;
-    *)        DEFAULT_MODEL="" ;;
+    gemini)   
+        DEFAULT_MODEL="gemini-3.0" 
+        ROLE_PROMPT="$SCRIPT_DIR/../system-prompts/gemini.md"
+        ;;
+    qwen)     
+        DEFAULT_MODEL="qwen3-next-80b-a3b-instruct" 
+        ROLE_PROMPT="$SCRIPT_DIR/../system-prompts/qwen.md"
+        ;;
+    deepseek) 
+        DEFAULT_MODEL="deepseek-v3" 
+        ROLE_PROMPT="$SCRIPT_DIR/../system-prompts/deepseek.md"
+        ;;
+    vllm)     
+        DEFAULT_MODEL="DeepSeek-Code" 
+        ROLE_PROMPT="$SCRIPT_DIR/../system-prompts/deepseek.md"
+        ;;
+    *)        
+        DEFAULT_MODEL="" 
+        ROLE_PROMPT=""
+        ;;
 esac
 
-# Register with hcom
+# 2. Register with hcom
 register_hcom "$TOOL"
 start_heartbeat
 
-# vLLM specific config for ELC
+# 3. atari_agent MCP Configuration
+# Point to the master branch version in Atari-LX project
+PROJECT_ROOT=$(detect_project_root)
+ATARI_LX_DIR="$(dirname "$PROJECT_ROOT")/Atari-LX"
+ATARI_AGENT_DIR="$ATARI_LX_DIR/atari_agent"
+
+if [ -d "$ATARI_AGENT_DIR" ]; then
+    # Inject MCP server into environment/args if supported by the tool
+    # For gemini-cli and elc, we use the --mcp-server flag pattern if available,
+    # but most often they read from settings.json. 
+    # Here we ensure the PYTHONPATH includes it for any python-based tools.
+    export PYTHONPATH="$ATARI_AGENT_DIR:${PYTHONPATH:-}"
+fi
+
+# 4. vLLM specific config for ELC
 if [ "$TOOL" == "vllm" ]; then
     export USE_CUSTOM_LLM=true
     export CUSTOM_LLM_PROVIDER="openai"
@@ -34,9 +61,10 @@ if [ "$TOOL" == "vllm" ]; then
     export CUSTOM_LLM_API_KEY="${VLLM_API_KEY:-no-key}"
 fi
 
-# Parse arguments
+# 5. Argument Parsing
 VALID_ARGS=()
 MODEL_SET=false
+SYSTEM_PROMPT_SET=false
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -47,24 +75,28 @@ while [[ $# -gt 0 ]]; do
             [ "$TOOL" == "vllm" ] && export CUSTOM_LLM_MODEL_NAME="$2"
             shift 2
             ;;
+        --system-prompt)
+            SYSTEM_PROMPT_SET=true
+            VALID_ARGS+=("--system-prompt" "$2")
+            shift 2
+            ;;
         *) VALID_ARGS+=("$1") ; shift ;;
     esac
 done
 
+# Set default model if not specified
 if [ "$MODEL_SET" = false ] && [ -n "$DEFAULT_MODEL" ]; then
     VALID_ARGS+=("--model" "$DEFAULT_MODEL")
     [ "$TOOL" == "vllm" ] && export CUSTOM_LLM_MODEL_NAME="$DEFAULT_MODEL"
 fi
 
-# Execution
+# Inject Role-Specific System Prompt if not explicitly provided
+if [ "$SYSTEM_PROMPT_SET" = false ] && [ -f "$ROLE_PROMPT" ]; then
+    VALID_ARGS+=("--system-prompt" "$(cat "$ROLE_PROMPT")")
+fi
+
+# 6. Execution
 case "$TOOL" in
-    vllm) elc "${VALID_ARGS[@]}" ;;
-    nemo) 
-        if [[ -f "$SCRIPT_DIR/nemo-cli.py" ]]; then
-            python3 "$SCRIPT_DIR/nemo-cli.py" "${VALID_ARGS[@]}"
-        else
-            exec python3 "$HOME/.hcom/scripts/nemo-cli.py" "${VALID_ARGS[@]}"
-        fi
-        ;;
-    *) "$TOOL" "${VALID_ARGS[@]}" ;;
+    vllm) exec elc "${VALID_ARGS[@]}" ;;
+    *)    exec "$TOOL" "${VALID_ARGS[@]}" ;;
 esac

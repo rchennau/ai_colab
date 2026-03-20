@@ -14,21 +14,7 @@ args = "-m gemini-3.0"
 [launch.qwen]
 args = "-m qwen3-next-80b-a3b-instruct"
 
-[launch.codex]
-args = ""
-sandbox_mode = "workspace"
-system_prompt = ""
-
-[launch.opencode]
-args = ""
-
-[launch.vllm]
-args = ""
-
-[launch.deepseek]
-args = ""
-
-[launch.claude]
+[launch.elc]
 args = ""
 
 [relay]
@@ -42,19 +28,12 @@ timeout = 86400
 auto_approve = true
 name_export = ""
 
-[gemini]
-# hcom configuration
-# Help: hcom config --help
-# Docs: hcom run docs
-
-
 # Atari Development Agent - MCP Server Configuration
 
 [mcpServers.atari-dev-agent]
 command = "python3"
 args = ["-m", "atari_agent.server"]
-cwd = "${HOME}/Atari-LX"
+cwd = "/Users/rchennault/Library/Mobile Documents/com~apple~CloudDocs/GitHub/Atari-LX/atari_agent"
 
 [mcpServers.atari-dev-agent.env]
-PYTHONPATH = "${HOME}/Atari-LX"
-GOOGLE_API_KEY = "${GOOGLE_API_KEY:-}"
+PYTHONPATH = "/Users/rchennault/Library/Mobile Documents/com~apple~CloudDocs/GitHub/Atari-LX/atari_agent"
