@@ -98,8 +98,8 @@ export HCOM_AGENT_NAME="$AGENT_NAME"
 export HCOM_PROJECT_DIR="$PROJECT_DIR"
 export HCOM_THREAD_NAME="$THREAD_NAME"
 
-hcom start --name "$AGENT_NAME" 2>/dev/null || true
-hcom events --subscribe "$THREAD_NAME" 2>/dev/null || true
+hcom start --as "$AGENT_NAME" 2>/dev/null || true
+hcom events sub --thread "$THREAD_NAME" 2>/dev/null || true
 
 # Create context
 CONTEXT_FILE=$(mktemp /tmp/conductor-context-XXXXXX)

@@ -16,7 +16,7 @@ if ! has_command hcom; then
 fi
 
 # Agent registration
-AGENT_NAME="conductor-$(hostname)-$$"
+AGENT_NAME="conductor_$(hostname | tr "[:upper:]" "[:lower:]" | tr "." "_")_$$"
 hcom start --as "$AGENT_NAME" > /dev/null 2>&1 || true
 export HCOM_NAME="$AGENT_NAME"
 

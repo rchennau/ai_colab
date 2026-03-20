@@ -114,7 +114,7 @@ create_dashboard() {
     for i in "${!agents[@]}"; do
         local agent="${agents[$i]}"
         local pane_idx=$((i + 1))
-        local agent_name="${agent}-dev"
+        local agent_name="${agent}_dev"
         local cmd=""
 
         case $agent in

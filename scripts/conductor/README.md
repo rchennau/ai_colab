@@ -81,13 +81,13 @@ Starting from the current directory and searching parent directories.
 
 ```bash
 # Send message
-hcom send @conductor-gemini -- Status update?
+hcom send @conductor_gemini -- Status update?
 
 # View events
 hcom events | tail -20
 
 # View transcript
-hcom transcript conductor-gemini
+hcom transcript conductor_gemini
 ```
 
 ## Architecture
@@ -111,7 +111,7 @@ hcom transcript conductor-gemini
 
 | Variable | Purpose | Default |
 |----------|---------|---------|
-| `HCOM_AGENT_NAME` | Agent name | `conductor-<model>` |
+| `HCOM_AGENT_NAME` | Agent name | `conductor_<model>` |
 | `HCOM_PROJECT_DIR` | Project directory | Auto-detected |
 | `HCOM_THREAD_NAME` | hcom thread | `plan-sync` |
 

@@ -6,7 +6,7 @@ set -euo pipefail
 
 # Configuration
 SPACE_NAME="Atari-LX Multi-Agent"
-HCOM_NAME="messenger-bridge"
+HCOM_NAME="messenger_bridge"
 
 # Register with hcom
 hcom start --as "$HCOM_NAME" > /dev/null 2>&1 || true

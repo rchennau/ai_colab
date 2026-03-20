@@ -10,18 +10,19 @@ source "$SCRIPT_DIR/utils.sh"
 
 if has_command hcom; then
     # Register with hcom to enable messaging
-    AGENT_NAME="${HCOM_NAME:-vllm-$$}"
+    # Use underscore instead of hyphen for hcom 0.7.5 compatibility
+    AGENT_NAME="${HCOM_NAME:-vllm_$$}"
     export HCOM_NAME="$AGENT_NAME"
+    
     hcom start --as "$HCOM_NAME" > /dev/null 2>&1 || true
-
-    # Ensure relay is running if more than one agent is active
-    ACTIVE_AGENTS=$(hcom list --names | wc -w)
-    if [ "$ACTIVE_AGENTS" -gt 1 ]; then
-        hcom relay daemon start > /dev/null 2>&1 || true
-    fi
-
-    # Pulse session to transition from "launching" to "listening"
     hcom listen --name "$HCOM_NAME" --timeout 1 > /dev/null 2>&1 || true
+    
+    # Start background heartbeat to prevent stale status
+    (while true; do 
+        hcom listen --name "$HCOM_NAME" --timeout 60 > /dev/null 2>&1 || sleep 60
+    done) &
+    HB_PID=$!
+    trap "kill $HB_PID 2>/dev/null || true" EXIT
 fi
 
 # Default model (vLLM expects the model name it was launched with)
@@ -53,9 +54,9 @@ if [ "$MODEL_SET" = false ]; then
 fi
 
 # Launch vllm-cli.py with valid arguments
-# Prefer local version if it exists
+# We avoid 'exec' to keep the heartbeat process alive
 if [[ -f "$SCRIPT_DIR/vllm-cli.py" ]]; then
-    exec python3 "$SCRIPT_DIR/vllm-cli.py" "${VALID_ARGS[@]}"
+    python3 "$SCRIPT_DIR/vllm-cli.py" "${VALID_ARGS[@]}"
 else
     echo "Error: vllm-cli.py not found in $SCRIPT_DIR"
     exit 1

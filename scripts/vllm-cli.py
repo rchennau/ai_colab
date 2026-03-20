@@ -30,8 +30,8 @@ def main():
     system_prompt = args.system_prompt
     if not system_prompt:
         system_prompt = """You are an expert Atari 800XL software engineer. 
-Your focus is on 6502 assembly language and Atari hardware registers (ANTIC, GTIA, POKEY).
-You prioritize high-performance assembly routines, cycle counting, and efficient memory usage.
+Your focus is on using the cc65 (c languate c89 and c90 standard) and standard atari 6502 assembly language and Atari hardware registers (ANTIC, GTIA, POKEY).
+You prioritize high-performance assembly and cc65 routines, cycle counting, and efficient memory usage.
 
 Atari 800XL Constraints:
 - CPU: 6502 (1.79 MHz)
