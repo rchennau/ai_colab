@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -x
 # Automated hcom Conductor Agent Workflow (One-shot)
 # Monitors project tracks, updates status, and ensures alignment.
 
@@ -29,8 +30,8 @@ echo "Conductor Agent [$AGENT_NAME] initialized. Running one-shot update for $TR
 
 if [[ -f "$TRACKS_FILE" ]]; then
     # Calculate progress
-    TOTAL=$(grep -c "^\- \[.\] \*\*Track:" "$TRACKS_FILE" || echo "0")
-    COMPLETE=$(grep -c "^\- \[x\] \*\*Track:" "$TRACKS_FILE" || echo "0")
+    TOTAL=$(grep -c "^\- \[.\] \*\*Track:" "$TRACKS_FILE" || true)
+    COMPLETE=$(grep -c "^\- \[x\] \*\*Track:" "$TRACKS_FILE" || true)
     
     if [[ $TOTAL -gt 0 ]]; then
         PERCENT=$(( (COMPLETE * 100) / TOTAL ))
@@ -48,24 +49,27 @@ if [[ -f "$TRACKS_FILE" ]]; then
 
     # --- Automated Tasking Section ---
     MAX_WORKERS=$("$SCRIPT_DIR/hcom-kv" get conductor_max_workers || echo "1")
-    [ -z "$MAX_WORKERS" ] && MAX_WORKERS=1
+    [[ -z "$MAX_WORKERS" ]] && MAX_WORKERS=1
     
-    CURRENT_WORKERS=$(hcom list --names | grep -c "worker-" || echo "0")
+    # Filter out non-name lines and count worker agents
+    CURRENT_WORKERS=$(hcom list --names 2>/dev/null | grep -v "Update available" | grep -v "Background PIDs" | grep -c "worker-" || echo "0")
+    # Clean up any potential multi-line or whitespace issues
+    CURRENT_WORKERS=$(echo "$CURRENT_WORKERS" | tail -n 1 | xargs)
 
-    if [ "$CURRENT_WORKERS" -lt "$MAX_WORKERS" ] && [ -n "$NEXT_TRACK" ]; then
+    if (( CURRENT_WORKERS < MAX_WORKERS )) && [[ -n "$NEXT_TRACK" ]]; then
         # Convert track name to a slug
         TRACK_SLUG=$(echo "$NEXT_TRACK" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g;s/--\+/-/g;s/^-//;s/-$//')
         
         # Check if this track is already assigned and if that agent is still alive
         ASSIGNED_AGENT=$("$SCRIPT_DIR/hcom-kv" get "track_assigned_$TRACK_SLUG" || true)
         AGENT_ALIVE=false
-        if [ -n "$ASSIGNED_AGENT" ]; then
-            if hcom list --names | grep -q "\b$ASSIGNED_AGENT\b"; then
+        if [[ -n "$ASSIGNED_AGENT" ]]; then
+            if hcom list --names 2>/dev/null | grep -q "\b$ASSIGNED_AGENT\b"; then
                 AGENT_ALIVE=true
             fi
         fi
 
-        if [ "$AGENT_ALIVE" = false ]; then
+        if [[ "$AGENT_ALIVE" == "false" ]]; then
             echo "[$(date +%T)] Assigning new worker for track: $NEXT_TRACK"
             
             # Spawn a headless worker
@@ -74,7 +78,7 @@ if [[ -f "$TRACKS_FILE" ]]; then
             # Extract agent name
             NEW_AGENT=$(echo "$SPAWN_OUT" | grep "^Names: " | awk '{print $2}' || true)
 
-            if [ -n "$NEW_AGENT" ]; then
+            if [[ -n "$NEW_AGENT" ]]; then
                 echo "[$(date +%T)] Spawned agent $NEW_AGENT for $TRACK_SLUG"
                 "$SCRIPT_DIR/hcom-kv" set "track_assigned_$TRACK_SLUG" "$NEW_AGENT"
                 "$SCRIPT_DIR/hcom-kv" set "agent_task_$NEW_AGENT" "$NEXT_TRACK"
@@ -88,7 +92,10 @@ if [[ -f "$TRACKS_FILE" ]]; then
     # --- End Automated Tasking ---
 
     # Broadcast status update
-    hcom send @all --intent inform --thread "plan-sync" -- "Status: $COMPLETE/$TOTAL tracks complete ($PERCENT%). Next up: ${NEXT_TRACK:-All complete}."
+    RECIPIENTS=$(hcom list --names 2>/dev/null | grep -v "Update available" | grep -v "Background PIDs" | grep -v "$AGENT_NAME" | sed 's/^/@/' | tr '\n' ' ')
+    if [[ -n "$RECIPIENTS" ]]; then
+        hcom send $RECIPIENTS --name "$AGENT_NAME" --intent inform --thread "plan-sync" -- "Status: $COMPLETE/$TOTAL tracks complete ($PERCENT%). Next up: ${NEXT_TRACK:-All complete}."
+    fi
     
     echo "[$(date +%T)] Status updated: $PERCENT%. Next: $NEXT_TRACK"
 else
