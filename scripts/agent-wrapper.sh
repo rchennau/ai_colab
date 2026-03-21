@@ -98,5 +98,13 @@ fi
 # 6. Execution
 case "$TOOL" in
     vllm) exec elc "${VALID_ARGS[@]}" ;;
+    nemo) exec python3 "$SCRIPT_DIR/nemo-cli.py" "${VALID_ARGS[@]}" ;;
+    deepseek) 
+        if has_command deepseek-cli; then
+            exec deepseek-cli "${VALID_ARGS[@]}"
+        else
+            exec deepseek "${VALID_ARGS[@]}"
+        fi
+        ;;
     *)    exec "$TOOL" "${VALID_ARGS[@]}" ;;
 esac
