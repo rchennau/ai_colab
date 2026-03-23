@@ -1,9 +1,9 @@
 # Track blackboard_tasking_20260322: Implementation Plan
 
 ## Phase 1: Foundation & Tooling
-- [ ] Task: Integrate `hcom-kv` library into Conductor scripts.
-    - [ ] Create wrapper functions `blackboard_get` and `blackboard_set` in `scripts/utils.sh`.
-    - [ ] Add basic error handling for `hcom-kv` failures.
+- [x] Task: Integrate `hcom-kv` library into Conductor scripts. 2f1b43c
+    - [x] Create wrapper functions `blackboard_get` and `blackboard_set` in `scripts/utils.sh`.
+    - [x] Add basic error handling for `hcom-kv` failures.
 - [ ] Task: Create a dedicated test suite for blackboard operations.
     - [ ] Write unit tests for the new wrapper functions.
     - [ ] Test success/failure paths and performance impact.
