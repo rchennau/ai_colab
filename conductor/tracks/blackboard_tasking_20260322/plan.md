@@ -4,9 +4,9 @@
 - [x] Task: Integrate `hcom-kv` library into Conductor scripts. 2f1b43c
     - [x] Create wrapper functions `blackboard_get` and `blackboard_set` in `scripts/utils.sh`.
     - [x] Add basic error handling for `hcom-kv` failures.
-- [ ] Task: Create a dedicated test suite for blackboard operations.
-    - [ ] Write unit tests for the new wrapper functions.
-    - [ ] Test success/failure paths and performance impact.
+- [x] Task: Create a dedicated test suite for blackboard operations. 5860db9
+    - [x] Write unit tests for the new wrapper functions.
+    - [x] Test success/failure paths and performance impact.
 - [ ] Task: Conductor - User Manual Verification 'Foundation & Tooling' (Protocol in workflow.md)
 
 ## Phase 2: Workflow Automation
