@@ -30,6 +30,7 @@ All agents communicate via [hcom](https://github.com/aannoo/hcom), a message-pas
 *   **Inter-agent messaging:** Agents can "talk" to each other, hand off tasks, and request reviews.
 *   **Shared Blackboard:** A lightweight KV store (`hcom-kv`) for sharing state (e.g., current task, progress percentages).
 *   **Unified TUI:** Monitor all agents and their messages in a single dashboard.
+*   **Blackboard Automation:** The Conductor script (`conductor-workflow.sh`) automatically syncs `tracks.md` when agents complete tasks on the blackboard.
 
 ## 🛠️ Key Scripts
 
