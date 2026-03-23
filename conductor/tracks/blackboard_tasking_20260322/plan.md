@@ -22,4 +22,4 @@
 - [x] Task: Update the Dashboard TUI to display current blackboard status. c4ff6cb
     - [x] Add "Active Task" and "Overall Progress" fields to the dashboard UI.
     - [x] Integrate with the `hcom` TUI refresh logic.
-- [ ] Task: Conductor - User Manual Verification 'Dashboard Integration' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Dashboard Integration' (Protocol in workflow.md) [checkpoint: 10c7781]
