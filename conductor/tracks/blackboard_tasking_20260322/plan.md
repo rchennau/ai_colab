@@ -16,7 +16,7 @@
 - [x] Task: Implement auto-completion logic for tracks in `tracks.md`. a34b53d
     - [x] Detect task completion on the blackboard.
     - [x] Update corresponding Markdown status to `[x]` with commit SHA.
-- [ ] Task: Conductor - User Manual Verification 'Workflow Automation' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Workflow Automation' (Protocol in workflow.md) [checkpoint: 77c7971]
 
 ## Phase 3: Dashboard Integration
 - [ ] Task: Update the Dashboard TUI to display current blackboard status.
