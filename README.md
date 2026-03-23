@@ -81,9 +81,14 @@ LLM CLI tools (qwen-code, gemini-cli, etc.) may exit when idle or waiting for in
 If `hcom` warns about an invalid `config.toml`, check for literal `\n` characters or missing `=` signs. Run `hcom status` to verify your configuration is valid.
 
 ### **Dashboard Pane Titles**
-Agent panes in the tmux dashboard display capitalized names (e.g., `Gemini`, `Qwen`, `Vllm`). If pane titles appear incorrect:
-- Ensure `allow-rename off` is set in the tmux session
-- Titles are applied after a 1-second delay to prevent shell overwriting
+The tmux dashboard uses a dual-labeling system to ensure agent names remain visible even when their CLI tools update the pane title with status messages:
+- **Persistent Label (`@agent_name`):** Each pane has a persistent, capitalized name (e.g., `[Gemini]`, `[Qwen]`) stored in a custom tmux option.
+- **Dynamic Status (`pane_title`):** The dynamic title from the agent's CLI (e.g., `✦ Working…`) is displayed alongside the persistent label.
+- **Improved UI:** Borders use a dark, subtle color scheme with an `[Atari-LX]` cap on the right for a clean, professional look.
+
+To manually re-apply or check these labels:
+- `tmux set-option -p @agent_name "NAME"` to set a persistent label.
+- `tmux show-options -p` to verify the current pane's settings.
 
 ### **vLLM Integration (via easy-llm-cli)**
 For high-performance local inference, the `vllm_dev` agent now uses **easy-llm-cli (ELC)**. This provides a Gemini-like terminal interface while connecting to your local vLLM OpenAI-compatible server.

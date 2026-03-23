@@ -41,7 +41,7 @@ show_status() {
         print_status "Dashboard session is running"
         echo ""
         echo "Panes:"
-        tmux list-panes -t $SESSION -F "  #{pane_index}: #{pane_title} - #{pane_current_command}"
+        tmux list-panes -t $SESSION -F "  #{pane_index}: [#{@agent_name}] #{pane_title} - #{pane_current_command}"
         echo ""
         echo "To attach: ~/.hcom/scripts/dashboard-launch.sh"
         echo "To stop:   ~/.hcom/scripts/dashboard-help.sh stop"
