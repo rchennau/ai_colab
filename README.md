@@ -54,15 +54,23 @@ Part of the hcom utilities ecosystem.
 Always use **lowercase letters, numbers, and underscores** for agent names. Hyphens and uppercase characters are restricted and may cause identity resolution failures (e.g., `gemini_dev` instead of `gemini-dev`). 
 
 ### **Agent Pulse (Heartbeats)**
-Agent wrappers (`*-hcom.sh`) include a background pulse loop that calls `hcom listen` every 10 seconds. This ensures that even idle or interactive agents (like Qwen or vLLM) maintain a stable `listening` status in the TUI and are not marked as `exit:timeout`.
+Agent wrappers (`*-hcom.sh`) include a background pulse loop that calls `hcom listen` every 30 seconds. This ensures that even idle or interactive agents maintain a stable `listening` status in the TUI and are not marked as `exit:timeout`.
 
 **Technical Details:**
-- Heartbeat timeout: 10 seconds (prevents timeout status)
-- Fallback sleep: 5 seconds (ensures rapid reconnection)
-- Location: `scripts/agent-wrapper.sh` and `scripts/utils.sh`
+- Heartbeat timeout: 30 seconds (prevents timeout status)
+- Fallback sleep: 10 seconds (ensures rapid reconnection)
+- Location: `scripts/agent-wrapper.sh`
+- Registration: `scripts/utils.sh` (`register_hcom()` function)
+
+**Note:** The heartbeat starts 0.5 seconds after registration to prevent race conditions during hcom name registration.
 
 ### **Configuration Validation**
 If `hcom` warns about an invalid `config.toml`, check for literal `\n` characters or missing `=` signs. Run `hcom status` to verify your configuration is valid.
+
+### **Dashboard Pane Titles**
+Agent panes in the tmux dashboard display capitalized names (e.g., `Gemini`, `Qwen`, `Vllm`). If pane titles appear incorrect:
+- Ensure `allow-rename off` is set in the tmux session
+- Titles are applied after a 1-second delay to prevent shell overwriting
 
 ### **vLLM Integration (via easy-llm-cli)**
 For high-performance local inference, the `vllm_dev` agent now uses **easy-llm-cli (ELC)**. This provides a Gemini-like terminal interface while connecting to your local vLLM OpenAI-compatible server.

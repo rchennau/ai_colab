@@ -71,6 +71,8 @@ create_dashboard() {
     tmux new-session -d -s $SESSION -n "dashboard" "hcom"
     tmux set-option -g mouse on
     tmux set-option -g pane-border-status top
+    # Prevent tmux from auto-renaming panes based on running command
+    tmux set-option -g allow-rename off
 
     # Optional: Start Conductor workflow in background
     if [ "${WITH_CONDUCTOR:-false}" == "true" ]; then
@@ -144,7 +146,13 @@ create_dashboard() {
         fi
 
         tmux send-keys -t $SESSION:0.$pane_idx "$env_vars && $cmd" C-m
-        tmux select-pane -t $SESSION:0.$pane_idx -T "$agent-cli"
+        
+        # Set pane title with capitalized agent name
+        local title_case_agent="$(tr '[:lower:]' '[:upper:]' <<< ${agent:0:1})${agent:1}"
+        tmux select-pane -t $SESSION:0.$pane_idx -T "$title_case_agent"
+        
+        # Re-apply title after brief delay to prevent shell from overwriting it
+        (sleep 1 && tmux select-pane -t $SESSION:0.$pane_idx -T "$title_case_agent") &
     done
 
     # Step 6: Select hcom pane

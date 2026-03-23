@@ -62,14 +62,18 @@ if [ -z "$CMD" ] && [ "$TOOL" != "nemo" ]; then
 fi
 
 # 2. Register with hcom
+# This performs initial registration and a single listen call
 register_hcom "$TOOL"
 
 # Background Heartbeat (Local implementation to allow unified cleanup)
-# Uses 10-second timeout to prevent "exit:timeout" status in hcom TUI
+# Uses 30-second timeout to prevent "exit:timeout" status in hcom TUI
+# Only start heartbeat AFTER registration is complete to avoid race condition
 HEARTBEAT_PID=""
 if [ -n "${HCOM_NAME:-}" ]; then
+    # Small delay to ensure registration completes before heartbeat starts
+    sleep 0.5
     (while true; do
-        hcom listen --name "$HCOM_NAME" --timeout 10 > /dev/null 2>&1 || sleep 5
+        hcom listen --name "$HCOM_NAME" --timeout 30 > /dev/null 2>&1 || sleep 10
     done) &
     HEARTBEAT_PID=$!
 fi
