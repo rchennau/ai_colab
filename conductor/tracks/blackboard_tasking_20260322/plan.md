@@ -19,7 +19,7 @@
 - [x] Task: Conductor - User Manual Verification 'Workflow Automation' (Protocol in workflow.md) [checkpoint: 77c7971]
 
 ## Phase 3: Dashboard Integration
-- [ ] Task: Update the Dashboard TUI to display current blackboard status.
-    - [ ] Add "Active Task" and "Overall Progress" fields to the dashboard UI.
-    - [ ] Integrate with the `hcom` TUI refresh logic.
+- [x] Task: Update the Dashboard TUI to display current blackboard status. c4ff6cb
+    - [x] Add "Active Task" and "Overall Progress" fields to the dashboard UI.
+    - [x] Integrate with the `hcom` TUI refresh logic.
 - [ ] Task: Conductor - User Manual Verification 'Dashboard Integration' (Protocol in workflow.md)
