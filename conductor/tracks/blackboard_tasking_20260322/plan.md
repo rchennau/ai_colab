@@ -13,9 +13,9 @@
 - [x] Task: Update `scripts/conductor-workflow.sh` to monitor blackboard state. a34b53d
     - [x] Implement a polling loop (e.g., every 10-30 seconds).
     - [x] Sync blackboard task status with `conductor/tracks.md`.
-- [ ] Task: Implement auto-completion logic for tracks in `tracks.md`.
-    - [ ] Detect task completion on the blackboard.
-    - [ ] Update corresponding Markdown status to `[x]` with commit SHA.
+- [x] Task: Implement auto-completion logic for tracks in `tracks.md`. a34b53d
+    - [x] Detect task completion on the blackboard.
+    - [x] Update corresponding Markdown status to `[x]` with commit SHA.
 - [ ] Task: Conductor - User Manual Verification 'Workflow Automation' (Protocol in workflow.md)
 
 ## Phase 3: Dashboard Integration
