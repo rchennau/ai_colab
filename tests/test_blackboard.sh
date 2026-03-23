@@ -45,5 +45,24 @@ else
     exit 1
 fi
 
+# Performance / Stress Test
+echo "Testing performance (100 sequential writes)..."
+start_time=$(date +%s)
+for i in {1..100}; do
+    blackboard_set "key_$i" "value_$i"
+done
+end_time=$(date +%s)
+duration=$((end_time - start_time))
+echo "100 writes completed in ${duration}s."
+
+# Verify last write
+RESULT=$(blackboard_get "key_100")
+if [[ "$RESULT" == "value_100" ]]; then
+    echo "SUCCESS: Performance test verification passed."
+else
+    echo "FAILURE: Performance test verification failed."
+    exit 1
+fi
+
 echo "All blackboard tests passed!"
 rm -f "$HCOM_DB_PATH"
