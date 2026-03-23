@@ -81,6 +81,15 @@ sync_blackboard_status() {
         blackboard_set "active_track" "${next_track:-None}"
         blackboard_set "conductor_last_run" "$(date '+%Y-%m-%dT%H:%M:%S%z')"
         
+        # Update TMUX status bar and pane title if in a session
+        if [[ -n "${TMUX:-}" ]]; then
+            local status_text="[Active: ${next_track:-None} | Progress: $percent%]"
+            # Status right for global view
+            tmux set-option -g status-right "$status_text" > /dev/null 2>&1 || true
+            # Update hcom pane title for focus
+            tmux select-pane -t "hcom-dashboard:0.0" -T "hcom TUI $status_text" > /dev/null 2>&1 || true
+        fi
+        
         # Sync tracks back from blackboard
         update_tracks_from_blackboard "$tracks_file"
         
