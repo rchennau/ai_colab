@@ -32,6 +32,9 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 - [x] **Track: Atari-LX Hardware Context**
   - **Assigned:** @qwen-dev
 
+- [ ] **Track: Implement Blackboard-Driven Conductor Tasking**
+  *Link: [./tracks/blackboard_tasking_20260322/](./tracks/blackboard_tasking_20260322/)*
+
 ---
 
 ## 🛠️ Infrastructure & Maintenance
