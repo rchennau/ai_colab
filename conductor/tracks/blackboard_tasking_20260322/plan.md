@@ -7,7 +7,7 @@
 - [x] Task: Create a dedicated test suite for blackboard operations. 5860db9
     - [x] Write unit tests for the new wrapper functions.
     - [x] Test success/failure paths and performance impact.
-- [ ] Task: Conductor - User Manual Verification 'Foundation & Tooling' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Foundation & Tooling' (Protocol in workflow.md) [checkpoint: 954df87]
 
 ## Phase 2: Workflow Automation
 - [ ] Task: Update `scripts/conductor-workflow.sh` to monitor blackboard state.
