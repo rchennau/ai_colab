@@ -55,15 +55,27 @@ Part of the hcom utilities ecosystem.
 Always use **lowercase letters, numbers, and underscores** for agent names. Hyphens and uppercase characters are restricted and may cause identity resolution failures (e.g., `gemini_dev` instead of `gemini-dev`). 
 
 ### **Agent Pulse (Heartbeats)**
-Agent wrappers (`*-hcom.sh`) include a background pulse loop that calls `hcom listen` every 30 seconds. This ensures that even idle or interactive agents maintain a stable `listening` status in the TUI and are not marked as `exit:timeout`.
+Agent wrappers use a background pulse loop that calls `hcom listen` every 10 seconds. This ensures that even idle or interactive agents maintain a stable `listening` status in the TUI and are not marked as `exit:timeout`.
 
 **Technical Details:**
-- Heartbeat timeout: 30 seconds (prevents timeout status)
-- Fallback sleep: 10 seconds (ensures rapid reconnection)
+- Heartbeat timeout: 10 seconds (prevents timeout status, faster status updates)
+- Fallback sleep: 1 second (ensures rapid reconnection on failure)
 - Location: `scripts/agent-wrapper.sh`
 - Registration: `scripts/utils.sh` (`register_hcom()` function)
 
-**Note:** The heartbeat starts 0.5 seconds after registration to prevent race conditions during hcom name registration.
+**Note:** The heartbeat runs in a detached background process to prevent blocking the main agent.
+
+### **Automatic Agent Restart (v2.2)**
+As of agent-wrapper.sh v2.2, agents automatically restart if they exit unexpectedly. This ensures persistent presence in the hcom TUI even when LLM CLI tools have internal idle timeouts.
+
+**Restart Behavior:**
+- Restart delay: 2 seconds between attempts
+- Maximum restarts: 10 attempts before giving up
+- Exit code logging: All exits are logged with timestamps for debugging
+- Location: `scripts/agent-wrapper.sh` (main loop)
+
+**Why This Matters:**
+LLM CLI tools (qwen-code, gemini-cli, etc.) may exit when idle or waiting for input. The automatic restart loop ensures agents re-register with hcom and maintain their presence in the dashboard without manual intervention.
 
 ### **Configuration Validation**
 If `hcom` warns about an invalid `config.toml`, check for literal `\n` characters or missing `=` signs. Run `hcom status` to verify your configuration is valid.

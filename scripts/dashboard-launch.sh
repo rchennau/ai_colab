@@ -71,6 +71,8 @@ create_dashboard() {
     tmux new-session -d -s $SESSION -n "dashboard" "hcom"
     tmux set-option -g mouse on
     tmux set-option -g pane-border-status top
+    # Update pane-border-format to include the custom @agent_name option
+    tmux set-option -g pane-border-format "#{?pane_active,#[reverse],}#{pane_index}#[default] [#{@agent_name}] \"#{pane_title}\""
     # Prevent tmux from auto-renaming panes based on running command
     tmux set-option -g allow-rename off
 
@@ -147,8 +149,9 @@ create_dashboard() {
 
         tmux send-keys -t $SESSION:0.$pane_idx "$env_vars && $cmd" C-m
         
-        # Set pane title with capitalized agent name
+        # Set persistent agent name and initial title
         local title_case_agent="$(tr '[:lower:]' '[:upper:]' <<< ${agent:0:1})${agent:1}"
+        tmux set-option -t $SESSION:0.$pane_idx -p @agent_name "$title_case_agent"
         tmux select-pane -t $SESSION:0.$pane_idx -T "$title_case_agent"
         
         # Re-apply title after brief delay to prevent shell from overwriting it
@@ -156,6 +159,7 @@ create_dashboard() {
     done
 
     # Step 6: Select hcom pane
+    tmux set-option -t $SESSION:0.0 -p @agent_name "HCOM"
     tmux select-pane -t $SESSION:0.0 -T "hcom TUI"
     tmux select-pane -t $SESSION:0.0
 

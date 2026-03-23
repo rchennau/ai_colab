@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Generic Agent Wrapper v2.1
+# Generic Agent Wrapper v2.2
 # Consolidates hcom registration, heartbeat, and atari_agent MCP
+# Now includes automatic restart to maintain persistent presence
 
 set -euo pipefail
 
@@ -13,24 +14,24 @@ shift
 
 # 1. Configuration & Role Determination
 case "$TOOL" in
-    gemini)   
-        DEFAULT_MODEL="gemini-3.0" 
+    gemini)
+        DEFAULT_MODEL="gemini-3.0"
         ROLE_PROMPT="$SCRIPT_DIR/../system-prompts/gemini.md"
         ;;
-    qwen)     
-        DEFAULT_MODEL="qwen3-next-80b-a3b-instruct" 
+    qwen)
+        DEFAULT_MODEL="qwen3-next-80b-a3b-instruct"
         ROLE_PROMPT="$SCRIPT_DIR/../system-prompts/qwen.md"
         ;;
-    deepseek) 
-        DEFAULT_MODEL="deepseek-v3" 
+    deepseek)
+        DEFAULT_MODEL="deepseek-v3"
         ROLE_PROMPT="$SCRIPT_DIR/../system-prompts/deepseek.md"
         ;;
-    vllm)     
-        DEFAULT_MODEL="DeepSeek-Code" 
+    vllm)
+        DEFAULT_MODEL="DeepSeek-Code"
         ROLE_PROMPT="$SCRIPT_DIR/../system-prompts/deepseek.md"
         ;;
-    *)        
-        DEFAULT_MODEL="" 
+    *)
+        DEFAULT_MODEL=""
         ROLE_PROMPT=""
         ;;
 esac
@@ -62,19 +63,22 @@ if [ -z "$CMD" ] && [ "$TOOL" != "nemo" ]; then
 fi
 
 # 2. Register with hcom
-# This performs initial registration and a single listen call
+# This performs initial registration
 register_hcom "$TOOL"
 
 # Background Heartbeat (Local implementation to allow unified cleanup)
-# Uses 30-second timeout to prevent "exit:timeout" status in hcom TUI
-# Only start heartbeat AFTER registration is complete to avoid race condition
+# IMPORTANT: Keeps agent registered with hcom to prevent "exit:timeout" status
+# Runs completely independently from the main agent process
 HEARTBEAT_PID=""
 if [ -n "${HCOM_NAME:-}" ]; then
-    # Small delay to ensure registration completes before heartbeat starts
-    sleep 0.5
-    (while true; do
-        hcom listen --name "$HCOM_NAME" --timeout 30 > /dev/null 2>&1 || sleep 10
-    done) &
+    # Start heartbeat in background
+    (
+        while true; do
+            # Short timeout ensures frequent status updates to hcom TUI
+            # listen returns 0 on message, 1 on timeout - both are OK
+            hcom listen --name "$HCOM_NAME" --timeout 10 >/dev/null 2>&1 || sleep 1
+        done
+    ) &
     HEARTBEAT_PID=$!
 fi
 
@@ -167,11 +171,40 @@ if [ "$SYSTEM_PROMPT_SET" = true ]; then
     esac
 fi
 
-# Run the command without exec to ensure traps are handled
-# We use eval for CMDs that might have spaces (like "python3 script.py")
-if [[ "$CMD" == *" "* ]]; then
-    eval "$CMD" '"${VALID_ARGS[@]}"'
-else
-    "$CMD" "${VALID_ARGS[@]}"
-fi
+# Run the command with automatic restart to maintain persistent presence
+# This ensures the agent stays registered with hcom even if the LLM CLI exits
+run_agent() {
+    if [[ "$CMD" == *" "* ]]; then
+        eval "$CMD" '"${VALID_ARGS[@]}"'
+    else
+        "$CMD" "${VALID_ARGS[@]}"
+    fi
+}
 
+# Main loop: restart agent if it exits (but not on normal exit)
+RESTART_COUNT=0
+MAX_RESTARTS=10
+RESTART_DELAY=2
+
+while true; do
+    echo "[$(date '+%H:%M:%S')] Starting $TOOL agent (attempt $((RESTART_COUNT + 1)))..."
+    
+    # Run the agent command
+    set +e  # Don't exit on error - we want to restart
+    run_agent
+    EXIT_CODE=$?
+    set -e
+    
+    echo "[$(date '+%H:%M:%S')] $TOOL agent exited with code $EXIT_CODE"
+    
+    # Check if we should restart
+    if [ $RESTART_COUNT -ge $MAX_RESTARTS ]; then
+        echo "[$(date '+%H:%M:%S')] Max restarts ($MAX_RESTARTS) reached, exiting"
+        exit $EXIT_CODE
+    fi
+    
+    # Increment restart counter and wait before restarting
+    RESTART_COUNT=$((RESTART_COUNT + 1))
+    echo "[$(date '+%H:%M:%S')] Restarting in ${RESTART_DELAY}s... (Ctrl+C to stop)"
+    sleep $RESTART_DELAY
+done
