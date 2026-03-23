@@ -122,15 +122,9 @@ register_hcom() {
 start_heartbeat() {
     local tool_name="${1:-agent}"
     if [ -n "${HCOM_NAME:-}" ]; then
-        # Use a long timeout to prevent "exit:timeout" spam in hcom TUI
-        # This keeps the agent active without polluting the command history
-        (while true; do
-            hcom listen --name "$HCOM_NAME" --timeout 3600 > /dev/null 2>&1 || sleep 5
-        done) &
-        local heartbeat_pid=$!
-        # Store heartbeat PID for cleanup
-        export HCOM_HEARTBEAT_PID=$heartbeat_pid
-        trap "kill $heartbeat_pid 2>/dev/null || true" EXIT
+        # Registration is enough to show up in TUI. 
+        # Continuous heartbeat via 'listen' was clashing with CLI messages.
+        hcom start --as "$HCOM_NAME" > /dev/null 2>&1 || true
         return 0
     fi
     return 1

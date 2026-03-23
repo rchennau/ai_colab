@@ -121,9 +121,9 @@ cleanup() {
     # Fix for Bash 3.2 on macOS: handle empty arrays with set -u
     for f in ${CLEANUP_FILES[@]+"${CLEANUP_FILES[@]}"}; do rm -f "$f" 2>/dev/null || true; done
     
-    # Kill heartbeat process if it exists
-    if [ -n "${HCOM_HEARTBEAT_PID:-}" ]; then
-        kill $HCOM_HEARTBEAT_PID 2>/dev/null || true
+    # Notify hcom of exit if possible
+    if [ -n "${HCOM_NAME:-}" ]; then
+        hcom stop --name "$HCOM_NAME" > /dev/null 2>&1 || true
     fi
 }
 trap cleanup EXIT

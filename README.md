@@ -55,23 +55,21 @@ Part of the hcom utilities ecosystem.
 Always use **lowercase letters, numbers, and underscores** for agent names. Hyphens and uppercase characters are restricted and may cause identity resolution failures (e.g., `gemini_dev` instead of `gemini-dev`). 
 
 ### **Agent Pulse (Heartbeats)**
-Agent wrappers use a background pulse loop that calls `hcom listen` every 10 seconds. This ensures that even idle or interactive agents maintain a stable `listening` status in the TUI and are not marked as `exit:timeout`.
+Agent wrappers register their identity with `hcom start` upon initialization. This ensures that agents show up correctly in the TUI (`hcom list`). 
 
 **Technical Details:**
-- Heartbeat timeout: 10 seconds (prevents timeout status, faster status updates)
-- Fallback sleep: 1 second (ensures rapid reconnection on failure)
-- Location: `scripts/agent-wrapper.sh`
-- Registration: `scripts/utils.sh` (`register_hcom()` function)
-
-**Note:** The heartbeat runs in a detached background process to prevent blocking the main agent.
+- **Manual Control:** To prevent background processes from "stealing" messages from interactive CLI sessions, the continuous background `hcom listen` loop has been removed in v2.2.2.
+- **Status Persistence:** Agents maintain their `listening` status as long as their primary interactive CLI process is running.
+- **Location:** `scripts/utils.sh` (`start_heartbeat()` function) and `scripts/agent-wrapper.sh`.
 
 ### **Automatic Agent Restart (v2.2)**
 As of agent-wrapper.sh v2.2, agents automatically restart if they exit unexpectedly. This ensures persistent presence in the hcom TUI even when LLM CLI tools have internal idle timeouts.
 
-### **Dashboard Reliability (v2.2.1)**
-To prevent agent loading failures in complex tmux environments (especially on macOS), the following improvements were made:
+### **Dashboard Reliability (v2.2.2)**
+To prevent agent loading failures and syntax errors in complex tmux environments (especially on macOS), the following improvements were made:
+- **Syntax Correction:** Resolved shell syntax errors in the `main` loop of `dashboard-launch.sh` that caused intermittent launch failures.
+- **Initialization Stability:** Increased shell initialization delays (1.0s) and added a secondary title refresh (2.0s) to ensure that `tmux send-keys` and pane titles are correctly applied without being overwritten by the shell's own startup sequence.
 - **Path Resolution:** The `hcom` binary path is now explicitly resolved during launch (supporting `~/.local/bin` and `/usr/local/bin`).
-- **Initialization Delays:** Increased shell initialization delays (1.0s) ensure that `tmux send-keys` commands are received by a fully ready shell.
 - **Window Addressing:** Uses named windows (`dashboard`, `conductor`, `bridge`) instead of numeric indices for robust pane management.
 - **Project Context:** New panes are automatically created in the current project root directory to ensure local configuration and scripts are immediately available.
 

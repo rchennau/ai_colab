@@ -72,8 +72,6 @@ create_dashboard() {
         hcom_bin="hcom"
     fi
 
-    $hcom_bin start > /dev/null 2>&1 || true
-
     # Ensure hooks are installed for status tracking
     if ! $hcom_bin hooks status 2>/dev/null | grep -q "installed"; then
         print_info "Installing hcom hooks for agent status tracking..."
@@ -171,6 +169,9 @@ create_dashboard() {
         esac
 
         print_info "Launching $agent in pane $pane_idx..."
+        # Set agent tag for better TUI visibility
+        $hcom_bin config -i "$agent_name" tag "$agent" > /dev/null 2>&1 || true
+
         # Increase sleep to ensure tmux and shell are ready for send-keys
         # macOS shells can be slow to initialize
         sleep 1.0
@@ -211,8 +212,6 @@ attach() {
     print_info "Navigation: Ctrl+b Arrow Keys | Ctrl+b z zoom"
     tmux attach -t $SESSION
 }
-
-
 
 main() {
     echo ""
