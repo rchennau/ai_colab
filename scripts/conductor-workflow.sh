@@ -17,12 +17,12 @@ TRACKS_FILE="conductor/tracks.md"
 INTERVAL=${CONDUCTOR_INTERVAL:-60} # Default to 60 seconds
 
 # Agent registration
-AGENT_NAME="conductor_$(hostname | tr "[:upper:]" "[:lower:]" | tr "." "_")_$$"
-register_hcom "$AGENT_NAME" || true
+export HCOM_NAME="conductor_$(hostname | tr "[:upper:]" "[:lower:]" | tr "." "_")_$$"
+register_hcom "conductor" || true
 
 # Thread subscription
-hcom events sub --agent "$AGENT_NAME" --thread "plan-sync" --once > /dev/null 2>&1 &
-hcom events sub --agent "$AGENT_NAME" --thread "track-updates" > /dev/null 2>&1 &
+hcom events sub --agent "$HCOM_NAME" --thread "plan-sync" --once > /dev/null 2>&1 &
+hcom events sub --agent "$HCOM_NAME" --thread "track-updates" > /dev/null 2>&1 &
 
 update_tracks_from_blackboard() {
     local tracks_file="$1"
@@ -135,14 +135,14 @@ spawn_workers() {
                 blackboard_set "track_assigned_$track_slug" "$new_agent"
                 blackboard_set "agent_task_$new_agent" "$next_track"
                 
-                hcom send "@$new_agent" --name "$AGENT_NAME" --intent request --thread "task-handoff" -- \
+                hcom send "@$new_agent" --name "$HCOM_NAME" --intent request --thread "task-handoff" -- \
                     "Your task is to implement the following track: $next_track. Please review conductor/tracks.md for specifications and report progress via the blackboard (hcom-kv)."
             fi
         fi
     fi
 }
 
-echo "Conductor Agent [$AGENT_NAME] initialized. Monitoring $TRACKS_FILE every $INTERVAL seconds."
+echo "Conductor Agent [$HCOM_NAME] initialized. Monitoring $TRACKS_FILE every $INTERVAL seconds."
 
 # Start heartbeat in background
 start_heartbeat || true
@@ -152,5 +152,5 @@ while true; do
     spawn_workers "$TRACKS_FILE"
     
     # Wait for next interval or interrupt
-    hcom listen --timeout "$INTERVAL" --name "$AGENT_NAME" > /dev/null 2>&1 || sleep "$INTERVAL"
+    hcom listen --timeout "$INTERVAL" --name "$HCOM_NAME" > /dev/null 2>&1 || sleep "$INTERVAL"
 done

@@ -35,6 +35,24 @@ check_prereqs() {
 reconnect() {
     if tmux has-session -t $SESSION 2>/dev/null; then
         print_info "Attaching to existing dashboard session..."
+        
+        # Optional: Add missing windows (like conductor or bridge) if requested
+        if [ "${WITH_CONDUCTOR:-false}" == "true" ]; then
+            if ! tmux list-windows -t $SESSION -F "#W" | grep -q "^conductor$"; then
+                print_info "Adding missing Conductor window..."
+                tmux new-window -d -t $SESSION -n "conductor" "bash $SCRIPT_DIR/conductor-workflow.sh"
+                print_success "Conductor agent added"
+            fi
+        fi
+        
+        if [ "${WITH_BRIDGE:-false}" == "true" ]; then
+            if ! tmux list-windows -t $SESSION -F "#W" | grep -q "^bridge$"; then
+                print_info "Adding missing Bridge window..."
+                tmux new-window -d -t $SESSION -n "bridge" "bash $SCRIPT_DIR/hcom-chat-bridge.sh"
+                print_success "Messenger Bridge added"
+            fi
+        fi
+        
         attach
         exit 0
     fi
@@ -45,17 +63,26 @@ create_dashboard() {
 
     # Step 1: Initialize hcom daemon and relay worker
     print_info "Initializing hcom daemon and relay worker..."
-    hcom start > /dev/null 2>&1 || true
+    
+    # Resolve hcom path for use in tmux
+    local hcom_bin=$(command -v hcom || echo "$HOME/.local/bin/hcom")
+    if [ ! -x "$hcom_bin" ]; then
+        print_warning "hcom binary not found at $hcom_bin"
+        # Fallback to just "hcom" and hope for the best in the shell
+        hcom_bin="hcom"
+    fi
+
+    $hcom_bin start > /dev/null 2>&1 || true
 
     # Ensure hooks are installed for status tracking
-    if ! hcom hooks status | grep -q "installed"; then
+    if ! $hcom_bin hooks status 2>/dev/null | grep -q "installed"; then
         print_info "Installing hcom hooks for agent status tracking..."
-        hcom hooks add all > /dev/null 2>&1 || true
+        $hcom_bin hooks add all > /dev/null 2>&1 || true
     fi
 
     # Start relay daemon if relay is enabled
-    if hcom config relay_enabled --json 2>/dev/null | grep -q "true"; then
-        hcom relay daemon start > /dev/null 2>&1 || true
+    if $hcom_bin config relay_enabled --json 2>/dev/null | grep -q "true"; then
+        $hcom_bin relay daemon start > /dev/null 2>&1 || true
         print_success "Relay daemon started"
     fi
 
@@ -68,7 +95,15 @@ create_dashboard() {
     sleep 1
 
     # Step 2: Create session with hcom TUI
-    tmux new-session -d -s $SESSION -n "dashboard" "hcom"
+    # Use absolute path to hcom to ensure it starts even if PATH is limited
+    tmux new-session -d -s $SESSION -n "dashboard" "$hcom_bin"
+    
+    # Verify session was created
+    if ! tmux has-session -t $SESSION 2>/dev/null; then
+        print_warning "Failed to create tmux session. Check if tmux and hcom are installed."
+        exit 1
+    fi
+
     tmux set-option -g mouse on
     tmux set-option -g pane-border-status top
     # Update pane-border-format to include the custom @agent_name option
@@ -102,20 +137,21 @@ create_dashboard() {
     # Step 4: Create agent panes
     if [ $num_agents -gt 0 ]; then
         # First split creates the right column
-        tmux split-window -h -t $SESSION:0
+        # Using -c to ensure the new pane starts in the project root
+        tmux split-window -h -t "$SESSION:dashboard.0" -c "$PWD"
         
         # Then split the right column into num_agents rows
         if [ $num_agents -gt 1 ]; then
             for ((i=1; i<num_agents; i++)); do
                 # Split the LAST created pane to get a vertical stack in order
-                tmux split-window -v -t $SESSION:0.$i
+                tmux split-window -v -t "$SESSION:dashboard.$i" -c "$PWD"
             done
         fi
         
         # Apply layout to ensure all panes are sized reasonably
-        tmux select-layout -t $SESSION:0 "main-vertical"
+        tmux select-layout -t "$SESSION:dashboard" "main-vertical"
         # Resize main pane to exactly 80 columns
-        tmux resize-pane -t $SESSION:0.0 -x 80
+        tmux resize-pane -t "$SESSION:dashboard.0" -x 80
     fi
 
     # Step 5: Launch selected agents
@@ -135,9 +171,10 @@ create_dashboard() {
         esac
 
         print_info "Launching $agent in pane $pane_idx..."
-        # Use a small sleep to ensure tmux is ready for send-keys
-        sleep 0.2
-        
+        # Increase sleep to ensure tmux and shell are ready for send-keys
+        # macOS shells can be slow to initialize
+        sleep 1.0
+
         # Prepare environment variables to pass
         local env_vars="export HCOM_NAME=$agent_name"
         if [ "$agent" == "vllm" ] && [ -n "${VLLM_BASE_URL:-}" ]; then
@@ -147,30 +184,35 @@ create_dashboard() {
             env_vars+=" NEMO_BASE_URL=\"$NEMO_BASE_URL\""
         fi
 
-        tmux send-keys -t $SESSION:0.$pane_idx "$env_vars && $cmd" C-m
-        
+        # Use window name for better addressing
+        tmux send-keys -t "$SESSION:dashboard.$pane_idx" "$env_vars && $cmd" C-m
+
         # Set persistent agent name and initial title
         local title_case_agent="$(tr '[:lower:]' '[:upper:]' <<< ${agent:0:1})${agent:1}"
-        tmux set-option -t $SESSION:0.$pane_idx -p @agent_name "$title_case_agent"
-        tmux select-pane -t $SESSION:0.$pane_idx -T "$title_case_agent"
-        
+        tmux set-option -t "$SESSION:dashboard.$pane_idx" -p @agent_name "$title_case_agent"
+        tmux select-pane -t "$SESSION:dashboard.$pane_idx" -T "$title_case_agent"
+
         # Re-apply title after brief delay to prevent shell from overwriting it
-        (sleep 1 && tmux select-pane -t $SESSION:0.$pane_idx -T "$title_case_agent") &
+        (sleep 2.0 && tmux select-pane -t "$SESSION:dashboard.$pane_idx" -T "$title_case_agent") &
     done
 
     # Step 6: Select hcom pane
-    tmux set-option -t $SESSION:0.0 -p @agent_name "HCOM"
-    tmux select-pane -t $SESSION:0.0 -T "hcom TUI"
-    tmux select-pane -t $SESSION:0.0
+    tmux set-option -t "$SESSION:dashboard.0" -p @agent_name "HCOM"
+    tmux select-pane -t "$SESSION:dashboard.0" -T "hcom TUI"
+    tmux select-pane -t "$SESSION:dashboard.0"
 
     print_success "Dashboard created with $num_agents agents"
+    sleep 1
 }
 
 attach() {
-    print_info "Attaching to dashboard..."
+    print_info "Attaching to dashboard in 1s..."
+    sleep 1
     print_info "Navigation: Ctrl+b Arrow Keys | Ctrl+b z zoom"
     tmux attach -t $SESSION
 }
+
+
 
 main() {
     echo ""

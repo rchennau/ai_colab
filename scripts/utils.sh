@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # Shared utilities for ai-colab scripts
 
+# Ensure ~/.local/bin is in PATH for hcom
+export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
+
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'

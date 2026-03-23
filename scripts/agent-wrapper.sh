@@ -62,8 +62,54 @@ if [ -z "$CMD" ] && [ "$TOOL" != "nemo" ]; then
     exit 1
 fi
 
-# 2. Register with hcom
-# This performs initial registration
+# 2. atari_agent MCP Configuration
+# Point to the master branch version in Atari-LX project
+PROJECT_ROOT=$(detect_project_root)
+ATARI_LX_DIR="$(dirname "$PROJECT_ROOT")/Atari-LX"
+ATARI_AGENT_DIR="$ATARI_LX_DIR/atari_agent"
+
+if [ -d "$ATARI_AGENT_DIR" ]; then
+    # Inject MCP server into environment/args if supported by the tool
+    export PYTHONPATH="$ATARI_AGENT_DIR:${PYTHONPATH:-}"
+fi
+
+# 3. vLLM specific config for ELC
+if [ "$TOOL" == "vllm" ]; then
+    export USE_CUSTOM_LLM=true
+    export CUSTOM_LLM_PROVIDER="openai"
+    export CUSTOM_LLM_ENDPOINT="${VLLM_BASE_URL:-http://192.168.0.193:8000/v1}"
+    export CUSTOM_LLM_API_KEY="${VLLM_API_KEY:-no-key}"
+fi
+
+# 4. Argument Parsing
+VALID_ARGS=()
+MODEL_SET=false
+SYSTEM_PROMPT_SET=false
+SYSTEM_PROMPT_CONTENT=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --name) 
+            export HCOM_NAME="$2"
+            shift 2 
+            ;;
+        -m|--model)
+            MODEL_SET=true
+            VALID_ARGS+=("--model" "$2")
+            [ "$TOOL" == "vllm" ] && export CUSTOM_LLM_MODEL_NAME="$2"
+            shift 2
+            ;;
+        --system-prompt)
+            SYSTEM_PROMPT_SET=true
+            SYSTEM_PROMPT_CONTENT="$2"
+            shift 2
+            ;;
+        *) VALID_ARGS+=("$1") ; shift ;;
+    esac
+done
+
+# 5. Register with hcom
+# This performs initial registration (uses HCOM_NAME if set by --name or environment)
 register_hcom "$TOOL"
 
 # Background Heartbeat (Local implementation to allow unified cleanup)
@@ -89,49 +135,6 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# 3. atari_agent MCP Configuration
-# Point to the master branch version in Atari-LX project
-PROJECT_ROOT=$(detect_project_root)
-ATARI_LX_DIR="$(dirname "$PROJECT_ROOT")/Atari-LX"
-ATARI_AGENT_DIR="$ATARI_LX_DIR/atari_agent"
-
-if [ -d "$ATARI_AGENT_DIR" ]; then
-    # Inject MCP server into environment/args if supported by the tool
-    export PYTHONPATH="$ATARI_AGENT_DIR:${PYTHONPATH:-}"
-fi
-
-# 4. vLLM specific config for ELC
-if [ "$TOOL" == "vllm" ]; then
-    export USE_CUSTOM_LLM=true
-    export CUSTOM_LLM_PROVIDER="openai"
-    export CUSTOM_LLM_ENDPOINT="${VLLM_BASE_URL:-http://192.168.0.193:8000/v1}"
-    export CUSTOM_LLM_API_KEY="${VLLM_API_KEY:-no-key}"
-fi
-
-# 5. Argument Parsing
-VALID_ARGS=()
-MODEL_SET=false
-SYSTEM_PROMPT_SET=false
-SYSTEM_PROMPT_CONTENT=""
-
-while [[ $# -gt 0 ]]; do
-    case "$1" in
-        --name) shift 2 ;;
-        -m|--model)
-            MODEL_SET=true
-            VALID_ARGS+=("--model" "$2")
-            [ "$TOOL" == "vllm" ] && export CUSTOM_LLM_MODEL_NAME="$2"
-            shift 2
-            ;;
-        --system-prompt)
-            SYSTEM_PROMPT_SET=true
-            SYSTEM_PROMPT_CONTENT="$2"
-            shift 2
-            ;;
-        *) VALID_ARGS+=("$1") ; shift ;;
-    esac
-done
-
 # Set default model if not specified
 if [ "$MODEL_SET" = false ] && [ -n "$DEFAULT_MODEL" ]; then
     VALID_ARGS+=("--model" "$DEFAULT_MODEL")
@@ -141,6 +144,19 @@ fi
 # Inject Role-Specific System Prompt if not explicitly provided
 if [ "$SYSTEM_PROMPT_SET" = false ] && [ -f "$ROLE_PROMPT" ]; then
     SYSTEM_PROMPT_CONTENT="$(cat "$ROLE_PROMPT")"
+    SYSTEM_PROMPT_SET=true
+fi
+
+# Append Conductor context if provided (from launch.sh)
+if [ -n "${QWEN_CONTEXT_FILE:-}" ] && [ -f "$QWEN_CONTEXT_FILE" ]; then
+    SYSTEM_PROMPT_CONTENT="$SYSTEM_PROMPT_CONTENT
+
+$(cat "$QWEN_CONTEXT_FILE")"
+    SYSTEM_PROMPT_SET=true
+elif [ -n "${GEMINI_CONTEXT_FILE:-}" ] && [ -f "$GEMINI_CONTEXT_FILE" ]; then
+    SYSTEM_PROMPT_CONTENT="$SYSTEM_PROMPT_CONTENT
+
+$(cat "$GEMINI_CONTEXT_FILE")"
     SYSTEM_PROMPT_SET=true
 fi
 

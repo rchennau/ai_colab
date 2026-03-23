@@ -2,6 +2,7 @@
 # Global Conductor Agent Launcher
 # Universal launcher for Conductor agent with hcom integration
 # Works with any project - project is auto-detected or configurable
+# Uses agent-wrapper.sh for proper hcom registration and heartbeat
 
 set -e
 
@@ -18,6 +19,7 @@ PROJECT_DIR=""
 AGENT_NAME=""
 THREAD_NAME="plan-sync"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+WRAPPER_SCRIPT="$SCRIPT_DIR/../agent-wrapper.sh"
 
 show_help() {
     cat << EOF
@@ -98,9 +100,6 @@ export HCOM_AGENT_NAME="$AGENT_NAME"
 export HCOM_PROJECT_DIR="$PROJECT_DIR"
 export HCOM_THREAD_NAME="$THREAD_NAME"
 
-hcom start --as "$AGENT_NAME" 2>/dev/null || true
-hcom events sub --thread "$THREAD_NAME" 2>/dev/null || true
-
 # Create context
 CONTEXT_FILE=$(mktemp /tmp/conductor-context-XXXXXX)
 cat > "$CONTEXT_FILE" << CTXEOF
@@ -118,24 +117,25 @@ Key files:
 - conductor/product.md
 CTXEOF
 
+# Use agent-wrapper.sh for proper hcom registration and heartbeat
+if [ ! -f "$WRAPPER_SCRIPT" ]; then
+    echo -e "${RED}Error: agent-wrapper.sh not found at $WRAPPER_SCRIPT${NC}"
+    exit 1
+fi
+
 case $MODEL in
     qwen)
-        echo -e "${GREEN}Launching Qwen CLI...${NC}"
-        TMP_SP=$(mktemp /tmp/qwen-sp-XXXXXX.md)
-        echo "Conductor Agent. Context: $CONTEXT_FILE" > "$TMP_SP"
-        export QWEN_SYSTEM_MD="$TMP_SP"
-        qwen --model qwen-max --working-dir "$PROJECT_DIR" "$@"
-        rm -f "$TMP_SP"
+        echo -e "${GREEN}Launching Qwen CLI via agent-wrapper...${NC}"
+        export QWEN_CONTEXT_FILE="$CONTEXT_FILE"
+        exec bash "$WRAPPER_SCRIPT" qwen --name "$AGENT_NAME" "$@"
         ;;
     gemini)
-        echo -e "${GREEN}Launching Gemini CLI...${NC}"
-        TMP_SP=$(mktemp /tmp/gemini-sp-XXXXXX.md)
-        echo "Conductor Agent. Context: $CONTEXT_FILE" > "$TMP_SP"
-        export GEMINI_SYSTEM_MD="$TMP_SP"
-        gemini --model gemini-3.0 --working-dir "$PROJECT_DIR" "$@"
-        rm -f "$TMP_SP"
+        echo -e "${GREEN}Launching Gemini CLI via agent-wrapper...${NC}"
+        export GEMINI_CONTEXT_FILE="$CONTEXT_FILE"
+        exec bash "$WRAPPER_SCRIPT" gemini --name "$AGENT_NAME" "$@"
         ;;
 esac
 
+# Cleanup (only reached on error)
 rm -f "$CONTEXT_FILE"
 echo -e "${GREEN}Session ended${NC}"

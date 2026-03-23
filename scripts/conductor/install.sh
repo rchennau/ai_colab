@@ -61,7 +61,7 @@ if [ -n "$SHELL_CONFIG" ]; then
         echo "export PATH=\"\$HOME/.local/bin:\$PATH\"" >> "$SHELL_CONFIG"
     fi
 
-    # Add aliases
+    # Add conductor aliases
     if ! grep -q "alias conductor=" "$SHELL_CONFIG" 2>/dev/null; then
         cat >> "$SHELL_CONFIG" << 'ALIAS_EOF'
 
@@ -69,9 +69,23 @@ if [ -n "$SHELL_CONFIG" ]; then
 export CONDUCTOR_HOME="$HOME/.hcom/scripts/conductor"
 alias conductor-status='conductor-status'
 ALIAS_EOF
-        echo -e "  ✓ Aliases added to $SHELL_CONFIG"
+        echo -e "  ✓ Conductor aliases added to $SHELL_CONFIG"
     else
-        echo -e "  ✓ Aliases already present"
+        echo -e "  ✓ Conductor aliases already present"
+    fi
+
+    # Add qwen and gemini agent aliases for hcom registration
+    if ! grep -q "alias qwen=" "$SHELL_CONFIG" 2>/dev/null; then
+        cat >> "$SHELL_CONFIG" << 'ALIAS_EOF'
+
+# AI Agent Wrappers (with hcom registration)
+export SCRIPTS_DIR="$HOME/.hcom/scripts"
+alias qwen='bash "$SCRIPTS_DIR/agent-wrapper.sh" qwen'
+alias gemini='bash "$SCRIPTS_DIR/agent-wrapper.sh" gemini'
+ALIAS_EOF
+        echo -e "  ✓ AI agent aliases added to $SHELL_CONFIG"
+    else
+        echo -e "  ✓ AI agent aliases already present"
     fi
 else
     echo -e "${YELLOW}Warning: Could not detect shell config file (tried .bashrc, .zshrc).${NC}"
@@ -92,6 +106,8 @@ echo ""
 echo -e "${YELLOW}Commands available:${NC}"
 echo -e "  ${GREEN}conductor${NC}         - Launch conductor (global command)"
 echo -e "  ${GREEN}conductor-status${NC}  - Check status"
+echo -e "  ${GREEN}qwen${NC}              - Launch Qwen with hcom registration"
+echo -e "  ${GREEN}gemini${NC}            - Launch Gemini with hcom registration"
 echo ""
 echo -e "${GREEN}To launch the full system from this directory, run:${NC}"
 echo -e "  ${BLUE}./launch.sh${NC}"

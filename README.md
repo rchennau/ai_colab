@@ -68,14 +68,12 @@ Agent wrappers use a background pulse loop that calls `hcom listen` every 10 sec
 ### **Automatic Agent Restart (v2.2)**
 As of agent-wrapper.sh v2.2, agents automatically restart if they exit unexpectedly. This ensures persistent presence in the hcom TUI even when LLM CLI tools have internal idle timeouts.
 
-**Restart Behavior:**
-- Restart delay: 2 seconds between attempts
-- Maximum restarts: 10 attempts before giving up
-- Exit code logging: All exits are logged with timestamps for debugging
-- Location: `scripts/agent-wrapper.sh` (main loop)
-
-**Why This Matters:**
-LLM CLI tools (qwen-code, gemini-cli, etc.) may exit when idle or waiting for input. The automatic restart loop ensures agents re-register with hcom and maintain their presence in the dashboard without manual intervention.
+### **Dashboard Reliability (v2.2.1)**
+To prevent agent loading failures in complex tmux environments (especially on macOS), the following improvements were made:
+- **Path Resolution:** The `hcom` binary path is now explicitly resolved during launch (supporting `~/.local/bin` and `/usr/local/bin`).
+- **Initialization Delays:** Increased shell initialization delays (1.0s) ensure that `tmux send-keys` commands are received by a fully ready shell.
+- **Window Addressing:** Uses named windows (`dashboard`, `conductor`, `bridge`) instead of numeric indices for robust pane management.
+- **Project Context:** New panes are automatically created in the current project root directory to ensure local configuration and scripts are immediately available.
 
 ### **Configuration Validation**
 If `hcom` warns about an invalid `config.toml`, check for literal `\n` characters or missing `=` signs. Run `hcom status` to verify your configuration is valid.
