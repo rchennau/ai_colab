@@ -41,6 +41,20 @@ fi
 PROJECT_ROOT=$(detect_project_root 2>/dev/null || echo "$SCRIPT_DIR")
 echo -e "${GREEN}Project Root:${NC} $PROJECT_ROOT"
 
+# Preferences handling
+PREFS_FILE="$PROJECT_ROOT/.ai-colab-prefs"
+load_pref() {
+    if [ -f "$PREFS_FILE" ]; then
+        grep "^$1=" "$PREFS_FILE" | cut -d'=' -f2-
+    fi
+}
+save_pref() {
+    touch "$PREFS_FILE"
+    grep -v "^$1=" "$PREFS_FILE" > "$PREFS_FILE.tmp" || true
+    echo "$1=$2" >> "$PREFS_FILE.tmp"
+    mv "$PREFS_FILE.tmp" "$PREFS_FILE"
+}
+
 # 2. Interactive Selection
 echo -e "\n${BLUE}Select components to launch:${NC}"
 echo "1) Dashboard (hcom TUI + Agents)"
@@ -66,10 +80,45 @@ if [ "$DASHBOARD" = true ]; then
     echo -e "\n${BLUE}Select agents for the Dashboard:${NC}"
     read -p "Include Qwen? [Y/n]: " -n 1 -r; echo ""; [[ $REPLY =~ ^[Nn]$ ]] && DASHBOARD_FLAGS+=" --no-qwen"
     read -p "Include Gemini? [Y/n]: " -n 1 -r; echo ""; [[ $REPLY =~ ^[Nn]$ ]] && DASHBOARD_FLAGS+=" --no-gemini"
-    read -p "Include Atari vLLM? [Y/n]: " -n 1 -r; echo ""; [[ $REPLY =~ ^[Nn]$ ]] && DASHBOARD_FLAGS+=" --no-vllm"
+    
+    # vLLM
+    read -p "Include vLLM? [Y/n]: " -n 1 -r; echo ""
+    if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+        LAST_VLLM_HOST=$(load_pref "VLLM_HOST")
+        LAST_VLLM_HOST=${LAST_VLLM_HOST:-192.168.0.193}
+        read -p "vLLM Host [default $LAST_VLLM_HOST]: " VLLM_HOST
+        VLLM_HOST=${VLLM_HOST:-$LAST_VLLM_HOST}
+        save_pref "VLLM_HOST" "$VLLM_HOST"
+        export VLLM_BASE_URL="http://$VLLM_HOST:8000/v1"
+    else
+        DASHBOARD_FLAGS+=" --no-vllm"
+    fi
+
     read -p "Include Claude? [y/N]: " -n 1 -r; echo ""; [[ $REPLY =~ ^[Yy]$ ]] && DASHBOARD_FLAGS+=" --add-claude"
     read -p "Include DeepSeek? [y/N]: " -n 1 -r; echo ""; [[ $REPLY =~ ^[Yy]$ ]] && DASHBOARD_FLAGS+=" --add-deepseek"
-    read -p "Include NeMo? [y/N]: " -n 1 -r; echo ""; [[ $REPLY =~ ^[Yy]$ ]] && DASHBOARD_FLAGS+=" --add-nemo"
+    
+    # NeMo
+    read -p "Include NeMo? [y/N]: " -n 1 -r; echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        DASHBOARD_FLAGS+=" --add-nemo"
+        LAST_NEMO_HOST=$(load_pref "NEMO_HOST")
+        LAST_NEMO_HOST=${LAST_NEMO_HOST:-integrate.api.nvidia.com}
+        read -p "NeMo Host [default $LAST_NEMO_HOST]: " NEMO_HOST
+        NEMO_HOST=${NEMO_HOST:-$LAST_NEMO_HOST}
+        save_pref "NEMO_HOST" "$NEMO_HOST"
+        
+        # If it's the default NVIDIA host, use https and no port, otherwise allow customization
+        if [ "$NEMO_HOST" == "integrate.api.nvidia.com" ]; then
+            export NEMO_BASE_URL="https://integrate.api.nvidia.com/v1"
+        else
+            # Guess http if it's an IP or local host, but let's be flexible
+            if [[ "$NEMO_HOST" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                 export NEMO_BASE_URL="http://$NEMO_HOST:8000/v1"
+            else
+                 export NEMO_BASE_URL="https://$NEMO_HOST/v1"
+            fi
+        fi
+    fi
     
     if [ "$CONDUCTOR" = true ]; then
         DASHBOARD_FLAGS+=" --conductor"

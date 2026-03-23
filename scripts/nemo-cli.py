@@ -18,8 +18,9 @@ def main():
         print("Error: NVIDIA_API_KEY environment variable not set.")
         sys.exit(1)
 
+    base_url = os.environ.get("NEMO_BASE_URL", "https://integrate.api.nvidia.com/v1")
     client = OpenAI(
-        base_url="https://integrate.api.nvidia.com/v1",
+        base_url=base_url,
         api_key=api_key
     )
 

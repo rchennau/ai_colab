@@ -1,11 +1,6 @@
 #!/usr/bin/env bash
-# HCOM Unified Dashboard - v2 Fix
+# HCOM Unified Dashboard - v2.2 Fix
 # Uses hcom-native agent launching for proper status tracking
-#
-# Key changes:
-# 1. Launch agents using hcom's native launch system
-# 2. Agents stay connected via hcom PTY tracking
-# 3. Real-time status updates in hcom TUI
 
 set -euo pipefail
 
@@ -75,6 +70,7 @@ create_dashboard() {
     # Step 2: Create session with hcom TUI
     tmux new-session -d -s $SESSION -n "dashboard" "hcom"
     tmux set-option -g mouse on
+    tmux set-option -g pane-border-status top
 
     # Optional: Start Conductor workflow in background
     if [ "${WITH_CONDUCTOR:-false}" == "true" ]; then
@@ -88,10 +84,7 @@ create_dashboard() {
         print_success "Messenger Bridge started"
     fi
 
-    # Step 3: Create right column for agents
-    tmux split-window -h -t $SESSION:0
-
-    # Step 4: Setup agent panes
+    # Step 3: Setup agent list
     local agents=()
     [ "${WITH_GEMINI:-true}" == "true" ] && agents+=("gemini")
     [ "${WITH_QWEN:-true}" == "true" ] && agents+=("qwen")
@@ -101,13 +94,24 @@ create_dashboard() {
     [ "${WITH_NEMO:-false}" == "true" ] && agents+=("nemo")
 
     local num_agents=${#agents[@]}
-    if [ $num_agents -gt 1 ]; then
-        tmux select-pane -t $SESSION:0.1
-        for ((i=1; i<$num_agents; i++)); do
-            tmux split-window -v -t $SESSION:0.1
-        done
-        # Balance panes
+    
+    # Step 4: Create agent panes
+    if [ $num_agents -gt 0 ]; then
+        # First split creates the right column
+        tmux split-window -h -t $SESSION:0
+        
+        # Then split the right column into num_agents rows
+        if [ $num_agents -gt 1 ]; then
+            for ((i=1; i<num_agents; i++)); do
+                # Split the LAST created pane to get a vertical stack in order
+                tmux split-window -v -t $SESSION:0.$i
+            done
+        fi
+        
+        # Apply layout to ensure all panes are sized reasonably
         tmux select-layout -t $SESSION:0 "main-vertical"
+        # Resize main pane to exactly 80 columns
+        tmux resize-pane -t $SESSION:0.0 -x 80
     fi
 
     # Step 5: Launch selected agents
@@ -127,16 +131,24 @@ create_dashboard() {
         esac
 
         print_info "Launching $agent in pane $pane_idx..."
-        tmux send-keys -t $SESSION:0.$pane_idx "export HCOM_NAME=$agent_name && $cmd" C-m
+        # Use a small sleep to ensure tmux is ready for send-keys
+        sleep 0.2
+        
+        # Prepare environment variables to pass
+        local env_vars="export HCOM_NAME=$agent_name"
+        if [ "$agent" == "vllm" ] && [ -n "${VLLM_BASE_URL:-}" ]; then
+            env_vars+=" VLLM_BASE_URL=\"$VLLM_BASE_URL\""
+        fi
+        if [ "$agent" == "nemo" ] && [ -n "${NEMO_BASE_URL:-}" ]; then
+            env_vars+=" NEMO_BASE_URL=\"$NEMO_BASE_URL\""
+        fi
+
+        tmux send-keys -t $SESSION:0.$pane_idx "$env_vars && $cmd" C-m
         tmux select-pane -t $SESSION:0.$pane_idx -T "$agent-cli"
     done
 
-    # Step 6: Set pane sizes
-    tmux select-pane -t $SESSION:0.0
-    tmux resize-pane -t $SESSION:0.0 -x 80
+    # Step 6: Select hcom pane
     tmux select-pane -t $SESSION:0.0 -T "hcom TUI"
-
-    # Step 7: Select hcom pane
     tmux select-pane -t $SESSION:0.0
 
     print_success "Dashboard created with $num_agents agents"
@@ -151,7 +163,7 @@ attach() {
 main() {
     echo ""
     echo -e "${BLUE}========================================${NC}"
-    echo -e "${BLUE}  HCOM Unified Dashboard v2.1${NC}"
+    echo -e "${BLUE}  HCOM Unified Dashboard v2.2${NC}"
     echo -e "${BLUE}========================================${NC}"
     echo ""
 
@@ -183,7 +195,7 @@ main() {
                 echo "  --add-claude     Include Claude agent"
                 echo "  --add-deepseek   Include DeepSeek agent"
                 echo "  --add-nemo       Include NVIDIA NeMo agent"
-                echo "  --vllm           Include remote vLLM agent (Atari expert)"
+                echo "  --vllm           Include remote vLLM agent"
                 echo "  --no-vllm        Exclude remote vLLM agent"
                 echo "  --conductor      Include Conductor automation"
                 echo "  --bridge         Include Google Chat bridge"

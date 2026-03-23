@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Generic Agent Wrapper
+# Generic Agent Wrapper v2.1
 # Consolidates hcom registration, heartbeat, and atari_agent MCP
 
 set -euo pipefail
@@ -35,9 +35,51 @@ case "$TOOL" in
         ;;
 esac
 
+# Check if tool is available before registering
+CMD=""
+case "$TOOL" in
+    gemini)
+        if has_command gemini-cli; then CMD="gemini-cli";
+        elif has_command gemini; then CMD="gemini"; fi
+        ;;
+    qwen)
+        if has_command qwen-code; then CMD="qwen-code";
+        elif has_command qwen; then CMD="qwen";
+        elif has_command qwen-cli; then CMD="qwen-cli"; fi
+        ;;
+    vllm) CMD="elc" ;;
+    nemo) CMD="python3 $SCRIPT_DIR/nemo-cli.py" ;;
+    deepseek)
+        if has_command deepseek-cli; then CMD="deepseek-cli";
+        else CMD="deepseek"; fi
+        ;;
+    *) CMD="$TOOL" ;;
+esac
+
+if [ -z "$CMD" ] && [ "$TOOL" != "nemo" ]; then
+    echo "Error: Tool $TOOL not found. Please run ./install.sh"
+    exit 1
+fi
+
 # 2. Register with hcom
 register_hcom "$TOOL"
-start_heartbeat
+
+# Background Heartbeat (Local implementation to allow unified cleanup)
+# Uses 10-second timeout to prevent "exit:timeout" status in hcom TUI
+HEARTBEAT_PID=""
+if [ -n "${HCOM_NAME:-}" ]; then
+    (while true; do
+        hcom listen --name "$HCOM_NAME" --timeout 10 > /dev/null 2>&1 || sleep 5
+    done) &
+    HEARTBEAT_PID=$!
+fi
+
+CLEANUP_FILES=()
+cleanup() {
+    [ -n "$HEARTBEAT_PID" ] && kill "$HEARTBEAT_PID" 2>/dev/null || true
+    for f in "${CLEANUP_FILES[@]}"; do rm -f "$f" 2>/dev/null || true; done
+}
+trap cleanup EXIT
 
 # 3. atari_agent MCP Configuration
 # Point to the master branch version in Atari-LX project
@@ -47,9 +89,6 @@ ATARI_AGENT_DIR="$ATARI_LX_DIR/atari_agent"
 
 if [ -d "$ATARI_AGENT_DIR" ]; then
     # Inject MCP server into environment/args if supported by the tool
-    # For gemini-cli and elc, we use the --mcp-server flag pattern if available,
-    # but most often they read from settings.json. 
-    # Here we ensure the PYTHONPATH includes it for any python-based tools.
     export PYTHONPATH="$ATARI_AGENT_DIR:${PYTHONPATH:-}"
 fi
 
@@ -65,6 +104,7 @@ fi
 VALID_ARGS=()
 MODEL_SET=false
 SYSTEM_PROMPT_SET=false
+SYSTEM_PROMPT_CONTENT=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -77,7 +117,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         --system-prompt)
             SYSTEM_PROMPT_SET=true
-            VALID_ARGS+=("--system-prompt" "$2")
+            SYSTEM_PROMPT_CONTENT="$2"
             shift 2
             ;;
         *) VALID_ARGS+=("$1") ; shift ;;
@@ -92,19 +132,42 @@ fi
 
 # Inject Role-Specific System Prompt if not explicitly provided
 if [ "$SYSTEM_PROMPT_SET" = false ] && [ -f "$ROLE_PROMPT" ]; then
-    VALID_ARGS+=("--system-prompt" "$(cat "$ROLE_PROMPT")")
+    SYSTEM_PROMPT_CONTENT="$(cat "$ROLE_PROMPT")"
+    SYSTEM_PROMPT_SET=true
 fi
 
 # 6. Execution
-case "$TOOL" in
-    vllm) exec elc "${VALID_ARGS[@]}" ;;
-    nemo) exec python3 "$SCRIPT_DIR/nemo-cli.py" "${VALID_ARGS[@]}" ;;
-    deepseek) 
-        if has_command deepseek-cli; then
-            exec deepseek-cli "${VALID_ARGS[@]}"
-        else
-            exec deepseek "${VALID_ARGS[@]}"
-        fi
-        ;;
-    *)    exec "$TOOL" "${VALID_ARGS[@]}" ;;
-esac
+# Apply system prompt via environment variable for tools that support it
+if [ "$SYSTEM_PROMPT_SET" = true ]; then
+    case "$TOOL" in
+        gemini)
+            TMP_SP=$(mktemp /tmp/gemini-sp-XXXXXX.md)
+            echo "$SYSTEM_PROMPT_CONTENT" > "$TMP_SP"
+            export GEMINI_SYSTEM_MD="$TMP_SP"
+            CLEANUP_FILES+=("$TMP_SP")
+            ;;
+        qwen)
+            TMP_SP=$(mktemp /tmp/qwen-sp-XXXXXX.md)
+            echo "$SYSTEM_PROMPT_CONTENT" > "$TMP_SP"
+            export QWEN_SYSTEM_MD="$TMP_SP"
+            CLEANUP_FILES+=("$TMP_SP")
+            ;;
+        nemo|deepseek|claude|vllm)
+            # These might support --system-prompt or we pass it through
+            VALID_ARGS+=("--system-prompt" "$SYSTEM_PROMPT_CONTENT")
+            ;;
+        *)
+            # Fallback
+            VALID_ARGS+=("--system-prompt" "$SYSTEM_PROMPT_CONTENT")
+            ;;
+    esac
+fi
+
+# Run the command without exec to ensure traps are handled
+# We use eval for CMDs that might have spaces (like "python3 script.py")
+if [[ "$CMD" == *" "* ]]; then
+    eval "$CMD" '"${VALID_ARGS[@]}"'
+else
+    "$CMD" "${VALID_ARGS[@]}"
+fi
+

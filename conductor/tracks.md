@@ -39,3 +39,10 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 - [x] **Project Documentation:** (Done)
 - [x] **Build System:** (Done)
 - [x] **Testing:** (Done)
+- [x] **Track: HCOM Telemetry Fix** (Done ✅)
+  - **Assigned:** @conductor
+  - **Description:** Fixed agent heartbeat timeout issue causing `exit:timeout` status cycling in hcom TUI.
+  - [x] Identified root cause: 60-second heartbeat timeout was too long
+  - [x] Reduced heartbeat timeout to 10 seconds in `scripts/agent-wrapper.sh`
+  - [x] Updated `register_hcom()` and `start_heartbeat()` in `scripts/utils.sh`
+  - [x] Updated documentation in README.md

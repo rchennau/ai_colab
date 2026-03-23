@@ -77,9 +77,10 @@ register_hcom() {
         # Use underscore instead of hyphen for hcom 0.7.5 compatibility
         local name="${HCOM_NAME:-${tool_name}_\$\$}"
         export HCOM_NAME="$name"
-        
+
         hcom start --as "$HCOM_NAME" > /dev/null 2>&1 || true
-        hcom listen --name "$HCOM_NAME" --timeout 1 > /dev/null 2>&1 || true
+        # Use short timeout to avoid triggering exit:timeout status
+        hcom listen --name "$HCOM_NAME" --timeout 5 > /dev/null 2>&1 || true
         return 0
     fi
     return 1
@@ -87,8 +88,9 @@ register_hcom() {
 
 start_heartbeat() {
     if [ -n "${HCOM_NAME:-}" ]; then
-        (while true; do 
-            hcom listen --name "$HCOM_NAME" --timeout 60 > /dev/null 2>&1 || sleep 60
+        # Use 10-second timeout to prevent "exit:timeout" status in hcom TUI
+        (while true; do
+            hcom listen --name "$HCOM_NAME" --timeout 10 > /dev/null 2>&1 || sleep 5
         done) &
         local pid=$!
         trap "kill $pid 2>/dev/null || true" EXIT

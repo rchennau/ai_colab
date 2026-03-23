@@ -54,7 +54,12 @@ Part of the hcom utilities ecosystem.
 Always use **lowercase letters, numbers, and underscores** for agent names. Hyphens and uppercase characters are restricted and may cause identity resolution failures (e.g., `gemini_dev` instead of `gemini-dev`). 
 
 ### **Agent Pulse (Heartbeats)**
-Agent wrappers (`*-hcom.sh`) now include a background pulse loop. This ensures that even idle or interactive agents (like Qwen or vLLM) are not marked as "stale" in the TUI by pulsing `hcom listen` every 60 seconds.
+Agent wrappers (`*-hcom.sh`) include a background pulse loop that calls `hcom listen` every 10 seconds. This ensures that even idle or interactive agents (like Qwen or vLLM) maintain a stable `listening` status in the TUI and are not marked as `exit:timeout`.
+
+**Technical Details:**
+- Heartbeat timeout: 10 seconds (prevents timeout status)
+- Fallback sleep: 5 seconds (ensures rapid reconnection)
+- Location: `scripts/agent-wrapper.sh` and `scripts/utils.sh`
 
 ### **Configuration Validation**
 If `hcom` warns about an invalid `config.toml`, check for literal `\n` characters or missing `=` signs. Run `hcom status` to verify your configuration is valid.

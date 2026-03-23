@@ -121,11 +121,19 @@ CTXEOF
 case $MODEL in
     qwen)
         echo -e "${GREEN}Launching Qwen CLI...${NC}"
-        qwen --model qwen-max --system-prompt "Conductor Agent. Context: $CONTEXT_FILE" --working-dir "$PROJECT_DIR" "$@"
+        TMP_SP=$(mktemp /tmp/qwen-sp-XXXXXX.md)
+        echo "Conductor Agent. Context: $CONTEXT_FILE" > "$TMP_SP"
+        export QWEN_SYSTEM_MD="$TMP_SP"
+        qwen --model qwen-max --working-dir "$PROJECT_DIR" "$@"
+        rm -f "$TMP_SP"
         ;;
     gemini)
         echo -e "${GREEN}Launching Gemini CLI...${NC}"
-        gemini --model gemini-3.0 --system-prompt "Conductor Agent. Context: $CONTEXT_FILE" --working-dir "$PROJECT_DIR" "$@"
+        TMP_SP=$(mktemp /tmp/gemini-sp-XXXXXX.md)
+        echo "Conductor Agent. Context: $CONTEXT_FILE" > "$TMP_SP"
+        export GEMINI_SYSTEM_MD="$TMP_SP"
+        gemini --model gemini-3.0 --working-dir "$PROJECT_DIR" "$@"
+        rm -f "$TMP_SP"
         ;;
 esac
 
