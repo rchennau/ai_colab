@@ -111,8 +111,8 @@ register_hcom() {
         local name="${HCOM_NAME:-${tool_name}_\$\$}"
         export HCOM_NAME="$name"
 
-        # Only register the name, don't call listen here
-        # The heartbeat loop in agent-wrapper.sh will handle continuous listening
+        # Register the agent with hcom and keep it persistent
+        # We don't start a background listen here because it overwrites status
         hcom start --as "$HCOM_NAME" > /dev/null 2>&1 || true
         return 0
     fi
@@ -120,13 +120,17 @@ register_hcom() {
 }
 
 start_heartbeat() {
+    local tool_name="${1:-agent}"
     if [ -n "${HCOM_NAME:-}" ]; then
-        # Use 10-second timeout to prevent "exit:timeout" status in hcom TUI
+        # Use a long timeout to prevent "exit:timeout" spam in hcom TUI
+        # This keeps the agent active without polluting the command history
         (while true; do
-            hcom listen --name "$HCOM_NAME" --timeout 10 > /dev/null 2>&1 || sleep 5
+            hcom listen --name "$HCOM_NAME" --timeout 3600 > /dev/null 2>&1 || sleep 5
         done) &
-        local pid=$!
-        trap "kill $pid 2>/dev/null || true" EXIT
+        local heartbeat_pid=$!
+        # Store heartbeat PID for cleanup
+        export HCOM_HEARTBEAT_PID=$heartbeat_pid
+        trap "kill $heartbeat_pid 2>/dev/null || true" EXIT
         return 0
     fi
     return 1

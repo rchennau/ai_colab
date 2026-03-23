@@ -108,30 +108,23 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# 5. Register with hcom
+# 5. Register with hcom and start heartbeat
 # This performs initial registration (uses HCOM_NAME if set by --name or environment)
 register_hcom "$TOOL"
 
-# Background Heartbeat (Local implementation to allow unified cleanup)
-# IMPORTANT: Keeps agent registered with hcom to prevent "exit:timeout" status
-# Runs completely independently from the main agent process
-HEARTBEAT_PID=""
-if [ -n "${HCOM_NAME:-}" ]; then
-    # Start heartbeat in background
-    (
-        while true; do
-            # Short timeout ensures frequent status updates to hcom TUI
-            # listen returns 0 on message, 1 on timeout - both are OK
-            hcom listen --name "$HCOM_NAME" --timeout 10 >/dev/null 2>&1 || sleep 1
-        done
-    ) &
-    HEARTBEAT_PID=$!
-fi
+# Start heartbeat to keep agent status fresh in hcom TUI
+# This prevents the "exit:timeout" cycling issue
+start_heartbeat "$TOOL"
 
 CLEANUP_FILES=()
 cleanup() {
-    [ -n "$HEARTBEAT_PID" ] && kill "$HEARTBEAT_PID" 2>/dev/null || true
-    for f in "${CLEANUP_FILES[@]}"; do rm -f "$f" 2>/dev/null || true; done
+    # Fix for Bash 3.2 on macOS: handle empty arrays with set -u
+    for f in ${CLEANUP_FILES[@]+"${CLEANUP_FILES[@]}"}; do rm -f "$f" 2>/dev/null || true; done
+    
+    # Kill heartbeat process if it exists
+    if [ -n "${HCOM_HEARTBEAT_PID:-}" ]; then
+        kill $HCOM_HEARTBEAT_PID 2>/dev/null || true
+    fi
 }
 trap cleanup EXIT
 
@@ -165,13 +158,19 @@ fi
 if [ "$SYSTEM_PROMPT_SET" = true ]; then
     case "$TOOL" in
         gemini)
-            TMP_SP=$(mktemp /tmp/gemini-sp-XXXXXX.md)
+            # Use XXXXXX at the end for macOS compatibility
+            TMP_SP=$(mktemp /tmp/gemini-sp-XXXXXX)
+            mv "$TMP_SP" "$TMP_SP.md"
+            TMP_SP="$TMP_SP.md"
             echo "$SYSTEM_PROMPT_CONTENT" > "$TMP_SP"
             export GEMINI_SYSTEM_MD="$TMP_SP"
             CLEANUP_FILES+=("$TMP_SP")
             ;;
         qwen)
-            TMP_SP=$(mktemp /tmp/qwen-sp-XXXXXX.md)
+            # Use XXXXXX at the end for macOS compatibility
+            TMP_SP=$(mktemp /tmp/qwen-sp-XXXXXX)
+            mv "$TMP_SP" "$TMP_SP.md"
+            TMP_SP="$TMP_SP.md"
             echo "$SYSTEM_PROMPT_CONTENT" > "$TMP_SP"
             export QWEN_SYSTEM_MD="$TMP_SP"
             CLEANUP_FILES+=("$TMP_SP")
