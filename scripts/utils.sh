@@ -69,6 +69,36 @@ get_hcom_db_path() {
     echo "${HCOM_DB_PATH:-$HOME/.hcom/hcom.db}"
 }
 
+# Blackboard Helpers (hcom-kv)
+
+blackboard_set() {
+    local key="$1"
+    local value="$2"
+    local db_path=$(get_hcom_db_path)
+
+    # Ensure directory exists
+    mkdir -p "$(dirname "$db_path")"
+    
+    # Create basic structure if it doesn't exist
+    sqlite3 "$db_path" "CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT);" || {
+        echo -e "${RED}Error: Failed to access blackboard at $db_path${NC}" >&2
+        return 1
+    }
+
+    sqlite3 "$db_path" ".timeout 5000" "INSERT OR REPLACE INTO kv (key, value) VALUES ('$key', '$value');"
+}
+
+blackboard_get() {
+    local key="$1"
+    local db_path=$(get_hcom_db_path)
+
+    if [[ ! -f "$db_path" ]]; then
+        return 0
+    fi
+
+    sqlite3 "$db_path" ".timeout 5000" "SELECT value FROM kv WHERE key = '$key';"
+}
+
 # hcom Agent Helpers
 
 register_hcom() {
@@ -78,9 +108,9 @@ register_hcom() {
         local name="${HCOM_NAME:-${tool_name}_\$\$}"
         export HCOM_NAME="$name"
 
+        # Only register the name, don't call listen here
+        # The heartbeat loop in agent-wrapper.sh will handle continuous listening
         hcom start --as "$HCOM_NAME" > /dev/null 2>&1 || true
-        # Use short timeout to avoid triggering exit:timeout status
-        hcom listen --name "$HCOM_NAME" --timeout 5 > /dev/null 2>&1 || true
         return 0
     fi
     return 1
