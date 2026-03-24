@@ -125,6 +125,10 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 - [x] **Project Documentation:** (Done)
 - [x] **Build System:** (Done)
 - [x] **Testing:** (Done)
+- [x] **Track: Docker Core Verification Harness** (Done ✅)
+  - **Assigned:** @architect
+  - **Description:** Created `tests/test_docker_core.sh` to verify Hub container builds and service availability.
+
 - [x] **Track: HCOM Telemetry Fix** (Done ✅)
   - **Assigned:** @conductor
   - **Description:** Fixed agent heartbeat timeout issue causing `exit:timeout` status cycling in hcom TUI.
