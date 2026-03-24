@@ -64,7 +64,7 @@ fi
 
 # 2. atari_agent MCP Configuration
 # Point to the master branch version in Atari-LX project
-PROJECT_ROOT=$(detect_project_root)
+PROJECT_ROOT=$(detect_project_root 2>/dev/null || dirname "$SCRIPT_DIR")
 ATARI_LX_DIR="$(dirname "$PROJECT_ROOT")/Atari-LX"
 ATARI_AGENT_DIR="$ATARI_LX_DIR/atari_agent"
 

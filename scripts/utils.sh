@@ -56,15 +56,23 @@ get_file_mtime() {
 
 # Detect project root
 detect_project_root() {
-    local dir="$PWD"
-    while [[ "$dir" != "/" ]]; do
+    local dir="${1:-$PWD}"
+    while [[ "$dir" != "/" && "$dir" != "." ]]; do
         if [ -f "$dir/conductor/tracks.md" ] || [ -f "$dir/conductor/product.md" ] || [ -d "$dir/.git" ]; then
             echo "$dir"
             return 0
         fi
         dir="$(dirname "$dir")"
     done
-    echo "$PWD"
+    
+    # Fallback: check where the scripts are located relative to this utils file
+    local utils_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    if [[ -f "$utils_dir/../conductor/tracks.md" ]]; then
+        echo "$(cd "$utils_dir/.." && pwd)"
+        return 0
+    fi
+
+    return 1
 }
 
 # Get hcom database path

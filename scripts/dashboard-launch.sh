@@ -76,7 +76,7 @@ create_dashboard() {
 
     tmux set-option -g mouse on
     tmux set-option -g pane-border-status top
-    tmux set-option -g pane-border-format "#{?pane_active,#[reverse],}#{pane_index}#[default] [#{@agent_name}] \"#{pane_title}\""
+    tmux set-option -g pane-border-format "#{?pane_active,#[reverse],} #P #[default] [#{@agent_name}] #{=20:pane_title} "
     tmux set-option -g allow-rename off
 
     # Step 3: Setup pane list for Right Column
@@ -132,11 +132,26 @@ create_dashboard() {
         local console_idx=$(tmux display-message -p -t "$console_id" "#{pane_index}")
         local user_name="user_$(whoami)"
         print_info "Initializing Console in pane $console_idx..."
-        tmux send-keys -t "$console_id" "export HCOM_NAME=$user_name && hcom start --as $user_name" C-m
-        tmux send-keys -t "$console_id" "alias s='hcom send @conductor -- \"!status\"'" C-m
-        tmux send-keys -t "$console_id" "alias t='hcom send @conductor -- \"!test\"'" C-m
-        tmux send-keys -t "$console_id" "alias b='hcom send @conductor -- \"!build\"'" C-m
+        tmux send-keys -t "$console_id" "export HCOM_NAME=$user_name && hcom start --as \$HCOM_NAME" C-m
+        tmux send-keys -t "$console_id" "alias s='hcom send --name \$HCOM_NAME @conductor -- \"!status\"'" C-m
+        tmux send-keys -t "$console_id" "alias t='hcom send --name \$HCOM_NAME @conductor -- \"!test\"'" C-m
+        tmux send-keys -t "$console_id" "alias b='hcom send --name \$HCOM_NAME @conductor -- \"!build\"'" C-m
         tmux send-keys -t "$console_id" "clear" C-m
+        tmux send-keys -t "$console_id" "echo -e \"${BLUE}╔══════════════════════════════════════════════╗${NC}\"" C-m
+        tmux send-keys -t "$console_id" "echo -e \"${BLUE}║         Atari-LX HCOM User Console           ║${NC}\"" C-m
+        tmux send-keys -t "$console_id" "echo -e \"${BLUE}╚══════════════════════════════════════════════╝${NC}\"" C-m
+        tmux send-keys -t "$console_id" "echo -e \"Logged in as: ${GREEN}$user_name${NC}\"" C-m
+        tmux send-keys -t "$console_id" "echo -e \"\"" C-m
+        tmux send-keys -t "$console_id" "echo -e \"${YELLOW}Available Conductor Commands:${NC}\"" C-m
+        tmux send-keys -t "$console_id" "echo -e \"  ${GREEN}s${NC} (!status)      - Get project health & progress\"" C-m
+        tmux send-keys -t "$console_id" "echo -e \"  ${GREEN}t${NC} (!test)        - Run all automated tests\"" C-m
+        tmux send-keys -t "$console_id" "echo -e \"  ${GREEN}b${NC} (!build)       - Build project & sync constants\"" C-m
+        tmux send-keys -t "$console_id" "echo -e \"  !screenshot      - Capture current emulator state\"" C-m
+        tmux send-keys -t "$console_id" "echo -e \"  !kb <query>      - Search architectural knowledge base\"" C-m
+        tmux send-keys -t "$console_id" "echo -e \"  !profile <file>  - Profile code performance (cycles)\"" C-m
+        tmux send-keys -t "$console_id" "echo -e \"  !git-sync        - Pull latest changes from remote\"" C-m
+        tmux send-keys -t "$console_id" "echo -e \"  !help            - Show all available commands\"" C-m
+        tmux send-keys -t "$console_id" "echo \"\"" C-m
         
         tmux set-option -t "$console_id" -p @agent_name "CONSOLE"
         tmux select-pane -t "$console_id" -T "User Console ($user_name)"

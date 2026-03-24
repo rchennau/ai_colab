@@ -19,6 +19,7 @@
 - [x] Task: Ensure all QA alerts are forwarded via the `hcom-chat-bridge.sh`.
 
 ## Phase 4: Verification & Final Handover
-- [ ] Task: Verify that `!test` command works from another agent's CLI.
-- [ ] Task: Verify that failures are reported correctly to Google Chat.
-- [ ] Task: Create a "Project Health" section in the dashboard (optional).
+- [x] Task: Verify that `!test` command works from another agent's CLI.
+- [x] Task: Verify that failures are reported correctly to Google Chat.
+- [x] Task: Create a "Project Health" section in the dashboard (optional). (Enhanced Conductor output implemented)
+
