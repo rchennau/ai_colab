@@ -60,6 +60,37 @@ fi
 PROJECT_ROOT=$(detect_project_root 2>/dev/null || echo "$SCRIPT_DIR")
 echo -e "${GREEN}Project Root:${NC} $PROJECT_ROOT"
 
+# 1.1 Project Artifact Detection & Migration
+echo -e "\n${BLUE}Scanning for existing AI/LLM integrations...${NC}"
+
+if [[ -f "$SCRIPT_DIR/scripts/migrate-project.sh" ]]; then
+    # Run detection (non-interactive mode first)
+    bash "$SCRIPT_DIR/scripts/migrate-project.sh" "$PROJECT_ROOT" --detect-only 2>/dev/null || true
+    
+    # Check if migration is needed
+    if [[ -f "$PROJECT_ROOT/.ai-colab-migration-pending" ]]; then
+        echo -e "\n${YELLOW}═══════════════════════════════════════════════════════${NC}"
+        echo -e "${YELLOW}  Existing AI/LLM integrations detected!${NC}"
+        echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
+        echo ""
+        echo -e "Found existing MCP configurations, product plans, or knowledge base artifacts."
+        echo -e "${BLUE}Would you like to migrate these to ai-colab?${NC}"
+        echo ""
+        read -p "Run migration now? [Y/n]: " -n 1 -r
+        echo ""
+        
+        if [[ $REPLY =~ ^[Yy]$ || -z $REPLY ]]; then
+            echo -e "\n${BLUE}Starting migration...${NC}"
+            bash "$SCRIPT_DIR/scripts/migrate-project.sh" "$PROJECT_ROOT"
+            rm -f "$PROJECT_ROOT/.ai-colab-migration-pending"
+        else
+            echo -e "\n${YELLOW}Migration skipped. You can run it later with:${NC}"
+            echo -e "  ${BLUE}./scripts/migrate-project.sh${NC}"
+        fi
+        echo ""
+    fi
+fi
+
 # Preferences handling
 PREFS_FILE="$PROJECT_ROOT/.ai-colab-prefs"
 load_pref() {

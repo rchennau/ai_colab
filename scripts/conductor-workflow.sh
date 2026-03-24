@@ -49,7 +49,7 @@ hcom events sub --agent "$HCOM_NAME" --thread "track-updates" > /dev/null 2>&1 &
 # ============================================
 
 # Check if a module is active
-# Usage: is_module_active "atari-lx"
+# Usage: is_module_active "atari-8bit"
 is_module_active() {
     local module_id="$1"
     local env_var_name=$(echo "$module_id" | tr '[:lower:]-' '[:upper:]_')
@@ -592,14 +592,14 @@ main() {
             run_automated_tests
         fi
 
-        # Check for periodic module hooks (e.g., screenshots from Atari-LX)
+        # Check for periodic module hooks (e.g., screenshots from Atari 8-Bit)
         # This is now handled dynamically via module system
         if [[ -f "$SCRIPT_DIR/module-manager.sh" ]]; then
             # Execute periodic hooks from modules (if defined in future module.toml extensions)
-            # For now, check for Atari-LX screenshot hook specifically for backward compatibility
-            if is_module_active "atari-lx" && (( CURRENT_TIME - LAST_SCREENSHOT_TIME > SCREENSHOT_INTERVAL )); then
-                log_info "Capturing scheduled screenshot (Atari-LX module)..."
-                bash "$PROJECT_ROOT/modules/atari-lx/scripts/hcom-atari-screen.sh" > /dev/null 2>&1 || true
+            # For now, check for Atari 8-Bit screenshot hook specifically for backward compatibility
+            if is_module_active "atari-8bit" && (( CURRENT_TIME - LAST_SCREENSHOT_TIME > SCREENSHOT_INTERVAL )); then
+                log_info "Capturing scheduled screenshot (Atari 8-Bit module)..."
+                bash "$PROJECT_ROOT/modules/atari-8bit/scripts/hcom-atari-screen.sh" > /dev/null 2>&1 || true
                 LAST_SCREENSHOT_TIME=$CURRENT_TIME
             fi
         fi

@@ -1,0 +1,21 @@
+[module]
+id = "atari-8bit"
+name = "Atari 8-Bit Development"
+description = "Specialized tools for 6502 assembly and Atari 8-bit hardware development."
+version = "1.0.0"
+
+[env]
+ENABLE_ATARI_8BIT = "true"
+
+[hooks]
+conductor_commands = [
+    { trigger = "!screenshot", script = "modules/atari-8bit/scripts/hcom-atari-screen.sh" },
+    { trigger = "!memory-map", script = "modules/atari-8bit/scripts/atari-mem-map.sh" },
+    { trigger = "!profile", script = "modules/atari-8bit/scripts/hcom-profiler.sh" },
+    { trigger = "!perf-trend", script = "modules/atari-8bit/scripts/hcom-perf-trend.sh" }
+]
+
+dashboard_sections = [
+    { name = "Latest Performance", type = "sql", source = "SELECT routine, cycles FROM performance ORDER BY timestamp DESC LIMIT 3" },
+    { name = "Memory Allocation", type = "file", source = "conductor/reports/memory_map.txt" }
+]
