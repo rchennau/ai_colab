@@ -56,6 +56,27 @@ brew install --cask iterm2
 
 ---
 
+## 🤖 Conductor Commands
+
+These commands can be sent from any agent chat or the **User Command Console**.
+
+| Command | Category | Purpose |
+|---------|----------|---------|
+| `!status` | Core | Summarize progress and active tracks. |
+| `!test` | Core | Run the full automated test suite. |
+| `!approve <slug>` | Core | Merge a completed task branch into main. |
+| `!kb <query>` | Core | Semantic search for architectural guidance. |
+| `!kb-refresh` | Core | Re-index the codebase for semantic search. |
+| `!build` | Core | Run the project build system. |
+| `!git-sync` | Core | Pull latest changes from remote. |
+| `!switch <path>` | Core | Change conductor focus to another project. |
+| `!screenshot` | Atari-LX | Capture current emulator state. |
+| `!memory-map` | Atari-LX | View visual memory allocation. |
+| `!profile <file>` | Atari-LX | Analyze 6502 code cycle counts. |
+| `!perf-trend <rt>` | Atari-LX | View historical performance trend. |
+
+---
+
 ## 📁 Configuration Files
 
 | File | Purpose |
