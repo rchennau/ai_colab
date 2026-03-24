@@ -18,13 +18,19 @@ A unified environment for coordinating multiple AI agents (Gemini, Claude, Qwen,
     ```bash
     ./launch.sh
     ```
-    Choose your agents and start collaborating in a unified tmux-based dashboard with real-time status tracking.
+    Choose your agents and start collaborating in the **v2.3 Unified Command Center**—a high-density tmux dashboard featuring real-time hcom monitoring, automated conductor logs, and a dedicated user console.
 
 ## 🏗️ Core Architecture
 
 ### **Intelligent Orchestration (Milestone 3, 4 & 5)**
-The **Conductor** is the project's "orchestrator." It maintains the Source of Truth in `conductor/tracks.md`, ensuring all agents are aligned on tasks and project state.
-*   **Track Dependency Tracking:** Automatically handles track dependencies, ensuring workers are only spawned for "ready" tasks.
+The **Conductor** is the project's "orchestrator." In v2.3, it is integrated directly into the Dashboard's right column for seamless monitoring.
+*   **Unified Command Center (v2.3)**:
+    *   **Left Column**: `hcom` TUI for message monitoring.
+    *   **Top Right**: **Conductor Log Pane** for real-time task tracking.
+    *   **Bottom Right**: LLM Agent stack (Gemini, Qwen, etc.).
+    *   **Bottom Console**: Dedicated **User Command Console** pre-registered with `hcom` and custom aliases (`s` for status, `t` for test, `b` for build).
+*   **Track Dependency Tracking**: Automatically handles track dependencies, ensuring workers are only spawned for "ready" tasks.
+
 *   **Automated QA & Review:** Periodically runs the `hcom-test-runner.sh` and `hcom-code-review.sh` to ensure build health and style compliance.
 *   **Visual Debugging:** Captures periodic screenshots of the Atari emulator for visual state analysis.
 *   **Interactive Commands:** Any agent can now send commands to the Conductor via `hcom`:
