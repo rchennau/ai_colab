@@ -226,30 +226,49 @@ for llm in $LLMS_TO_INSTALL; do
     esac
 done
 
-# 4. Optional: Addon Modules
-echo -e "\n${GREEN}Available Addon Modules:${NC}"
-MODULES_JSON=$(python3 "$SCRIPT_DIR/scripts/module-manager.py" list "$SCRIPT_DIR")
-# Simple extraction of IDs and Names from JSON
-MOD_IDS=$(echo "$MODULES_JSON" | grep -oP '"id": "\K[^"]+' || echo "")
-MOD_NAMES=$(echo "$MODULES_JSON" | grep -oP '"name": "\K[^"]+' || echo "")
+# 4. Optional: Addon Modules (Dynamic Discovery)
+echo -e "\n${GREEN}Discovering Addon Modules...${NC}"
 
-# Iterate and ask
-IFS=$'\n'
-IDS_ARR=($MOD_IDS)
-NAMES_ARR=($MOD_NAMES)
-
-for i in "${!IDS_ARR[@]}"; do
-    ID="${IDS_ARR[$i]}"
-    NAME="${NAMES_ARR[$i]}"
+# Use module-manager.sh to discover all available modules
+if [[ -f "$SCRIPT_DIR/scripts/module-manager.sh" ]]; then
+    MODULES_DIR="$SCRIPT_DIR/modules"
     
-    read -p "Install $NAME ($ID)? [y/N] " -n 1 -r; echo ""
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        echo -e "${BLUE}Configuring $NAME...${NC}"
-        # In a full implementation, we'd run module-specific install scripts here
-        # e.g., bash "$SCRIPT_DIR/modules/$ID/scripts/install.sh"
-        echo "  ✓ $NAME configured."
+    if [[ -d "$MODULES_DIR" ]]; then
+        # Discover all modules with valid manifests
+        bash "$SCRIPT_DIR/scripts/module-manager.sh" list | grep -v "^Available\|^$" | while read -r line; do
+            # Parse module info: "  ✓ module-id (active)" or "  ○ module-id"
+            module_id=$(echo "$line" | sed 's/.*[✓○] \([^ ]*\).*/\1/' | tr -d ' ')
+            is_active=$(echo "$line" | grep -q "✓" && echo "true" || echo "false")
+            
+            if [[ -n "$module_id" && "$module_id" != "Available" ]]; then
+                echo -e "${BLUE}Found Module:${NC} $module_id"
+                
+                # Check for module-specific install script
+                module_install="$MODULES_DIR/$module_id/scripts/install-deps.sh"
+                if [[ -f "$module_install" ]]; then
+                    read -p "  Run installation for $module_id? [Y/n] " -n 1 -r
+                    echo ""
+                    if [[ $REPLY =~ ^[Yy]$ || -z $REPLY ]]; then
+                        echo -e "  ${BLUE}Running module installation...${NC}"
+                        bash "$module_install" || echo -e "  ${YELLOW}Warning: Module installation had warnings${NC}"
+                    fi
+                else
+                    echo -e "  ${GREEN}✓ No installation required${NC}"
+                fi
+                
+                # Set module preference
+                pref_key="MODULE_$(echo "$module_id" | tr '-' '_' | tr '[:lower:]' '[:upper:]')"
+                if [[ "$is_active" == "true" ]]; then
+                    echo "$pref_key=true" >> "$SCRIPT_DIR/.ai-colab-prefs"
+                fi
+            fi
+        done
+    else
+        echo -e "${YELLOW}○ No modules directory found${NC}"
     fi
-done
+else
+    echo -e "${YELLOW}○ Module manager not found, skipping module discovery${NC}"
+fi
 
 # 4.1 Compute Backend Selection
 echo -e "\n${GREEN}Select Compute Backend for High-Power Agents:${NC}"

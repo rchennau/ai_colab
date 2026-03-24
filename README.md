@@ -26,7 +26,9 @@ To provide a seamless development experience where human oversight and AI autono
 ai-colab follows a **'Hub and Spoke'** model to separate orchestration from compute:
 
 ### **Orchestration Hub (Self-Hosted)**
-The **Hub** is the central controller. It is designed to be **self-hosted** (locally or via Docker) and contains:
+The **Hub** is the central controller. It is designed to be **self-hosted** (locally or via Docker).
+> **⚠️ Important:** The `ai-colab-core` Docker image contains **ONLY** the orchestration components (hcom relay, Conductor, Blackboard, Web UI) and remote connectors (client CLIs). It does **NOT** run LLM models or agent logic internally; these run externally as 'Spokes'.
+
 - **hcom Relay**: The messaging backbone for the entire fleet.
 - **Conductor**: The project orchestrator and task manager.
 - **Shared Blackboard**: Real-time state synchronization (hcom-kv).

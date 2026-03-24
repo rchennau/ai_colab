@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Global Conductor Agent Installation Script
 # Installs conductor utilities and shell aliases
+# Now with dynamic module support
 
 set -e
 
@@ -36,11 +37,32 @@ cp "$SCRIPT_DIR/status.sh" "$CONDUCTOR_HOME/"
 cp "$SCRIPT_DIR/../"*".sh" "$HOME/.hcom/scripts/" 2>/dev/null || true
 cp "$SCRIPT_DIR/../utils.sh" "$HOME/.hcom/scripts/"
 
-# Copy addon modules if they exist
+# Copy addon modules if they exist (Dynamic Module Support)
 if [ -d "$SCRIPT_DIR/../../modules" ]; then
     echo -e "${GREEN}Copying addon modules to $HOME/.hcom/modules...${NC}"
     mkdir -p "$HOME/.hcom/modules"
     cp -R "$SCRIPT_DIR/../../modules/"* "$HOME/.hcom/modules/"
+    
+    # Create symlinks for module scripts in global scripts directory
+    echo -e "${GREEN}Linking module scripts...${NC}"
+    for module_dir in "$HOME/.hcom/modules"/*/; do
+        if [[ -d "$module_dir" ]]; then
+            module_id=$(basename "$module_dir")
+            module_scripts="$module_dir/scripts"
+            
+            if [[ -d "$module_scripts" ]]; then
+                echo -e "  ${BLUE}Module:${NC} $module_id"
+                # Link all executable scripts
+                for script in "$module_scripts"/*.sh; do
+                    if [[ -f "$script" ]]; then
+                        script_name=$(basename "$script")
+                        ln -sf "$script" "$HOME/.hcom/scripts/${module_id}-${script_name}"
+                        echo -e "    ✓ Linked: ${script_name}"
+                    fi
+                done
+            fi
+        fi
+    done
 fi
 
 # Create bin directory
