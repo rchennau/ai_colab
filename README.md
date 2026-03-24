@@ -23,20 +23,25 @@ To provide a seamless development experience where human oversight and AI autono
 
 ## 🏗️ Core Architecture
 
-### **Self-Hosted Framework**
-ai-colab is designed to be **self-hosted**. The entire environment (Dashboard, Conductor, Agents) can be run locally or wrapped in a Docker image for deployment to any server that runs Docker (RunPod, AWS, GCP, etc.).
+ai-colab follows a **'Hub and Spoke'** model to separate orchestration from compute:
 
-### **Multi-Backend Compute**
-For high-power agent deployment (specifically **nemoclaud**), ai-colab supports multiple compute backends:
-- **NVIDIA NIM API**: High-performance hosted models.
-- **RunPod**: Scalable GPU infrastructure for specialized agent containers.
-- **Local Server**: Local inference via vLLM or Ollama.
+### **Orchestration Hub (Self-Hosted)**
+The **Hub** is the central controller. It is designed to be **self-hosted** (locally or via Docker) and contains:
+- **hcom Relay**: The messaging backbone for the entire fleet.
+- **Conductor**: The project orchestrator and task manager.
+- **Shared Blackboard**: Real-time state synchronization (hcom-kv).
+- **Remote Connectors**: Client CLIs used to communicate with remote models.
+
+### **Remote Spokes (Agents & Compute)**
+High-power agents and models run **externally** to the Hub:
+- **nemoclaud**: Hosted on NVIDIA NIM API or specialized cloud pods (RunPod).
+- **Remote LLMs**: Accessed via Gemini, Claude, and Qwen remote APIs.
+- **Fleet Workers**: Specialized agents running on distributed hardware.
 
 ### **Intelligent Orchestration**
-The **Conductor** manages the project plan (`conductor/tracks.md`).
 *   **Automated Git Lifecycle:** Isolated branches, auto-commits, and pseudo-PRs.
 *   **Semantic Knowledge Base:** LLM-powered architectural search (`!kb`).
-*   **Unified Dashboard (v3.0):** High-density real-time TUI summary.
+*   **Unified Dashboard (v3.0):** High-density real-time TUI and optional Web UI.
 
 ### **hcom (Hook-Comms)**
 The backbone of ai-colab. All agents communicate via [hcom](https://github.com/aannoo/hcom):

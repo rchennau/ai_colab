@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ai-colab CICD Build Script
-# Builds the unified self-hosted environment container image.
+# Builds the Orchestration Core (Hub) container image.
 
 set -euo pipefail
 
@@ -9,10 +9,10 @@ if ! command -v docker >/dev/null 2>&1; then
     exit 1
 fi
 
-IMAGE_NAME=${1:-ai-colab-unified}
+IMAGE_NAME=${1:-ai-colab-core}
 TAG=${2:-latest}
 
-echo "Building Unified Self-Hosted Image: $IMAGE_NAME:$TAG"
+echo "Building ai-colab Orchestration Core Image: $IMAGE_NAME:$TAG"
 docker build -t "$IMAGE_NAME:$TAG" .
 
 echo "Build complete."

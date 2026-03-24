@@ -1,21 +1,26 @@
 # Product Definition: ai-colab
 
 ## Vision
-To provide a seamless, multi-agent development environment where different AI agents (Gemini, Claude, Qwen, etc.) can collaborate autonomously or semi-autonomously on complex software engineering tasks. **ai-colab is a self-hosted framework** that can be containerized for local use or deployed to any Docker-capable server (RunPod, AWS, GCP).
+To provide a seamless, multi-agent development environment where human oversight and AI autonomy work in harmony. **ai-colab is a self-hosted Orchestration Core (Hub)** that acts as a central controller for remote agents and compute resources.
+
+## 'Hub and Spoke' Architecture
+ai-colab follows a modular architecture where the core framework is separated from the intelligence providers:
+- **Orchestration Core (Hub)**: Self-hosted (native or Docker). Handles messaging (hcom), state (Blackboard), tasking (Conductor), and monitoring (Dashboard).
+- **Remote Agents (Spokes)**: High-power agents (like **nemoclaud**) run externally on specialized infrastructure (NVIDIA API, RunPod, etc.) and connect to the Hub via remote CLIs and MCP.
 
 ## Multi-Backend Compute
-While the ai-colab core is self-hosted, it supports connecting to specialized compute backends for high-power agent deployment (specifically for **nemoclaud** or other large-scale models):
-- **NVIDIA NIM API**: Hosted inference for enterprise models.
-- **RunPod**: On-demand GPU infrastructure for containerized agent scaling.
-- **Local Server**: Standard vLLM/Ollama local execution.
+The Hub connects to various backends for specialized agent deployment:
+- **NVIDIA NIM API**: Hosted inference for enterprise-grade models like **nemoclaud**.
+- **RunPod / AWS / GCP**: Infrastructure for self-hosting specialized agent containers or model pods.
+- **Local Server**: Standard vLLM/Ollama execution for low-latency tasks.
 
 ## Core Pillars
 
-### **1. Self-Hosted Orchestration**
-*   **Conductor Agent:** A dedicated agent that manages the project plan (`tracks.md`) and ensures all other agents are working on the right tasks.
-*   **Container Ready:** A unified Docker image for self-hosting the entire framework on any infrastructure.
-*   **Automated Quality Assurance:** Integrated testing (`hcom-test-runner.sh`) and code reviews (`hcom-code-review.sh`) broadcast results via `hcom`.
-*   **Git Lifecycle Automation:** Automated branching, commit validation, and pseudo-PR management.
+### **1. Self-Hosted Hub**
+*   **Conductor Agent:** A dedicated orchestrator that manages the project plan (`tracks.md`) and coordinates remote workers.
+*   **Orchestration Core Image:** A lightweight Docker image for self-hosting the Hub on any server.
+*   **Automated Quality Assurance:** Integrated testing and code reviews that broadcast results to the entire agent network.
+*   **Git Lifecycle Automation:** Automated branching and pseudo-PR management across the distributed system.
 
 ### **2. Frictionless Setup**
 *   **Master Installer (`install.sh`):** A single command to set up the project-agnostic core and optionally install domain-specific modules.
