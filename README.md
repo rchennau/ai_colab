@@ -22,9 +22,10 @@ A unified environment for coordinating multiple AI agents (Gemini, Claude, Qwen,
 
 ## 🏗️ Core Architecture
 
-### **The Conductor & QA Automation (Milestone 3 & 4)**
+### **Intelligent Orchestration (Milestone 3, 4 & 5)**
 The **Conductor** is the project's "orchestrator." It maintains the Source of Truth in `conductor/tracks.md`, ensuring all agents are aligned on tasks and project state.
-*   **Automated Testing:** Periodically runs the `hcom-test-runner.sh` to ensure build health and syncs status to the Blackboard.
+*   **Track Dependency Tracking:** Automatically handles track dependencies, ensuring workers are only spawned for "ready" tasks.
+*   **Automated QA & Review:** Periodically runs the `hcom-test-runner.sh` and `hcom-code-review.sh` to ensure build health and style compliance.
 *   **Visual Debugging:** Captures periodic screenshots of the Atari emulator for visual state analysis.
 *   **Interactive Commands:** Any agent can now send commands to the Conductor via `hcom`:
     *   `!status`: Summarizes project progress, active track, and test health.
@@ -33,6 +34,8 @@ The **Conductor** is the project's "orchestrator." It maintains the Source of Tr
     *   `!build`: Triggers the local project's build system (`make`).
     *   `!git-sync`: Synchronizes with the remote repository.
     *   `!switch <path>`: Swaps the Conductor's focus to a different project directory.
+    *   `!kb <query>`: Searches the project's architectural knowledge base (conductor/).
+    *   `!profile <file>`: Analyzes 6502 assembly for cycle counts and performance bottlenecks.
 
 ### **hcom (Hook-Comms)**
 All agents communicate via [hcom](https://github.com/aannoo/hcom), a message-passing protocol that enables:
@@ -49,7 +52,9 @@ All agents communicate via [hcom](https://github.com/aannoo/hcom), a message-pas
 | `./launch.sh` | Unified launcher for the Dashboard and Conductor. |
 | `scripts/agent-wrapper.sh` | The unified core for registration, heartbeats, and roles. |
 | `scripts/hcom-test-runner.sh` | Unified test execution and blackboard reporting (v2.2.3). |
-| `scripts/conductor-workflow.sh` | Automated background manager with command processing and QA monitoring. |
+| `scripts/hcom-code-review.sh` | Automated code review against style guides using Gemini. |
+| `scripts/hcom-profiler.sh` | Performance analysis using the atari-dev-agent MCP. |
+| `scripts/conductor-workflow.sh` | Automated manager with command processing, dependency tracking, and QA. |
 | `scripts/atari-debate.sh` | Automates technical debates between active agents. |
 | `scripts/hcom-kv.sh` | Standardization script for reading/writing the Shared Blackboard. |
 | `scripts/hcom-chat-bridge.sh` | Forwards project events and visual debug updates to Google Chat. |

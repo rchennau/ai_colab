@@ -145,7 +145,7 @@ spawn_workers() {
     # Find all tracks marked as [ ]
     grep "^\- \[ \] \*\*Track:" "$tracks_file" | while read -r line; do
         # Stop if we already have max workers
-        local current_workers=$(hcom list --names | grep -c "worker-" || true)
+        local current_workers=$(hcom list --names | grep -c "worker_" || true) # Check for our worker prefix
         if [[ "$current_workers" -ge "$max_workers" ]]; then
             # echo "[$(date +%T)] Max workers ($max_workers) reached. Skipping further spawns."
             break
@@ -171,7 +171,9 @@ spawn_workers() {
         if [[ "$agent_alive" == false ]]; then
             echo "[$(date +%T)] Assigning new worker for track: $next_track"
             
-            local spawn_out=$(hcom 1 gemini --tag worker --headless --go 2>&1 || true)
+            # Use a unique name for the worker
+            local new_worker_name="worker_$(date +%s)_$RANDOM"
+            local spawn_out=$(hcom 1 gemini --as "$new_worker_name" --tag worker --headless --go 2>&1 || true)
             local new_agent=$(echo "$spawn_out" | grep "^Names: " | awk '{print $2}' || true)
 
             if [[ -n "$new_agent" ]]; then
@@ -194,12 +196,12 @@ run_automated_tests() {
 
 process_commands() {
     local event_json="$1"
-    local type=$(echo "$event_json" | grep -oP '"type":"\K[^"]+')
+    local type=$(extract_json_value "$event_json" "type")
     
     if [[ "$type" == "message" ]]; then
-        local from=$(echo "$event_json" | grep -oP '"msg_from":"\K[^"]+')
-        local text=$(echo "$event_json" | grep -oP '"msg_text":"\K[^"]+')
-        local thread=$(echo "$event_json" | grep -oP '"msg_thread":"\K[^"]+')
+        local from=$(extract_json_value "$event_json" "msg_from")
+        local text=$(extract_json_value "$event_json" "msg_text")
+        local thread=$(extract_json_value "$event_json" "msg_thread")
         
         # We only care about command triggers starting with !
         if [[ "$text" == !* ]]; then
@@ -214,6 +216,7 @@ process_commands() {
                 "!screenshot")
                     hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Capturing emulator state..."
                     bash "$SCRIPT_DIR/hcom-atari-screen.sh" > /dev/null 2>&1 || true
+                    LAST_SCREENSHOT_TIME=$CURRENT_TIME # Reset timer
                     ;;
                 "!status")
                     local progress=$(blackboard_get "project_progress")
@@ -222,7 +225,7 @@ process_commands() {
                     local build_time=$(blackboard_get "atari_last_build")
                     
                     hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- \
-                        "Project Health: Progress $progress | Active Track: $active | Tests: $test_status | Last Build: $build_time"
+                        "Project Health: Progress ${progress:-N/A} | Active Track: ${active:-None} | Tests: ${test_status:-N/A} | Last Build: ${build_time:-N/A}"
                     ;;
                 "!switch")
                     local new_path=$(echo "$text" | awk '{print $2}')
@@ -232,6 +235,8 @@ process_commands() {
                         PROJECT_ROOT="$new_path"
                         TRACKS_FILE="$PROJECT_ROOT/conductor/tracks.md"
                         blackboard_set "conductor_current_project" "$PROJECT_ROOT"
+                        # Re-evaluate all tracks next iteration
+                        sync_blackboard_status "$TRACKS_FILE"
                     else
                         hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: Directory not found: $new_path"
                     fi
@@ -254,10 +259,10 @@ process_commands() {
                     local query=$(echo "$text" | cut -d' ' -f2-)
                     hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Searching Knowledge Base for: $query"
                     # Simple grep-based search in conductor/ directory
-                    local results=$(grep -ril "$query" "$PROJECT_ROOT/conductor/"*.md 2>/dev/null | head -n 3)
-                    if [[ -n "$results" ]]; then
+                    local results_raw=$(grep -ril "$query" "$PROJECT_ROOT/conductor/"*.md 2>/dev/null | head -n 3)
+                    if [[ -n "$results_raw" ]]; then
                         local resp="Found relevant docs:"
-                        for res in $results; do
+                        for res in $results_raw; do
                             resp="$resp $(basename "$res")"
                         done
                         hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "$resp"
@@ -273,6 +278,10 @@ process_commands() {
                     else
                         hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: File not found: $file"
                     fi
+                    ;;
+                "!help")
+                    hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- \
+                        "Conductor Commands: !status, !test, !screenshot, !build, !git-sync, !kb <query>, !profile <file>, !switch <path>, !help"
                     ;;
                 *)
                     # Unknown command
@@ -302,20 +311,21 @@ while true; do
     fi
     
     # Process new hcom events (commands)
-    # We use 'hcom events' to find new messages since LAST_EVENT_ID
+    local TMP_ID_FILE="/tmp/conductor_last_event_id_$$"
+    echo "$LAST_EVENT_ID" > "$TMP_ID_FILE"
+    
+    # hcom events --all returns one JSON object per line for multiple events
     hcom events --all --sql "id > $LAST_EVENT_ID AND type='message'" --last 5 | while read -r line; do
         if [[ -n "$line" && "$line" == \{* ]]; then
-            ID=$(echo "$line" | grep -oP '"id":\K\d+')
-            if [[ -n "$ID" && "$ID" -gt "$LAST_EVENT_ID" ]]; then
+            local event_id=$(extract_json_value "$line" "id")
+            if [[ -n "$event_id" && "$event_id" -gt "$(cat "$TMP_ID_FILE")" ]]; then
                 process_commands "$line"
-                # Update LAST_EVENT_ID (this subshell issue means we should update it outside)
+                echo "$event_id" > "$TMP_ID_FILE"
             fi
         fi
     done
-    
-    # Correct way to update LAST_EVENT_ID from subshell is to use a file or redirect
-    NEW_ID=$(hcom events --all --sql "id > $LAST_EVENT_ID AND type='message'" --last 1 | grep -oP '"id":\K\d+' || echo "$LAST_EVENT_ID")
-    LAST_EVENT_ID=$NEW_ID
+    LAST_EVENT_ID=$(cat "$TMP_ID_FILE")
+    rm -f "$TMP_ID_FILE"
 
     # Wait for next interval or interrupt
     # We use a shorter interval for hcom listen when we have command handling

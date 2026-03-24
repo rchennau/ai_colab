@@ -72,6 +72,23 @@ get_hcom_db_path() {
     echo "${HCOM_DB_PATH:-$HOME/.hcom/hcom.db}"
 }
 
+# Extract value from compact JSON (key:value or key:"value" or key:bool)
+extract_json_value() {
+    local json="$1"
+    local key="$2"
+    # Try string value first
+    local val=$(echo "$json" | sed -n "s/.*\"$key\"[[:space:]]*:[[:space:]]*\"\([^\"]*\)\".*/\1/p")
+    if [[ -z "$val" ]]; then
+        # Try numeric value
+        val=$(echo "$json" | sed -n "s/.*\"$key\"[[:space:]]*:[[:space:]]*\([0-9]*\).*/\1/p")
+    fi
+    if [[ -z "$val" ]]; then
+        # Try boolean (true/false) or null value
+        val=$(echo "$json" | sed -n "s/.*\"$key\"[[:space:]]*:[[:space:]]*\([a-z]*\).*/\1/p")
+    fi
+    echo "$val"
+}
+
 # Blackboard Helpers (hcom-kv)
 
 blackboard_set() {
@@ -108,7 +125,8 @@ register_hcom() {
     local tool_name="$1"
     if has_command hcom; then
         # Use underscore instead of hyphen for hcom 0.7.5 compatibility
-        local name="${HCOM_NAME:-${tool_name}_\$\$}"
+        # Using $$ for PID to ensure uniqueness if HCOM_NAME is not set
+        local name="${HCOM_NAME:-${tool_name}_$$}"
         export HCOM_NAME="$name"
 
         # Register the agent with hcom and keep it persistent

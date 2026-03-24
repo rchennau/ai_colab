@@ -28,7 +28,7 @@ extract_seg_addr() {
     local seg_name="$1"
     # Find the line for the segment and extract the hex address
     # Format: ZEROPAGE              000080  0000AB  00002C  00001
-    grep -E "^$seg_name\s+" "$MAP_FILE" | awk '{print "0x"$2}' || echo ""
+    grep -E "^$seg_name[[:space:]]+" "$MAP_FILE" | awk '{print "0x"$2}' || echo ""
 }
 
 # Sync standard segments

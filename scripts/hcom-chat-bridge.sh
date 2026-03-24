@@ -42,7 +42,7 @@ forward_to_chat "*Bridge Online*: Remote monitoring enabled for Atari-LX team."
 # - Intent=inform/request (messages)
 # - Life_action=ready/stopped (agent status)
 # - Custom threads: plan-sync, visual-debug
-LAST_ID=$(hcom events --last 1 | grep -oP '"id":\K\d+' || echo "0")
+LAST_ID=$(extract_json_value "$(hcom events --last 1)" "id" || echo "0")
 
 while true; do
     # Wait for new events
@@ -51,18 +51,18 @@ while true; do
     
     if [[ -n "$EVENT_JSON" ]]; then
         # Parse event details
-        ID=$(echo "$EVENT_JSON" | grep -oP '"id":\K\d+')
-        TYPE=$(echo "$EVENT_JSON" | grep -oP '"type":"\K[^"]+')
-        INSTANCE=$(echo "$EVENT_JSON" | grep -oP '"instance":"\K[^"]+')
+        ID=$(extract_json_value "$EVENT_JSON" "id")
+        TYPE=$(extract_json_value "$EVENT_JSON" "type")
+        INSTANCE=$(extract_json_value "$EVENT_JSON" "instance")
         
         MSG=""
         if [[ "$TYPE" == "message" ]]; then
-            FROM=$(echo "$EVENT_JSON" | grep -oP '"msg_from":"\K[^"]+')
-            TEXT=$(echo "$EVENT_JSON" | grep -oP '"msg_text":"\K[^"]+')
-            THREAD=$(echo "$EVENT_JSON" | grep -oP '"msg_thread":"\K[^"]+')
+            FROM=$(extract_json_value "$EVENT_JSON" "msg_from")
+            TEXT=$(extract_json_value "$EVENT_JSON" "msg_text")
+            THREAD=$(extract_json_value "$EVENT_JSON" "msg_thread")
             MSG="*[$THREAD]* $FROM: $TEXT"
         elif [[ "$TYPE" == "life" ]]; then
-            ACTION=$(echo "$EVENT_JSON" | grep -oP '"life_action":"\K[^"]+')
+            ACTION=$(extract_json_value "$EVENT_JSON" "life_action")
             MSG="*Lifecycle*: $INSTANCE is now $ACTION"
         fi
 
