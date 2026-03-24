@@ -94,6 +94,7 @@ create_dashboard() {
     [ "${WITH_DEEPSEEK:-false}" == "true" ] && right_panes+=("deepseek")
     [ "${WITH_CLAUDE:-false}" == "true" ] && right_panes+=("claude")
     [ "${WITH_NEMO:-false}" == "true" ] && right_panes+=("nemo")
+    [ "${WITH_NEMOCLAW:-false}" == "true" ] && right_panes+=("nemoclaw")
 
     local num_right_panes=${#right_panes[@]}
     
@@ -212,6 +213,11 @@ create_dashboard() {
                 agent_name="nemo_dev"
                 title="NeMo"
                 ;;
+            nemoclaw)
+                cmd="bash $SCRIPT_DIR/nemoclaw-hcom.sh"
+                agent_name="nemoclaw"
+                title="nemoclaw"
+                ;;
         esac
 
         print_info "Launching $title in pane $pane_idx..."
@@ -266,6 +272,7 @@ main() {
     WITH_DEEPSEEK=false
     WITH_CLAUDE=false
     WITH_NEMO=false
+    WITH_NEMOCLAW=false
     WITH_CONDUCTOR=false
     WITH_BRIDGE=false
     WITH_CONSOLE=true
@@ -276,6 +283,7 @@ main() {
             --add-claude) WITH_CLAUDE=true; shift ;;
             --add-deepseek) WITH_DEEPSEEK=true; shift ;;
             --add-nemo) WITH_NEMO=true; shift ;;
+            --add-nemoclaw) WITH_NEMOCLAW=true; shift ;;
             --vllm) WITH_VLLM=true; shift ;;
             --no-vllm) WITH_VLLM=false; shift ;;
             --conductor) WITH_CONDUCTOR=true; shift ;;
@@ -291,6 +299,7 @@ main() {
                 echo "  --add-claude     Include Claude agent"
                 echo "  --add-deepseek   Include DeepSeek agent"
                 echo "  --add-nemo       Include NVIDIA NeMo agent"
+                echo "  --add-nemoclaw   Include NVIDIA NIM nemoclaw"
                 echo "  --vllm           Include remote vLLM agent"
                 echo "  --no-vllm        Exclude remote vLLM agent"
                 echo "  --bridge         Include Google Chat bridge"

@@ -50,6 +50,7 @@ case "$TOOL" in
         ;;
     vllm) CMD="elc" ;;
     nemo) CMD="python3 $SCRIPT_DIR/nemo-cli.py" ;;
+    nemoclaw) CMD="python3 $SCRIPT_DIR/nemo-cli.py" ;;
     deepseek)
         if has_command deepseek-cli; then CMD="deepseek-cli";
         else CMD="deepseek"; fi

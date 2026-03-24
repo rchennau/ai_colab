@@ -208,25 +208,30 @@ if [ "$DASHBOARD" = true ]; then
     read -p "Include Claude? [y/N]: " -n 1 -r; echo ""; [[ $REPLY =~ ^[Yy]$ ]] && DASHBOARD_FLAGS+=" --add-claude"
     read -p "Include DeepSeek? [y/N]: " -n 1 -r; echo ""; [[ $REPLY =~ ^[Yy]$ ]] && DASHBOARD_FLAGS+=" --add-deepseek"
     
-    # NeMo
-    read -p "Include NeMo? [y/N]: " -n 1 -r; echo ""
+    # NeMo / nemoclaw
+    read -p "Include nemoclaw (NVIDIA NIM)? [y/N]: " -n 1 -r; echo ""
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        DASHBOARD_FLAGS+=" --add-nemo"
-        LAST_NEMO_HOST=$(load_pref "NEMO_HOST")
-        LAST_NEMO_HOST=${LAST_NEMO_HOST:-integrate.api.nvidia.com}
-        read -p "NeMo Host [default $LAST_NEMO_HOST]: " NEMO_HOST
-        NEMO_HOST=${NEMO_HOST:-$LAST_NEMO_HOST}
-        save_pref "NEMO_HOST" "$NEMO_HOST"
-        
-        # If it's the default NVIDIA host, use https and no port, otherwise allow customization
-        if [ "$NEMO_HOST" == "integrate.api.nvidia.com" ]; then
-            export NEMO_BASE_URL="https://integrate.api.nvidia.com/v1"
-        else
-            # Guess http if it's an IP or local host, but let's be flexible
-            if [[ "$NEMO_HOST" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-                 export NEMO_BASE_URL="http://$NEMO_HOST:8000/v1"
+        DASHBOARD_FLAGS+=" --add-nemoclaw"
+        export NEMO_HOST="integrate.api.nvidia.com"
+        export NEMO_BASE_URL="https://integrate.api.nvidia.com/v1"
+    else
+        read -p "Include generic NeMo? [y/N]: " -n 1 -r; echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            DASHBOARD_FLAGS+=" --add-nemo"
+            LAST_NEMO_HOST=$(load_pref "NEMO_HOST")
+            LAST_NEMO_HOST=${LAST_NEMO_HOST:-integrate.api.nvidia.com}
+            read -p "NeMo Host [default $LAST_NEMO_HOST]: " NEMO_HOST
+            NEMO_HOST=${NEMO_HOST:-$LAST_NEMO_HOST}
+            save_pref "NEMO_HOST" "$NEMO_HOST"
+            
+            if [ "$NEMO_HOST" == "integrate.api.nvidia.com" ]; then
+                export NEMO_BASE_URL="https://integrate.api.nvidia.com/v1"
             else
-                 export NEMO_BASE_URL="https://$NEMO_HOST/v1"
+                if [[ "$NEMO_HOST" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                     export NEMO_BASE_URL="http://$NEMO_HOST:8000/v1"
+                else
+                     export NEMO_BASE_URL="https://$NEMO_HOST/v1"
+                fi
             fi
         fi
     fi

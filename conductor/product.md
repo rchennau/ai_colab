@@ -47,11 +47,11 @@ The Hub connects to various backends for specialized agent deployment:
 *   **Phase 8:** Hardware Visualization & Performance Dashboards (Done ✅)
 *   **Phase 9:** Dynamic Plugin System & Fleet Orchestration (Done ✅)
 *   **Phase 10:** Multi-Backend Compute & CI/CD Automation (Done ✅)
+*   **Phase 11:** NeMo-Claude (nemoclaw) NVIDIA Integration (Active 🚀)
 
 ## Future Considerations
-- Full emulator integration with live-state debugging.
-- Cross-platform build support for non-Atari 8-bit targets.
-- Voice-command interface for the Conductor dashboard.
-- LLM-native IDE integration (VS Code extension).
-- Autonomous Project Evolution (Agents proposing their own milestones).
-- Federated Agent Learning (Sharing skills across distributed fleets).
+- Native IDE Integration (VS Code / Cursor Extension).
+- Advanced Fleet Autonomy (Self-healing remote workers).
+- Voice & Vision Interaction (Whisper/Vision-aware Conductor).
+- Mobile Dashboards for remote monitoring.
+- Federated Agent Learning (Skill-sharing across distributed fleets).

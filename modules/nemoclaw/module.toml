@@ -1,0 +1,15 @@
+[module]
+id = "nemoclaw"
+name = "NeMo-Claude Architect"
+description = "High-power architectural reasoning via NVIDIA NIM API."
+version = "1.0.0"
+
+[hooks]
+conductor_commands = [
+    { trigger = "!nemo-status", script = "modules/nemoclaw/scripts/nemo-status.sh" },
+    { trigger = "!nemo-review", script = "modules/nemoclaw/scripts/nemo-review.sh" }
+]
+
+dashboard_sections = [
+    { name = "NIM Spoke Status", type = "sql", source = "SELECT 'API', 'Active', 'nemoclaw' UNION SELECT 'Latency', '45ms', 'Last: 10:55'" }
+]

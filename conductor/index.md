@@ -22,4 +22,7 @@
 - [Track: Multi-Backend Compute](./tracks/backend_selection_20260323/index.md)
 - [Track: CI/CD Deployment](./tracks/cicd_pipeline_20260323/index.md)
 - [Track: Autonomous Evolution](./tracks/autonomous_evolution_20260323/index.md)
+- [Track: nemoclaw NVIDIA Integration](./tracks/nemoclaw_nvidia_20260324/index.md)
+- [Track: Specialized NeMo Module](./tracks/nemo_module_20260324/index.md)
 - [Milestone 10 Plan](./milestone-10-plan.md)
+- [Milestone 11 Plan](./milestone-11-plan.md)
