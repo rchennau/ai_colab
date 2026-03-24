@@ -204,7 +204,7 @@ run_agent() {
 # Main loop: restart agent if it exits (but not on normal exit)
 RESTART_COUNT=0
 MAX_RESTARTS=10
-RESTART_DELAY=5
+RESTART_DELAY=10
 
 while true; do
     echo "[$(date '+%H:%M:%S')] Starting $TOOL agent (attempt $((RESTART_COUNT + 1)))..."

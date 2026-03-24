@@ -19,6 +19,10 @@ TEST_INTERVAL=900 # 15 minutes
 SCREENSHOT_INTERVAL=300 # 5 minutes
 LAST_TEST_RUN=0
 LAST_SCREENSHOT_TIME=0
+# Tracking variables for status broadcasts to avoid noise
+LAST_BROADCAST_PCT=""
+LAST_BROADCAST_TRACK=""
+LAST_BROADCAST_TIME=0
 # Initialize last event ID to avoid processing old messages
 LAST_EVENT_ID=$(hcom events --last 1 | grep -oP '"id":\K\d+' || echo "0")
 
@@ -108,10 +112,17 @@ sync_blackboard_status() {
         # Sync tracks back from blackboard
         update_tracks_from_blackboard "$tracks_file"
         
-        # Broadcast status update
-        hcom send @all --intent inform --thread "plan-sync" -- "Status: $complete/$total tracks complete ($percent%). Next up: ${next_track:-All complete}."
+        # Smart Status Broadcast: Only send if something changed or 10 mins passed
+        local current_time=$(date +%s)
+        if [[ "$percent" != "$LAST_BROADCAST_PCT" || "$next_track" != "$LAST_BROADCAST_TRACK" || $((current_time - LAST_BROADCAST_TIME)) -gt 600 ]]; then
+            hcom send @all --intent inform --thread "plan-sync" -- "Status: $complete/$total tracks complete ($percent%). Next up: ${next_track:-All complete}."
+            LAST_BROADCAST_PCT="$percent"
+            LAST_BROADCAST_TRACK="$next_track"
+            LAST_BROADCAST_TIME=$current_time
+            echo "[$(date +%T)] Broadcasted status update: $percent%"
+        fi
         
-        echo "[$(date +%T)] Status updated: $percent%. Next: $next_track"
+        echo "[$(date +%T)] Status checked: $percent%. Next: $next_track"
     else
         echo "[$(date +%T)] Warning: $tracks_file not found."
     fi
@@ -328,6 +339,6 @@ while true; do
     rm -f "$TMP_ID_FILE"
 
     # Wait for next interval or interrupt
-    # We use a shorter interval for hcom listen when we have command handling
-    hcom listen --timeout 10 --name "$HCOM_NAME" > /dev/null 2>&1 || sleep 10
+    # We use a 30s interval to reduce hcom churn
+    hcom listen --timeout 30 --name "$HCOM_NAME" > /dev/null 2>&1 || sleep 30
 done

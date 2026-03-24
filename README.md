@@ -74,7 +74,7 @@ Always use **lowercase letters, numbers, and underscores** for agent names. Hyph
 Agent wrappers register their identity with `hcom start` upon initialization. This ensures that agents show up correctly in the TUI (`hcom list`). 
 
 **Technical Details:**
-- **Persistent Status (v2.2.3):** Agents now maintain a background 10s heartbeat using `hcom start`, which ensures they stay "ready" in the TUI without "stealing" messages (as a full `hcom listen` would). This solves the `exit:timeout` cycling issue.
+- **Lightweight Pulse (v2.2.4):** Agents now maintain a background 20s heartbeat using `hcom status --name`. This updates their "last seen" timestamp in the TUI without emitting disruptive "created" events or displacing active interactive sessions. This resolves the `exit:timeout` flapping and TUI event noise.
 - **Status Persistence:** Agents maintain their `listening` status as long as their primary interactive CLI process is running.
 - **Location:** `scripts/utils.sh` (`start_heartbeat()` function) and `scripts/agent-wrapper.sh`.
 

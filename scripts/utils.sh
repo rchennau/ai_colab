@@ -140,13 +140,13 @@ register_hcom() {
 start_heartbeat() {
     local tool_name="${1:-agent}"
     if [ -n "${HCOM_NAME:-}" ]; then
-        # Continuous heartbeat via 'hcom start' in background.
-        # This keeps the status 'ready' in TUI without stealing messages like 'listen' would.
-        # We use a 10s interval to ensure status stays fresh.
+        # Lightweight heartbeat via 'hcom status' in background.
+        # This updates the 'last seen' timestamp without emitting 'created' events.
+        # We use a 20s interval to ensure status stays fresh without excessive churn.
         (
             while true; do
-                hcom start --as "$HCOM_NAME" > /dev/null 2>&1 || true
-                sleep 10
+                hcom status --name "$HCOM_NAME" > /dev/null 2>&1 || true
+                sleep 20
             done
         ) &
         HEARTBEAT_PID=$!
