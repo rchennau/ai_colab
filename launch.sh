@@ -93,9 +93,20 @@ case "$LAUNCH_CHOICE" in
     *) echo "Invalid choice"; exit 1 ;;
 esac
 
-# 3. Agent Selection (if dashboard)
+# 3. Module Selection
+echo -e "\n${BLUE}Enable Addon Modules:${NC}"
+ENABLE_ATARI_LX=false
+read -p "Enable Atari-LX Module? [y/N]: " -n 1 -r; echo ""
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    ENABLE_ATARI_LX=true
+    export ENABLE_ATARI_LX=true
+fi
+
+# 4. Agent Selection (if dashboard)
 DASHBOARD_FLAGS=""
 if [ "$DASHBOARD" = true ]; then
+    [[ "$ENABLE_ATARI_LX" == "true" ]] && DASHBOARD_FLAGS+=" --atari"
+    
     echo -e "\n${BLUE}Select agents for the Dashboard:${NC}"
     read -p "Include Qwen? [Y/n]: " -n 1 -r; echo ""; [[ $REPLY =~ ^[Nn]$ ]] && DASHBOARD_FLAGS+=" --no-qwen"
     read -p "Include Gemini? [Y/n]: " -n 1 -r; echo ""; [[ $REPLY =~ ^[Nn]$ ]] && DASHBOARD_FLAGS+=" --no-gemini"

@@ -226,18 +226,47 @@ for llm in $LLMS_TO_INSTALL; do
     esac
 done
 
-# 4. Optional: Atari800 for Atari-LX project
-if [[ -f "$SCRIPT_DIR/scripts/hcom-atari-screen.sh" ]] && ! has_command atari800; then
-    echo -e "\n${YELLOW}Atari800 emulator is missing. Required for atari-debate and screen capture.${NC}"
-    read -p "Do you want to install atari800? [y/N] " -n 1 -r
-    echo ""
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        if [[ "$IS_MACOS" == true ]] && has_command brew; then
-            brew install atari800
-        else
-            echo "Please install atari800 using your package manager."
+# 4. Optional: Addon Modules
+echo -e "\n${GREEN}Available Addon Modules:${NC}"
+echo "1) Atari-LX Development (6502 Assembly, Emulator sync, Performance tools)"
+echo "n) None (standard project-agnostic orchestration)"
+echo ""
+read -p "Install Atari-LX module? [y/N] " -n 1 -r
+echo ""
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    echo -e "${BLUE}Installing Atari-LX Module...${NC}"
+    
+    # Check for Atari800 for Atari-LX project
+    if ! has_command atari800; then
+        echo -e "${YELLOW}Atari800 emulator is missing.${NC}"
+        read -p "  Install atari800? [y/N] " -n 1 -r
+        echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            if [[ "$IS_MACOS" == true ]] && has_command brew; then
+                brew install atari800
+            else
+                echo "  Please install atari800 using your package manager."
+            fi
         fi
     fi
+    
+    # Check for CC65 (compiler)
+    if ! has_command cl65; then
+        echo -e "${YELLOW}CC65 toolchain is missing.${NC}"
+        read -p "  Install cc65? [y/N] " -n 1 -r
+        echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            if [[ "$IS_MACOS" == true ]] && has_command brew; then
+                brew install cc65
+            else
+                echo "  Please install cc65 using your package manager."
+            fi
+        fi
+    fi
+    
+    # Create module directory and copy scripts (already done in dev, but good for install)
+    mkdir -p "$SCRIPT_DIR/modules/atari-lx/scripts"
+    echo "  ✓ Atari-LX module configured."
 fi
 
 # 5. Conductor Agent Setup
