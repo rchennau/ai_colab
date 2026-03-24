@@ -1,15 +1,19 @@
 # Product Definition: ai-colab
 
 ## Vision
-To provide a seamless, multi-agent development environment where different AI agents (Gemini, Claude, Qwen, etc.) can collaborate autonomously or semi-autonomously on complex software engineering tasks. **ai-colab is project-agnostic** and can be extended via optional addon modules for specialized domains.
+To provide a seamless, multi-agent development environment where different AI agents (Gemini, Claude, Qwen, etc.) can collaborate autonomously or semi-autonomously on complex software engineering tasks. **ai-colab is a self-hosted framework** that can be containerized for local use or deployed to any Docker-capable server (RunPod, AWS, GCP).
 
-## Target Audience
-AI Engineering teams, open-source contributors, and developers working on multi-agent systems where task orchestration, state synchronization, and collaborative problem-solving are required.
+## Multi-Backend Compute
+While the ai-colab core is self-hosted, it supports connecting to specialized compute backends for high-power agent deployment (specifically for **nemoclaud** or other large-scale models):
+- **NVIDIA NIM API**: Hosted inference for enterprise models.
+- **RunPod**: On-demand GPU infrastructure for containerized agent scaling.
+- **Local Server**: Standard vLLM/Ollama local execution.
 
 ## Core Pillars
 
-### **1. Unified Orchestration**
+### **1. Self-Hosted Orchestration**
 *   **Conductor Agent:** A dedicated agent that manages the project plan (`tracks.md`) and ensures all other agents are working on the right tasks.
+*   **Container Ready:** A unified Docker image for self-hosting the entire framework on any infrastructure.
 *   **Automated Quality Assurance:** Integrated testing (`hcom-test-runner.sh`) and code reviews (`hcom-code-review.sh`) broadcast results via `hcom`.
 *   **Git Lifecycle Automation:** Automated branching, commit validation, and pseudo-PR management.
 

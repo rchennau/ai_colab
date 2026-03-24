@@ -23,11 +23,20 @@ To provide a seamless development experience where human oversight and AI autono
 
 ## 🏗️ Core Architecture
 
+### **Self-Hosted Framework**
+ai-colab is designed to be **self-hosted**. The entire environment (Dashboard, Conductor, Agents) can be run locally or wrapped in a Docker image for deployment to any server that runs Docker (RunPod, AWS, GCP, etc.).
+
+### **Multi-Backend Compute**
+For high-power agent deployment (specifically **nemoclaud**), ai-colab supports multiple compute backends:
+- **NVIDIA NIM API**: High-performance hosted models.
+- **RunPod**: Scalable GPU infrastructure for specialized agent containers.
+- **Local Server**: Local inference via vLLM or Ollama.
+
 ### **Intelligent Orchestration**
-The **Conductor** is the project's "orchestrator," managing the project plan (`conductor/tracks.md`).
-*   **Automated Git Lifecycle (New!):** Automatically creates branches for new tasks, commits progress upon successful testing, and manages "Pseudo-PRs" for your approval.
-*   **Semantic Knowledge Base (New!):** An LLM-powered RAG system. Use `!kb <query>` to search the entire codebase for architectural guidance, not just documentation.
-*   **Unified Dashboard (v3.0):** A high-density project summary showing Milestone progress, active tasks, and recent hcom events in a single pane.
+The **Conductor** manages the project plan (`conductor/tracks.md`).
+*   **Automated Git Lifecycle:** Isolated branches, auto-commits, and pseudo-PRs.
+*   **Semantic Knowledge Base:** LLM-powered architectural search (`!kb`).
+*   **Unified Dashboard (v3.0):** High-density real-time TUI summary.
 
 ### **hcom (Hook-Comms)**
 The backbone of ai-colab. All agents communicate via [hcom](https://github.com/aannoo/hcom):

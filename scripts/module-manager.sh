@@ -280,6 +280,23 @@ parse_conductor_commands() {
     done < "$manifest"
 }
 
+# Parse all conductor commands from all active modules
+# Usage: parse_all_conductor_commands
+# Output: trigger|script|module_id triples, one per line
+parse_all_conductor_commands() {
+    local modules=$(discover_modules)
+    
+    while IFS= read -r module_id; do
+        if [[ -n "$module_id" ]] && is_module_active "$module_id"; then
+            parse_conductor_commands "$module_id" | while IFS='|' read -r trigger script; do
+                if [[ -n "$trigger" ]]; then
+                    echo "${trigger}|${script}|${module_id}"
+                fi
+            done
+        fi
+    done <<< "$modules"
+}
+
 # ============================================
 # Dashboard Sections
 # ============================================
@@ -456,12 +473,21 @@ main() {
                 echo -e "${RED}Error: Module ID required${NC}"
                 exit 1
             fi
-            echo -e "${BLUE}Conductor Commands:${NC}"
-            parse_conductor_commands "$1" | while IFS='|' read -r trigger script; do
-                if [[ -n "$trigger" ]]; then
-                    echo "  $trigger → $script"
-                fi
-            done
+            if [[ "$1" == "all" ]]; then
+                # List commands from all active modules (for !help)
+                parse_all_conductor_commands | while IFS='|' read -r trigger script module_id; do
+                    if [[ -n "$trigger" ]]; then
+                        echo "  $trigger → $script ($module_id)"
+                    fi
+                done
+            else
+                echo -e "${BLUE}Conductor Commands:${NC}"
+                parse_conductor_commands "$1" | while IFS='|' read -r trigger script; do
+                    if [[ -n "$trigger" ]]; then
+                        echo "  $trigger → $script"
+                    fi
+                done
+            fi
             ;;
         dashboard)
             if [[ -z "$1" ]]; then

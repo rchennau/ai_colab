@@ -343,20 +343,11 @@ process_commands() {
         if [[ "$text" == !* ]]; then
             local cmd=$(echo "$text" | awk '{print $1}')
             log_info "Received command: $cmd from $from"
-            
+
             case "$cmd" in
                 "!test")
                     hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Initiating full test suite..."
                     run_automated_tests
-                    ;;
-                "!screenshot")
-                    if [[ "${ENABLE_ATARI_LX:-false}" == "true" ]]; then
-                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Capturing emulator state..."
-                        bash "$PROJECT_ROOT/modules/atari-lx/scripts/hcom-atari-screen.sh" > /dev/null 2>&1 || true
-                        LAST_SCREENSHOT_TIME=$CURRENT_TIME # Reset timer
-                    else
-                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: Atari-LX module is not enabled."
-                    fi
                     ;;
                 "!approve")
                     local target=$(echo "$text" | awk '{print $2}')
@@ -366,7 +357,7 @@ process_commands() {
                         grep "^\- \[ \] \*\*Track:" "$TRACKS_FILE" | while read -r line; do
                             local track_name=$(echo "$line" | sed 's/^- \[ \] \*\*Track: //;s/\*\*.*//')
                             local track_slug=$(echo "$track_name" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g;s/--\+/-/g;s/^-//;s/-$//')
-                            
+
                             if [[ "$target" == "$track_slug" || "$target" == "$track_name" ]]; then
                                 hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Approving track: $track_name..."
                                 blackboard_set "track_status_$track_slug" "approved"
@@ -379,46 +370,22 @@ process_commands() {
                         hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Usage: !approve <track_slug_or_name>"
                     fi
                     ;;
-                "!memory-map")
-                    if [[ "${ENABLE_ATARI_LX:-false}" == "true" ]]; then
-                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Generating visual memory map..."
-                        if bash "$PROJECT_ROOT/modules/atari-lx/scripts/atari-mem-map.sh" > /dev/null 2>&1; then
-                            local map_report="$PROJECT_ROOT/conductor/reports/memory_map.txt"
-                            if [[ -f "$map_report" ]]; then
-                                hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" --file "$map_report"
-                            else
-                                hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: Memory map report not found."
-                            fi
-                        else
-                            hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: Failed to generate memory map. Ensure build artifacts exist."
-                        fi
-                    else
-                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: Atari-LX module is not enabled."
-                    fi
-                    ;;
-                "!perf-trend")
-                    if [[ "${ENABLE_ATARI_LX:-false}" == "true" ]]; then
-                        local routine=$(echo "$text" | awk '{print $2}')
-                        if [[ -n "$routine" ]]; then
-                            hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Analyzing performance trends for $routine..."
-                            # Capture output of trend tool
-                            local report=$(bash "$SCRIPT_DIR/hcom-perf-trend.sh" "$routine")
-                            hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "$report"
-                        else
-                            hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Usage: !perf-trend <routine_name>"
-                        fi
-                    else
-                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: Atari-LX module is not enabled."
-                    fi
-                    ;;
                 "!status")
                     local progress=$(blackboard_get "project_progress")
                     local active=$(blackboard_get "active_track")
                     local test_status=$(blackboard_get "test_last_status")
-                    local build_time=$(blackboard_get "atari_last_build")
                     
+                    # Build status message with module-specific info
                     local msg="Project Health: Progress ${progress:-N/A} | Active Track: ${active:-None} | Tests: ${test_status:-N/A}"
-                    [[ "${ENABLE_ATARI_LX:-false}" == "true" ]] && msg="$msg | Last Build: ${build_time:-N/A}"
+                    
+                    # Add module-specific status (dynamically)
+                    if [[ -f "$SCRIPT_DIR/module-manager.sh" ]]; then
+                        # Check for any active modules and add their status
+                        local active_modules=$(bash "$SCRIPT_DIR/module-manager.sh" active 2>/dev/null | grep -v "^Available\|^Active\|^$" | wc -l)
+                        if [[ "$active_modules" -gt 0 ]]; then
+                            msg="$msg | Modules: $active_modules active"
+                        fi
+                    fi
                     
                     hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "$msg"
                     ;;
@@ -440,9 +407,6 @@ process_commands() {
                     hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Starting project build..."
                     if make build > /dev/null 2>&1; then
                         hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Build successful."
-                        if [[ "${ENABLE_ATARI_LX:-false}" == "true" ]]; then
-                            bash "$PROJECT_ROOT/modules/atari-lx/scripts/hcom-atari-sync.sh" > /dev/null 2>&1 || true
-                        fi
                     else
                         hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Build failed."
                     fi
@@ -455,22 +419,22 @@ process_commands() {
                 "!kb")
                     local query=$(echo "$text" | cut -d' ' -f2-)
                     local map_file="$PROJECT_ROOT/conductor/knowledge_base_map.md"
-                    
+
                     if [[ ! -f "$map_file" ]]; then
                         hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: Knowledge base map not found. Running indexer..."
                         bash "$SCRIPT_DIR/hcom-kb-index.sh" > /dev/null 2>&1 || true
                     fi
-                    
+
                     hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Searching Semantic Knowledge Base for: $query"
-                    
+
                     # 1. Identify relevant files using the map
                     local search_prompt="Based on the following Project Map, identify the top 3 most relevant file paths for the query: '$query'. Return ONLY a comma-separated list of paths relative to the project root.
                     Map:
                     $(cat "$map_file")"
-                    
+
                     local file_list=$(gemini --model gemini-3.0 --headless --prompt "$search_prompt" 2>&1 | tr -d '\n' | sed 's/ //g')
                     log_info "Identified files: $file_list"
-                    
+
                     # 2. Retrieve content and generate final answer
                     local combined_content=""
                     IFS=',' read -ra ADDR <<< "$file_list"
@@ -481,12 +445,12 @@ process_commands() {
                             $(cat "$PROJECT_ROOT/$file")"
                         fi
                     done
-                    
+
                     if [[ -n "$combined_content" ]]; then
                         local final_prompt="Based on the following project context and documentation, provide a comprehensive architectural answer to the query: '$query'.
                         Context:
                         $combined_content"
-                        
+
                         local answer=$(gemini --model gemini-3.0 --headless --prompt "$final_prompt" 2>&1)
                         hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "$answer"
                     else
@@ -500,7 +464,7 @@ process_commands() {
                     ;;
                 "!web-start")
                     hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Starting Visual Health Dashboard on http://localhost:5050..."
-                    python3 "$SCRIPT_DIR/hcom-web-dashboard.py" > /tmp/hcom-web.log 2>&1 &
+                    python3 "$SCRIPT_DIR/hom-web-dashboard.py" > /tmp/hcom-web.log 2>&1 &
                     echo $! > /tmp/hcom-web.pid
                     ;;
                 "!web-stop")
@@ -509,33 +473,31 @@ process_commands() {
                         hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Web dashboard stopped."
                     fi
                     ;;
-                "!profile")
-                    if [[ "${ENABLE_ATARI_LX:-false}" == "true" ]]; then
-                        local file=$(echo "$text" | awk '{print $2}')
-                        if [[ -f "$file" ]]; then
-                            hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Profiling performance for: $file"
-                            bash "$PROJECT_ROOT/modules/atari-lx/scripts/hcom-profiler.sh" "$file" > /dev/null 2>&1 || true
-                        else
-                            hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: File not found: $file"
-                        fi
-                    else
-                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: Atari-LX module is not enabled."
-                    fi
-                    ;;
                 "!help")
-                    local help_msg="Conductor Commands: !status, !test, !approve, !build, !git-sync, !kb <query>, !kb-refresh, !web-start, !evolve, !switch <path>, !help"
-                    # Add modular commands to help if needed, or just let them be discovered
+                    # Build help message with core and module commands
+                    local core_cmds="!status, !test, !approve, !build, !git-sync, !kb <query>, !kb-refresh, !web-start, !web-stop, !evolve, !switch <path>"
+                    
+                    # Add module commands dynamically
+                    local mod_cmds=""
+                    if [[ -f "$SCRIPT_DIR/module-manager.sh" ]]; then
+                        mod_cmds=$(bash "$SCRIPT_DIR/module-manager.sh" commands all 2>/dev/null | grep -v "^Conductor\|^$" | cut -d'→' -f1 | tr '\n' ', ' | sed 's/, $//')
+                    fi
+                    
+                    local help_msg="Core Commands: $core_cmds"
+                    [[ -n "$mod_cmds" ]] && help_msg="$help_msg | Module Commands: $mod_cmds"
+                    help_msg="$help_msg | !help"
+                    
                     hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "$help_msg"
                     ;;
                 "!evolve")
                     hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Analyzing project for autonomous evolution..."
-                    
+
                     # Gather context
                     local product_ctx=$(cat "$PROJECT_ROOT/conductor/product.md" | sed -n '/## Future Considerations/,$p')
                     local tracks_ctx=$(cat "$TRACKS_FILE" | grep "^\- \[" | head -n 20)
                     local map_ctx=""
                     [ -f "$PROJECT_ROOT/conductor/knowledge_base_map.md" ] && map_ctx=$(cat "$PROJECT_ROOT/conductor/knowledge_base_map.md" | head -n 50)
-                    
+
                     local evolve_prompt="You are the Conductor Agent for ai-colab. Based on the following project context, propose ONE new development track that aligns with the 'Future Considerations'.
                     
                     Future Considerations:
@@ -569,17 +531,28 @@ process_commands() {
                     fi
                     ;;
                 *)
-                    # Check for modular commands
-                    local mod_cmd=$(python3 "$SCRIPT_DIR/module-manager.py" commands "$PROJECT_ROOT" | grep -A 2 "\"$cmd\")" || true)
-                    if [[ -n "$mod_cmd" ]]; then
-                        # This is a bit tricky to eval correctly in shell with arguments
-                        # For now, let's just trigger the script associated with the command
-                        # We re-fetch the script path specifically
-                        local script_path=$(python3 "$SCRIPT_DIR/module-manager.py" commands "$PROJECT_ROOT" | grep -A 2 "\"$cmd\")" | grep "bash \"\$PROJECT_ROOT/" | cut -d'"' -f2 | sed "s|\$PROJECT_ROOT/||")
-                        if [[ -n "$script_path" ]]; then
-                            hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Executing modular command: $cmd"
-                            bash "$PROJECT_ROOT/$script_path" "$@" > /dev/null 2>&1 || true
+                    # Check for modular commands from active modules
+                    # Use module-manager.sh to find and execute module commands
+                    if [[ -f "$SCRIPT_DIR/module-manager.sh" ]]; then
+                        # Find the command in all active modules
+                        local cmd_info=$(bash "$SCRIPT_DIR/module-manager.sh" commands all 2>/dev/null | grep "^  $cmd " | head -1)
+                        
+                        if [[ -n "$cmd_info" ]]; then
+                            # Extract script path from output: "  !cmd → path/to/script (module-id)"
+                            local script_path=$(echo "$cmd_info" | sed 's/.*→ \([^ ]*\) .*/\1/')
+                            local module_id=$(echo "$cmd_info" | sed 's/.* (\([^)]*\))/\1/')
+                            
+                            if [[ -n "$script_path" ]]; then
+                                hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Executing module command: $cmd (from $module_id)"
+                                bash "$PROJECT_ROOT/$script_path" "$@" > /dev/null 2>&1 || true
+                            else
+                                hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: Command script not found: $cmd"
+                            fi
+                        else
+                            hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Unknown command: $cmd. Use !help for available commands."
                         fi
+                    else
+                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: Module manager not found."
                     fi
                     ;;
             esac
@@ -605,11 +578,16 @@ main() {
             run_automated_tests
         fi
 
-        # Check for periodic screenshots
-        if [[ "${ENABLE_ATARI_LX:-false}" == "true" ]] && (( CURRENT_TIME - LAST_SCREENSHOT_TIME > SCREENSHOT_INTERVAL )); then
-            log_info "Capturing scheduled screenshot..."
-            bash "$PROJECT_ROOT/modules/atari-lx/scripts/hcom-atari-screen.sh" > /dev/null 2>&1 || true
-            LAST_SCREENSHOT_TIME=$CURRENT_TIME
+        # Check for periodic module hooks (e.g., screenshots from Atari-LX)
+        # This is now handled dynamically via module system
+        if [[ -f "$SCRIPT_DIR/module-manager.sh" ]]; then
+            # Execute periodic hooks from modules (if defined in future module.toml extensions)
+            # For now, check for Atari-LX screenshot hook specifically for backward compatibility
+            if is_module_active "atari-lx" && (( CURRENT_TIME - LAST_SCREENSHOT_TIME > SCREENSHOT_INTERVAL )); then
+                log_info "Capturing scheduled screenshot (Atari-LX module)..."
+                bash "$PROJECT_ROOT/modules/atari-lx/scripts/hcom-atari-screen.sh" > /dev/null 2>&1 || true
+                LAST_SCREENSHOT_TIME=$CURRENT_TIME
+            fi
         fi
 
         # Check for periodic KB indexing (once every 12 hours)

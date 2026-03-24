@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# ai-colab RunPod Deployment Script
-# Deploys an agent pod to RunPod via API.
+# ai-colab Cloud Deployment Script (RunPod)
+# Self-hosts the unified ai-colab environment on a RunPod instance.
 
 set -euo pipefail
 
@@ -14,10 +14,10 @@ if [[ -z "$API_KEY" ]]; then
     exit 1
 fi
 
-IMAGE_NAME=${1:-ai-colab-agent:latest}
+IMAGE_NAME=${1:-ai-colab-unified:latest}
 GPU_TYPE=${2:-"NVIDIA GeForce RTX 3090"}
 
-log_info "Deploying agent to RunPod ($GPU_TYPE)..."
+log_info "Self-hosting ai-colab on RunPod ($GPU_TYPE)..."
 
 # Construct GraphQL mutation
 QUERY="mutation {
