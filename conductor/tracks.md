@@ -13,7 +13,7 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 - [x] **Milestone 7: Advanced Knowledge & Git Lifecycle Automation** (Done ✅)
 - [x] **Milestone 8: Hardware Visualization & Performance Dashboards** (Done ✅)
 - [x] **Milestone 9: Dynamic Plugin System & Fleet Orchestration** (Done ✅)
-- [ ] **Milestone 10: Multi-Backend Compute & CI/CD Automation** (Active 🚀)
+- [x] **Milestone 10: Multi-Backend Compute & CI/CD Automation** (Done ✅)
 
 ---
 
@@ -73,7 +73,6 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - [x] Automated validation and commits.
   - [x] PR approval workflow (`!approve`).
 
-
 - [x] **Track: Semantic Knowledge Base (RAG-lite)** (Done ✅)
   - **Assigned:** @conductor
   - **Description:** Upgrade `!kb` with semantic context-aware search.
@@ -107,19 +106,17 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - **Assigned:** @architect
   - **Description:** Replace system-prompt-based roles with a formalized MCP toolset for handoffs and proposals.
 
-- [ ] **Track: Multi-Backend Compute Selection (Cloud/Edge)** (New)
+- [x] **Track: Multi-Backend Compute Selection (Cloud/Edge)** (Done ✅)
   - **Assigned:** @conductor
   - **Description:** Implement selection logic for running high-power agents via NVIDIA API, RunPod, or Local Server.
 
-- [ ] **Track: CI/CD Pipeline for Agent Deployment** (New)
+- [x] **Track: CI/CD Pipeline for Agent Deployment** (Done ✅)
   - **Assigned:** @architect
   - **Description:** Develop automation scripts to build agent containers and deploy them to RunPod or NVIDIA infrastructure.
 
-- [ ] **Track: Autonomous Project Evolution** (New)
+- [x] **Track: Autonomous Project Evolution** (Done ✅)
   - **Assigned:** @conductor
   - **Description:** Enable the Conductor to autonomously suggest new development tracks based on project status and future goals.
-
-
 
 ---
 
@@ -135,4 +132,3 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - [x] Implemented continuous 10s background heartbeat loop in `scripts/utils.sh` via `start_heartbeat()`.
   - [x] Updated `scripts/agent-wrapper.sh` and `scripts/hcom-chat-bridge.sh` to use the new heartbeat with robust cleanup.
   - [x] Verified that status stays `ready` without intercepting messages from interactive sessions.
-
