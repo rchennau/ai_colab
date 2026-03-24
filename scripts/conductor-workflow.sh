@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Automated hcom Conductor Agent Workflow
 # Monitors project tracks, updates status, and ensures alignment.
+# Now with dynamic module support for extensible commands and features.
 
 set -euo pipefail
 
@@ -42,6 +43,19 @@ trap cleanup EXIT
 # Thread subscription
 hcom events sub --agent "$HCOM_NAME" --thread "plan-sync" --once > /dev/null 2>&1 &
 hcom events sub --agent "$HCOM_NAME" --thread "track-updates" > /dev/null 2>&1 &
+
+# ============================================
+# Module System Integration
+# ============================================
+
+# Check if a module is active
+# Usage: is_module_active "atari-lx"
+is_module_active() {
+    local module_id="$1"
+    local env_var_name=$(echo "$module_id" | tr '[:lower:]-' '[:upper:]_')
+    local env_var="ENABLE_${env_var_name}"
+    [[ "${!env_var:-}" == "true" ]]
+}
 
 commit_track_changes() {
     local track_slug="$1"
