@@ -60,7 +60,21 @@ detect_mcp_configs() {
         FOUND_ARTIFACTS+=("MCP server directory")
     fi
     
-    # Check for MCP server implementations
+    # Check for MCP server implementations (Python)
+    if [[ -f "$project_root/atari_agent/server.py" ]]; then
+        MCP_CONFIGS+=("atari_agent/server.py (Python MCP Server)")
+        FOUND_ARTIFACTS+=("MCP server implementation (atari-dev-agent)")
+    fi
+    
+    # Check for other Python MCP servers
+    if find "$project_root" -maxdepth 3 -name "server.py" -type f 2>/dev/null | grep -q .; then
+        local mcp_servers=$(find "$project_root" -maxdepth 3 -name "server.py" -type f 2>/dev/null)
+        if echo "$mcp_servers" | grep -q "mcp\|agent"; then
+            FOUND_ARTIFACTS+=("Python MCP server implementations")
+        fi
+    fi
+    
+    # Check for MCP server directories
     if find "$project_root" -maxdepth 3 -name "*mcp*server*" -type f 2>/dev/null | grep -q .; then
         FOUND_ARTIFACTS+=("MCP server implementations")
     fi
@@ -77,12 +91,18 @@ detect_product_plans() {
         "conductor/plan.md"
         "conductor/tech-stack.md"
         "conductor/workflow.md"
+        "conductor/index.md"
+        "conductor/product-guidelines.md"
+        "conductor/code_styleguides/"
         "docs/product.md"
         "docs/roadmap.md"
         "docs/plans/"
         "PLAN.md"
         "ROADMAP.md"
         "TODO.md"
+        ".qwen/conductor-agent.md"
+        ".qwen/product-plan.md"
+        ".gemini/conductor.md"
     )
     
     for path in "${plan_paths[@]}"; do
@@ -94,6 +114,20 @@ detect_product_plans() {
     # Check for conductor directory
     if [[ -d "$project_root/conductor" ]]; then
         FOUND_ARTIFACTS+=("Conductor directory structure")
+        
+        # Count tracks
+        local track_count=$(find "$project_root/conductor/tracks" -maxdepth 1 -type d 2>/dev/null | wc -l)
+        if [[ $track_count -gt 1 ]]; then
+            FOUND_ARTIFACTS+=("Track system ($((track_count - 1)) tracks)")
+        fi
+    fi
+    
+    # Check for .qwen agent configurations (Atari-LX pattern)
+    if [[ -d "$project_root/.qwen" ]]; then
+        local qwen_files=$(find "$project_root/.qwen" -name "*.md" -type f 2>/dev/null | wc -l)
+        if [[ $qwen_files -gt 0 ]]; then
+            FOUND_ARTIFACTS+=("Qwen agent configurations ($qwen_files files)")
+        fi
     fi
 }
 
@@ -109,6 +143,7 @@ detect_kb_artifacts() {
         "kb/"
         ".knowledge/"
         "*.kb.md"
+        "docs/kb/index.md"
     )
     
     for path in "${kb_paths[@]}"; do
@@ -120,6 +155,14 @@ detect_kb_artifacts() {
     # Check for semantic index
     if [[ -f "$project_root/.kb_index.db" ]] || [[ -f "$project_root/kb_index.db" ]]; then
         FOUND_ARTIFACTS+=("Knowledge base index database")
+    fi
+    
+    # Check for comprehensive KB directories (Atari-LX pattern)
+    if [[ -d "$project_root/docs/kb" ]]; then
+        local kb_file_count=$(find "$project_root/docs/kb" -name "*.md" -type f 2>/dev/null | wc -l)
+        if [[ $kb_file_count -gt 10 ]]; then
+            FOUND_ARTIFACTS+=("Comprehensive knowledge base ($kb_file_count files)")
+        fi
     fi
 }
 
@@ -309,7 +352,40 @@ perform_migration() {
     
     # Step 2: Integrate MCP configurations
     echo -e "${YELLOW}Step 2: Integrating MCP configurations...${NC}"
-    
+
+    # Check for Python MCP servers (Atari-LX pattern)
+    local mcp_server_source="$project_root/atari_agent"
+    if [[ -d "$mcp_server_source" ]] && [[ -f "$mcp_server_source/server.py" ]]; then
+        echo -e "  ${BLUE}Detected Python MCP Server:${NC} atari_agent/"
+        echo -e "  ${YELLOW}Recommendation:${NC} Copy to modules/atari-8bit/mcp/"
+        echo ""
+        read -p "  Copy MCP server to atari-8bit module? [Y/n]: " -n 1 -r
+        echo ""
+        
+        if [[ $REPLY =~ ^[Yy]$ || -z $REPLY ]]; then
+            local mcp_target="$project_root/modules/atari-8bit/mcp"
+            mkdir -p "$(dirname "$mcp_target")"
+            
+            if [[ -d "$mcp_target" ]]; then
+                echo -e "  ${YELLOW}  Warning: Target directory exists, skipping copy${NC}"
+                echo -e "  Target: $mcp_target"
+            else
+                cp -r "$mcp_server_source" "$mcp_target"
+                echo -e "  ${GREEN}✓${NC} Copied MCP server to: $mcp_target"
+                
+                # Update module.toml if it exists
+                local module_toml="$project_root/modules/atari-8bit/module.toml"
+                if [[ -f "$module_toml" ]]; then
+                    echo -e "  ${GREEN}✓${NC} MCP server ready for module integration"
+                    echo -e "     Update $module_toml with:"
+                    echo -e "     [hooks]"
+                    echo -e "     mcp_server = \"modules/atari-8bit/mcp/server.py\""
+                fi
+            fi
+        fi
+        echo ""
+    fi
+
     # Create ai-colab MCP config if it doesn't exist
     local ai_colab_mcp="$project_root/config.toml"
     if [[ ${#MCP_CONFIGS[@]} -gt 0 ]]; then
