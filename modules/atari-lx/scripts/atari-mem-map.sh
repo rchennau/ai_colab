@@ -6,7 +6,7 @@ set -euo pipefail
 
 # Find script directory and source utils
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/utils.sh"
+source "$SCRIPT_DIR/../../../scripts/utils.sh"
 
 PROJECT_ROOT=$(detect_project_root)
 MAP_FILE="$PROJECT_ROOT/build/bin/atari-lx.map"

@@ -1,5 +1,5 @@
 # ai-colab Project Map (Semantic Knowledge Base)
-Generated: 2026-03-23 20:38:01
+Generated: 2026-03-23 20:55:53
 
 ## Project Structure
 - conductor: Project management documentation.

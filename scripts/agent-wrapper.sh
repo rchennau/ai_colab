@@ -62,15 +62,16 @@ if [ -z "$CMD" ] && [ "$TOOL" != "nemo" ]; then
     exit 1
 fi
 
-# 2. atari_agent MCP Configuration
-# Point to the master branch version in Atari-LX project
-PROJECT_ROOT=$(detect_project_root 2>/dev/null || dirname "$SCRIPT_DIR")
-ATARI_LX_DIR="$(dirname "$PROJECT_ROOT")/Atari-LX"
-ATARI_AGENT_DIR="$ATARI_LX_DIR/atari_agent"
+# 2. Module-Specific Configuration (e.g., Atari-LX)
+if [[ "${ENABLE_ATARI_LX:-false}" == "true" ]]; then
+    PROJECT_ROOT=$(detect_project_root 2>/dev/null || dirname "$SCRIPT_DIR")
+    ATARI_LX_DIR="$(dirname "$PROJECT_ROOT")/Atari-LX"
+    ATARI_AGENT_DIR="$ATARI_LX_DIR/atari_agent"
 
-if [ -d "$ATARI_AGENT_DIR" ]; then
-    # Inject MCP server into environment/args if supported by the tool
-    export PYTHONPATH="$ATARI_AGENT_DIR:${PYTHONPATH:-}"
+    if [ -d "$ATARI_AGENT_DIR" ]; then
+        # Inject MCP server into environment/args if supported by the tool
+        export PYTHONPATH="$ATARI_AGENT_DIR:${PYTHONPATH:-}"
+    fi
 fi
 
 # 3. vLLM specific config for ELC

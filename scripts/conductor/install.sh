@@ -36,6 +36,13 @@ cp "$SCRIPT_DIR/status.sh" "$CONDUCTOR_HOME/"
 cp "$SCRIPT_DIR/../"*".sh" "$HOME/.hcom/scripts/" 2>/dev/null || true
 cp "$SCRIPT_DIR/../utils.sh" "$HOME/.hcom/scripts/"
 
+# Copy addon modules if they exist
+if [ -d "$SCRIPT_DIR/../../modules" ]; then
+    echo -e "${GREEN}Copying addon modules to $HOME/.hcom/modules...${NC}"
+    mkdir -p "$HOME/.hcom/modules"
+    cp -R "$SCRIPT_DIR/../../modules/"* "$HOME/.hcom/modules/"
+fi
+
 # Create bin directory
 mkdir -p "$BIN_DIR"
 

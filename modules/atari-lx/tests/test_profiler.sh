@@ -4,7 +4,7 @@
 set -euo pipefail
 
 # Find script directory and source utils
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../scripts" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/../../../scripts && pwd)"
 source "$SCRIPT_DIR/utils.sh"
 
 # Mock/Override DB_PATH for testing
@@ -29,7 +29,7 @@ echo "LDA #0" > "$DUMMY_FILE"
 
 # 1. Test Profiling
 echo "Testing profiling..."
-bash "$SCRIPT_DIR/hcom-profiler.sh" "$DUMMY_FILE" > /dev/null
+bash "$SCRIPT_DIR/../modules/atari-lx/scripts/hcom-profiler.sh" "$DUMMY_FILE" > /dev/null
 
 BLACKBOARD_KEY="perf_$(echo "$DUMMY_FILE" | tr '/' '_')"
 RESULT=$(blackboard_get "$BLACKBOARD_KEY")

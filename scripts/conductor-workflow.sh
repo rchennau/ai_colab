@@ -346,9 +346,13 @@ process_commands() {
                     run_automated_tests
                     ;;
                 "!screenshot")
-                    hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Capturing emulator state..."
-                    bash "$SCRIPT_DIR/hcom-atari-screen.sh" > /dev/null 2>&1 || true
-                    LAST_SCREENSHOT_TIME=$CURRENT_TIME # Reset timer
+                    if [[ "${ENABLE_ATARI_LX:-false}" == "true" ]]; then
+                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Capturing emulator state..."
+                        bash "$PROJECT_ROOT/modules/atari-lx/scripts/hcom-atari-screen.sh" > /dev/null 2>&1 || true
+                        LAST_SCREENSHOT_TIME=$CURRENT_TIME # Reset timer
+                    else
+                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: Atari-LX module is not enabled."
+                    fi
                     ;;
                 "!approve")
                     local target=$(echo "$text" | awk '{print $2}')
@@ -372,27 +376,35 @@ process_commands() {
                     fi
                     ;;
                 "!memory-map")
-                    hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Generating visual memory map..."
-                    if bash "$SCRIPT_DIR/atari-mem-map.sh" > /dev/null 2>&1; then
-                        local map_report="$PROJECT_ROOT/conductor/reports/memory_map.txt"
-                        if [[ -f "$map_report" ]]; then
-                            hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" --file "$map_report"
+                    if [[ "${ENABLE_ATARI_LX:-false}" == "true" ]]; then
+                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Generating visual memory map..."
+                        if bash "$PROJECT_ROOT/modules/atari-lx/scripts/atari-mem-map.sh" > /dev/null 2>&1; then
+                            local map_report="$PROJECT_ROOT/conductor/reports/memory_map.txt"
+                            if [[ -f "$map_report" ]]; then
+                                hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" --file "$map_report"
+                            else
+                                hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: Memory map report not found."
+                            fi
                         else
-                            hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: Memory map report not found."
+                            hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: Failed to generate memory map. Ensure build artifacts exist."
                         fi
                     else
-                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: Failed to generate memory map. Ensure build artifacts exist."
+                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: Atari-LX module is not enabled."
                     fi
                     ;;
                 "!perf-trend")
-                    local routine=$(echo "$text" | awk '{print $2}')
-                    if [[ -n "$routine" ]]; then
-                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Analyzing performance trends for $routine..."
-                        # Capture output of trend tool
-                        local report=$(bash "$SCRIPT_DIR/hcom-perf-trend.sh" "$routine")
-                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "$report"
+                    if [[ "${ENABLE_ATARI_LX:-false}" == "true" ]]; then
+                        local routine=$(echo "$text" | awk '{print $2}')
+                        if [[ -n "$routine" ]]; then
+                            hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Analyzing performance trends for $routine..."
+                            # Capture output of trend tool
+                            local report=$(bash "$SCRIPT_DIR/hcom-perf-trend.sh" "$routine")
+                            hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "$report"
+                        else
+                            hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Usage: !perf-trend <routine_name>"
+                        fi
                     else
-                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Usage: !perf-trend <routine_name>"
+                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: Atari-LX module is not enabled."
                     fi
                     ;;
                 "!status")
@@ -401,8 +413,10 @@ process_commands() {
                     local test_status=$(blackboard_get "test_last_status")
                     local build_time=$(blackboard_get "atari_last_build")
                     
-                    hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- \
-                        "Project Health: Progress ${progress:-N/A} | Active Track: ${active:-None} | Tests: ${test_status:-N/A} | Last Build: ${build_time:-N/A}"
+                    local msg="Project Health: Progress ${progress:-N/A} | Active Track: ${active:-None} | Tests: ${test_status:-N/A}"
+                    [[ "${ENABLE_ATARI_LX:-false}" == "true" ]] && msg="$msg | Last Build: ${build_time:-N/A}"
+                    
+                    hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "$msg"
                     ;;
                 "!switch")
                     local new_path=$(echo "$text" | awk '{print $2}')
@@ -422,7 +436,9 @@ process_commands() {
                     hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Starting project build..."
                     if make build > /dev/null 2>&1; then
                         hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Build successful."
-                        bash "$SCRIPT_DIR/hcom-atari-sync.sh" > /dev/null 2>&1 || true
+                        if [[ "${ENABLE_ATARI_LX:-false}" == "true" ]]; then
+                            bash "$PROJECT_ROOT/modules/atari-lx/scripts/hcom-atari-sync.sh" > /dev/null 2>&1 || true
+                        fi
                     else
                         hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Build failed."
                     fi
@@ -479,17 +495,22 @@ process_commands() {
                     hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Index refreshed."
                     ;;
                 "!profile")
-                    local file=$(echo "$text" | awk '{print $2}')
-                    if [[ -f "$file" ]]; then
-                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Profiling performance for: $file"
-                        bash "$SCRIPT_DIR/hcom-profiler.sh" "$file" > /dev/null 2>&1 || true
+                    if [[ "${ENABLE_ATARI_LX:-false}" == "true" ]]; then
+                        local file=$(echo "$text" | awk '{print $2}')
+                        if [[ -f "$file" ]]; then
+                            hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Profiling performance for: $file"
+                            bash "$PROJECT_ROOT/modules/atari-lx/scripts/hcom-profiler.sh" "$file" > /dev/null 2>&1 || true
+                        else
+                            hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: File not found: $file"
+                        fi
                     else
-                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: File not found: $file"
+                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: Atari-LX module is not enabled."
                     fi
                     ;;
                 "!help")
-                    hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- \
-                        "Conductor Commands: !status, !test, !screenshot, !build, !git-sync, !kb <query>, !profile <file>, !switch <path>, !help"
+                    local help_msg="Conductor Commands: !status, !test, !approve, !build, !git-sync, !kb <query>, !kb-refresh, !switch <path>, !help"
+                    [[ "${ENABLE_ATARI_LX:-false}" == "true" ]] && help_msg="$help_msg, !screenshot, !memory-map, !profile <file>, !perf-trend <routine>"
+                    hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "$help_msg"
                     ;;
                 *)
                     # Unknown command
@@ -518,9 +539,9 @@ main() {
         fi
 
         # Check for periodic screenshots
-        if (( CURRENT_TIME - LAST_SCREENSHOT_TIME > SCREENSHOT_INTERVAL )); then
+        if [[ "${ENABLE_ATARI_LX:-false}" == "true" ]] && (( CURRENT_TIME - LAST_SCREENSHOT_TIME > SCREENSHOT_INTERVAL )); then
             log_info "Capturing scheduled screenshot..."
-            bash "$SCRIPT_DIR/hcom-atari-screen.sh" > /dev/null 2>&1 || true
+            bash "$PROJECT_ROOT/modules/atari-lx/scripts/hcom-atari-screen.sh" > /dev/null 2>&1 || true
             LAST_SCREENSHOT_TIME=$CURRENT_TIME
         fi
 

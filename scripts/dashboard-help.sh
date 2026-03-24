@@ -110,7 +110,7 @@ Commands:
 
 Quick Commands:
   ~/.hcom/scripts/dashboard-launch.sh    Launch/connect to dashboard
-  ~/.hcom/scripts/atari-debate           Start a technical decision debate
+$( [[ -d "$HOME/.hcom/modules/atari-lx" ]] && echo "  ~/.hcom/modules/atari-lx/scripts/atari-debate  Start a technical decision debate" )
 HELP
         ;;
     *)

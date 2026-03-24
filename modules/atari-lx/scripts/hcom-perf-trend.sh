@@ -6,7 +6,7 @@ set -euo pipefail
 
 # Find script directory and source utils
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/utils.sh"
+source "$SCRIPT_DIR/../../../scripts/utils.sh"
 
 ROUTINE_NAME="${1:-}"
 [[ -z "$ROUTINE_NAME" ]] && { echo "Usage: hcom-perf-trend.sh <routine_name>"; exit 1; }

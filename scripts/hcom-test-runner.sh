@@ -13,7 +13,7 @@ TEST_DIR="$PROJECT_ROOT/tests"
 KV_TOOL="$SCRIPT_DIR/hcom-kv"
 
 echo "========================================="
-echo "  Atari-LX Automated Test Runner"
+echo "  ai-colab Automated Test Runner"
 echo "========================================="
 
 TOTAL=0

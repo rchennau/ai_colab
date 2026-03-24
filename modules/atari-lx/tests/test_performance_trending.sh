@@ -4,7 +4,7 @@
 set -euo pipefail
 
 # Find script directory and source utils
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../scripts" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/../../../scripts && pwd)"
 source "$SCRIPT_DIR/utils.sh"
 
 # Mock/Override DB_PATH for testing
@@ -21,7 +21,7 @@ sqlite3 "$HCOM_DB_PATH" "INSERT INTO performance (timestamp, routine, cycles, co
 
 # 2. Test Trending
 echo "Testing trend report..."
-REPORT=$(bash "$SCRIPT_DIR/hcom-perf-trend.sh" "test_routine")
+REPORT=$(bash "$SCRIPT_DIR/../modules/atari-lx/scripts/hcom-perf-trend.sh" "test_routine")
 
 if [[ "$REPORT" == *"Improvement"* ]]; then
     echo "SUCCESS: Trend identified improvement."
@@ -40,7 +40,7 @@ hcom() {
 }
 export -f hcom
 
-REPORT=$(bash "$SCRIPT_DIR/hcom-perf-trend.sh" "test_routine")
+REPORT=$(bash "$SCRIPT_DIR/../modules/atari-lx/scripts/hcom-perf-trend.sh" "test_routine")
 
 if [[ "$REPORT" == *"Regression"* ]]; then
     echo "SUCCESS: Trend identified regression."

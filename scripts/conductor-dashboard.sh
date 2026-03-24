@@ -18,7 +18,7 @@ WHITE='\033[1;37m'
 render_header() {
     clear
     echo -e "${BLUE}╔══════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║${WHITE}               Atari-LX Conductor Dashboard v3.0              ${BLUE}║${NC}"
+    echo -e "${BLUE}║${WHITE}               ai-colab Conductor Dashboard v3.0              ${BLUE}║${NC}"
     echo -e "${BLUE}╚══════════════════════════════════════════════════════════════╝${NC}"
 }
 
@@ -30,30 +30,17 @@ render_progress() {
 }
 
 render_performance() {
+    [[ "${ENABLE_ATARI_LX:-false}" == "false" ]] && return
     echo -e "\n${YELLOW}--- Latest Performance ---${NC}"
     # Fetch last 3 routines
-    if has_command sqlite3; then
-        sqlite3 "$DB_PATH" "SELECT routine, cycles, timestamp FROM performance ORDER BY timestamp DESC LIMIT 3;" | while read -r line; do
-            local routine=$(echo "$line" | cut -d'|' -f1)
-            local cycles=$(echo "$line" | cut -d'|' -f2)
-            printf "  %-20s : %-10s cycles\n" "$routine" "$cycles"
-        done
-    else
-        echo "  (SQLite not available)"
-    fi
+...
 }
 
 render_memory() {
+    [[ "${ENABLE_ATARI_LX:-false}" == "false" ]] && return
     echo -e "\n${GREEN}--- Memory Allocation ---${NC}"
     local map_file="$PROJECT_ROOT/conductor/reports/memory_map.txt"
-    if [[ -f "$map_file" ]]; then
-        # Show segments from the map file
-        grep -E "^[A-Z0-9_]{2,}" "$map_file" | head -n 3 | while read -r line; do
-            echo "  $line"
-        done
-    else
-        echo "  (No memory map generated. Run !memory-map)"
-    fi
+...
 }
 
 render_events() {

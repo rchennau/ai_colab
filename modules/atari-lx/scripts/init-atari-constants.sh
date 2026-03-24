@@ -6,7 +6,7 @@ set -euo pipefail
 
 # Find script directory and source utils
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/utils.sh"
+source "$SCRIPT_DIR/../../../scripts/utils.sh"
 
 KV_TOOL="$SCRIPT_DIR/hcom-kv"
 

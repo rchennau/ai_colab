@@ -6,7 +6,7 @@ set -euo pipefail
 
 # Find script directory and source utils
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/utils.sh"
+source "$SCRIPT_DIR/../../../scripts/utils.sh"
 
 FILE_PATH="$1"
 [[ -z "$FILE_PATH" ]] && { echo "Usage: hcom-profiler.sh <file_path>"; exit 1; }

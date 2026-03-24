@@ -60,9 +60,12 @@ create_dashboard() {
         $hcom_bin relay daemon start > /dev/null 2>&1 || true
     fi
 
-    # Initialize Atari Integration
-    bash "$SCRIPT_DIR/init-atari-constants.sh" > /dev/null 2>&1 || true
-    bash "$SCRIPT_DIR/hcom-atari-sync.sh" > /dev/null 2>&1 || true
+    # Initialize Atari Integration (Addon)
+    if [[ "${ENABLE_ATARI_LX:-false}" == "true" ]]; then
+        print_info "Initializing Atari-LX Module..."
+        bash "$PROJECT_ROOT/modules/atari-lx/scripts/init-atari-constants.sh" > /dev/null 2>&1 || true
+        bash "$PROJECT_ROOT/modules/atari-lx/scripts/hcom-atari-sync.sh" > /dev/null 2>&1 || true
+    fi
 
     sleep 1
 
@@ -138,18 +141,25 @@ create_dashboard() {
         tmux send-keys -t "$console_id" "alias b='hcom send --name \$HCOM_NAME @conductor -- \"!build\"'" C-m
         tmux send-keys -t "$console_id" "clear" C-m
         tmux send-keys -t "$console_id" "echo -e \"${BLUE}╔══════════════════════════════════════════════╗${NC}\"" C-m
-        tmux send-keys -t "$console_id" "echo -e \"${BLUE}║         Atari-LX HCOM User Console           ║${NC}\"" C-m
+        tmux send-keys -t "$console_id" "echo -e \"${BLUE}║           ai-colab HCOM User Console         ║${NC}\"" C-m
         tmux send-keys -t "$console_id" "echo -e \"${BLUE}╚══════════════════════════════════════════════╝${NC}\"" C-m
         tmux send-keys -t "$console_id" "echo -e \"Logged in as: ${GREEN}$user_name${NC}\"" C-m
         tmux send-keys -t "$console_id" "echo -e \"\"" C-m
         tmux send-keys -t "$console_id" "echo -e \"${YELLOW}Available Conductor Commands:${NC}\"" C-m
         tmux send-keys -t "$console_id" "echo -e \"  ${GREEN}s${NC} (!status)      - Get project health & progress\"" C-m
         tmux send-keys -t "$console_id" "echo -e \"  ${GREEN}t${NC} (!test)        - Run all automated tests\"" C-m
-        tmux send-keys -t "$console_id" "echo -e \"  ${GREEN}b${NC} (!build)       - Build project & sync constants\"" C-m
-        tmux send-keys -t "$console_id" "echo -e \"  !screenshot      - Capture current emulator state\"" C-m
+        tmux send-keys -t "$console_id" "echo -e \"  ${GREEN}b${NC} (!build)       - Build project and integrated apps\"" C-m
         tmux send-keys -t "$console_id" "echo -e \"  !kb <query>      - Search architectural knowledge base\"" C-m
-        tmux send-keys -t "$console_id" "echo -e \"  !profile <file>  - Profile code performance (cycles)\"" C-m
         tmux send-keys -t "$console_id" "echo -e \"  !git-sync        - Pull latest changes from remote\"" C-m
+        
+        if [[ "${ENABLE_ATARI_LX:-false}" == "true" ]]; then
+            tmux send-keys -t "$console_id" "echo -e \"${YELLOW}Atari-LX Commands:${NC}\"" C-m
+            tmux send-keys -t "$console_id" "echo -e \"  !screenshot      - Capture current emulator state\"" C-m
+            tmux send-keys -t "$console_id" "echo -e \"  !memory-map      - View visual memory allocation\"" C-m
+            tmux send-keys -t "$console_id" "echo -e \"  !profile <file>  - Profile code performance (cycles)\"" C-m
+            tmux send-keys -t "$console_id" "echo -e \"  !perf-trend <rt> - View historical performance trend\"" C-m
+        fi
+        
         tmux send-keys -t "$console_id" "echo -e \"  !help            - Show all available commands\"" C-m
         tmux send-keys -t "$console_id" "echo \"\"" C-m
         

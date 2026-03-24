@@ -1,7 +1,7 @@
 # Product Definition: ai-colab
 
 ## Vision
-To provide a seamless, multi-agent development environment where different AI agents (Gemini, Claude, Qwen, etc.) can collaborate autonomously or semi-autonomously on complex software engineering tasks.
+To provide a seamless, multi-agent development environment where different AI agents (Gemini, Claude, Qwen, etc.) can collaborate autonomously or semi-autonomously on complex software engineering tasks. **ai-colab is project-agnostic** and can be extended via optional addon modules for specialized domains.
 
 ## Target Audience
 AI Engineering teams, open-source contributors, and developers working on multi-agent systems where task orchestration, state synchronization, and collaborative problem-solving are required.
@@ -11,17 +11,20 @@ AI Engineering teams, open-source contributors, and developers working on multi-
 ### **1. Unified Orchestration**
 *   **Conductor Agent:** A dedicated agent that manages the project plan (`tracks.md`) and ensures all other agents are working on the right tasks.
 *   **Automated Quality Assurance:** Integrated testing (`hcom-test-runner.sh`) and code reviews (`hcom-code-review.sh`) broadcast results via `hcom`.
+*   **Git Lifecycle Automation:** Automated branching, commit validation, and pseudo-PR management.
 
 ### **2. Frictionless Setup**
-*   **Master Installer (`install.sh`):** A single command to set up the entire environment, including `hcom`, `tmux`, and multiple LLM CLIs.
-*   **One-Click Launch (`launch.sh`):** A unified interface to start the collaboration session, choosing the desired mix of agents.
+*   **Master Installer (`install.sh`):** A single command to set up the project-agnostic core and optionally install domain-specific modules.
+*   **One-Click Launch (`launch.sh`):** A unified interface to start the collaboration session, choosing the desired mix of agents and active modules.
 
 ### **3. Inter-Agent Intelligence**
 *   **hcom Integration:** A robust messaging layer for real-time communication between LLMs.
-*   **Shared Blackboard:** A lightweight KV store for sharing ephemeral project state (e.g., current task, performance bottlenecks, shared constants).
+*   **Shared Blackboard:** A lightweight KV store for sharing ephemeral project state.
+*   **Semantic Knowledge Base:** RAG-lite system for architectural guidance based on the entire codebase.
 
-### **4. Specialized Domains (Atari-LX)**
+### **4. Modular Addons (Atari-LX)**
 *   **High-Performance Context:** Specific tools and prompts for 6502 assembly, Atari hardware constraints, and performance-critical systems.
+*   **Hardware Visualization:** ASCII-art memory map generator and performance trending dashboards.
 *   **Automated Debates:** A unique feature to have multiple agents argue the merits of different implementation strategies (`atari-debate.sh`).
 
 ## Roadmap
