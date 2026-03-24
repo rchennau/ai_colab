@@ -117,18 +117,47 @@ sync_blackboard_status() {
     fi
 }
 
+check_track_dependencies() {
+    local track_line="$1"
+    local tracks_file="$2"
+    
+    # Extract dependency if exists: (Requires: Track Name)
+    # Using sed instead of grep -P for macOS/BSD compatibility
+    local dep_name=$(echo "$track_line" | sed -n 's/.*(Requires: \(.*\)).*/\1/p' || echo "")
+    
+    if [[ -n "$dep_name" ]]; then
+        # Check if the required track is marked as [x]
+        if grep -q "\- \[x\] \*\*Track: $dep_name\*\*" "$tracks_file"; then
+            return 0 # Met
+        else
+            return 1 # Not met
+        fi
+    fi
+    return 0 # No dependency
+}
+
 spawn_workers() {
     local tracks_file="$1"
-    local next_track=$(grep -m 1 "^\- \[ \] \*\*Track:" "$tracks_file" | sed 's/^- \[ \] \*\*Track: //;s/\*\*.*//')
     
-    [[ -z "$next_track" ]] && return
-
     local max_workers=$(blackboard_get "conductor_max_workers")
-    [[ -z "$max_workers" ]] && max_workers=1
+    [[ -z "$max_workers" || "$max_workers" == "None" ]] && max_workers=1
     
-    local current_workers=$(hcom list --names | grep -c "worker-" || true)
+    # Find all tracks marked as [ ]
+    grep "^\- \[ \] \*\*Track:" "$tracks_file" | while read -r line; do
+        # Stop if we already have max workers
+        local current_workers=$(hcom list --names | grep -c "worker-" || true)
+        if [[ "$current_workers" -ge "$max_workers" ]]; then
+            # echo "[$(date +%T)] Max workers ($max_workers) reached. Skipping further spawns."
+            break
+        fi
 
-    if [[ "$current_workers" -lt "$max_workers" ]]; then
+        # Check dependencies
+        if ! check_track_dependencies "$line" "$tracks_file"; then
+            # echo "[$(date +%T)] Skipping track due to unmet dependency: $line"
+            continue
+        fi
+
+        local next_track=$(echo "$line" | sed 's/^- \[ \] \*\*Track: //;s/\*\*.*//')
         local track_slug=$(echo "$next_track" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g;s/--\+/-/g;s/^-//;s/-$//')
         
         local assigned_agent=$(blackboard_get "track_assigned_$track_slug")
@@ -154,7 +183,7 @@ spawn_workers() {
                     "Your task is to implement the following track: $next_track. Please review conductor/tracks.md for specifications and report progress via the blackboard (hcom-kv)."
             fi
         fi
-    fi
+    done
 }
 
 run_automated_tests() {
@@ -220,6 +249,30 @@ process_commands() {
                     hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Syncing with remote repository..."
                     local sync_out=$(git pull 2>&1 || echo "Git pull failed")
                     hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Sync result: $sync_out"
+                    ;;
+                "!kb")
+                    local query=$(echo "$text" | cut -d' ' -f2-)
+                    hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Searching Knowledge Base for: $query"
+                    # Simple grep-based search in conductor/ directory
+                    local results=$(grep -ril "$query" "$PROJECT_ROOT/conductor/"*.md 2>/dev/null | head -n 3)
+                    if [[ -n "$results" ]]; then
+                        local resp="Found relevant docs:"
+                        for res in $results; do
+                            resp="$resp $(basename "$res")"
+                        done
+                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "$resp"
+                    else
+                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "No architectural guidance found for '$query'."
+                    fi
+                    ;;
+                "!profile")
+                    local file=$(echo "$text" | awk '{print $2}')
+                    if [[ -f "$file" ]]; then
+                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Profiling performance for: $file"
+                        bash "$SCRIPT_DIR/hcom-profiler.sh" "$file" > /dev/null 2>&1 || true
+                    else
+                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: File not found: $file"
+                    fi
                     ;;
                 *)
                     # Unknown command
