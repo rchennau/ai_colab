@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # ai-colab Unified Launcher
 # Launches the multi-agent dashboard, conductor, and selected agents.
+# Now with terminal-specific optimizations for iTerm2, WSL, and more.
 
 set -e
 
@@ -18,10 +19,28 @@ else
     has_command() { command -v "$1" >/dev/null 2>&1; }
 fi
 
+# Source terminal detection and apply optimizations
+if [ -f "$SCRIPT_DIR/scripts/terminal-detect.sh" ]; then
+    source "$SCRIPT_DIR/scripts/terminal-detect.sh"
+    init_terminal
+fi
+
 echo -e "${BLUE}╔════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║       ai-colab Unified Launcher       ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════╝${NC}"
 echo ""
+
+# Display terminal info if detected
+if [[ -n "$AI_COLAB_TERMINAL" ]]; then
+    echo -e "${GREEN}Terminal:${NC} $AI_COLAB_TERMINAL ($AI_COLAB_ENVIRONMENT)"
+    
+    if [[ "$AI_COLAB_TERMINAL" == "iterm2" ]]; then
+        echo -e "${BLUE}✓ iTerm2 optimizations active${NC}"
+    elif [[ "$AI_COLAB_ENVIRONMENT" == "wsl" ]]; then
+        echo -e "${BLUE}✓ WSL optimizations active${NC}"
+    fi
+    echo ""
+fi
 
 # Check for hcom
 if ! has_command hcom; then

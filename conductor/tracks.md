@@ -64,13 +64,21 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 - [x] **Track: Intelligent Context & Shared Memory**
   *Link: [./milestone-5-plan.md](./milestone-5-plan.md)*
 
-- [ ] **Track: Git-Aware Conductor & PR Automation** (New)
+- [x] **Track: Git-Aware Conductor & PR Automation** (Done ✅)
   - **Assigned:** @conductor
   - **Description:** Automate git branch creation, commits for passing tests, and pseudo-PR management.
+  - [x] Branch management in `conductor-workflow.sh`.
+  - [x] Automated validation and commits.
+  - [x] PR approval workflow (`!approve`).
 
-- [ ] **Track: Semantic Knowledge Base (RAG-lite)** (New)
+
+- [x] **Track: Semantic Knowledge Base (RAG-lite)** (Done ✅)
   - **Assigned:** @conductor
   - **Description:** Upgrade `!kb` with semantic context-aware search.
+  - [x] Project indexing (`hcom-kb-index.sh`).
+  - [x] Semantic search in `conductor-workflow.sh`.
+  - [x] Knowledge maintenance (periodic indexing).
+
 
 ---
 

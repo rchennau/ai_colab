@@ -18,10 +18,33 @@ else
     has_command() { command -v "$1" >/dev/null 2>&1; }
 fi
 
+# Source terminal detection
+if [ -f "$SCRIPT_DIR/scripts/terminal-detect.sh" ]; then
+    source "$SCRIPT_DIR/scripts/terminal-detect.sh"
+    init_terminal
+fi
+
 echo -e "${BLUE}╔════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║       ai-colab Master Installer       ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════╝${NC}"
 echo ""
+
+# Terminal Detection & Optimization
+if [[ -n "$AI_COLAB_TERMINAL" ]]; then
+    echo -e "${GREEN}Terminal Detected:${NC} $AI_COLAB_TERMINAL ($AI_COLAB_ENVIRONMENT)"
+    
+    if [[ "$AI_COLAB_TERMINAL" == "iterm2" ]]; then
+        echo -e "${BLUE}✓ iTerm2 detected - applying optimizations${NC}"
+        echo -e "  - True color support enabled"
+        echo -e "  - Unicode support enabled"
+        echo -e "  - Shell integration available"
+    elif [[ "$AI_COLAB_ENVIRONMENT" == "wsl" ]]; then
+        echo -e "${BLUE}✓ WSL detected - applying optimizations${NC}"
+        echo -e "  - Windows clipboard integration enabled"
+        echo -e "  - Windows Terminal interop configured"
+    fi
+    echo ""
+fi
 
 # 1. Dependency Checks (Base)
 echo -e "${GREEN}Checking base dependencies...${NC}"
@@ -225,12 +248,61 @@ else
     echo -e "${RED}Error: scripts/conductor/install.sh not found.${NC}"
 fi
 
+# 6. Terminal-Specific Configuration
+echo -e "\n${GREEN}Setting up terminal-specific optimizations...${NC}"
+
+if [[ -n "$AI_COLAB_TERMINAL" ]]; then
+    CONFIG_DIR="$SCRIPT_DIR/config"
+    mkdir -p "$CONFIG_DIR"
+    
+    case "$AI_COLAB_TERMINAL" in
+        iterm2)
+            TMUX_CONFIG="$CONFIG_DIR/tmux.iterm2.conf"
+            if [[ -f "$TMUX_CONFIG" ]]; then
+                echo -e "${BLUE}✓ iTerm2 configuration available${NC}"
+                echo -e "  Config: $TMUX_CONFIG"
+                
+                # Offer to install as ~/.tmux.conf if no existing config
+                if [[ ! -f "$HOME/.tmux.conf" ]]; then
+                    read -p "  Install as your default tmux config? [Y/n] " -n 1 -r
+                    echo ""
+                    if [[ $REPLY =~ ^[Yy]$ || -z $REPLY ]]; then
+                        cp "$TMUX_CONFIG" "$HOME/.tmux.conf"
+                        echo -e "  ${GREEN}✓ Installed to ~/.tmux.conf${NC}"
+                    fi
+                fi
+            fi
+            ;;
+        windows_terminal)
+            TMUX_CONFIG="$CONFIG_DIR/tmux.windows-terminal.conf"
+            if [[ -f "$TMUX_CONFIG" ]]; then
+                echo -e "${BLUE}✓ Windows Terminal configuration available${NC}"
+                echo -e "  Config: $TMUX_CONFIG"
+                
+                if [[ ! -f "$HOME/.tmux.conf" ]]; then
+                    read -p "  Install as your default tmux config? [Y/n] " -n 1 -r
+                    echo ""
+                    if [[ $REPLY =~ ^[Yy]$ || -z $REPLY ]]; then
+                        cp "$TMUX_CONFIG" "$HOME/.tmux.conf"
+                        echo -e "  ${GREEN}✓ Installed to ~/.tmux.conf${NC}"
+                    fi
+                fi
+            fi
+            ;;
+        *)
+            echo -e "${YELLOW}○ Using default tmux configuration${NC}"
+            ;;
+    esac
+else
+    echo -e "${YELLOW}○ Terminal detection skipped (run manually with: scripts/terminal-detect.sh)${NC}"
+fi
+
 if [ -n "$SHELL_CONFIG" ] && [ -f "$SHELL_CONFIG" ] && [[ "$SHELL_CONFIG" != *".zshrc" ]]; then
     echo -e "\n${BLUE}Sourcing $SHELL_CONFIG...${NC}"
     source "$SHELL_CONFIG"
 fi
 
-# 6. Final Verification
+# 7. Final Verification
 echo -e "\n${BLUE}Installation complete!${NC}"
 echo -e "Some changes may require restarting your terminal or running:"
 echo -e "  source $SHELL_CONFIG"

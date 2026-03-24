@@ -43,6 +43,79 @@ trap cleanup EXIT
 hcom events sub --agent "$HCOM_NAME" --thread "plan-sync" --once > /dev/null 2>&1 &
 hcom events sub --agent "$HCOM_NAME" --thread "track-updates" > /dev/null 2>&1 &
 
+commit_track_changes() {
+    local track_slug="$1"
+    local track_name="$2"
+    local branch=$(blackboard_get "track_branch_$track_slug")
+    
+    # Check if we are in a git repo
+    if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+        return 1
+    fi
+    
+    # If a branch was used, ensure we are on it
+    if [[ -n "$branch" ]]; then
+        git checkout "$branch" > /dev/null 2>&1
+    fi
+    
+    log_info "Committing changes for track: $track_name"
+    git add .
+    
+    if git commit -m "Auto-commit: Completed track $track_name" > /dev/null 2>&1; then
+        local sha=$(git rev-parse --short HEAD)
+        log_success "Created commit: $sha"
+        blackboard_set "track_commit_$track_slug" "$sha"
+        
+        # If we were on a branch, switch back to previous (main)
+        if [[ -n "$branch" ]]; then
+            git checkout - > /dev/null 2>&1
+        fi
+        return 0
+    else
+        log_warn "No changes to commit for track: $track_name"
+        return 0 # Not an error, just nothing to do
+    fi
+}
+
+merge_track_pr() {
+    local track_slug="$1"
+    local track_name="$2"
+    local branch=$(blackboard_get "track_branch_$track_slug")
+    local commit_sha=$(blackboard_get "track_commit_$track_slug")
+    
+    # Check if we are in a git repo
+    if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+        return 1
+    fi
+    
+    if [[ -n "$branch" ]]; then
+        log_info "Merging branch $branch into current branch..."
+        if git merge "$branch" -m "Auto-merge: Completed track $track_name" > /dev/null 2>&1; then
+            log_success "Merge successful."
+        else
+            log_error "Merge conflict detected for track: $track_name. Manual resolution required."
+            return 1
+        fi
+    fi
+    
+    # Update tracks.md status to [x]
+    log_info "Updating tracks.md for $track_name..."
+    local replacement="- [x] **Track: $track_name**"
+    [[ -n "$commit_sha" ]] && replacement="$replacement ($commit_sha)"
+    
+    # Escape track name for sed
+    local escaped_track_name=$(echo "$track_name" | sed 's/[^^]/[&]/g; s/\^/\\^/g')
+    sed -i.bak "s/^- \[ \] \*\*Track: $escaped_track_name\*\*/$replacement/" "$TRACKS_FILE"
+    rm -f "${TRACKS_FILE}.bak"
+    
+    # Clear blackboard status
+    blackboard_set "track_status_$track_slug" "synced"
+    blackboard_set "pr_$track_slug" "merged"
+    blackboard_set "last_merged_track" "$track_name"
+    
+    return 0
+}
+
 update_tracks_from_blackboard() {
     local tracks_file="$1"
     
@@ -53,26 +126,38 @@ update_tracks_from_blackboard() {
         
         # Check blackboard for status
         local status=$(blackboard_get "track_status_$track_slug")
-        local commit_sha=$(blackboard_get "track_commit_$track_slug")
+        
+        if [[ "$status" == "approved" ]]; then
+            log_info "PR Approved for track: $track_name. Finalizing..."
+            merge_track_pr "$track_slug" "$track_name"
+            hcom send @all --intent inform --thread "plan-sync" -- "PR MERGED: $track_name. Changes integrated into project root."
+            continue
+        fi
         
         if [[ "$status" == "complete" ]]; then
-            log_success "Auto-completing track: $track_name (via blackboard)"
+            log_info "Track reported complete: $track_name. Validating..."
             
-            # Update tracks.md status to [x]
-            # If we have a commit SHA, append it
-            local replacement="- [x] **Track: $track_name**"
-            [[ -n "$commit_sha" ]] && replacement="$replacement ($commit_sha)"
-            
-            # Escape track name for sed
-            local escaped_track_name=$(echo "$track_name" | sed 's/[^^]/[&]/g; s/\^/\\^/g')
-            sed -i.bak "s/^- \[ \] \*\*Track: $escaped_track_name\*\*/$replacement/" "$tracks_file"
-            rm -f "${tracks_file}.bak"
-            
-            # Clear blackboard status to avoid re-processing
-            blackboard_set "track_status_$track_slug" "synced"
-            
-            # Broadcast the update
-            hcom send @all --intent inform --thread "plan-sync" -- "Track completed: $track_name"
+            # 1. Run Automated Tests before committing
+            if bash "$SCRIPT_DIR/hcom-test-runner.sh" > /dev/null 2>&1; then
+                log_success "Validation passed for $track_name."
+                
+                # 2. Commit changes to branch
+                commit_track_changes "$track_slug" "$track_name" || true
+                
+                # 3. Create Pseudo-PR
+                local commit_sha=$(blackboard_get "track_commit_$track_slug")
+                local branch=$(blackboard_get "track_branch_$track_slug")
+                
+                blackboard_set "track_status_$track_slug" "pr_ready"
+                blackboard_set "pr_$track_slug" "pending_approval"
+                
+                # Broadcast the PR
+                hcom send @all --intent inform --thread "plan-sync" -- "PULL REQUEST READY: $track_name. Branch: ${branch:-main}. Commit: ${commit_sha:-no-commit}. Use '!approve $track_slug' to merge."
+            else
+                log_error "Validation FAILED for $track_name. Commit aborted."
+                hcom send @all --intent inform --thread "plan-sync" -- "Validation FAILED for track: $track_name. Manual intervention required."
+                blackboard_set "track_status_$track_slug" "failed_validation"
+            fi
         fi
     done
 }
@@ -148,6 +233,35 @@ check_track_dependencies() {
     return 0 # No dependency
 }
 
+create_track_branch() {
+    local track_slug="$1"
+    local branch_name="track/$track_slug"
+    
+    # Check if we are in a git repo
+    if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+        return 0
+    fi
+    
+    # Check if branch already exists
+    if git rev-parse --verify "$branch_name" > /dev/null 2>&1; then
+        log_info "Git branch already exists: $branch_name"
+        return 0
+    fi
+    
+    log_info "Creating new git branch: $branch_name"
+    if git checkout -b "$branch_name" > /dev/null 2>&1; then
+        log_success "Switched to branch: $branch_name"
+        # Store the branch in the blackboard
+        blackboard_set "track_branch_$track_slug" "$branch_name"
+        # Switch back to the previous branch (usually main) to allow conductor to continue
+        git checkout - > /dev/null 2>&1
+        return 0
+    else
+        log_error "Failed to create git branch: $branch_name"
+        return 1
+    fi
+}
+
 spawn_workers() {
     local tracks_file="$1"
     
@@ -183,18 +297,24 @@ spawn_workers() {
         if [[ "$agent_alive" == false ]]; then
             log_info "Assigning new worker for track: $next_track"
             
-            # Use a unique name for the worker
+            # 1. Create Git Branch for the track
+            create_track_branch "$track_slug" || true
+            local branch=$(blackboard_get "track_branch_$track_slug")
+
+            # 2. Spawn Agent
             local new_worker_name="worker_$(date +%s)_$RANDOM"
             local spawn_out=$(hcom 1 gemini --as "$new_worker_name" --tag worker --headless --go 2>&1 || true)
             local new_agent=$(echo "$spawn_out" | grep "^Names: " | awk '{print $2}' || true)
 
             if [[ -n "$new_agent" ]]; then
-                log_success "Spawned agent $new_agent for $track_slug"
+                log_success "Spawned agent $new_agent for $track_slug (Branch: ${branch:-None})"
                 blackboard_set "track_assigned_$track_slug" "$new_agent"
                 blackboard_set "agent_task_$new_agent" "$next_track"
                 
-                hcom send "@$new_agent" --name "$HCOM_NAME" --intent request --thread "task-handoff" -- \
-                    "Your task is to implement the following track: $next_track. Please review conductor/tracks.md for specifications and report progress via the blackboard (hcom-kv)."
+                local msg="Your task is to implement the following track: $next_track. Please review conductor/tracks.md for specifications and report progress via the blackboard (hcom-kv)."
+                [[ -n "$branch" ]] && msg="$msg Note: You should work in the git branch: $branch"
+                
+                hcom send "@$new_agent" --name "$HCOM_NAME" --intent request --thread "task-handoff" -- "$msg"
             fi
         fi
     done
@@ -229,6 +349,27 @@ process_commands() {
                     hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Capturing emulator state..."
                     bash "$SCRIPT_DIR/hcom-atari-screen.sh" > /dev/null 2>&1 || true
                     LAST_SCREENSHOT_TIME=$CURRENT_TIME # Reset timer
+                    ;;
+                "!approve")
+                    local target=$(echo "$text" | awk '{print $2}')
+                    if [[ -n "$target" ]]; then
+                        # Try to find a track that matches the slug or name
+                        local track_found=false
+                        grep "^\- \[ \] \*\*Track:" "$TRACKS_FILE" | while read -r line; do
+                            local track_name=$(echo "$line" | sed 's/^- \[ \] \*\*Track: //;s/\*\*.*//')
+                            local track_slug=$(echo "$track_name" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g;s/--\+/-/g;s/^-//;s/-$//')
+                            
+                            if [[ "$target" == "$track_slug" || "$target" == "$track_name" ]]; then
+                                hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Approving track: $track_name..."
+                                blackboard_set "track_status_$track_slug" "approved"
+                                # We don't merge here, it will be picked up by the next loop iteration
+                                track_found=true
+                                break
+                            fi
+                        done
+                    else
+                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Usage: !approve <track_slug_or_name>"
+                    fi
                     ;;
                 "!status")
                     local progress=$(blackboard_get "project_progress")
@@ -269,18 +410,49 @@ process_commands() {
                     ;;
                 "!kb")
                     local query=$(echo "$text" | cut -d' ' -f2-)
-                    hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Searching Knowledge Base for: $query"
-                    # Simple grep-based search in conductor/ directory
-                    local results_raw=$(grep -ril "$query" "$PROJECT_ROOT/conductor/"*.md 2>/dev/null | head -n 3)
-                    if [[ -n "$results_raw" ]]; then
-                        local resp="Found relevant docs:"
-                        for res in $results_raw; do
-                            resp="$resp $(basename "$res")"
-                        done
-                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "$resp"
-                    else
-                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "No architectural guidance found for '$query'."
+                    local map_file="$PROJECT_ROOT/conductor/knowledge_base_map.md"
+                    
+                    if [[ ! -f "$map_file" ]]; then
+                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: Knowledge base map not found. Running indexer..."
+                        bash "$SCRIPT_DIR/hcom-kb-index.sh" > /dev/null 2>&1 || true
                     fi
+                    
+                    hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Searching Semantic Knowledge Base for: $query"
+                    
+                    # 1. Identify relevant files using the map
+                    local search_prompt="Based on the following Project Map, identify the top 3 most relevant file paths for the query: '$query'. Return ONLY a comma-separated list of paths relative to the project root.
+                    Map:
+                    $(cat "$map_file")"
+                    
+                    local file_list=$(gemini --model gemini-3.0 --headless --prompt "$search_prompt" 2>&1 | tr -d '\n' | sed 's/ //g')
+                    log_info "Identified files: $file_list"
+                    
+                    # 2. Retrieve content and generate final answer
+                    local combined_content=""
+                    IFS=',' read -ra ADDR <<< "$file_list"
+                    for file in "${ADDR[@]}"; do
+                        if [[ -f "$PROJECT_ROOT/$file" ]]; then
+                            combined_content="$combined_content
+                            --- FILE: $file ---
+                            $(cat "$PROJECT_ROOT/$file")"
+                        fi
+                    done
+                    
+                    if [[ -n "$combined_content" ]]; then
+                        local final_prompt="Based on the following project context and documentation, provide a comprehensive architectural answer to the query: '$query'.
+                        Context:
+                        $combined_content"
+                        
+                        local answer=$(gemini --model gemini-3.0 --headless --prompt "$final_prompt" 2>&1)
+                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "$answer"
+                    else
+                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "No relevant architectural guidance found for '$query'."
+                    fi
+                    ;;
+                "!kb-refresh")
+                    hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Refreshing Semantic Knowledge Base Index..."
+                    bash "$SCRIPT_DIR/hcom-kb-index.sh" > /dev/null 2>&1 || true
+                    hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Index refreshed."
                     ;;
                 "!profile")
                     local file=$(echo "$text" | awk '{print $2}')
@@ -328,13 +500,19 @@ main() {
 
         # Check for periodic screenshots
         if (( CURRENT_TIME - LAST_SCREENSHOT_TIME > SCREENSHOT_INTERVAL )); then
-            echo -e "[$(date +%T)] ${YELLOW}Capturing scheduled screenshot...${NC}"
+            log_info "Capturing scheduled screenshot..."
             bash "$SCRIPT_DIR/hcom-atari-screen.sh" > /dev/null 2>&1 || true
             LAST_SCREENSHOT_TIME=$CURRENT_TIME
         fi
-        
-        # Process new hcom events (commands)
-        local TMP_ID_FILE="/tmp/conductor_last_event_id_$$"
+
+        # Check for periodic KB indexing (once every 12 hours)
+        if [[ ! -f "$PROJECT_ROOT/conductor/knowledge_base_map.md" ]] || (( CURRENT_TIME - $(blackboard_get "kb_last_indexed_ts" || echo 0) > 43200 )); then
+            log_info "Running scheduled KB indexing..."
+            bash "$SCRIPT_DIR/hcom-kb-index.sh" > /dev/null 2>&1 || true
+            blackboard_set "kb_last_indexed_ts" "$CURRENT_TIME"
+        fi
+
+        # Process new hcom events (commands)        local TMP_ID_FILE="/tmp/conductor_last_event_id_$$"
         echo "$LAST_EVENT_ID" > "$TMP_ID_FILE"
         
         # hcom events --all returns one JSON object per line for multiple events
