@@ -56,7 +56,7 @@ update_tracks_from_blackboard() {
         local commit_sha=$(blackboard_get "track_commit_$track_slug")
         
         if [[ "$status" == "complete" ]]; then
-            echo "[$(date +%T)] Auto-completing track: $track_name (via blackboard)"
+            log_success "Auto-completing track: $track_name (via blackboard)"
             
             # Update tracks.md status to [x]
             # If we have a commit SHA, append it
@@ -120,12 +120,12 @@ sync_blackboard_status() {
             LAST_BROADCAST_PCT="$percent"
             LAST_BROADCAST_TRACK="$next_track"
             LAST_BROADCAST_TIME=$current_time
-            echo "[$(date +%T)] Broadcasted status update: $percent%"
+            log_info "Broadcasted status update: $percent%"
         fi
         
-        echo "[$(date +%T)] Status checked: $percent%. Next: $next_track"
+        log_info "Status checked: $percent%. Next: $next_track"
     else
-        echo "[$(date +%T)] Warning: $tracks_file not found."
+        log_warn "$tracks_file not found."
     fi
 }
 
@@ -181,7 +181,7 @@ spawn_workers() {
         fi
 
         if [[ "$agent_alive" == false ]]; then
-            echo "[$(date +%T)] Assigning new worker for track: $next_track"
+            log_info "Assigning new worker for track: $next_track"
             
             # Use a unique name for the worker
             local new_worker_name="worker_$(date +%s)_$RANDOM"
@@ -189,7 +189,7 @@ spawn_workers() {
             local new_agent=$(echo "$spawn_out" | grep "^Names: " | awk '{print $2}' || true)
 
             if [[ -n "$new_agent" ]]; then
-                echo "[$(date +%T)] Spawned agent $new_agent for $track_slug"
+                log_success "Spawned agent $new_agent for $track_slug"
                 blackboard_set "track_assigned_$track_slug" "$new_agent"
                 blackboard_set "agent_task_$new_agent" "$next_track"
                 
@@ -201,7 +201,7 @@ spawn_workers() {
 }
 
 run_automated_tests() {
-    echo "[$(date +%T)] Triggering automated test run..."
+    log_info "Triggering automated test run..."
     bash "$SCRIPT_DIR/hcom-test-runner.sh" > /dev/null 2>&1 || true
     LAST_TEST_RUN=$(date +%s)
 }
@@ -218,7 +218,7 @@ process_commands() {
         # We only care about command triggers starting with !
         if [[ "$text" == !* ]]; then
             local cmd=$(echo "$text" | awk '{print $1}')
-            echo "[$(date +%T)] Received command: $cmd from $from"
+            log_info "Received command: $cmd from $from"
             
             case "$cmd" in
                 "!test")
@@ -303,62 +303,63 @@ process_commands() {
     fi
 }
 
-echo -e "${BLUE}╔════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║       Atari-LX Conductor Agent        ║${NC}"
-echo -e "${BLUE}╚════════════════════════════════════════╝${NC}"
-echo -e "Agent: ${GREEN}$HCOM_NAME${NC}"
-echo -e "Monitoring: ${YELLOW}$TRACKS_FILE${NC}"
-echo -e "Interval: ${INTERVAL}s"
-echo ""
+main() {
+    echo -e "${BLUE}╔════════════════════════════════════════╗${NC}"
+    echo -e "${BLUE}║       Atari-LX Conductor Agent        ║${NC}"
+    echo -e "${BLUE}╚════════════════════════════════════════╝${NC}"
+    echo -e "Agent: ${GREEN}$HCOM_NAME${NC}"
+    echo -e "Monitoring: ${YELLOW}$TRACKS_FILE${NC}"
+    echo -e "Interval: ${INTERVAL}s"
+    echo ""
 
-while true; do
-    echo -e "[$(date +%T)] ${BLUE}Syncing project status...${NC}"
-    sync_blackboard_status "$TRACKS_FILE"
-    
-    echo -e "[$(date +%T)] ${BLUE}Checking for task assignments...${NC}"
-    spawn_workers "$TRACKS_FILE"
-    
-    # Check for periodic tests
-    CURRENT_TIME=$(date +%s)
-    if (( CURRENT_TIME - LAST_TEST_RUN > TEST_INTERVAL )); then
-        echo -e "[$(date +%T)] ${YELLOW}Running scheduled tests...${NC}"
-        run_automated_tests
-    fi
-
-    # Check for periodic screenshots
-    if (( CURRENT_TIME - LAST_SCREENSHOT_TIME > SCREENSHOT_INTERVAL )); then
-        echo -e "[$(date +%T)] ${YELLOW}Capturing scheduled screenshot...${NC}"
-        bash "$SCRIPT_DIR/hcom-atari-screen.sh" > /dev/null 2>&1 || true
-        LAST_SCREENSHOT_TIME=$CURRENT_TIME
-    fi
-    
-    # Process new hcom events (commands)
-    local TMP_ID_FILE="/tmp/conductor_last_event_id_$$"
-    echo "$LAST_EVENT_ID" > "$TMP_ID_FILE"
-    
-    # hcom events --all returns one JSON object per line for multiple events
-    # We want to be quiet here unless we actually process something
-    hcom events --all --sql "id > $LAST_EVENT_ID AND type='message'" --last 5 | while read -r line; do
-        if [[ -n "$line" && "$line" == \{* ]]; then
-            local event_id=$(extract_json_value "$line" "id")
-            if [[ -n "$event_id" && "$event_id" -gt "$(cat "$TMP_ID_FILE")" ]]; then
-                echo -e "[$(date +%T)] ${GREEN}Processing event $event_id...${NC}"
-                process_commands "$line"
-                echo "$event_id" > "$TMP_ID_FILE"
-            fi
+    while true; do
+        echo -e "[$(date +%T)] ${BLUE}Syncing project status...${NC}"
+        sync_blackboard_status "$TRACKS_FILE"
+        
+        echo -e "[$(date +%T)] ${BLUE}Checking for task assignments...${NC}"
+        spawn_workers "$TRACKS_FILE"
+        
+        # Check for periodic tests
+        CURRENT_TIME=$(date +%s)
+        if (( CURRENT_TIME - LAST_TEST_RUN > TEST_INTERVAL )); then
+            echo -e "[$(date +%T)] ${YELLOW}Running scheduled tests...${NC}"
+            run_automated_tests
         fi
-    done
-    LAST_EVENT_ID=$(cat "$TMP_ID_FILE")
-    rm -f "$TMP_ID_FILE"
 
-    # Wait for next interval or interrupt
-    # We use a 30s interval to reduce hcom churn
-    # Use hcom listen with --timeout to wait for messages, but don't redirect to /dev/null
-    # unless we want to keep the terminal CLEAN.
-    # Actually, let's keep it visible so it doesn't look like "just a shell terminal"
-    # Wait, hcom listen without redirection might mess up our loop.
-    # Let's use a simple sleep for now, but keep the status line visible.
-    echo -n -e "[$(date +%T)] ${BLUE}Listening for events...${NC}\r"
-    hcom listen --timeout "$INTERVAL" --name "$HCOM_NAME" > /dev/null 2>&1 || sleep "$INTERVAL"
-    echo -e "\033[K" # Clear the line
-done
+        # Check for periodic screenshots
+        if (( CURRENT_TIME - LAST_SCREENSHOT_TIME > SCREENSHOT_INTERVAL )); then
+            echo -e "[$(date +%T)] ${YELLOW}Capturing scheduled screenshot...${NC}"
+            bash "$SCRIPT_DIR/hcom-atari-screen.sh" > /dev/null 2>&1 || true
+            LAST_SCREENSHOT_TIME=$CURRENT_TIME
+        fi
+        
+        # Process new hcom events (commands)
+        local TMP_ID_FILE="/tmp/conductor_last_event_id_$$"
+        echo "$LAST_EVENT_ID" > "$TMP_ID_FILE"
+        
+        # hcom events --all returns one JSON object per line for multiple events
+        # We want to be quiet here unless we actually process something
+        hcom events --all --sql "id > $LAST_EVENT_ID AND type='message'" --last 5 | while read -r line; do
+            if [[ -n "$line" && "$line" == \{* ]]; then
+                local event_id=$(extract_json_value "$line" "id")
+                if [[ -n "$event_id" && "$event_id" -gt "$(cat "$TMP_ID_FILE")" ]]; then
+                    echo -e "[$(date +%T)] ${GREEN}Processing event $event_id...${NC}"
+                    process_commands "$line"
+                    echo "$event_id" > "$TMP_ID_FILE"
+                fi
+            fi
+        done
+        LAST_EVENT_ID=$(cat "$TMP_ID_FILE")
+        rm -f "$TMP_ID_FILE"
+
+        # Wait for next interval or interrupt
+        echo -n -e "[$(date +%T)] ${BLUE}Listening for events...${NC}\r"
+        hcom listen --timeout "$INTERVAL" --name "$HCOM_NAME" > /dev/null 2>&1 || sleep "$INTERVAL"
+        echo -e "\033[K" # Clear the line
+    done
+}
+
+# Run main if not sourced
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi

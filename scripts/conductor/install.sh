@@ -27,8 +27,13 @@ fi
 
 # Create conductor home if it doesn't exist
 mkdir -p "$CONDUCTOR_HOME"
+mkdir -p "$HOME/.hcom/scripts"
+
+# Copy all scripts to global hcom directory for consistency
+echo -e "${GREEN}Copying scripts to $HOME/.hcom/scripts...${NC}"
 cp "$SCRIPT_DIR/launch.sh" "$CONDUCTOR_HOME/"
 cp "$SCRIPT_DIR/status.sh" "$CONDUCTOR_HOME/"
+cp "$SCRIPT_DIR/../"*".sh" "$HOME/.hcom/scripts/" 2>/dev/null || true
 cp "$SCRIPT_DIR/../utils.sh" "$HOME/.hcom/scripts/"
 
 # Create bin directory
@@ -74,14 +79,17 @@ ALIAS_EOF
         echo -e "  ✓ Conductor aliases already present"
     fi
 
-    # Add qwen and gemini agent aliases for hcom registration
+    # Add AI agent aliases for hcom registration
     if ! grep -q "alias qwen=" "$SHELL_CONFIG" 2>/dev/null; then
         cat >> "$SHELL_CONFIG" << 'ALIAS_EOF'
 
 # AI Agent Wrappers (with hcom registration)
 export SCRIPTS_DIR="$HOME/.hcom/scripts"
-alias qwen='bash "$SCRIPTS_DIR/agent-wrapper.sh" qwen'
-alias gemini='bash "$SCRIPTS_DIR/agent-wrapper.sh" gemini'
+alias qwen='bash "$SCRIPTS_DIR/qwen-hcom.sh"'
+alias gemini='bash "$SCRIPTS_DIR/gemini-hcom.sh"'
+alias deepseek='bash "$SCRIPTS_DIR/deepseek-hcom.sh"'
+alias claude='bash "$SCRIPTS_DIR/claude-hcom.sh"'
+alias nemo='bash "$SCRIPTS_DIR/nemo-hcom.sh"'
 ALIAS_EOF
         echo -e "  ✓ AI agent aliases added to $SHELL_CONFIG"
     else

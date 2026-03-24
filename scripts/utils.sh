@@ -11,6 +11,12 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
+# Logging Utilities
+log_info() { echo -e "${BLUE}[$(date +%T)] INFO:${NC} $1"; }
+log_success() { echo -e "${GREEN}[$(date +%T)] SUCCESS:${NC} $1"; }
+log_warn() { echo -e "${YELLOW}[$(date +%T)] WARNING:${NC} $1"; }
+log_error() { echo -e "${RED}[$(date +%T)] ERROR:${NC} $1"; }
+
 # Check if a command exists
 has_command() {
     command -v "$1" >/dev/null 2>&1

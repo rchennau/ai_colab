@@ -10,7 +10,7 @@ AI Engineering teams, open-source contributors, and developers working on multi-
 
 ### **1. Unified Orchestration**
 *   **Conductor Agent:** A dedicated agent that manages the project plan (`tracks.md`) and ensures all other agents are working on the right tasks.
-*   **Conflict Resolution:** Mechanisms to prevent overlapping work and ensure file-system integrity across multiple AI editors.
+*   **Automated Quality Assurance:** Integrated testing (`hcom-test-runner.sh`) and code reviews (`hcom-code-review.sh`) broadcast results via `hcom`.
 
 ### **2. Frictionless Setup**
 *   **Master Installer (`install.sh`):** A single command to set up the entire environment, including `hcom`, `tmux`, and multiple LLM CLIs.
@@ -22,7 +22,7 @@ AI Engineering teams, open-source contributors, and developers working on multi-
 
 ### **4. Specialized Domains (Atari-LX)**
 *   **High-Performance Context:** Specific tools and prompts for 6502 assembly, Atari hardware constraints, and performance-critical systems.
-*   **Automated Debates:** A unique feature to have multiple agents argue the merits of different implementation strategies.
+*   **Automated Debates:** A unique feature to have multiple agents argue the merits of different implementation strategies (`atari-debate.sh`).
 
 ## Roadmap
 *   **Phase 1:** Unified Installer & Launcher (Done ✅)
@@ -31,6 +31,8 @@ AI Engineering teams, open-source contributors, and developers working on multi-
 *   **Phase 4:** Multi-Project & Advanced Orchestration (Done ✅)
 *   **Phase 5:** Intelligent Context & Shared Memory (Done ✅)
 *   **Phase 6:** Unified Command Center & High-Density Monitoring (Done ✅)
+*   **Phase 7:** Advanced Knowledge (RAG) & Git Lifecycle Automation (Planned)
+*   **Phase 8:** Hardware Visualization & Performance Dashboards (Future)
 
 ## Future Considerations
 - Vector Database integration for large-scale knowledge bases.
