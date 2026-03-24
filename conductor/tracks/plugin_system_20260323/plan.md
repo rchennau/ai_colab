@@ -4,15 +4,15 @@
 - [x] Task: Create `modules/atari-lx/module.toml` based on the new specification.
 - [x] Task: Develop a helper script `scripts/module-manager.sh` to parse TOML manifests (using `sed/awk` or a small Python helper for robustness).
 
-## Phase 2: Orchestration Integration [phase:PENDING]
-- [~] Task: Update `launch.sh` to use the manifest for environment variables and flags.
+## Phase 2: Orchestration Integration [phase:92cbd0f]
+- [x] Task: Update `launch.sh` to use the manifest for environment variables and flags.
   - Already implemented in previous milestone
-- [~] Task: Update `scripts/conductor-workflow.sh` to dynamically load command hooks from active modules.
+- [x] Task: Update `scripts/conductor-workflow.sh` to dynamically load command hooks from active modules.
   - Removed hardcoded `!screenshot`, `!memory-map`, `!perf-trend`, `!profile`
   - Added dynamic command loading via module-manager.sh
   - Updated `!help` to show module commands
   - Added `is_module_active()` helper function
-- [~] Task: Update `scripts/conductor-dashboard.sh` to render modular UI sections.
+- [x] Task: Update `scripts/conductor-dashboard.sh` to render modular UI sections.
   - Already implemented, uses module-manager.py sections
 
 ## Phase 3: Setup Automation
