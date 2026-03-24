@@ -12,3 +12,5 @@
 ## Management
 - [Tracks Registry](./tracks.md)
 - [Tracks Directory](./tracks/)
+- [Track: Git Lifecycle Automation](./tracks/git_lifecycle_20260323/index.md)
+- [Track: Semantic Knowledge Base](./tracks/semantic_kb_20260323/index.md)

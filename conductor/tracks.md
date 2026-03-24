@@ -9,6 +9,9 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 - [x] **Milestone 3: Automated Quality Assurance** (Done ✅)
 - [x] **Milestone 4: Multi-Project & Advanced Orchestration** (Done ✅)
 - [x] **Milestone 5: Intelligent Context & Shared Memory** (Done ✅)
+- [x] **Milestone 6: Unified Command Center & High-Density Monitoring** (Done ✅)
+- [ ] **Milestone 7: Advanced Knowledge & Git Lifecycle Automation** (Planned)
+- [ ] **Milestone 8: Hardware Visualization & Performance Dashboards** (Future)
 
 ---
 
@@ -60,6 +63,14 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 
 - [x] **Track: Intelligent Context & Shared Memory**
   *Link: [./milestone-5-plan.md](./milestone-5-plan.md)*
+
+- [ ] **Track: Git-Aware Conductor & PR Automation** (New)
+  - **Assigned:** @conductor
+  - **Description:** Automate git branch creation, commits for passing tests, and pseudo-PR management.
+
+- [ ] **Track: Semantic Knowledge Base (RAG-lite)** (New)
+  - **Assigned:** @conductor
+  - **Description:** Upgrade `!kb` with semantic context-aware search.
 
 ---
 
