@@ -1,8 +1,8 @@
 # Plan: Generic Module Plugin System
 
 ## Phase 1: Foundation & Manifest
-- [ ] Task: Create `modules/atari-lx/module.toml` based on the new specification.
-- [ ] Task: Develop a helper script `scripts/module-manager.sh` to parse TOML manifests (using `sed/awk` or a small Python helper for robustness).
+- [x] Task: Create `modules/atari-lx/module.toml` based on the new specification.
+- [x] Task: Develop a helper script `scripts/module-manager.sh` to parse TOML manifests (using `sed/awk` or a small Python helper for robustness).
 
 ## Phase 2: Orchestration Integration
 - [ ] Task: Update `launch.sh` to use the manifest for environment variables and flags.
