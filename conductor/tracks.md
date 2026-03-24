@@ -10,8 +10,8 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 - [x] **Milestone 4: Multi-Project & Advanced Orchestration** (Done ✅)
 - [x] **Milestone 5: Intelligent Context & Shared Memory** (Done ✅)
 - [x] **Milestone 6: Unified Command Center & High-Density Monitoring** (Done ✅)
-- [ ] **Milestone 7: Advanced Knowledge & Git Lifecycle Automation** (Planned)
-- [ ] **Milestone 8: Hardware Visualization & Performance Dashboards** (Future)
+- [x] **Milestone 7: Advanced Knowledge & Git Lifecycle Automation** (Done ✅)
+- [ ] **Milestone 8: Hardware Visualization & Performance Dashboards** (Active 🚀)
 
 ---
 
@@ -78,6 +78,14 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - [x] Project indexing (`hcom-kb-index.sh`).
   - [x] Semantic search in `conductor-workflow.sh`.
   - [x] Knowledge maintenance (periodic indexing).
+
+- [ ] **Track: Visual Memory Map Generator** (New)
+  - **Assigned:** @qwen-dev
+  - **Description:** Create a tool to generate a visual representation of the Atari memory map from build artifacts.
+
+- [ ] **Track: Performance Trending & Dashboard (v3.0)** (New)
+  - **Assigned:** @conductor
+  - **Description:** Implement historical performance tracking and a high-density dashboard for cycle counts.
 
 
 ---
