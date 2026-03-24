@@ -29,18 +29,34 @@ render_progress() {
     echo -e "${CYAN}Progress: ${WHITE}$progress${NC} | ${CYAN}Active Track: ${WHITE}$active_track${NC}"
 }
 
-render_performance() {
-    [[ "${ENABLE_ATARI_LX:-false}" == "false" ]] && return
-    echo -e "\n${YELLOW}--- Latest Performance ---${NC}"
-    # Fetch last 3 routines
-...
-}
-
-render_memory() {
-    [[ "${ENABLE_ATARI_LX:-false}" == "false" ]] && return
-    echo -e "\n${GREEN}--- Memory Allocation ---${NC}"
-    local map_file="$PROJECT_ROOT/conductor/reports/memory_map.txt"
-...
+render_modular_sections() {
+    local sections_json=$(python3 "$SCRIPT_DIR/module-manager.py" sections "$PROJECT_ROOT")
+    
+    # Simple extraction of sections from JSON list
+    echo "$sections_json" | grep -oP '\{"name": "[^"]+", "type": "[^"]+", "source": "[^"]+"\}' | while read -r section; do
+        local name=$(echo "$section" | grep -oP '"name": "\K[^"]+')
+        local stype=$(echo "$section" | grep -oP '"type": "\K[^"]+')
+        local source=$(echo "$section" | grep -oP '"source": "\K[^"]+')
+        
+        echo -e "\n${YELLOW}--- $name ---${NC}"
+        if [[ "$stype" == "sql" ]]; then
+            if has_command sqlite3; then
+                sqlite3 "$DB_PATH" "$source" | while read -r line; do
+                    echo "  $line"
+                done
+            else
+                echo "  (SQLite not available)"
+            fi
+        elif [[ "$stype" == "file" ]]; then
+            if [[ -f "$PROJECT_ROOT/$source" ]]; then
+                head -n 5 "$PROJECT_ROOT/$source" | while read -r line; do
+                    echo "  $line"
+                done
+            else
+                echo "  (Source file not found: $source)"
+            fi
+        fi
+    done
 }
 
 render_events() {
@@ -62,7 +78,6 @@ render_footer() {
 # Main render loop
 render_header
 render_progress
-render_performance
-render_memory
+render_modular_sections
 render_events
 render_footer

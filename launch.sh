@@ -94,18 +94,46 @@ case "$LAUNCH_CHOICE" in
 esac
 
 # 3. Module Selection
-echo -e "\n${BLUE}Enable Addon Modules:${NC}"
-ENABLE_ATARI_LX=false
-read -p "Enable Atari-LX Module? [y/N]: " -n 1 -r; echo ""
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    ENABLE_ATARI_LX=true
-    export ENABLE_ATARI_LX=true
-fi
+echo -e "\n${BLUE}Available Addon Modules:${NC}"
+MODULES_JSON=$(python3 "$SCRIPT_DIR/scripts/module-manager.py" list "$PROJECT_ROOT")
+# Simple extraction of IDs and Names from JSON
+MOD_IDS=$(echo "$MODULES_JSON" | grep -oP '"id": "\K[^"]+' || echo "")
+MOD_NAMES=$(echo "$MODULES_JSON" | grep -oP '"name": "\K[^"]+' || echo "")
+
+# Iterate and ask
+IFS=$'\n'
+IDS_ARR=($MOD_IDS)
+NAMES_ARR=($MOD_NAMES)
+
+for i in "${!IDS_ARR[@]}"; do
+    ID="${IDS_ARR[$i]}"
+    NAME="${NAMES_ARR[$i]}"
+    PREF_KEY="MODULE_$(echo "$ID" | tr '-' '_' | tr '[:lower:]' '[:upper:]')"
+    LAST_VAL=$(load_pref "$PREF_KEY")
+    LAST_VAL=${LAST_VAL:-false}
+    
+    PROMPT_VAL="n"
+    [[ "$LAST_VAL" == "true" ]] && PROMPT_VAL="Y" || PROMPT_VAL="y"
+    
+    read -p "Enable $NAME ($ID)? [$PROMPT_VAL/n]: " -n 1 -r; echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$LAST_VAL" == "true" ]]); then
+        save_pref "$PREF_KEY" "true"
+        # Export env vars from module
+        # Note: We'll evaluate these later via the module manager env command
+    else
+        save_pref "$PREF_KEY" "false"
+    fi
+done
+
+# Evaluate active module environment variables
+eval "$(python3 "$SCRIPT_DIR/scripts/module-manager.py" env "$PROJECT_ROOT")"
 
 # 4. Agent Selection (if dashboard)
 DASHBOARD_FLAGS=""
 if [ "$DASHBOARD" = true ]; then
-    [[ "$ENABLE_ATARI_LX" == "true" ]] && DASHBOARD_FLAGS+=" --atari"
+    # Pass ENABLE_ vars to dashboard via flags if needed, or just let them be env vars
+    # For backward compatibility with dashboard-launch.sh:
+    [[ "${ENABLE_ATARI_LX:-false}" == "true" ]] && DASHBOARD_FLAGS+=" --atari"
     
     echo -e "\n${BLUE}Select agents for the Dashboard:${NC}"
     read -p "Include Qwen? [Y/n]: " -n 1 -r; echo ""; [[ $REPLY =~ ^[Nn]$ ]] && DASHBOARD_FLAGS+=" --no-qwen"

@@ -17,6 +17,14 @@ log_success() { echo -e "${GREEN}[$(date +%T)] SUCCESS:${NC} $1"; }
 log_warn() { echo -e "${YELLOW}[$(date +%T)] WARNING:${NC} $1"; }
 log_error() { echo -e "${RED}[$(date +%T)] ERROR:${NC} $1"; }
 
+# Fleet Management Utilities
+fleet_exec() {
+    local host="$1"
+    local cmd="$2"
+    log_info "Executing remote command on $host: $cmd"
+    ssh -o ConnectTimeout=5 "$host" "$cmd"
+}
+
 # Check if a command exists
 has_command() {
     command -v "$1" >/dev/null 2>&1

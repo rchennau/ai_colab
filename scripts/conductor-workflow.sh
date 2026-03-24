@@ -113,6 +113,10 @@ merge_track_pr() {
     blackboard_set "pr_$track_slug" "merged"
     blackboard_set "last_merged_track" "$track_name"
     
+    # Event-Driven Knowledge Indexing
+    log_info "Triggering knowledge base re-index after merge..."
+    bash "$SCRIPT_DIR/hcom-kb-index.sh" > /dev/null 2>&1 || true
+    
     return 0
 }
 
@@ -494,6 +498,17 @@ process_commands() {
                     bash "$SCRIPT_DIR/hcom-kb-index.sh" > /dev/null 2>&1 || true
                     hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Index refreshed."
                     ;;
+                "!web-start")
+                    hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Starting Visual Health Dashboard on http://localhost:5050..."
+                    python3 "$SCRIPT_DIR/hcom-web-dashboard.py" > /tmp/hcom-web.log 2>&1 &
+                    echo $! > /tmp/hcom-web.pid
+                    ;;
+                "!web-stop")
+                    if [ -f /tmp/hcom-web.pid ]; then
+                        kill $(cat /tmp/hcom-web.pid) && rm /tmp/hcom-web.pid
+                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Web dashboard stopped."
+                    fi
+                    ;;
                 "!profile")
                     if [[ "${ENABLE_ATARI_LX:-false}" == "true" ]]; then
                         local file=$(echo "$text" | awk '{print $2}')
@@ -509,11 +524,22 @@ process_commands() {
                     ;;
                 "!help")
                     local help_msg="Conductor Commands: !status, !test, !approve, !build, !git-sync, !kb <query>, !kb-refresh, !switch <path>, !help"
-                    [[ "${ENABLE_ATARI_LX:-false}" == "true" ]] && help_msg="$help_msg, !screenshot, !memory-map, !profile <file>, !perf-trend <routine>"
+                    # Add modular commands to help if needed, or just let them be discovered
                     hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "$help_msg"
                     ;;
                 *)
-                    # Unknown command
+                    # Check for modular commands
+                    local mod_cmd=$(python3 "$SCRIPT_DIR/module-manager.py" commands "$PROJECT_ROOT" | grep -A 2 "\"$cmd\")" || true)
+                    if [[ -n "$mod_cmd" ]]; then
+                        # This is a bit tricky to eval correctly in shell with arguments
+                        # For now, let's just trigger the script associated with the command
+                        # We re-fetch the script path specifically
+                        local script_path=$(python3 "$SCRIPT_DIR/module-manager.py" commands "$PROJECT_ROOT" | grep -A 2 "\"$cmd\")" | grep "bash \"\$PROJECT_ROOT/" | cut -d'"' -f2 | sed "s|\$PROJECT_ROOT/||")
+                        if [[ -n "$script_path" ]]; then
+                            hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Executing modular command: $cmd"
+                            bash "$PROJECT_ROOT/$script_path" "$@" > /dev/null 2>&1 || true
+                        fi
+                    fi
                     ;;
             esac
         fi

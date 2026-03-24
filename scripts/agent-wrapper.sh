@@ -74,6 +74,14 @@ if [[ "${ENABLE_ATARI_LX:-false}" == "true" ]]; then
     fi
 fi
 
+# 2.1 Core Dev MCP Configuration
+CORE_DEV_MCP="$PROJECT_ROOT/mcp/core-dev/server.py"
+if [ -f "$CORE_DEV_MCP" ]; then
+    # Some tools might need explicit flags, for now we just ensure it's findable
+    # If the LLM CLI supports direct MCP injection via env vars
+    export CORE_DEV_MCP_PATH="$CORE_DEV_MCP"
+fi
+
 # 3. vLLM specific config for ELC
 if [ "$TOOL" == "vllm" ]; then
     export USE_CUSTOM_LLM=true

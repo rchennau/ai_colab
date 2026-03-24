@@ -1,0 +1,21 @@
+[module]
+id = "atari-lx"
+name = "Atari-LX Development"
+description = "Specialized tools for 6502 assembly and Atari hardware."
+version = "1.0.0"
+
+[env]
+ENABLE_ATARI_LX = "true"
+
+[hooks]
+conductor_commands = [
+    { trigger = "!screenshot", script = "modules/atari-lx/scripts/hcom-atari-screen.sh" },
+    { trigger = "!memory-map", script = "modules/atari-lx/scripts/atari-mem-map.sh" },
+    { trigger = "!profile", script = "modules/atari-lx/scripts/hcom-profiler.sh" },
+    { trigger = "!perf-trend", script = "modules/atari-lx/scripts/hcom-perf-trend.sh" }
+]
+
+dashboard_sections = [
+    { name = "Latest Performance", type = "sql", source = "SELECT routine, cycles FROM performance ORDER BY timestamp DESC LIMIT 3" },
+    { name = "Memory Allocation", type = "file", source = "conductor/reports/memory_map.txt" }
+]

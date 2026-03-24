@@ -12,6 +12,7 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 - [x] **Milestone 6: Unified Command Center & High-Density Monitoring** (Done ✅)
 - [x] **Milestone 7: Advanced Knowledge & Git Lifecycle Automation** (Done ✅)
 - [x] **Milestone 8: Hardware Visualization & Performance Dashboards** (Done ✅)
+- [ ] **Milestone 9: Dynamic Plugin System & Fleet Orchestration** (Active 🚀)
 
 ---
 
@@ -93,6 +94,17 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - [x] Historical trending tool (`hcom-perf-trend.sh`).
   - [x] High-density Conductor dashboard (`conductor-dashboard.sh`).
 
+- [ ] **Track: Generic Module Plugin System** (New)
+  - **Assigned:** @conductor
+  - **Description:** Implement manifest-based plugin loading for specialized project domains.
+
+- [ ] **Track: Visual Health Web Overlay** (New)
+  - **Assigned:** @all
+  - **Description:** Develop a Flask-based web dashboard for high-resolution performance and task analytics.
+
+- [ ] **Track: MCP-First Architecture (Core Dev)** (New)
+  - **Assigned:** @architect
+  - **Description:** Replace system-prompt-based roles with a formalized MCP toolset for handoffs and proposals.
 
 
 ---

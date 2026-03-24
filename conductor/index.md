@@ -16,3 +16,6 @@
 - [Track: Semantic Knowledge Base](./tracks/semantic_kb_20260323/index.md)
 - [Track: Visual Memory Map](./tracks/memory_map_20260323/index.md)
 - [Track: Performance Dashboard](./tracks/perf_dashboard_20260323/index.md)
+- [Track: Generic Module Plugin System](./tracks/plugin_system_20260323/index.md)
+- [Track: Visual Health Web Overlay](./tracks/web_dashboard_20260323/index.md)
+- [Track: MCP-First Architecture](./tracks/core_dev_mcp_20260323/index.md)
