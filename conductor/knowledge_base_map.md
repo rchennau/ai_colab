@@ -24,6 +24,7 @@ Generated: 2026-03-24 10:55:00 (Manual Update)
 - `scripts/cicd-build.sh`: Builds the self-hosted Hub container image.
 - `scripts/cicd-deploy-runpod.sh`: Deploys specialized 'Spoke' compute environments to RunPod.
 - `scripts/cicd-deploy-nvidia.sh`: Integration for NVIDIA NIM/API hosted spokes.
+- `tests/test_docker_core.sh`: Verification harness for Hub container builds and service availability.
 
 ## Index Metadata
 - Status: Active

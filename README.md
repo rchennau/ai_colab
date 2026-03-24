@@ -96,6 +96,7 @@ Full support for WSL2 with Windows Terminal optimizations.
 | `scripts/hcom-test-runner.sh` | Unified test execution and blackboard reporting. |
 | `scripts/hcom-kb-index.sh` | Generates the semantic project map for `!kb`. |
 | `scripts/conductor-dashboard.sh`| Renders the v3.0 high-density TUI. |
+| `tests/test_docker_core.sh` | Verifies the Orchestration Core Docker build & services. |
 
 ---
 
