@@ -87,13 +87,12 @@ Agent wrappers register their identity with `hcom start` upon initialization. Th
 ### **Automatic Agent Restart (v2.2)**
 As of agent-wrapper.sh v2.2, agents automatically restart if they exit unexpectedly. This ensures persistent presence in the hcom TUI even when LLM CLI tools have internal idle timeouts.
 
-### **Dashboard Reliability (v2.2.2)**
-To prevent agent loading failures and syntax errors in complex tmux environments (especially on macOS), the following improvements were made:
+### **Dashboard Reliability (v2.3.1)**
+To prevent agent loading failures and "no space for new pane" errors in high-density tmux environments, the following improvements were made:
+- **Dynamic Pane IDs:** The dashboard now uses internal tmux pane IDs (`#{pane_id}`) instead of numeric indices (`.0`, `.1`). This ensures that agents and consoles are launched into the correct panes even as tmux re-indexes them during the split process.
+- **Space Balancing:** Added automated space balancing (`select-layout tiled`) and improved splitting logic to ensure that new panes have sufficient room to initialize. This resolves the common `no space for new pane` error on smaller terminal windows.
+- **Improved Focus Logic:** Uses pane IDs to reliably focus the user console upon startup, regardless of the number of active agents.
 - **Syntax Correction:** Resolved shell syntax errors in the `main` loop of `dashboard-launch.sh` that caused intermittent launch failures.
-- **Initialization Stability:** Increased shell initialization delays (1.0s) and added a secondary title refresh (2.0s) to ensure that `tmux send-keys` and pane titles are correctly applied without being overwritten by the shell's own startup sequence.
-- **Path Resolution:** The `hcom` binary path is now explicitly resolved during launch (supporting `~/.local/bin` and `/usr/local/bin`).
-- **Window Addressing:** Uses named windows (`dashboard`, `conductor`, `bridge`) instead of numeric indices for robust pane management.
-- **Project Context:** New panes are automatically created in the current project root directory to ensure local configuration and scripts are immediately available.
 
 ### **Configuration Validation**
 If `hcom` warns about an invalid `config.toml`, check for literal `\n` characters or missing `=` signs. Run `hcom status` to verify your configuration is valid.

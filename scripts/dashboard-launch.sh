@@ -97,51 +97,56 @@ create_dashboard() {
     # Step 4: Layout Creation
     
     # 4a. Create Console Pane (Bottom)
-    local console_idx=-1
+    local console_id=""
     if [ "${WITH_CONSOLE:-true}" == "true" ]; then
-        tmux split-window -v -t "$SESSION:dashboard.0" -l 5 -c "$PWD"
-        console_idx=1
+        console_id=$(tmux split-window -v -t "$SESSION:dashboard.0" -l 5 -c "$PWD" -P -F "#{pane_id}")
     fi
     
     # 4b. Create Right Column
-    # Split Pane 0 (HCOM) vertically to create Right Column
-    tmux split-window -h -t "$SESSION:dashboard.0" -c "$PWD"
-    local right_col_start_idx=1
-    [ $console_idx -eq 1 ] && right_col_start_idx=2
+    # Split Pane 0 (HCOM) horizontally to create Right Column
+    local right_col_id=$(tmux split-window -h -t "$SESSION:dashboard.0" -c "$PWD" -P -F "#{pane_id}")
     
     # 4c. Split Right Column for components
+    local agent_pane_ids=("$right_col_id")
     if [ $num_right_panes -gt 1 ]; then
+        local current_pane_id="$right_col_id"
         for ((i=1; i<num_right_panes; i++)); do
-            # Indices shift as we split. Splitting the rightmost pane creates a vertical stack.
-            tmux split-window -v -t "$SESSION:dashboard.$right_col_start_idx" -c "$PWD"
+            current_pane_id=$(tmux split-window -v -t "$current_pane_id" -c "$PWD" -P -F "#{pane_id}")
+            agent_pane_ids+=("$current_pane_id")
+            # Balancing space is critical to avoid "no space for new pane"
+            tmux select-layout -t "$SESSION:dashboard" tiled >/dev/null 2>&1 || true
         done
     fi
     
     # 4d. Finalize Geometry
+    # Re-apply main-vertical to get the HCOM on left, others on right
     tmux select-layout -t "$SESSION:dashboard" "main-vertical"
     tmux resize-pane -t "$SESSION:dashboard.0" -x 80
-    if [ $console_idx -ne -1 ]; then
-        tmux resize-pane -t "$SESSION:dashboard.$console_idx" -y 5
+    
+    if [ -n "$console_id" ]; then
+        tmux resize-pane -t "$console_id" -y 5
     fi
 
     # Step 5: Launch Console
-    if [ $console_idx -ne -1 ]; then
+    if [ -n "$console_id" ]; then
+        local console_idx=$(tmux display-message -p -t "$console_id" "#{pane_index}")
         local user_name="user_$(whoami)"
-        print_info "Initializing Console..."
-        tmux send-keys -t "$SESSION:dashboard.$console_idx" "export HCOM_NAME=$user_name && hcom start --as $user_name" C-m
-        tmux send-keys -t "$SESSION:dashboard.$console_idx" "alias s='hcom send @conductor -- \"!status\"'" C-m
-        tmux send-keys -t "$SESSION:dashboard.$console_idx" "alias t='hcom send @conductor -- \"!test\"'" C-m
-        tmux send-keys -t "$SESSION:dashboard.$console_idx" "alias b='hcom send @conductor -- \"!build\"'" C-m
-        tmux send-keys -t "$SESSION:dashboard.$console_idx" "clear" C-m
+        print_info "Initializing Console in pane $console_idx..."
+        tmux send-keys -t "$console_id" "export HCOM_NAME=$user_name && hcom start --as $user_name" C-m
+        tmux send-keys -t "$console_id" "alias s='hcom send @conductor -- \"!status\"'" C-m
+        tmux send-keys -t "$console_id" "alias t='hcom send @conductor -- \"!test\"'" C-m
+        tmux send-keys -t "$console_id" "alias b='hcom send @conductor -- \"!build\"'" C-m
+        tmux send-keys -t "$console_id" "clear" C-m
         
-        tmux set-option -t "$SESSION:dashboard.$console_idx" -p @agent_name "CONSOLE"
-        tmux select-pane -t "$SESSION:dashboard.$console_idx" -T "User Console ($user_name)"
+        tmux set-option -t "$console_id" -p @agent_name "CONSOLE"
+        tmux select-pane -t "$console_id" -T "User Console ($user_name)"
     fi
 
     # Step 6: Launch Right Column Components
     for i in "${!right_panes[@]}"; do
         local component="${right_panes[$i]}"
-        local pane_idx=$((i + right_col_start_idx))
+        local pane_id="${agent_pane_ids[$i]}"
+        local pane_idx=$(tmux display-message -p -t "$pane_id" "#{pane_index}")
         local cmd=""
         local agent_name=""
         local title=""
@@ -188,11 +193,11 @@ create_dashboard() {
         $hcom_bin config -i "$agent_name" tag "$component" > /dev/null 2>&1 || true
 
         sleep 1.0
-        tmux send-keys -t "$SESSION:dashboard.$pane_idx" "export HCOM_NAME=$agent_name && $cmd" C-m
+        tmux send-keys -t "$pane_id" "export HCOM_NAME=$agent_name && $cmd" C-m
         
-        tmux set-option -t "$SESSION:dashboard.$pane_idx" -p @agent_name "$(tr '[:lower:]' '[:upper:]' <<< ${title})"
-        tmux select-pane -t "$SESSION:dashboard.$pane_idx" -T "$title"
-        (sleep 2.0 && tmux select-pane -t "$SESSION:dashboard.$pane_idx" -T "$title") &
+        tmux set-option -t "$pane_id" -p @agent_name "$(tr '[:lower:]' '[:upper:]' <<< ${title})"
+        tmux select-pane -t "$pane_id" -T "$title"
+        (sleep 2.0 && tmux select-pane -t "$pane_id" -T "$title") &
     done
 
     # Step 7: Finalize HCOM Pane
@@ -200,8 +205,8 @@ create_dashboard() {
     tmux select-pane -t "$SESSION:dashboard.0" -T "hcom TUI"
     
     # Always focus the Console if it exists, otherwise HCOM
-    if [ $console_idx -ne -1 ]; then
-        tmux select-pane -t "$SESSION:dashboard.$console_idx"
+    if [ -n "$console_id" ]; then
+        tmux select-pane -t "$console_id"
     else
         tmux select-pane -t "$SESSION:dashboard.0"
     fi
