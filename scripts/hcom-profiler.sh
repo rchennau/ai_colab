@@ -27,6 +27,20 @@ fi
 BLACKBOARD_KEY="perf_$(echo "$FILE_PATH" | tr '/' '_')"
 blackboard_set "$BLACKBOARD_KEY" "$(echo "$ANALYSIS" | head -n 1 | cut -c1-50)..."
 
+# Persistent History
+DB_PATH=$(get_hcom_db_path)
+sqlite3 "$DB_PATH" "CREATE TABLE IF NOT EXISTS performance (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT, routine TEXT, cycles INTEGER, commit_sha TEXT);"
+
+COMMIT_SHA=$(git rev-parse --short HEAD 2>/dev/null || echo "no-git")
+ROUTINE_NAME=$(basename "$FILE_PATH")
+# Extract cycles from Gemini analysis (regex search for digits followed by 'cycles')
+CYCLES=$(echo "$ANALYSIS" | grep -oE '[0-9]+ cycles' | head -n 1 | awk '{print $1}' || echo "0")
+
+if [[ -n "$CYCLES" && "$CYCLES" != "0" ]]; then
+    sqlite3 "$DB_PATH" "INSERT INTO performance (timestamp, routine, cycles, commit_sha) VALUES (datetime('now'), '$ROUTINE_NAME', $CYCLES, '$COMMIT_SHA');"
+    log_success "Stored performance data: $CYCLES cycles for $ROUTINE_NAME"
+fi
+
 # Broadcast to team
 hcom send @all --intent inform --thread "visual-debug" -- \
     "Performance Profile: $FILE_PATH. Result: $ANALYSIS"

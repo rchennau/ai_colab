@@ -371,6 +371,30 @@ process_commands() {
                         hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Usage: !approve <track_slug_or_name>"
                     fi
                     ;;
+                "!memory-map")
+                    hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Generating visual memory map..."
+                    if bash "$SCRIPT_DIR/atari-mem-map.sh" > /dev/null 2>&1; then
+                        local map_report="$PROJECT_ROOT/conductor/reports/memory_map.txt"
+                        if [[ -f "$map_report" ]]; then
+                            hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" --file "$map_report"
+                        else
+                            hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: Memory map report not found."
+                        fi
+                    else
+                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: Failed to generate memory map. Ensure build artifacts exist."
+                    fi
+                    ;;
+                "!perf-trend")
+                    local routine=$(echo "$text" | awk '{print $2}')
+                    if [[ -n "$routine" ]]; then
+                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Analyzing performance trends for $routine..."
+                        # Capture output of trend tool
+                        local report=$(bash "$SCRIPT_DIR/hcom-perf-trend.sh" "$routine")
+                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "$report"
+                    else
+                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Usage: !perf-trend <routine_name>"
+                    fi
+                    ;;
                 "!status")
                     local progress=$(blackboard_get "project_progress")
                     local active=$(blackboard_get "active_track")
@@ -476,21 +500,16 @@ process_commands() {
 }
 
 main() {
-    echo -e "${BLUE}╔════════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║       Atari-LX Conductor Agent        ║${NC}"
-    echo -e "${BLUE}╚════════════════════════════════════════╝${NC}"
-    echo -e "Agent: ${GREEN}$HCOM_NAME${NC}"
-    echo -e "Monitoring: ${YELLOW}$TRACKS_FILE${NC}"
-    echo -e "Interval: ${INTERVAL}s"
-    echo ""
-
     while true; do
-        echo -e "[$(date +%T)] ${BLUE}Syncing project status...${NC}"
+        # Render high-density dashboard
+        bash "$SCRIPT_DIR/conductor-dashboard.sh"
+
+        log_info "Syncing project status..."
         sync_blackboard_status "$TRACKS_FILE"
-        
-        echo -e "[$(date +%T)] ${BLUE}Checking for task assignments...${NC}"
+
+        log_info "Checking for task assignments..."
         spawn_workers "$TRACKS_FILE"
-        
+...
         # Check for periodic tests
         CURRENT_TIME=$(date +%s)
         if (( CURRENT_TIME - LAST_TEST_RUN > TEST_INTERVAL )); then
