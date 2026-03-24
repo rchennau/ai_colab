@@ -1,0 +1,71 @@
+# ai-colab Standard Profile (Recommended)
+# Balanced configuration with popular LLMs and Atari 8-Bit module
+
+version = "1.0.0"
+
+[installation]
+status = "pending"
+pathway = "cli"
+
+# Standard LLM configuration
+[[llms]]
+name = "gemini"
+enabled = true
+model = "gemini-3.0"
+args = "-m gemini-3.0"
+
+[[llms]]
+name = "qwen"
+enabled = true
+model = "qwen3-next-80b-a3b-instruct"
+args = "-m qwen3-next-80b-a3b-instruct"
+
+[[llms]]
+name = "vllm"
+enabled = true
+endpoint = "http://192.168.0.193:8000/v1"
+model = "local-model"
+
+# Atari 8-Bit module enabled
+[[modules]]
+id = "atari-8bit"
+enabled = true
+
+[modules.env_vars]
+ENABLE_ATARI_8BIT = "true"
+
+# Local compute with optional cloud offload
+[compute]
+backend = "local"
+
+# Standard preferences
+[preferences]
+theme = "dark"
+auto_approve = false
+timeout = 86400
+log_level = "info"
+
+[preferences.notifications]
+enabled = true
+channels = ["terminal"]
+
+[preferences.dashboard]
+refresh_interval = 30
+compact_mode = false
+
+# Docker disabled by default
+[docker]
+enabled = false
+image = "ai-colab:latest"
+
+[docker.ports]
+webui = 8080
+api = 8081
+
+# Basic security
+[security]
+auth_enabled = false
+
+[security.rate_limit]
+enabled = true
+requests_per_minute = 60

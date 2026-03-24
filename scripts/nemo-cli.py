@@ -6,7 +6,7 @@ from openai import OpenAI
 
 def main():
     parser = argparse.ArgumentParser(description="NVIDIA NeMo CLI Wrapper")
-    parser.add_argument("-m", "--model", default="nvidia/llama-3.1-nemotron-70b-instruct", help="Model name")
+    parser.add_argument("-m", "--model", default="nvidia/llama-3.3-nemotron-super-49b-v1.5", help="Model name")
     parser.add_argument("-p", "--prompt", help="Prompt text")
     parser.add_argument("--system-prompt", help="System prompt")
     parser.add_argument("query", nargs="*", help="Positional query")

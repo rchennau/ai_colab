@@ -1,0 +1,36 @@
+# ai-colab Minimal Profile
+# Core functionality only - essential LLMs and no modules
+
+version = "1.0.0"
+
+[installation]
+status = "pending"
+pathway = "cli"
+
+# Minimal LLM configuration - just Gemini
+[[llms]]
+name = "gemini"
+enabled = true
+model = "gemini-3.0"
+
+# No additional modules
+# modules = []
+
+# Local compute only
+[compute]
+backend = "local"
+
+# Basic preferences
+[preferences]
+theme = "dark"
+auto_approve = false
+timeout = 86400
+log_level = "info"
+
+# No Docker
+[docker]
+enabled = false
+
+# Basic security
+[security]
+auth_enabled = false

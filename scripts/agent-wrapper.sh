@@ -49,8 +49,8 @@ case "$TOOL" in
         elif has_command qwen-cli; then CMD="qwen-cli"; fi
         ;;
     vllm) CMD="elc" ;;
-    nemo) CMD="python3 $SCRIPT_DIR/nemo-cli.py" ;;
-    nemoclaw) CMD="python3 $SCRIPT_DIR/nemo-cli.py" ;;
+    nemo) CMD="python3 \"$SCRIPT_DIR/nemo-cli.py\"" ;;
+    nemoclaw) CMD="python3 \"$SCRIPT_DIR/nemo-cli.py\"" ;;
     deepseek)
         if has_command deepseek-cli; then CMD="deepseek-cli";
         else CMD="deepseek"; fi
@@ -63,11 +63,13 @@ if [ -z "$CMD" ] && [ "$TOOL" != "nemo" ]; then
     exit 1
 fi
 
-# 2. Module-Specific Configuration (e.g., Atari 8-Bit)
-if [[ "${ENABLE_ATARI_8BIT:-false}" == "true" ]]; then
-    PROJECT_ROOT=$(detect_project_root 2>/dev/null || dirname "$SCRIPT_DIR")
-    ATARI_8BIT_DIR="$(dirname "$PROJECT_ROOT")/Atari-LX"
-    ATARI_AGENT_DIR="$ATARI_8BIT_DIR/atari_agent"
+# 2. Project Detection
+PROJECT_ROOT=$(detect_project_root 2>/dev/null || dirname "$SCRIPT_DIR")
+
+# 2.1 Module-Specific Configuration (e.g., Atari-LX)
+if [[ "${ENABLE_ATARI_LX:-false}" == "true" ]]; then
+    ATARI_LX_DIR="$(dirname "$PROJECT_ROOT")/Atari-LX"
+    ATARI_AGENT_DIR="$ATARI_LX_DIR/atari_agent"
 
     if [ -d "$ATARI_AGENT_DIR" ]; then
         # Inject MCP server into environment/args if supported by the tool
@@ -75,7 +77,7 @@ if [[ "${ENABLE_ATARI_8BIT:-false}" == "true" ]]; then
     fi
 fi
 
-# 2.1 Core Dev MCP Configuration
+# 2.2 Core Dev MCP Configuration
 CORE_DEV_MCP="$PROJECT_ROOT/mcp/core-dev/server.py"
 if [ -f "$CORE_DEV_MCP" ]; then
     # Some tools might need explicit flags, for now we just ensure it's findable

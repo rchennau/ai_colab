@@ -1,0 +1,300 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ai-colab.dev/schemas/config.v1.0.0.json",
+  "title": "ai-colab Configuration Schema",
+  "description": "Unified configuration schema for ai-colab installation and launch",
+  "version": "1.0.0",
+  "type": "object",
+  "required": ["version", "installation"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Configuration schema version (semantic versioning)",
+      "examples": ["1.0.0", "1.1.0"]
+    },
+    "installation": {
+      "type": "object",
+      "required": ["status", "pathway"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["pending", "in-progress", "complete", "failed"],
+          "description": "Current installation status"
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Installation completion timestamp (ISO 8601)"
+        },
+        "pathway": {
+          "type": "string",
+          "enum": ["cli", "webui", "docker", "auto"],
+          "description": "Installation pathway used"
+        },
+        "ai_colab_version": {
+          "type": "string",
+          "description": "Version of ai-colab installed"
+        },
+        "last_reconfigure": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last reconfiguration timestamp"
+        }
+      }
+    },
+    "llms": {
+      "type": "array",
+      "description": "List of LLM configurations",
+      "items": {
+        "type": "object",
+        "required": ["name", "enabled"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "LLM identifier",
+            "enum": ["gemini", "qwen", "claude", "deepseek", "nemo", "ollama", "vllm", "elc"],
+            "examples": ["gemini", "qwen"]
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether this LLM is enabled",
+            "default": false
+          },
+          "api_key_env": {
+            "type": "string",
+            "description": "Environment variable name for API key",
+            "pattern": "^[A-Z_][A-Z0-9_]*$",
+            "examples": ["GEMINI_API_KEY", "ANTHROPIC_API_KEY"]
+          },
+          "model": {
+            "type": "string",
+            "description": "Model identifier or version",
+            "examples": ["gemini-3.0", "qwen3-next-80b-a3b-instruct"]
+          },
+          "endpoint": {
+            "type": "string",
+            "format": "uri",
+            "description": "Custom API endpoint (for local/self-hosted)",
+            "examples": ["http://localhost:8000/v1", "https://api.nvidia.com/v1"]
+          },
+          "args": {
+            "type": "string",
+            "description": "Additional command-line arguments",
+            "examples": ["-m gemini-3.0", "--temperature 0.7"]
+          }
+        }
+      }
+    },
+    "modules": {
+      "type": "array",
+      "description": "List of module configurations",
+      "items": {
+        "type": "object",
+        "required": ["id", "enabled"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Module identifier",
+            "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$",
+            "examples": ["atari-8bit", "mock-test"]
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether this module is enabled",
+            "default": false
+          },
+          "config": {
+            "type": "object",
+            "description": "Module-specific configuration",
+            "additionalProperties": true
+          },
+          "env_vars": {
+            "type": "object",
+            "description": "Environment variables for this module",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "compute": {
+      "type": "object",
+      "description": "Compute backend configuration",
+      "required": ["backend"],
+      "properties": {
+        "backend": {
+          "type": "string",
+          "enum": ["local", "nvidia", "runpod"],
+          "description": "Compute backend type",
+          "default": "local"
+        },
+        "endpoint": {
+          "type": "string",
+          "format": "uri",
+          "description": "Backend API endpoint"
+        },
+        "api_key_env": {
+          "type": "string",
+          "description": "Environment variable for API key"
+        },
+        "model": {
+          "type": "string",
+          "description": "Default model for compute backend"
+        },
+        "gpu_config": {
+          "type": "object",
+          "description": "GPU-specific configuration",
+          "properties": {
+            "device": {
+              "type": "string",
+              "examples": ["cuda:0", "mps"]
+            },
+            "memory_limit": {
+              "type": "integer",
+              "description": "GPU memory limit in MB"
+            }
+          }
+        }
+      }
+    },
+    "preferences": {
+      "type": "object",
+      "description": "User preferences",
+      "properties": {
+        "theme": {
+          "type": "string",
+          "enum": ["dark", "light", "auto"],
+          "default": "dark",
+          "description": "UI theme preference"
+        },
+        "auto_approve": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically approve agent actions"
+        },
+        "timeout": {
+          "type": "integer",
+          "minimum": 60,
+          "maximum": 86400,
+          "default": 86400,
+          "description": "Agent timeout in seconds (1 min - 24 hours)"
+        },
+        "log_level": {
+          "type": "string",
+          "enum": ["debug", "info", "warn", "error"],
+          "default": "info",
+          "description": "Logging verbosity level"
+        },
+        "notifications": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true
+            },
+            "channels": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["terminal", "email", "slack", "google-chat"]
+              }
+            }
+          }
+        },
+        "dashboard": {
+          "type": "object",
+          "properties": {
+            "refresh_interval": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 300,
+              "default": 30,
+              "description": "Dashboard refresh interval in seconds"
+            },
+            "compact_mode": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        }
+      }
+    },
+    "docker": {
+      "type": "object",
+      "description": "Docker-specific configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether to use Docker for ai-colab"
+        },
+        "image": {
+          "type": "string",
+          "default": "ai-colab:latest",
+          "description": "Docker image to use"
+        },
+        "ports": {
+          "type": "object",
+          "properties": {
+            "webui": {
+              "type": "integer",
+              "default": 8080,
+              "description": "Web UI port"
+            },
+            "api": {
+              "type": "integer",
+              "default": 8081,
+              "description": "API port"
+            }
+          }
+        },
+        "volumes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Docker volume mounts"
+        }
+      }
+    },
+    "security": {
+      "type": "object",
+      "description": "Security configuration",
+      "properties": {
+        "auth_enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable authentication for Web UI"
+        },
+        "auth_token_env": {
+          "type": "string",
+          "description": "Environment variable for auth token"
+        },
+        "allowed_origins": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          },
+          "description": "CORS allowed origins"
+        },
+        "rate_limit": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true
+            },
+            "requests_per_minute": {
+              "type": "integer",
+              "default": 60
+            }
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}
