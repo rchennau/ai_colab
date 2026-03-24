@@ -12,7 +12,8 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 - [x] **Milestone 6: Unified Command Center & High-Density Monitoring** (Done ✅)
 - [x] **Milestone 7: Advanced Knowledge & Git Lifecycle Automation** (Done ✅)
 - [x] **Milestone 8: Hardware Visualization & Performance Dashboards** (Done ✅)
-- [ ] **Milestone 9: Dynamic Plugin System & Fleet Orchestration** (Active 🚀)
+- [x] **Milestone 9: Dynamic Plugin System & Fleet Orchestration** (Done ✅)
+- [ ] **Milestone 10: Multi-Backend Compute & CI/CD Automation** (Active 🚀)
 
 ---
 
@@ -94,17 +95,30 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - [x] Historical trending tool (`hcom-perf-trend.sh`).
   - [x] High-density Conductor dashboard (`conductor-dashboard.sh`).
 
-- [ ] **Track: Generic Module Plugin System** (New)
+- [x] **Track: Generic Module Plugin System** (Done ✅)
   - **Assigned:** @conductor
   - **Description:** Implement manifest-based plugin loading for specialized project domains.
 
-- [ ] **Track: Visual Health Web Overlay** (New)
+- [x] **Track: Visual Health Web Overlay** (Done ✅)
   - **Assigned:** @all
   - **Description:** Develop a Flask-based web dashboard for high-resolution performance and task analytics.
 
-- [ ] **Track: MCP-First Architecture (Core Dev)** (New)
+- [x] **Track: MCP-First Architecture (Core Dev)** (Done ✅)
   - **Assigned:** @architect
   - **Description:** Replace system-prompt-based roles with a formalized MCP toolset for handoffs and proposals.
+
+- [ ] **Track: Multi-Backend Compute Selection (Cloud/Edge)** (New)
+  - **Assigned:** @conductor
+  - **Description:** Implement selection logic for running high-power agents via NVIDIA API, RunPod, or Local Server.
+
+- [ ] **Track: CI/CD Pipeline for Agent Deployment** (New)
+  - **Assigned:** @architect
+  - **Description:** Develop automation scripts to build agent containers and deploy them to RunPod or NVIDIA infrastructure.
+
+- [ ] **Track: Autonomous Project Evolution** (New)
+  - **Assigned:** @conductor
+  - **Description:** Enable the Conductor to autonomously suggest new development tracks based on project status and future goals.
+
 
 
 ---

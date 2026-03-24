@@ -251,6 +251,35 @@ for i in "${!IDS_ARR[@]}"; do
     fi
 done
 
+# 4.1 Compute Backend Selection
+echo -e "\n${GREEN}Select Compute Backend for High-Power Agents:${NC}"
+echo "1) NVIDIA NIM API (Hosted)"
+echo "2) RunPod Serverless/Pods"
+echo "3) Local Server (vLLM / Ollama)"
+echo "n) None (skip configuration)"
+echo ""
+read -p "Select backend [1-3, default 3]: " BACKEND_CHOICE
+BACKEND_CHOICE=${BACKEND_CHOICE:-3}
+
+COMPUTE_BACKEND="local"
+case "$BACKEND_CHOICE" in
+    1)
+        COMPUTE_BACKEND="nvidia"
+        read -p "Enter NVIDIA API Key: " NVIDIA_API_KEY
+        echo "export NVIDIA_API_KEY=$NVIDIA_API_KEY" >> "$HOME/.ai-colab-env"
+        ;;
+    2)
+        COMPUTE_BACKEND="runpod"
+        read -p "Enter RunPod API Key: " RUNPOD_API_KEY
+        echo "export RUNPOD_API_KEY=$RUNPOD_API_KEY" >> "$HOME/.ai-colab-env"
+        ;;
+    3)
+        COMPUTE_BACKEND="local"
+        ;;
+esac
+echo "MODULE_COMPUTE_BACKEND=$COMPUTE_BACKEND" >> "$SCRIPT_DIR/.ai-colab-prefs"
+echo -e "  ✓ Compute backend set to: ${BLUE}$COMPUTE_BACKEND${NC}"
+
 # 5. Conductor Agent Setup
 echo -e "\n${GREEN}Setting up Global Conductor Agent...${NC}"
 if [ -f "$SCRIPT_DIR/scripts/conductor/install.sh" ]; then

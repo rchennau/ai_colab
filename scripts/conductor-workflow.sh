@@ -523,9 +523,50 @@ process_commands() {
                     fi
                     ;;
                 "!help")
-                    local help_msg="Conductor Commands: !status, !test, !approve, !build, !git-sync, !kb <query>, !kb-refresh, !switch <path>, !help"
+                    local help_msg="Conductor Commands: !status, !test, !approve, !build, !git-sync, !kb <query>, !kb-refresh, !web-start, !evolve, !switch <path>, !help"
                     # Add modular commands to help if needed, or just let them be discovered
                     hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "$help_msg"
+                    ;;
+                "!evolve")
+                    hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Analyzing project for autonomous evolution..."
+                    
+                    # Gather context
+                    local product_ctx=$(cat "$PROJECT_ROOT/conductor/product.md" | sed -n '/## Future Considerations/,$p')
+                    local tracks_ctx=$(cat "$TRACKS_FILE" | grep "^\- \[" | head -n 20)
+                    local map_ctx=""
+                    [ -f "$PROJECT_ROOT/conductor/knowledge_base_map.md" ] && map_ctx=$(cat "$PROJECT_ROOT/conductor/knowledge_base_map.md" | head -n 50)
+                    
+                    local evolve_prompt="You are the Conductor Agent for ai-colab. Based on the following project context, propose ONE new development track that aligns with the 'Future Considerations'.
+                    
+                    Future Considerations:
+                    $product_ctx
+                    
+                    Current Tracks:
+                    $tracks_ctx
+                    
+                    Project Map:
+                    $map_ctx
+                    
+                    Format your response as a single markdown track entry:
+                    - [ ] **Track: <TITLE>**
+                      - **Assigned:** @pending
+                      - **Description:** <1-sentence description>
+                      - **Dependencies:** <comma-separated IDs or None>"
+                    
+                    local proposal=$(gemini --model gemini-3.0 --headless --prompt "$evolve_prompt" 2>&1)
+                    hcom send "@all" --name "$HCOM_NAME" --thread "$thread" -- "AUTONOMOUS PROPOSAL:\n$proposal\n\nUse '!approve-track' to add this to the roadmap."
+                    blackboard_set "last_autonomous_proposal" "$proposal"
+                    ;;
+                "!approve-track")
+                    local last_proposal=$(blackboard_get "last_autonomous_proposal")
+                    if [[ -n "$last_proposal" ]]; then
+                        echo -e "\n$last_proposal" >> "$TRACKS_FILE"
+                        hcom send "@all" --name "$HCOM_NAME" --thread "$thread" -- "Track approved and added to $TRACKS_FILE."
+                        # Trigger re-sync
+                        sync_blackboard_status "$TRACKS_FILE"
+                    else
+                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "No pending proposal found."
+                    fi
                     ;;
                 *)
                     # Check for modular commands

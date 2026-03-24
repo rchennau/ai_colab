@@ -19,3 +19,6 @@
 - [Track: Generic Module Plugin System](./tracks/plugin_system_20260323/index.md)
 - [Track: Visual Health Web Overlay](./tracks/web_dashboard_20260323/index.md)
 - [Track: MCP-First Architecture](./tracks/core_dev_mcp_20260323/index.md)
+- [Track: Multi-Backend Compute](./tracks/backend_selection_20260323/index.md)
+- [Track: CI/CD Deployment](./tracks/cicd_pipeline_20260323/index.md)
+- [Track: Autonomous Evolution](./tracks/autonomous_evolution_20260323/index.md)

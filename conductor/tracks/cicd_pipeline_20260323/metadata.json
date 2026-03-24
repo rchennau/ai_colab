@@ -1,0 +1,7 @@
+{
+  "id": "cicd_pipeline_20260323",
+  "name": "CI/CD Pipeline for Agent Deployment",
+  "status": "pending",
+  "assigned_to": "@architect",
+  "milestone": "Milestone 10"
+}

@@ -118,8 +118,6 @@ for i in "${!IDS_ARR[@]}"; do
     read -p "Enable $NAME ($ID)? [$PROMPT_VAL/n]: " -n 1 -r; echo ""
     if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$LAST_VAL" == "true" ]]); then
         save_pref "$PREF_KEY" "true"
-        # Export env vars from module
-        # Note: We'll evaluate these later via the module manager env command
     else
         save_pref "$PREF_KEY" "false"
     fi
@@ -127,6 +125,30 @@ done
 
 # Evaluate active module environment variables
 eval "$(python3 "$SCRIPT_DIR/scripts/module-manager.py" env "$PROJECT_ROOT")"
+
+# 3.1 Compute Backend Confirmation
+LAST_BACKEND=$(load_pref "MODULE_COMPUTE_BACKEND")
+LAST_BACKEND=${LAST_BACKEND:-local}
+echo -e "\n${BLUE}Compute Backend:${NC} ${GREEN}$LAST_BACKEND${NC}"
+read -p "Use $LAST_BACKEND for high-power agents? [Y/n]: " -n 1 -r; echo ""
+if [[ $REPLY =~ ^[Nn]$ ]]; then
+    echo "1) NVIDIA NIM API"
+    echo "2) RunPod"
+    echo "3) Local Server"
+    read -p "Select backend [1-3]: " NEW_BACKEND
+    case "$NEW_BACKEND" in
+        1) COMPUTE_BACKEND="nvidia" ;;
+        2) COMPUTE_BACKEND="runpod" ;;
+        *) COMPUTE_BACKEND="local" ;;
+    esac
+    save_pref "MODULE_COMPUTE_BACKEND" "$COMPUTE_BACKEND"
+else
+    COMPUTE_BACKEND="$LAST_BACKEND"
+fi
+export COMPUTE_BACKEND="$COMPUTE_BACKEND"
+
+# Load backend-specific env vars if they exist
+[ -f "$HOME/.ai-colab-env" ] && source "$HOME/.ai-colab-env"
 
 # 4. Agent Selection (if dashboard)
 DASHBOARD_FLAGS=""
