@@ -3,7 +3,7 @@ active = "default"
 
 [launch]
 tag = ""
-hints = "You are participating in a multi-agent Atari-LX project. Sync your state via hcom bundle 'Atari-LX Plan Sync' if you are out of alignment with conductor/tracks.md. Use 'hcom-kv' to read/write from the shared blackboard (e.g., hcom-kv set current_task 'Optimizing sprite routine')."
+hints = "You are participating in a multi-agent Atari-LX project. Sync your state via hcom bundle 'Atari-LX Plan Sync' if you are out of alignment with conductor/tracks.md. Use 'hcom-kv' to read/write from the shared blackboard. Use Conductor commands (!status, !test, !screenshot, !build, !git-sync) for orchestration."
 notes = "Atari-LX Engineering: Use conductor/tracks.md as the source of truth. All agents MUST monitor the 'plan-sync' thread for state updates."
 subagent_timeout = 30
 auto_subscribe = "collision"

@@ -4,12 +4,24 @@
 
 set -euo pipefail
 
+# Find script directory and source utils
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/utils.sh"
+
 # Configuration
 SPACE_NAME="Atari-LX Multi-Agent"
 HCOM_NAME="messenger_bridge"
 
-# Register with hcom
-hcom start --as "$HCOM_NAME" > /dev/null 2>&1 || true
+# Register with hcom and start heartbeat
+register_hcom "messenger" || true
+start_heartbeat "messenger" || true
+
+cleanup() {
+    if [ -n "${HEARTBEAT_PID:-}" ]; then
+        kill "$HEARTBEAT_PID" 2>/dev/null || true
+    fi
+}
+trap cleanup EXIT
 
 echo "Starting hcom-chat-bridge..."
 echo "Monitoring events and forwarding to Google Chat space: $SPACE_NAME"

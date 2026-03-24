@@ -118,10 +118,15 @@ start_heartbeat "$TOOL"
 
 CLEANUP_FILES=()
 cleanup() {
-    # Fix for Bash 3.2 on macOS: handle empty arrays with set -u
+    # 1. Kill background heartbeat if it exists
+    if [ -n "${HEARTBEAT_PID:-}" ]; then
+        kill "$HEARTBEAT_PID" 2>/dev/null || true
+    fi
+
+    # 2. Fix for Bash 3.2 on macOS: handle empty arrays with set -u
     for f in ${CLEANUP_FILES[@]+"${CLEANUP_FILES[@]}"}; do rm -f "$f" 2>/dev/null || true; done
     
-    # Notify hcom of exit if possible
+    # 3. Notify hcom of exit if possible
     if [ -n "${HCOM_NAME:-}" ]; then
         hcom stop --name "$HCOM_NAME" > /dev/null 2>&1 || true
     fi
@@ -199,7 +204,7 @@ run_agent() {
 # Main loop: restart agent if it exits (but not on normal exit)
 RESTART_COUNT=0
 MAX_RESTARTS=10
-RESTART_DELAY=2
+RESTART_DELAY=5
 
 while true; do
     echo "[$(date '+%H:%M:%S')] Starting $TOOL agent (attempt $((RESTART_COUNT + 1)))..."

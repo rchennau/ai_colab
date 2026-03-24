@@ -22,8 +22,17 @@ A unified environment for coordinating multiple AI agents (Gemini, Claude, Qwen,
 
 ## 🏗️ Core Architecture
 
-### **The Conductor**
+### **The Conductor & QA Automation (Milestone 3 & 4)**
 The **Conductor** is the project's "orchestrator." It maintains the Source of Truth in `conductor/tracks.md`, ensuring all agents are aligned on tasks and project state.
+*   **Automated Testing:** Periodically runs the `hcom-test-runner.sh` to ensure build health and syncs status to the Blackboard.
+*   **Visual Debugging:** Captures periodic screenshots of the Atari emulator for visual state analysis.
+*   **Interactive Commands:** Any agent can now send commands to the Conductor via `hcom`:
+    *   `!status`: Summarizes project progress, active track, and test health.
+    *   `!test`: Triggers an immediate full test suite run.
+    *   `!screenshot`: Captures a new Atari screen state for the team.
+    *   `!build`: Triggers the local project's build system (`make`).
+    *   `!git-sync`: Synchronizes with the remote repository.
+    *   `!switch <path>`: Swaps the Conductor's focus to a different project directory.
 
 ### **hcom (Hook-Comms)**
 All agents communicate via [hcom](https://github.com/aannoo/hcom), a message-passing protocol that enables:
@@ -39,9 +48,11 @@ All agents communicate via [hcom](https://github.com/aannoo/hcom), a message-pas
 | `./install.sh` | Master installer for dependencies and LLM CLIs. |
 | `./launch.sh` | Unified launcher for the Dashboard and Conductor. |
 | `scripts/agent-wrapper.sh` | The unified core for registration, heartbeats, and roles. |
-| `scripts/*-hcom.sh` | Lightweight wrappers (Gemini, Qwen, vLLM via **ELC**, etc.) with standardized hcom identity and status tracking. |
-| `scripts/conductor-workflow.sh` | Automated background manager for track progress and worker spawning. |
-| `scripts/atari-debate.sh` | Automates technical debates between active agents (including vLLM Atari expert). |
+| `scripts/hcom-test-runner.sh` | Unified test execution and blackboard reporting (v2.2.3). |
+| `scripts/conductor-workflow.sh` | Automated background manager with command processing and QA monitoring. |
+| `scripts/atari-debate.sh` | Automates technical debates between active agents. |
+| `scripts/hcom-kv.sh` | Standardization script for reading/writing the Shared Blackboard. |
+| `scripts/hcom-chat-bridge.sh` | Forwards project events and visual debug updates to Google Chat. |
 
 ## 🕹️ Project Context: Atari-LX
 This repository is pre-configured for **Atari-LX Engineering**, featuring deep integration with the Atari 8-bit hardware environment, shared constants, and automated technical debates for optimized 6502 assembly development.
@@ -58,7 +69,7 @@ Always use **lowercase letters, numbers, and underscores** for agent names. Hyph
 Agent wrappers register their identity with `hcom start` upon initialization. This ensures that agents show up correctly in the TUI (`hcom list`). 
 
 **Technical Details:**
-- **Manual Control:** To prevent background processes from "stealing" messages from interactive CLI sessions, the continuous background `hcom listen` loop has been removed in v2.2.2.
+- **Persistent Status (v2.2.3):** Agents now maintain a background 10s heartbeat using `hcom start`, which ensures they stay "ready" in the TUI without "stealing" messages (as a full `hcom listen` would). This solves the `exit:timeout` cycling issue.
 - **Status Persistence:** Agents maintain their `listening` status as long as their primary interactive CLI process is running.
 - **Location:** `scripts/utils.sh` (`start_heartbeat()` function) and `scripts/agent-wrapper.sh`.
 

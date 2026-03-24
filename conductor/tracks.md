@@ -6,7 +6,8 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 
 - [x] **Milestone 1: Unified Environment Foundation** (Done)
 - [x] **Milestone 2: Enhanced Task Coordination** (Done)
-- [ ] **Milestone 3: Automated Quality Assurance** (Planned)
+- [x] **Milestone 3: Automated Quality Assurance** (Done ✅)
+- [ ] **Milestone 4: Multi-Project & Advanced Orchestration** (Started)
 
 ---
 
@@ -31,9 +32,30 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 
 - [x] **Track: Atari-LX Hardware Context**
   - **Assigned:** @qwen-dev
+  - [x] Symbol Synchronization (`hcom-atari-sync.sh`)
+  - [x] Visual Debugging (`hcom-atari-screen.sh`)
+  - [x] Hardware Constants (`init-atari-constants.sh`)
+
+- [x] **Track: Atari-LX Technical Debate**
+  - **Assigned:** @all
+  - [x] Specialized debate wrapper (`atari-debate.sh`)
+  - [x] Automated project context injection (Blackboard/Build)
+  - [x] Interactive role assignment (PRO/CON/JUDGE)
+
+- [x] **Track: Google Chat Messenger Bridge**
+  - **Assigned:** @conductor
+  - [x] Google Workspace Auth Integration (`google-auth.sh`)
+  - [x] Event monitoring & forwarding loop (`hcom-chat-bridge.sh`)
+  - [x] Remote monitoring space: "Atari-LX Multi-Agent"
 
 - [x] **Track: Implement Blackboard-Driven Conductor Tasking**
   *Link: [./tracks/blackboard_tasking_20260322/](./tracks/blackboard_tasking_20260322/)*
+
+- [x] **Track: Automated Quality Assurance**
+  *Link: [./tracks/automated_qa_20260323/](./tracks/automated_qa_20260323/)*
+
+- [ ] **Track: Multi-Project & Advanced Orchestration**
+  *Link: [./milestone-4-plan.md](./milestone-4-plan.md)*
 
 ---
 
@@ -45,7 +67,8 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 - [x] **Track: HCOM Telemetry Fix** (Done ✅)
   - **Assigned:** @conductor
   - **Description:** Fixed agent heartbeat timeout issue causing `exit:timeout` status cycling in hcom TUI.
-  - [x] Identified root cause: 60-second heartbeat timeout was too long
-  - [x] Reduced heartbeat timeout to 10 seconds in `scripts/agent-wrapper.sh`
-  - [x] Updated `register_hcom()` and `start_heartbeat()` in `scripts/utils.sh`
-  - [x] Updated documentation in README.md
+  - [x] Identified root cause: Single registration was insufficient for hcom 0.7.5 persistent status.
+  - [x] Implemented continuous 10s background heartbeat loop in `scripts/utils.sh` via `start_heartbeat()`.
+  - [x] Updated `scripts/agent-wrapper.sh` and `scripts/hcom-chat-bridge.sh` to use the new heartbeat with robust cleanup.
+  - [x] Verified that status stays `ready` without intercepting messages from interactive sessions.
+

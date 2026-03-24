@@ -15,10 +15,24 @@ check_sqlite3 || exit 1
 # Configuration
 TRACKS_FILE="conductor/tracks.md"
 INTERVAL=${CONDUCTOR_INTERVAL:-60} # Default to 60 seconds
+TEST_INTERVAL=900 # 15 minutes
+SCREENSHOT_INTERVAL=300 # 5 minutes
+LAST_TEST_RUN=0
+LAST_SCREENSHOT_TIME=0
+# Initialize last event ID to avoid processing old messages
+LAST_EVENT_ID=$(hcom events --last 1 | grep -oP '"id":\K\d+' || echo "0")
 
 # Agent registration
 export HCOM_NAME="conductor_$(hostname | tr "[:upper:]" "[:lower:]" | tr "." "_")_$$"
 register_hcom "conductor" || true
+start_heartbeat "conductor" || true
+
+cleanup() {
+    if [ -n "${HEARTBEAT_PID:-}" ]; then
+        kill "$HEARTBEAT_PID" 2>/dev/null || true
+    fi
+}
+trap cleanup EXIT
 
 # Thread subscription
 hcom events sub --agent "$HCOM_NAME" --thread "plan-sync" --once > /dev/null 2>&1 &
@@ -83,7 +97,8 @@ sync_blackboard_status() {
         
         # Update TMUX status bar and pane title if in a session
         if [[ -n "${TMUX:-}" ]]; then
-            local status_text="[Active: ${next_track:-None} | Progress: $percent%]"
+            local test_status=$(blackboard_get "test_last_status" || echo "N/A")
+            local status_text="[Active: ${next_track:-None} | Progress: $percent% | Tests: $test_status]"
             # Status right for global view
             tmux set-option -g status-right "$status_text" > /dev/null 2>&1 || true
             # Update hcom pane title for focus
@@ -142,15 +157,114 @@ spawn_workers() {
     fi
 }
 
-echo "Conductor Agent [$HCOM_NAME] initialized. Monitoring $TRACKS_FILE every $INTERVAL seconds."
+run_automated_tests() {
+    echo "[$(date +%T)] Triggering automated test run..."
+    bash "$SCRIPT_DIR/hcom-test-runner.sh" > /dev/null 2>&1 || true
+    LAST_TEST_RUN=$(date +%s)
+}
 
-# Start heartbeat in background
-start_heartbeat || true
+process_commands() {
+    local event_json="$1"
+    local type=$(echo "$event_json" | grep -oP '"type":"\K[^"]+')
+    
+    if [[ "$type" == "message" ]]; then
+        local from=$(echo "$event_json" | grep -oP '"msg_from":"\K[^"]+')
+        local text=$(echo "$event_json" | grep -oP '"msg_text":"\K[^"]+')
+        local thread=$(echo "$event_json" | grep -oP '"msg_thread":"\K[^"]+')
+        
+        # We only care about command triggers starting with !
+        if [[ "$text" == !* ]]; then
+            local cmd=$(echo "$text" | awk '{print $1}')
+            echo "[$(date +%T)] Received command: $cmd from $from"
+            
+            case "$cmd" in
+                "!test")
+                    hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Initiating full test suite..."
+                    run_automated_tests
+                    ;;
+                "!screenshot")
+                    hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Capturing emulator state..."
+                    bash "$SCRIPT_DIR/hcom-atari-screen.sh" > /dev/null 2>&1 || true
+                    ;;
+                "!status")
+                    local progress=$(blackboard_get "project_progress")
+                    local active=$(blackboard_get "active_track")
+                    local test_status=$(blackboard_get "test_last_status")
+                    local build_time=$(blackboard_get "atari_last_build")
+                    
+                    hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- \
+                        "Project Health: Progress $progress | Active Track: $active | Tests: $test_status | Last Build: $build_time"
+                    ;;
+                "!switch")
+                    local new_path=$(echo "$text" | awk '{print $2}')
+                    if [[ -d "$new_path" ]]; then
+                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Switching project root to: $new_path"
+                        # Update variables (this will affect the next iteration)
+                        PROJECT_ROOT="$new_path"
+                        TRACKS_FILE="$PROJECT_ROOT/conductor/tracks.md"
+                        blackboard_set "conductor_current_project" "$PROJECT_ROOT"
+                    else
+                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: Directory not found: $new_path"
+                    fi
+                    ;;
+                "!build")
+                    hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Starting project build..."
+                    if make build > /dev/null 2>&1; then
+                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Build successful."
+                        bash "$SCRIPT_DIR/hcom-atari-sync.sh" > /dev/null 2>&1 || true
+                    else
+                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Build failed."
+                    fi
+                    ;;
+                "!git-sync")
+                    hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Syncing with remote repository..."
+                    local sync_out=$(git pull 2>&1 || echo "Git pull failed")
+                    hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Sync result: $sync_out"
+                    ;;
+                *)
+                    # Unknown command
+                    ;;
+            esac
+        fi
+    fi
+}
+
+echo "Conductor Agent [$HCOM_NAME] initialized. Monitoring $TRACKS_FILE and hcom events."
 
 while true; do
     sync_blackboard_status "$TRACKS_FILE"
     spawn_workers "$TRACKS_FILE"
     
+    # Check for periodic tests
+    CURRENT_TIME=$(date +%s)
+    if (( CURRENT_TIME - LAST_TEST_RUN > TEST_INTERVAL )); then
+        run_automated_tests
+    fi
+
+    # Check for periodic screenshots
+    if (( CURRENT_TIME - LAST_SCREENSHOT_TIME > SCREENSHOT_INTERVAL )); then
+        echo "[$(date +%T)] Triggering periodic screenshot..."
+        bash "$SCRIPT_DIR/hcom-atari-screen.sh" > /dev/null 2>&1 || true
+        LAST_SCREENSHOT_TIME=$CURRENT_TIME
+    fi
+    
+    # Process new hcom events (commands)
+    # We use 'hcom events' to find new messages since LAST_EVENT_ID
+    hcom events --all --sql "id > $LAST_EVENT_ID AND type='message'" --last 5 | while read -r line; do
+        if [[ -n "$line" && "$line" == \{* ]]; then
+            ID=$(echo "$line" | grep -oP '"id":\K\d+')
+            if [[ -n "$ID" && "$ID" -gt "$LAST_EVENT_ID" ]]; then
+                process_commands "$line"
+                # Update LAST_EVENT_ID (this subshell issue means we should update it outside)
+            fi
+        fi
+    done
+    
+    # Correct way to update LAST_EVENT_ID from subshell is to use a file or redirect
+    NEW_ID=$(hcom events --all --sql "id > $LAST_EVENT_ID AND type='message'" --last 1 | grep -oP '"id":\K\d+' || echo "$LAST_EVENT_ID")
+    LAST_EVENT_ID=$NEW_ID
+
     # Wait for next interval or interrupt
-    hcom listen --timeout "$INTERVAL" --name "$HCOM_NAME" > /dev/null 2>&1 || sleep "$INTERVAL"
+    # We use a shorter interval for hcom listen when we have command handling
+    hcom listen --timeout 10 --name "$HCOM_NAME" > /dev/null 2>&1 || sleep 10
 done

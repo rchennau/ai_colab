@@ -122,9 +122,16 @@ register_hcom() {
 start_heartbeat() {
     local tool_name="${1:-agent}"
     if [ -n "${HCOM_NAME:-}" ]; then
-        # Registration is enough to show up in TUI. 
-        # Continuous heartbeat via 'listen' was clashing with CLI messages.
-        hcom start --as "$HCOM_NAME" > /dev/null 2>&1 || true
+        # Continuous heartbeat via 'hcom start' in background.
+        # This keeps the status 'ready' in TUI without stealing messages like 'listen' would.
+        # We use a 10s interval to ensure status stays fresh.
+        (
+            while true; do
+                hcom start --as "$HCOM_NAME" > /dev/null 2>&1 || true
+                sleep 10
+            done
+        ) &
+        HEARTBEAT_PID=$!
         return 0
     fi
     return 1
