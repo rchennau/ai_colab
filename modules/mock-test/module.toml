@@ -1,0 +1,19 @@
+[module]
+id = "mock-test"
+name = "Mock Test Module"
+description = "Test module for verifying plugin system functionality. Safe to enable/disable."
+version = "1.0.0"
+
+[env]
+ENABLE_MOCK_TEST = "true"
+MOCK_TEST_VALUE = "test_123"
+
+[hooks]
+conductor_commands = [
+    { trigger = "!mock-hello", script = "modules/mock-test/scripts/mock-hello.sh" },
+    { trigger = "!mock-status", script = "modules/mock-test/scripts/mock-status.sh" }
+]
+
+dashboard_sections = [
+    { name = "Mock Test Status", type = "text", source = "modules/mock-test/status.txt" }
+]
