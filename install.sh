@@ -185,7 +185,7 @@ for llm in $LLMS_TO_INSTALL; do
                 if [[ "$IS_MACOS" == true ]] && has_command brew; then
                     brew install qwen-code
                 else
-                    npm install -g qwen-cli
+                    npm install -g @qwen-code/qwen-code
                 fi
             else
                 echo -e "  ✓ Qwen CLI is already installed."
