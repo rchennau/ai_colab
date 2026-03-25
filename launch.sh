@@ -144,40 +144,41 @@ NAMES_ARR=($MOD_NAMES)
 if [ ${#IDS_ARR[@]} -eq 0 ]; then
     echo -e "  ${YELLOW}(No additional modules found)${NC}"
 else
-    for i in "${!IDS_ARR[@]}"; do
-        ID="${IDS_ARR[$i]}"
-        NAME="${NAMES_ARR[$i]}"
-        PREF_KEY="MODULE_$(echo "$ID" | tr '-' '_' | tr '[:lower:]' '[:upper:]')"
-        LAST_VAL=$(load_pref "$PREF_KEY")
-        LAST_VAL=${LAST_VAL:-false}
-        
-        PROMPT_VAL="n"
-        [[ "$LAST_VAL" == "true" ]] && PROMPT_VAL="Y" || PROMPT_VAL="y"
-        
-        read -p "  Enable $NAME ($ID)? [$PROMPT_VAL/n]: " -n 1 -r; echo ""
-        if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$LAST_VAL" == "true" ]]); then
-            save_pref "$PREF_KEY" "true"
-        else
-            save_pref "$PREF_KEY" "false"
-        fi
-    done
+    read -p "  Reconfigure Module Addons? [y/N]: " -n 1 -r; echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        for i in "${!IDS_ARR[@]}"; do
+            ID="${IDS_ARR[$i]}"
+            NAME="${NAMES_ARR[$i]}"
+            PREF_KEY="MODULE_$(echo "$ID" | tr '-' '_' | tr '[:lower:]' '[:upper:]')"
+            LAST_VAL=$(load_pref "$PREF_KEY")
+            LAST_VAL=${LAST_VAL:-false}
+
+            PROMPT_VAL="n"
+            [[ "$LAST_VAL" == "true" ]] && PROMPT_VAL="Y" || PROMPT_VAL="y"
+
+            read -p "  Enable $NAME ($ID)? [$PROMPT_VAL/n]: " -n 1 -r; echo ""
+            if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$LAST_VAL" == "true" ]]); then
+                save_pref "$PREF_KEY" "true"
+            else
+                save_pref "$PREF_KEY" "false"
+            fi
+        done
+    fi
 fi
 
 # Evaluate active module environment variables
 eval "$(python3 "$SCRIPT_DIR/scripts/module-manager.py" env "$PROJECT_ROOT")"
 
 # 3.1 Compute Backend (Spoke Architecture)
-# The ai-colab Hub runs on this local machine. 
-# High-power agents (Spokes) require external GPU compute.
-LAST_BACKEND=$(load_pref "compute.backend" "nvidia")
+LAST_BACKEND=$(load_pref "compute.backend" "local")
 ui_title "Remote Compute (Spokes)" "${BLUE}"
-ui_box "The ai-colab Hub runs on this local machine. High-power agents 
+ui_box "The ai-colab Hub runs on this local machine. High-power agents
 (Spokes) require external GPU compute for inference." "${BLUE}"
 echo ""
 ui_status "Current Backend" "$LAST_BACKEND" "${GREEN}"
 
-read -p "  Use $LAST_BACKEND for high-power Spokes? [Y/n]: " -n 1 -r; echo ""
-if [[ $REPLY =~ ^[Nn]$ ]]; then
+read -p "  Configure Remote Compute Backend? [y/N]: " -n 1 -r; echo ""
+if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo -e "  ${CYAN}1)${NC} NVIDIA NIM (Cloud-hosted nemoclaw - Recommended)"
     echo -e "  ${CYAN}2)${NC} Remote vLLM (Private network GPU server)"
     echo -e "  ${CYAN}3)${NC} RunPod (On-demand cloud GPU)"
@@ -202,91 +203,104 @@ export COMPUTE_BACKEND="$COMPUTE_BACKEND"
 DASHBOARD_FLAGS=""
 if [ "$DASHBOARD" = true ]; then
     ui_title "Collaboration Fleet" "${BLUE}"
-    ui_box "Select at least two agents to enable multi-agent collaboration.
+    ui_box "Select agents to enable multi-agent collaboration.
 Spoke agents will use the $COMPUTE_BACKEND backend." "${BLUE}"
     echo ""
-    
-    # Qwen
-    DEFAULT_QWEN=$(load_pref "llm.qwen.enabled" "true")
-    PROMPT_QWEN=$([[ "$DEFAULT_QWEN" == "true" ]] && echo "Y/n" || echo "y/N")
-    read -p "  Include Qwen? [$PROMPT_QWEN]: " -n 1 -r; echo ""
-    if [[ $REPLY =~ ^[Nn]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_QWEN" == "false" ]]); then
-        DASHBOARD_FLAGS+=" --no-qwen"
-    fi
-    
-    # Gemini
-    DEFAULT_GEMINI=$(load_pref "llm.gemini.enabled" "true")
-    PROMPT_GEMINI=$([[ "$DEFAULT_GEMINI" == "true" ]] && echo "Y/n" || echo "y/N")
-    read -p "  Include Gemini? [$PROMPT_GEMINI]: " -n 1 -r; echo ""
-    if [[ $REPLY =~ ^[Nn]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_GEMINI" == "false" ]]); then
-        DASHBOARD_FLAGS+=" --no-gemini"
-    fi
-    
-    # Spoke Agent: nemoclaw (NVIDIA NIM)
-    if [ "$COMPUTE_BACKEND" == "nvidia" ]; then
-        DEFAULT_NEMOCLAW=$(load_pref "llm.nemoclaw.enabled" "true")
-        PROMPT_NEMOCLAW=$([[ "$DEFAULT_NEMOCLAW" == "true" ]] && echo "Y/n" || echo "y/N")
-        read -p "  Include nemoclaw (NVIDIA NIM)? [$PROMPT_NEMOCLAW]: " -n 1 -r; echo ""
-        if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_NEMOCLAW" == "true" ]]); then
-            DASHBOARD_FLAGS+=" --add-nemoclaw"
-            export NEMO_HOST="integrate.api.nvidia.com"
-            export NEMO_BASE_URL="https://integrate.api.nvidia.com/v1"
-            save_pref "llm.nemoclaw.enabled" "true"
+
+    read -p "  Reconfigure Collaboration Fleet? [y/N]: " -n 1 -r; echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        # Qwen
+        DEFAULT_QWEN=$(load_pref "llm.qwen.enabled" "true")
+        PROMPT_QWEN=$([[ "$DEFAULT_QWEN" == "true" ]] && echo "Y/n" || echo "y/N")
+        read -p "  Include Qwen? [$PROMPT_QWEN]: " -n 1 -r; echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_QWEN" == "true" ]]); then
+            save_pref "llm.qwen.enabled" "true"
         else
-            save_pref "llm.nemoclaw.enabled" "false"
+            save_pref "llm.qwen.enabled" "false"
+        fi
+
+        # Gemini
+        DEFAULT_GEMINI=$(load_pref "llm.gemini.enabled" "true")
+        PROMPT_GEMINI=$([[ "$DEFAULT_GEMINI" == "true" ]] && echo "Y/n" || echo "y/N")
+        read -p "  Include Gemini? [$PROMPT_GEMINI]: " -n 1 -r; echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_GEMINI" == "true" ]]); then
+            save_pref "llm.gemini.enabled" "true"
+        else
+            save_pref "llm.gemini.enabled" "false"
+        fi
+
+        # Spoke Agent: nemoclaw (NVIDIA NIM)
+        if [ "$COMPUTE_BACKEND" == "nvidia" ]; then
+            DEFAULT_NEMOCLAW=$(load_pref "llm.nemoclaw.enabled" "true")
+            PROMPT_NEMOCLAW=$([[ "$DEFAULT_NEMOCLAW" == "true" ]] && echo "Y/n" || echo "y/N")
+            read -p "  Include nemoclaw (NVIDIA NIM)? [$PROMPT_NEMOCLAW]: " -n 1 -r; echo ""
+            if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_NEMOCLAW" == "true" ]]); then
+                save_pref "llm.nemoclaw.enabled" "true"
+            else
+                save_pref "llm.nemoclaw.enabled" "false"
+            fi
+        fi
+
+        # Spoke Agent: vLLM
+        if [[ "$COMPUTE_BACKEND" == "vllm-remote" || "$COMPUTE_BACKEND" == "local" ]]; then
+            DEFAULT_VLLM=$(load_pref "llm.vllm.enabled" "false")
+            PROMPT_VLLM=$([[ "$DEFAULT_VLLM" == "true" ]] && echo "Y/n" || echo "y/N")
+            read -p "  Include vLLM Spoke? [$PROMPT_VLLM]: " -n 1 -r; echo ""
+            if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_VLLM" == "true" ]]); then
+                LAST_VLLM_HOST=$(load_pref "llm.vllm.host" "192.168.0.193")
+                read -p "  vLLM Host [default $LAST_VLLM_HOST]: " VLLM_HOST
+                VLLM_HOST=${VLLM_HOST:-$LAST_VLLM_HOST}
+                save_pref "llm.vllm.host" "$VLLM_HOST"
+                save_pref "llm.vllm.enabled" "true"
+            else
+                save_pref "llm.vllm.enabled" "false"
+            fi
+        fi
+
+        # Claude
+        DEFAULT_CLAUDE=$(load_pref "llm.claude.enabled" "false")
+        PROMPT_CLAUDE=$([[ "$DEFAULT_CLAUDE" == "true" ]] && echo "Y/n" || echo "y/N")
+        read -p "  Include Claude? [$PROMPT_CLAUDE]: " -n 1 -r; echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_CLAUDE" == "true" ]]); then
+            save_pref "llm.claude.enabled" "true"
+        else
+            save_pref "llm.claude.enabled" "false"
+        fi
+
+        # DeepSeek
+        DEFAULT_DEEPSEEK=$(load_pref "llm.deepseek.enabled" "false")
+        PROMPT_DEEPSEEK=$([[ "$DEFAULT_DEEPSEEK" == "true" ]] && echo "Y/n" || echo "y/N")
+        read -p "  Include DeepSeek? [$PROMPT_DEEPSEEK]: " -n 1 -r; echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_DEEPSEEK" == "true" ]]); then
+            save_pref "llm.deepseek.enabled" "true"
+        else
+            save_pref "llm.deepseek.enabled" "false"
         fi
     fi
 
-    # Spoke Agent: vLLM
-    if [[ "$COMPUTE_BACKEND" == "vllm-remote" || "$COMPUTE_BACKEND" == "local" ]]; then
-        DEFAULT_VLLM=$(load_pref "llm.vllm.enabled" "false")
-        PROMPT_VLLM=$([[ "$DEFAULT_VLLM" == "true" ]] && echo "Y/n" || echo "y/N")
-        read -p "  Include vLLM Spoke? [$PROMPT_VLLM]: " -n 1 -r; echo ""
-        if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_VLLM" == "true" ]]); then
-            LAST_VLLM_HOST=$(load_pref "llm.vllm.host" "192.168.0.193")
-            read -p "  vLLM Host [default $LAST_VLLM_HOST]: " VLLM_HOST
-            VLLM_HOST=${VLLM_HOST:-$LAST_VLLM_HOST}
-            save_pref "llm.vllm.host" "$VLLM_HOST"
-            export VLLM_BASE_URL="http://$VLLM_HOST:8000/v1"
-            DASHBOARD_FLAGS+=" --vllm"
-            save_pref "llm.vllm.enabled" "true"
-        else
-            save_pref "llm.vllm.enabled" "false"
-        fi
+    # Set DASHBOARD_FLAGS based on finalized preferences
+    [[ $(load_pref "llm.qwen.enabled" "true") == "false" ]] && DASHBOARD_FLAGS+=" --no-qwen"
+    [[ $(load_pref "llm.gemini.enabled" "true") == "false" ]] && DASHBOARD_FLAGS+=" --no-gemini"
+
+    if [[ $(load_pref "llm.nemoclaw.enabled" "false") == "true" && "$COMPUTE_BACKEND" == "nvidia" ]]; then
+        DASHBOARD_FLAGS+=" --add-nemoclaw"
+        export NEMO_HOST="integrate.api.nvidia.com"
+        export NEMO_BASE_URL="https://integrate.api.nvidia.com/v1"
     fi
 
-    # Claude
-    DEFAULT_CLAUDE=$(load_pref "llm.claude.enabled" "false")
-    PROMPT_CLAUDE=$([[ "$DEFAULT_CLAUDE" == "true" ]] && echo "Y/n" || echo "y/N")
-    read -p "  Include Claude? [$PROMPT_CLAUDE]: " -n 1 -r; echo ""
-    if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_CLAUDE" == "true" ]]); then
-        DASHBOARD_FLAGS+=" --add-claude"
-        save_pref "llm.claude.enabled" "true"
-    else
-        save_pref "llm.claude.enabled" "false"
+    if [[ $(load_pref "llm.vllm.enabled" "false") == "true" && ("$COMPUTE_BACKEND" == "vllm-remote" || "$COMPUTE_BACKEND" == "local") ]]; then
+        DASHBOARD_FLAGS+=" --vllm"
+        VLLM_HOST=$(load_pref "llm.vllm.host" "192.168.0.193")
+        export VLLM_BASE_URL="http://$VLLM_HOST:8000/v1"
     fi
-    
-    # DeepSeek
-    DEFAULT_DEEPSEEK=$(load_pref "llm.deepseek.enabled" "false")
-    PROMPT_DEEPSEEK=$([[ "$DEFAULT_DEEPSEEK" == "true" ]] && echo "Y/n" || echo "y/N")
-    read -p "  Include DeepSeek? [$PROMPT_DEEPSEEK]: " -n 1 -r; echo ""
-    if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_DEEPSEEK" == "true" ]]); then
-        DASHBOARD_FLAGS+=" --add-deepseek"
-        save_pref "llm.deepseek.enabled" "true"
-    else
-        save_pref "llm.deepseek.enabled" "false"
-    fi
-    
+
+    [[ $(load_pref "llm.claude.enabled" "false") == "true" ]] && DASHBOARD_FLAGS+=" --add-claude"
+    [[ $(load_pref "llm.deepseek.enabled" "false") == "true" ]] && DASHBOARD_FLAGS+=" --add-deepseek"
+
     if [ "$CONDUCTOR" = true ]; then
         DASHBOARD_FLAGS+=" --conductor"
     fi
 fi
-    
-    if [ "$CONDUCTOR" = true ]; then
-        DASHBOARD_FLAGS+=" --conductor"
-    fi
-fi
-
 # 4. Launching
 ui_title "Finalizing Launch" "${BLUE}"
 if [ "$DASHBOARD" = true ]; then

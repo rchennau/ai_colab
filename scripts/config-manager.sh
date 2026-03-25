@@ -185,17 +185,22 @@ config_set() {
     
     ensure_dirs
     
-    # Create backup if atomic mode
+    # Check if key exists and has same value
+    if grep -q "^${key}[[:space:]]*=[[:space:]]*\"${value}\"" "$CONFIG_FILE" 2>/dev/null; then
+        return 0
+    fi
+
+    # Create backup if atomic mode and file exists
     if [[ "$atomic" == "true" && -f "$CONFIG_FILE" ]]; then
         create_backup
     fi
-    
+
     # Create config file if it doesn't exist
     if [[ ! -f "$CONFIG_FILE" ]]; then
         touch "$CONFIG_FILE"
     fi
-    
-    # Check if key exists
+
+    # Check if key exists (regardless of value)
     if grep -q "^${key}[[:space:]]*=" "$CONFIG_FILE" 2>/dev/null; then
         # Update existing key
         if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -209,9 +214,8 @@ config_set() {
         # Add new key
         echo "${key} = \"${value}\"" >> "$CONFIG_FILE"
     fi
-    
-    print_success "Configuration updated: ${key} = ${value}"
-    
+
+    print_success "Configuration updated: ${key} = ${value}"    
     # Update state
     update_state "config_changed" "$(date -Iseconds)"
     
