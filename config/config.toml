@@ -32,3 +32,7 @@ enabled = "true"
 
 [module.chat_bridge]
 enabled = "true"
+MODULE_ATARI_8BIT = "false"
+MODULE_MOCK_TEST = "true"
+MODULE_NEMOCLAW = "true"
+compute.backend = "local"

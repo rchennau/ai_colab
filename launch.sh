@@ -166,20 +166,27 @@ fi
 # Evaluate active module environment variables
 eval "$(python3 "$SCRIPT_DIR/scripts/module-manager.py" env "$PROJECT_ROOT")"
 
-# 3.1 Compute Backend Confirmation
-LAST_BACKEND=$(load_pref "compute.backend" "local")
-ui_title "Compute Configuration" "${BLUE}"
+# 3.1 Compute Backend (Spoke Architecture)
+# The ai-colab Hub runs on this local machine. 
+# High-power agents (Spokes) require external GPU compute.
+LAST_BACKEND=$(load_pref "compute.backend" "nvidia")
+ui_title "Remote Compute (Spokes)" "${BLUE}"
+ui_box "The ai-colab Hub runs on this local machine. High-power agents 
+(Spokes) require external GPU compute for inference." "${BLUE}"
+echo ""
 ui_status "Current Backend" "$LAST_BACKEND" "${GREEN}"
 
-read -p "  Use $LAST_BACKEND for high-power agents? [Y/n]: " -n 1 -r; echo ""
+read -p "  Use $LAST_BACKEND for high-power Spokes? [Y/n]: " -n 1 -r; echo ""
 if [[ $REPLY =~ ^[Nn]$ ]]; then
-    echo -e "  ${CYAN}1)${NC} NVIDIA NIM API"
-    echo -e "  ${CYAN}2)${NC} RunPod"
-    echo -e "  ${CYAN}3)${NC} Local Server"
-    read -p "  Select backend [1-3]: " NEW_BACKEND
+    echo -e "  ${CYAN}1)${NC} NVIDIA NIM (Cloud-hosted nemoclaw - Recommended)"
+    echo -e "  ${CYAN}2)${NC} Remote vLLM (Private network GPU server)"
+    echo -e "  ${CYAN}3)${NC} RunPod (On-demand cloud GPU)"
+    echo -e "  ${CYAN}4)${NC} Local Server (Use only if you have local GPU)"
+    read -p "  Select backend [1-4]: " NEW_BACKEND
     case "$NEW_BACKEND" in
         1) COMPUTE_BACKEND="nvidia" ;;
-        2) COMPUTE_BACKEND="runpod" ;;
+        2) COMPUTE_BACKEND="vllm-remote" ;;
+        3) COMPUTE_BACKEND="runpod" ;;
         *) COMPUTE_BACKEND="local" ;;
     esac
     save_pref "compute.backend" "$COMPUTE_BACKEND"
@@ -194,12 +201,10 @@ export COMPUTE_BACKEND="$COMPUTE_BACKEND"
 # 4. Agent Selection (if dashboard)
 DASHBOARD_FLAGS=""
 if [ "$DASHBOARD" = true ]; then
-    # Pass ENABLE_ vars to dashboard via flags if needed, or just let them be env vars
-    # For backward compatibility with dashboard-launch.sh:
-    [[ "${ENABLE_ATARI_LX:-false}" == "true" ]] && DASHBOARD_FLAGS+=" --atari"
-    
-    ui_title "Agent Configuration" "${BLUE}"
-    echo -e "Select agents for the Dashboard:"
+    ui_title "Collaboration Fleet" "${BLUE}"
+    ui_box "Select at least two agents to enable multi-agent collaboration.
+Spoke agents will use the $COMPUTE_BACKEND backend." "${BLUE}"
+    echo ""
     
     # Qwen
     DEFAULT_QWEN=$(load_pref "llm.qwen.enabled" "true")
@@ -217,17 +222,37 @@ if [ "$DASHBOARD" = true ]; then
         DASHBOARD_FLAGS+=" --no-gemini"
     fi
     
-    # vLLM
-    DEFAULT_VLLM=$(load_pref "llm.vllm.enabled" "false")
-    PROMPT_VLLM=$([[ "$DEFAULT_VLLM" == "true" ]] && echo "Y/n" || echo "y/N")
-    read -p "  Include vLLM? [$PROMPT_VLLM]: " -n 1 -r; echo ""
-    if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_VLLM" == "true" ]]); then
-        LAST_VLLM_HOST=$(load_pref "llm.vllm.host" "192.168.0.193")
-        read -p "  vLLM Host [default $LAST_VLLM_HOST]: " VLLM_HOST
-        VLLM_HOST=${VLLM_HOST:-$LAST_VLLM_HOST}
-        save_pref "llm.vllm.host" "$VLLM_HOST"
-        export VLLM_BASE_URL="http://$VLLM_HOST:8000/v1"
-        DASHBOARD_FLAGS+=" --vllm"
+    # Spoke Agent: nemoclaw (NVIDIA NIM)
+    if [ "$COMPUTE_BACKEND" == "nvidia" ]; then
+        DEFAULT_NEMOCLAW=$(load_pref "llm.nemoclaw.enabled" "true")
+        PROMPT_NEMOCLAW=$([[ "$DEFAULT_NEMOCLAW" == "true" ]] && echo "Y/n" || echo "y/N")
+        read -p "  Include nemoclaw (NVIDIA NIM)? [$PROMPT_NEMOCLAW]: " -n 1 -r; echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_NEMOCLAW" == "true" ]]); then
+            DASHBOARD_FLAGS+=" --add-nemoclaw"
+            export NEMO_HOST="integrate.api.nvidia.com"
+            export NEMO_BASE_URL="https://integrate.api.nvidia.com/v1"
+            save_pref "llm.nemoclaw.enabled" "true"
+        else
+            save_pref "llm.nemoclaw.enabled" "false"
+        fi
+    fi
+
+    # Spoke Agent: vLLM
+    if [[ "$COMPUTE_BACKEND" == "vllm-remote" || "$COMPUTE_BACKEND" == "local" ]]; then
+        DEFAULT_VLLM=$(load_pref "llm.vllm.enabled" "false")
+        PROMPT_VLLM=$([[ "$DEFAULT_VLLM" == "true" ]] && echo "Y/n" || echo "y/N")
+        read -p "  Include vLLM Spoke? [$PROMPT_VLLM]: " -n 1 -r; echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_VLLM" == "true" ]]); then
+            LAST_VLLM_HOST=$(load_pref "llm.vllm.host" "192.168.0.193")
+            read -p "  vLLM Host [default $LAST_VLLM_HOST]: " VLLM_HOST
+            VLLM_HOST=${VLLM_HOST:-$LAST_VLLM_HOST}
+            save_pref "llm.vllm.host" "$VLLM_HOST"
+            export VLLM_BASE_URL="http://$VLLM_HOST:8000/v1"
+            DASHBOARD_FLAGS+=" --vllm"
+            save_pref "llm.vllm.enabled" "true"
+        else
+            save_pref "llm.vllm.enabled" "false"
+        fi
     fi
 
     # Claude
@@ -236,6 +261,9 @@ if [ "$DASHBOARD" = true ]; then
     read -p "  Include Claude? [$PROMPT_CLAUDE]: " -n 1 -r; echo ""
     if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_CLAUDE" == "true" ]]); then
         DASHBOARD_FLAGS+=" --add-claude"
+        save_pref "llm.claude.enabled" "true"
+    else
+        save_pref "llm.claude.enabled" "false"
     fi
     
     # DeepSeek
@@ -244,38 +272,15 @@ if [ "$DASHBOARD" = true ]; then
     read -p "  Include DeepSeek? [$PROMPT_DEEPSEEK]: " -n 1 -r; echo ""
     if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_DEEPSEEK" == "true" ]]); then
         DASHBOARD_FLAGS+=" --add-deepseek"
+        save_pref "llm.deepseek.enabled" "true"
+    else
+        save_pref "llm.deepseek.enabled" "false"
     fi
     
-    # NeMo / nemoclaw
-    DEFAULT_NEMOCLAW=$(load_pref "llm.nemoclaw.enabled" "false")
-    PROMPT_NEMOCLAW=$([[ "$DEFAULT_NEMOCLAW" == "true" ]] && echo "Y/n" || echo "y/N")
-    read -p "  Include nemoclaw (NVIDIA NIM)? [$PROMPT_NEMOCLAW]: " -n 1 -r; echo ""
-    if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_NEMOCLAW" == "true" ]]); then
-        DASHBOARD_FLAGS+=" --add-nemoclaw"
-        export NEMO_HOST="integrate.api.nvidia.com"
-        export NEMO_BASE_URL="https://integrate.api.nvidia.com/v1"
-    else
-        DEFAULT_NEMO=$(load_pref "llm.nemo.enabled" "false")
-        PROMPT_NEMO=$([[ "$DEFAULT_NEMO" == "true" ]] && echo "Y/n" || echo "y/N")
-        read -p "  Include generic NeMo? [$PROMPT_NEMO]: " -n 1 -r; echo ""
-        if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_NEMO" == "true" ]]); then
-            DASHBOARD_FLAGS+=" --add-nemo"
-            LAST_NEMO_HOST=$(load_pref "llm.nemo.host" "integrate.api.nvidia.com")
-            read -p "  NeMo Host [default $LAST_NEMO_HOST]: " NEMO_HOST
-            NEMO_HOST=${NEMO_HOST:-$LAST_NEMO_HOST}
-            save_pref "llm.nemo.host" "$NEMO_HOST"
-            
-            if [ "$NEMO_HOST" == "integrate.api.nvidia.com" ]; then
-                export NEMO_BASE_URL="https://integrate.api.nvidia.com/v1"
-            else
-                if [[ "$NEMO_HOST" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-                     export NEMO_BASE_URL="http://$NEMO_HOST:8000/v1"
-                else
-                     export NEMO_BASE_URL="https://$NEMO_HOST/v1"
-                fi
-            fi
-        fi
+    if [ "$CONDUCTOR" = true ]; then
+        DASHBOARD_FLAGS+=" --conductor"
     fi
+fi
     
     if [ "$CONDUCTOR" = true ]; then
         DASHBOARD_FLAGS+=" --conductor"
