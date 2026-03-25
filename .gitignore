@@ -11,6 +11,9 @@ identity.toml
 config.toml.bak
 config.toml.backup
 
+# Ignore ai-colab local state and migration backups
+.ai-colab-*
+
 # Ignore random user files or python caches if any
 __pycache__/
 *.pyc
