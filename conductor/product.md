@@ -30,6 +30,7 @@ The Hub connects to various backends for specialized agent deployment:
     *   `--reconfigure`: Modify existing installation
     *   `--auto`: Non-interactive quick install
 *   **One-Click Launch (`launch.sh`):** A unified interface to start the collaboration session, choosing the desired mix of agents and active modules.
+    *   **Project Migration:** Automatically detects and migrates existing AI/LLM integrations (MCP, conductor, KB) into the ai-colab ecosystem.
 *   **Web UI Setup:** Browser-based installation wizard accessible at http://localhost:8080
 *   **Docker Compose:** Containerized deployment with persistent volumes and health checks.
 *   **Configuration Management:** Centralized config with schema validation, atomic writes, and automatic backups.
@@ -42,6 +43,7 @@ The Hub connects to various backends for specialized agent deployment:
 *   **Agent Health Monitoring:** Real-time status tracking with automatic restart on failure.
 *   **Session Recovery:** Automatic cleanup and recovery from crashed sessions.
 *   **Enhanced Dashboard (v2.4):** Improved tmux dashboard with pre-flight checks, health monitoring, and better error handling.
+*   **80-Column ANSI UI:** Unified CLI aesthetic with professional ANSI graphics, banners, and status tracking across all core scripts.
 
 ### **4. Modular Addons (Atari-LX)**
 *   **High-Performance Context:** Specific tools and prompts for 6502 assembly, Atari hardware constraints, and performance-critical systems.
@@ -67,6 +69,8 @@ The Hub connects to various backends for specialized agent deployment:
     *   Reconfiguration mode (--reconfigure flag)
     *   Pre-flight checks for system readiness
     *   Session recovery and health monitoring
+    *   **Project Migration Tool:** Automated import of existing AI configurations
+    *   **80-Column ANSI UI:** Professional CLI graphics and status reporting
 *   **Phase 12:** NeMo-Claude (nemoclaw) NVIDIA Integration (Done ✅)
 *   **Phase 13:** Automated Testing & CI/CD Integration (Done ✅)
     *   GitHub Actions workflow for Web UI testing

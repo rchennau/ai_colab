@@ -14,6 +14,16 @@ brew install --cask iterm2
 ./launch.sh
 ```
 
+### Project Migration (v3.0)
+If you have an existing project with AI configurations, use the automated migration tool:
+```bash
+# Interactive migration
+./scripts/migrate-project.sh
+
+# Or just run launch.sh and it will detect existing configs
+./launch.sh
+```
+
 ### WSL2 Ubuntu (Windows Terminal)
 ```bash
 # In WSL2 terminal

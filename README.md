@@ -76,6 +76,8 @@ High-power agents and models run **externally** to the Hub:
 *   **Automated Git Lifecycle:** Isolated branches, auto-commits, and pseudo-PRs.
 *   **Semantic Knowledge Base:** LLM-powered architectural search (`!kb`).
 *   **Unified Dashboard (v3.0):** High-density real-time TUI and optional Web UI.
+*   **80-Column ANSI UI:** Professional CLI graphics and status reporting across all core scripts.
+*   **Project Migration Tool:** Automated detection and import of existing AI integrations.
 
 ### **hcom (Hook-Comms)**
 The backbone of ai-colab. All agents communicate via [hcom](https://github.com/aannoo/hcom):
@@ -125,8 +127,10 @@ Full support for WSL2 with Windows Terminal optimizations.
 | `./install.sh --wizard` | Interactive CLI installation wizard (5-step guided setup) |
 | `./install.sh --reconfigure` | Modify existing installation without reinstalling |
 | `./launch.sh` | Unified launcher with interactive module and agent selection |
+| `./scripts/migrate-project.sh` | Project Detection & Migration Tool (automated AI import) |
 | `scripts/config-manager.sh` | Central configuration management and schema validation |
 | `scripts/install-wizard.sh` | Interactive terminal-based configuration wizard |
+| `scripts/utils.sh` | Shared utilities and 80-column ANSI UI helpers |
 | `scripts/agent-wrapper.sh` | Unified registration, heartbeats, and role injection |
 | `scripts/conductor-workflow.sh`| The orchestration heart (Git, KB, Tasking) |
 | `scripts/hcom-test-runner.sh` | Unified test execution and blackboard reporting |

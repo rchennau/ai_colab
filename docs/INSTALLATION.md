@@ -55,6 +55,23 @@ Best for: CI/CD or experienced users who want a standard setup without interacti
 
 ---
 
+## Project Migration (v3.0)
+If you are moving an existing AI project into the ai-colab ecosystem, use the automated **Project Migration Tool**.
+
+### Features
+-   **Automated Detection:** Scans for MCP configurations, product plans, and KB artifacts.
+-   **Safe Integration:** Creates automatic backups before importing existing files.
+-   **Seamless Onboarding:** Merges configurations into the unified `config.toml`.
+-   **Launcher Integration:** `launch.sh` will automatically detect and prompt for migration if existing integrations are found.
+
+### Manual Usage
+To trigger a migration manually:
+```bash
+./scripts/migrate-project.sh
+```
+
+---
+
 ## Post-Installation Management
 
 ### Reconfiguration

@@ -4,7 +4,9 @@ Last Updated: 2026-03-24 (Web UI Enhancements & Automated Testing Update)
 ## Orchestration Core (Hub)
 - `launch.sh`: Unified launcher for the Dashboard and Conductor. Refactored to use central `config-manager.sh`.
 - `install.sh`: Master installer for project dependencies. Supports `--wizard`, `--reconfigure`, and `--auto` modes.
-- `scripts/install-wizard.sh`: Interactive terminal-based configuration wizard (5-step guided setup).
+- `scripts/install-wizard.sh`: Interactive terminal-based configuration wizard (5-step guided setup). Enhanced with 80-column ANSI UI.
+- `scripts/migrate-project.sh`: Project Detection & Migration Tool. Automatically imports existing AI integrations.
+- `scripts/utils.sh`: Shared utilities including new 80-column ANSI UI helpers (banners, boxes, status items).
 - `scripts/config-manager.sh`: Unified configuration management with validation against `config/config.schema.json`. Supports get/set/validate/backup/restore operations.
 - `config/config.schema.json`: Central source of truth for all project configurations and preferences.
 - `config/profiles/`: Pre-defined configuration profiles (minimal, standard, full).
