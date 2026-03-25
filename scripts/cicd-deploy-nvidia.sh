@@ -25,6 +25,19 @@ RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $API
 
 if [[ "$RESPONSE" == "200" ]]; then
     log_success "NVIDIA NIM connectivity verified."
+    
+    # Verify specific nemoclaw model availability
+    log_info "Verifying nemoclaw model availability..."
+    MODEL_CHECK=$(curl -s -H "Authorization: Bearer $API_KEY" "$COMPUTE_BASE_URL/models" | grep -q "nvidia/llama-3.3-nemotron-super-49b-v1.5" && echo "true" || echo "false")
+    
+    if [[ "$MODEL_CHECK" == "true" ]]; then
+        log_success "nemoclaw model verified."
+        blackboard_set "nemoclaw_status" "available"
+    else
+        log_warning "nemoclaw model (nvidia/llama-3.3-nemotron-super-49b-v1.5) not found in model list."
+        blackboard_set "nemoclaw_status" "unavailable"
+    fi
+    
     blackboard_set "compute_nvidia_status" "ready"
 else
     log_error "Failed to connect to NVIDIA NIM (HTTP $RESPONSE)."

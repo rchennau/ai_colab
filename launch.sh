@@ -91,28 +91,29 @@ if [[ -f "$SCRIPT_DIR/scripts/migrate-project.sh" ]]; then
     fi
 fi
 
-# Preferences handling
-PREFS_FILE="$PROJECT_ROOT/.ai-colab-prefs"
+# Configuration Manager
+CONFIG_MGR="$SCRIPT_DIR/scripts/config-manager.sh"
+
+# Preferences handling via config-manager
 load_pref() {
-    if [ -f "$PREFS_FILE" ]; then
-        grep "^$1=" "$PREFS_FILE" | cut -d'=' -f2-
-    fi
+    bash "$CONFIG_MGR" get "$1" "${2:-}"
 }
 save_pref() {
-    touch "$PREFS_FILE"
-    grep -v "^$1=" "$PREFS_FILE" > "$PREFS_FILE.tmp" || true
-    echo "$1=$2" >> "$PREFS_FILE.tmp"
-    mv "$PREFS_FILE.tmp" "$PREFS_FILE"
+    bash "$CONFIG_MGR" set "$1" "$2"
 }
 
 # 2. Interactive Selection
+# Load previous choices from state if available
+LAST_LAUNCH_CHOICE=$(bash "$CONFIG_MGR" state last_launch_choice 3)
+
 echo -e "\n${BLUE}Select components to launch:${NC}"
 echo "1) Dashboard (hcom TUI + Agents)"
 echo "2) Conductor (Project Manager)"
 echo "3) Both (Recommended)"
 echo ""
-read -p "Choice [1-3, default 3]: " LAUNCH_CHOICE
-LAUNCH_CHOICE=${LAUNCH_CHOICE:-3}
+read -p "Choice [1-3, default $LAST_LAUNCH_CHOICE]: " LAUNCH_CHOICE
+LAUNCH_CHOICE=${LAUNCH_CHOICE:-$LAST_LAUNCH_CHOICE}
+bash "$CONFIG_MGR" state-set last_launch_choice "$LAUNCH_CHOICE"
 
 DASHBOARD=false
 CONDUCTOR=false
@@ -158,8 +159,7 @@ done
 eval "$(python3 "$SCRIPT_DIR/scripts/module-manager.py" env "$PROJECT_ROOT")"
 
 # 3.1 Compute Backend Confirmation
-LAST_BACKEND=$(load_pref "MODULE_COMPUTE_BACKEND")
-LAST_BACKEND=${LAST_BACKEND:-local}
+LAST_BACKEND=$(load_pref "compute.backend" "local")
 echo -e "\n${BLUE}Compute Backend:${NC} ${GREEN}$LAST_BACKEND${NC}"
 read -p "Use $LAST_BACKEND for high-power agents? [Y/n]: " -n 1 -r; echo ""
 if [[ $REPLY =~ ^[Nn]$ ]]; then
@@ -172,7 +172,7 @@ if [[ $REPLY =~ ^[Nn]$ ]]; then
         2) COMPUTE_BACKEND="runpod" ;;
         *) COMPUTE_BACKEND="local" ;;
     esac
-    save_pref "MODULE_COMPUTE_BACKEND" "$COMPUTE_BACKEND"
+    save_pref "compute.backend" "$COMPUTE_BACKEND"
 else
     COMPUTE_BACKEND="$LAST_BACKEND"
 fi
@@ -189,40 +189,70 @@ if [ "$DASHBOARD" = true ]; then
     [[ "${ENABLE_ATARI_LX:-false}" == "true" ]] && DASHBOARD_FLAGS+=" --atari"
     
     echo -e "\n${BLUE}Select agents for the Dashboard:${NC}"
-    read -p "Include Qwen? [Y/n]: " -n 1 -r; echo ""; [[ $REPLY =~ ^[Nn]$ ]] && DASHBOARD_FLAGS+=" --no-qwen"
-    read -p "Include Gemini? [Y/n]: " -n 1 -r; echo ""; [[ $REPLY =~ ^[Nn]$ ]] && DASHBOARD_FLAGS+=" --no-gemini"
+    
+    # Qwen
+    DEFAULT_QWEN=$(load_pref "llm.qwen.enabled" "true")
+    PROMPT_QWEN=$([[ "$DEFAULT_QWEN" == "true" ]] && echo "Y/n" || echo "y/N")
+    read -p "Include Qwen? [$PROMPT_QWEN]: " -n 1 -r; echo ""
+    if [[ $REPLY =~ ^[Nn]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_QWEN" == "false" ]]); then
+        DASHBOARD_FLAGS+=" --no-qwen"
+    fi
+    
+    # Gemini
+    DEFAULT_GEMINI=$(load_pref "llm.gemini.enabled" "true")
+    PROMPT_GEMINI=$([[ "$DEFAULT_GEMINI" == "true" ]] && echo "Y/n" || echo "y/N")
+    read -p "Include Gemini? [$PROMPT_GEMINI]: " -n 1 -r; echo ""
+    if [[ $REPLY =~ ^[Nn]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_GEMINI" == "false" ]]); then
+        DASHBOARD_FLAGS+=" --no-gemini"
+    fi
     
     # vLLM
-    read -p "Include vLLM? [Y/n]: " -n 1 -r; echo ""
-    if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-        LAST_VLLM_HOST=$(load_pref "VLLM_HOST")
-        LAST_VLLM_HOST=${LAST_VLLM_HOST:-192.168.0.193}
+    DEFAULT_VLLM=$(load_pref "llm.vllm.enabled" "false")
+    PROMPT_VLLM=$([[ "$DEFAULT_VLLM" == "true" ]] && echo "Y/n" || echo "y/N")
+    read -p "Include vLLM? [$PROMPT_VLLM]: " -n 1 -r; echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_VLLM" == "true" ]]); then
+        LAST_VLLM_HOST=$(load_pref "llm.vllm.host" "192.168.0.193")
         read -p "vLLM Host [default $LAST_VLLM_HOST]: " VLLM_HOST
         VLLM_HOST=${VLLM_HOST:-$LAST_VLLM_HOST}
-        save_pref "VLLM_HOST" "$VLLM_HOST"
+        save_pref "llm.vllm.host" "$VLLM_HOST"
         export VLLM_BASE_URL="http://$VLLM_HOST:8000/v1"
-    else
-        DASHBOARD_FLAGS+=" --no-vllm"
+        DASHBOARD_FLAGS+=" --vllm"
     fi
 
-    read -p "Include Claude? [y/N]: " -n 1 -r; echo ""; [[ $REPLY =~ ^[Yy]$ ]] && DASHBOARD_FLAGS+=" --add-claude"
-    read -p "Include DeepSeek? [y/N]: " -n 1 -r; echo ""; [[ $REPLY =~ ^[Yy]$ ]] && DASHBOARD_FLAGS+=" --add-deepseek"
+    # Claude
+    DEFAULT_CLAUDE=$(load_pref "llm.claude.enabled" "false")
+    PROMPT_CLAUDE=$([[ "$DEFAULT_CLAUDE" == "true" ]] && echo "Y/n" || echo "y/N")
+    read -p "Include Claude? [$PROMPT_CLAUDE]: " -n 1 -r; echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_CLAUDE" == "true" ]]); then
+        DASHBOARD_FLAGS+=" --add-claude"
+    fi
+    
+    # DeepSeek
+    DEFAULT_DEEPSEEK=$(load_pref "llm.deepseek.enabled" "false")
+    PROMPT_DEEPSEEK=$([[ "$DEFAULT_DEEPSEEK" == "true" ]] && echo "Y/n" || echo "y/N")
+    read -p "Include DeepSeek? [$PROMPT_DEEPSEEK]: " -n 1 -r; echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_DEEPSEEK" == "true" ]]); then
+        DASHBOARD_FLAGS+=" --add-deepseek"
+    fi
     
     # NeMo / nemoclaw
-    read -p "Include nemoclaw (NVIDIA NIM)? [y/N]: " -n 1 -r; echo ""
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
+    DEFAULT_NEMOCLAW=$(load_pref "llm.nemoclaw.enabled" "false")
+    PROMPT_NEMOCLAW=$([[ "$DEFAULT_NEMOCLAW" == "true" ]] && echo "Y/n" || echo "y/N")
+    read -p "Include nemoclaw (NVIDIA NIM)? [$PROMPT_NEMOCLAW]: " -n 1 -r; echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_NEMOCLAW" == "true" ]]); then
         DASHBOARD_FLAGS+=" --add-nemoclaw"
         export NEMO_HOST="integrate.api.nvidia.com"
         export NEMO_BASE_URL="https://integrate.api.nvidia.com/v1"
     else
-        read -p "Include generic NeMo? [y/N]: " -n 1 -r; echo ""
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
+        DEFAULT_NEMO=$(load_pref "llm.nemo.enabled" "false")
+        PROMPT_NEMO=$([[ "$DEFAULT_NEMO" == "true" ]] && echo "Y/n" || echo "y/N")
+        read -p "Include generic NeMo? [$PROMPT_NEMO]: " -n 1 -r; echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_NEMO" == "true" ]]); then
             DASHBOARD_FLAGS+=" --add-nemo"
-            LAST_NEMO_HOST=$(load_pref "NEMO_HOST")
-            LAST_NEMO_HOST=${LAST_NEMO_HOST:-integrate.api.nvidia.com}
+            LAST_NEMO_HOST=$(load_pref "llm.nemo.host" "integrate.api.nvidia.com")
             read -p "NeMo Host [default $LAST_NEMO_HOST]: " NEMO_HOST
             NEMO_HOST=${NEMO_HOST:-$LAST_NEMO_HOST}
-            save_pref "NEMO_HOST" "$NEMO_HOST"
+            save_pref "llm.nemo.host" "$NEMO_HOST"
             
             if [ "$NEMO_HOST" == "integrate.api.nvidia.com" ]; then
                 export NEMO_BASE_URL="https://integrate.api.nvidia.com/v1"

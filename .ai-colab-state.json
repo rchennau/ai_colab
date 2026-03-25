@@ -1,11 +1,52 @@
 {
   "version": "1.0.0",
-  "created": "2026-03-24T12:21:10-07:00",
+  "created": "2026-03-24T14:25:52-07:00",
   "installation": {
-    "status": "pending",
+    "status": "in-progress",
     "pathway": "unknown"
   },
-  "config_history": [],
-  "last_modified": "2026-03-24T12:22:06.013862",
-  "config_changed": "2026-03-24T12:22:05-07:00"
+  "config_history": [
+    {
+      "timestamp": "2026-03-24T14:25:52.997935",
+      "description": "Loaded profile: minimal"
+    },
+    {
+      "timestamp": "2026-03-24T14:27:17.142692",
+      "description": "Loaded profile: minimal"
+    },
+    {
+      "timestamp": "2026-03-24T14:27:17.334823",
+      "description": "Loaded profile: standard"
+    },
+    {
+      "timestamp": "2026-03-24T14:27:17.534072",
+      "description": "Loaded profile: full"
+    },
+    {
+      "timestamp": "2026-03-24T14:27:33.609565",
+      "description": "Loaded profile: minimal"
+    },
+    {
+      "timestamp": "2026-03-24T14:27:33.808129",
+      "description": "Loaded profile: standard"
+    },
+    {
+      "timestamp": "2026-03-24T14:27:33.998995",
+      "description": "Loaded profile: full"
+    },
+    {
+      "timestamp": "2026-03-24T14:27:44.458325",
+      "description": "Loaded profile: minimal"
+    },
+    {
+      "timestamp": "2026-03-24T14:27:44.653067",
+      "description": "Loaded profile: standard"
+    },
+    {
+      "timestamp": "2026-03-24T14:27:44.845206",
+      "description": "Loaded profile: full"
+    }
+  ],
+  "last_modified": "2026-03-24T14:25:52.749272",
+  "config_changed": "2026-03-24T14:25:52-07:00"
 }

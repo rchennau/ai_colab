@@ -1,0 +1,167 @@
+version: '3.8'
+
+services:
+  ai-colab:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ai-colab:latest
+    container_name: ai-colab
+    restart: unless-stopped
+
+    # Port mappings
+    ports:
+      - "8080:8080"  # Web UI
+      - "8081:8081"  # API
+
+    # Environment variables
+    environment:
+      - TZ=${TZ:-UTC}
+      - COMPUTE_BACKEND=${COMPUTE_BACKEND:-local}
+      - NVIDIA_API_KEY=${NVIDIA_API_KEY:-}
+      - RUNPOD_API_KEY=${RUNPOD_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+
+    # Volume mounts for persistence
+    volumes:
+      # Configuration persistence
+      - ~/.ai-colab/config:/app/config
+      - ~/.ai-colab/state:/app/.ai-colab-state.json
+      - ~/.ai-colab/prefs:/app/.ai-colab-prefs
+      - ~/.ai-colab/env:/home/ai-colab/.ai-colab-env
+
+      # Project access (optional, for development)
+      - ~/projects:/home/ai-colab/projects
+
+      # Module persistence
+      - ./modules:/app/modules:ro
+
+      # hcom data
+      - ~/.hcom:/home/ai-colab/.hcom
+
+      # Logs
+      - ./logs:/app/logs
+
+    # Working directory
+    working_dir: /app
+
+    # Enable inter-process communication
+    ipc: shareable
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # Network mode
+    network_mode: bridge
+
+    # Init process for proper signal handling
+    init: true
+
+  # Optional: vLLM service for local model serving
+  vllm:
+    image: vllm/vllm-openai:latest
+    container_name: ai-colab-vllm
+    restart: unless-stopped
+    profiles:
+      - vllm  # Only start with: docker-compose --profile vllm up
+
+    # GPU access (requires NVIDIA Container Toolkit)
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+    # Port mapping
+    ports:
+      - "8000:8000"
+
+    # Volume for model cache
+    volumes:
+      - ~/.vllm/models:/models
+
+    # Environment
+    environment:
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN:-}
+
+    # Command
+    command: >
+      --model DeepSeek-Coder-V2-Lite-Instruct
+      --served-model-name local-model
+      --host 0.0.0.0
+      --port 8000
+      --gpu-memory-utilization 0.9
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 16G
+
+    # Network
+    networks:
+      - ai-colab-network
+
+  # Optional: Redis for caching (if needed for Web UI scaling)
+  redis:
+    image: redis:7-alpine
+    container_name: ai-colab-redis
+    restart: unless-stopped
+    profiles:
+      - scaling
+
+    # Port mapping
+    ports:
+      - "6379:6379"
+
+    # Volume for persistence
+    volumes:
+      - redis-data:/data
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    # Network
+    networks:
+      - ai-colab-network
+
+# Networks
+networks:
+  ai-colab-network:
+    driver: bridge
+
+# Volumes
+volumes:
+  redis-data:
+    driver: local

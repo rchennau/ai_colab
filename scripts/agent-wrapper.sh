@@ -30,6 +30,10 @@ case "$TOOL" in
         DEFAULT_MODEL="DeepSeek-Code"
         ROLE_PROMPT="$SCRIPT_DIR/../system-prompts/deepseek.md"
         ;;
+    nemoclaw)
+        DEFAULT_MODEL="nvidia/llama-3.3-nemotron-super-49b-v1.5"
+        ROLE_PROMPT="$SCRIPT_DIR/../system-prompts/nemoclaw.md"
+        ;;
     *)
         DEFAULT_MODEL=""
         ROLE_PROMPT=""

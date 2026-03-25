@@ -1,125 +1,34 @@
-# ai-colab Full Profile
-# All LLMs, all modules, all features enabled
+# Full ai-colab Profile
+# Everything enabled: Dashboard + Conductor + All Agents + Atari-LX + Chat Bridge
 
 version = "1.0.0"
+profile = "full"
 
 [installation]
-status = "pending"
+status = "complete"
 pathway = "cli"
 
-# All LLMs enabled
-[[llms]]
-name = "gemini"
-enabled = true
-model = "gemini-3.0"
-args = "-m gemini-3.0"
+[llm.gemini]
+enabled = "true"
 
-[[llms]]
-name = "qwen"
-enabled = true
-model = "qwen3-next-80b-a3b-instruct"
-args = "-m qwen3-next-80b-a3b-instruct"
+[llm.qwen]
+enabled = "true"
 
-[[llms]]
-name = "claude"
-enabled = true
-model = "claude-3-7-sonnet-20250219"
-api_key_env = "ANTHROPIC_API_KEY"
+[llm.deepseek]
+enabled = "true"
 
-[[llms]]
-name = "deepseek"
-enabled = true
-model = "deepseek-chat"
-api_key_env = "DEEPSEEK_API_KEY"
+[llm.claude]
+enabled = "true"
 
-[[llms]]
-name = "nemo"
-enabled = true
-endpoint = "https://integrate.api.nvidia.com/v1"
-api_key_env = "NVIDIA_API_KEY"
+[llm.vllm]
+enabled = "true"
+host = "192.168.0.193"
 
-[[llms]]
-name = "ollama"
-enabled = true
-endpoint = "http://localhost:11434"
-
-[[llms]]
-name = "vllm"
-enabled = true
-endpoint = "http://192.168.0.193:8000/v1"
-model = "local-model"
-
-[[llms]]
-name = "elc"
-enabled = true
-endpoint = "http://192.168.0.193:8000/v1"
-
-# All modules enabled
-[[modules]]
-id = "atari-8bit"
-enabled = true
-
-[modules.env_vars]
-ENABLE_ATARI_8BIT = "true"
-
-[[modules]]
-id = "mock-test"
-enabled = false
-
-[modules.env_vars]
-ENABLE_MOCK_TEST = "false"
-
-# Multi-backend compute
 [compute]
-backend = "local"
+backend = "nvidia"
 
-# Can be overridden to 'nvidia' or 'runpod'
-# endpoint = "https://api.nvidia.com/v1"
-# api_key_env = "NVIDIA_API_KEY"
+[module.atari]
+enabled = "true"
 
-# Full preferences
-[preferences]
-theme = "dark"
-auto_approve = false
-timeout = 86400
-log_level = "debug"
-
-[preferences.notifications]
-enabled = true
-channels = ["terminal", "google-chat"]
-
-[preferences.dashboard]
-refresh_interval = 15
-compact_mode = false
-
-# Docker enabled for Web UI
-[docker]
-enabled = true
-image = "ai-colab:latest"
-
-[docker.ports]
-webui = 8080
-api = 8081
-
-[docker.volumes]
-volumes = [
-    "./config:/app/config",
-    "./modules:/app/modules",
-    "./conductor:/app/conductor"
-]
-
-# Enhanced security
-[security]
-auth_enabled = true
-auth_token_env = "AI_COLAB_AUTH_TOKEN"
-
-[security.rate_limit]
-enabled = true
-requests_per_minute = 120
-
-# CORS for Web UI
-[[security.allowed_origins]]
-value = "http://localhost:8080"
-
-[[security.allowed_origins]]
-value = "http://127.0.0.1:8080"
+[module.chat_bridge]
+enabled = "true"

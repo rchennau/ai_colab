@@ -106,8 +106,8 @@ def validate_toml_basic(content):
             key = key.strip()
             value = value.strip()
             
-            # Validate key
-            if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_-]*$', key):
+            # Validate key (allow dots for dotted keys)
+            if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_.-]*$', key):
                 errors.append(f"Line {i}: Invalid key format: {key}")
             
             # Basic value validation

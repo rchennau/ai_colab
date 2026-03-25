@@ -7,19 +7,51 @@ To provide a seamless development experience where human oversight and AI autono
 
 ## 🚀 Quick Start
 
-1.  **Clone and Install:**
-    ```bash
-    git clone https://github.com/rchennau/ai_colab.git
-    cd ai_colab
-    ./install.sh
-    ```
-    This script handles all dependencies (hcom, LLM CLIs, tmux, sqlite3). You will be prompted to install optional **Addon Modules** (like Atari-LX).
+### Installation Pathways
 
-2.  **Launch the Dashboard:**
-    ```bash
-    ./launch.sh
-    ```
-    Choose your agents and active modules. Start collaborating in the **v3.0 Unified Command Center**—a high-density tmux dashboard featuring real-time hcom monitoring, automated conductor logs, and a dedicated user console.
+ai-colab supports multiple installation pathways to suit your workflow:
+
+#### **Option 1: Interactive CLI Wizard (Recommended)**
+
+Guided terminal-based setup for your native environment:
+
+```bash
+git clone https://github.com/ai-colab/ai-colab.git
+cd ai-colab
+./install.sh --wizard
+```
+
+#### **Option 2: Docker & Web UI**
+
+Browser-based setup and containerized management:
+
+```bash
+git clone https://github.com/ai-colab/ai-colab.git
+cd ai-colab
+docker-compose up -d
+```
+
+Then open: http://localhost:8080
+
+#### **Option 3: Quick/Auto Install**
+
+Automated installation with sensible defaults (for CI/CD):
+
+```bash
+./install.sh --auto
+```
+
+### Launch the Dashboard
+
+After installation:
+
+```bash
+./launch.sh
+```
+
+Choose your agents and active modules. Start collaborating in the **Unified Command Center**—a high-density tmux dashboard featuring real-time hcom monitoring, automated conductor logs, and a dedicated user console.
+
+📖 **Full Documentation:** See [`docs/INSTALLATION.md`](docs/INSTALLATION.md) for detailed installation guide.
 
 ## 🏗️ Core Architecture
 
@@ -89,16 +121,34 @@ Full support for WSL2 with Windows Terminal optimizations.
 
 | Script | Purpose |
 |--------|---------|
-| `./install.sh` | Project-agnostic core installer + module selection. |
-| `./launch.sh` | Unified launcher with module enablement. |
-| `scripts/agent-wrapper.sh` | Unified registration, heartbeats, and role injection. |
-| `scripts/conductor-workflow.sh`| The orchestration heart (Git, KB, Tasking). |
-| `scripts/hcom-test-runner.sh` | Unified test execution and blackboard reporting. |
-| `scripts/hcom-kb-index.sh` | Generates the semantic project map for `!kb`. |
-| `scripts/conductor-dashboard.sh`| Renders the v3.0 high-density TUI. |
-| `tests/test_docker_core.sh` | Verifies the Orchestration Core Docker build & services. |
+| `./install.sh` | Master installer with `--wizard`, `--reconfigure`, and `--guide` |
+| `./launch.sh` | Unified launcher with interactive module and agent selection |
+| `scripts/config-manager.sh` | Central configuration management and schema validation |
+| `scripts/install-wizard.sh` | Interactive terminal-based configuration wizard |
+| `scripts/agent-wrapper.sh` | Unified registration, heartbeats, and role injection |
+| `scripts/conductor-workflow.sh`| The orchestration heart (Git, KB, Tasking) |
+| `scripts/hcom-test-runner.sh` | Unified test execution and blackboard reporting |
+| `scripts/hcom-kb-index.sh` | Generates the semantic project map for `!kb` |
+| `scripts/conductor-dashboard.sh`| Renders the high-density terminal dashboard |
+| `webui/app.py` | Flask-based Web UI and API backend |
+| `tests/test_config_manager.sh` | Automated validation of the configuration system |
+| `tests/test_install_wizard.sh` | Integration tests for the installer and CLI experience |
 
 ---
+
+## 🌐 Web UI
+
+ai-colab includes a comprehensive Web UI for browser-based management:
+
+- **Setup Wizard**: Interactive configuration via browser
+- **Dashboard**: Real-time system status and agent monitoring
+- **Configuration Editor**: Visual config management with validation
+- **Logs Viewer**: Real-time log streaming and filtering
+- **Agent Management**: Start, stop, and monitor agents
+
+**Access**: http://localhost:8080 (when running via Docker)
+
+📖 **Guide:** See [`docs/WEBUI_GUIDE.md`](docs/WEBUI_GUIDE.md)
 
 ## 📋 Best Practices
 

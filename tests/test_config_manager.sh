@@ -64,7 +64,7 @@ fi
 
 # Test 2: Help Command
 test_start "Help Command"
-if $CONFIG_MANAGER help | grep -q "USAGE:"; then
+if "$CONFIG_MANAGER" help | grep -q "USAGE:"; then
     test_pass "Help command works"
 else
     test_fail "Help command failed"
@@ -72,7 +72,9 @@ fi
 
 # Test 3: Initialize State
 test_start "Initialize State"
-if $CONFIG_MANAGER init 2>&1 | grep -q "State file initialized"; then
+# Force re-init by deleting state
+rm -f "$PROJECT_ROOT/.ai-colab-state.json"
+if "$CONFIG_MANAGER" init 2>&1 | grep -q "State file initialized"; then
     test_pass "State initialization works"
 else
     test_fail "State initialization failed"
@@ -80,7 +82,7 @@ fi
 
 # Test 4: Set Configuration Value
 test_start "Set Configuration Value"
-if $CONFIG_MANAGER set test.key "test_value" 2>&1 | grep -q "Configuration updated"; then
+if "$CONFIG_MANAGER" set test.key "test_value" 2>&1 | grep -q "Configuration updated"; then
     test_pass "Set configuration value"
 else
     test_fail "Set configuration value failed"
@@ -88,7 +90,7 @@ fi
 
 # Test 5: Get Configuration Value
 test_start "Get Configuration Value"
-value=$($CONFIG_MANAGER get test.key "default")
+value=$("$CONFIG_MANAGER" get test.key "default")
 if [[ "$value" == "test_value" ]]; then
     test_pass "Get configuration value"
 else
@@ -97,7 +99,7 @@ fi
 
 # Test 6: List Configuration
 test_start "List Configuration"
-if $CONFIG_MANAGER list | grep -q "test.key"; then
+if "$CONFIG_MANAGER" list | grep -q "test.key"; then
     test_pass "List configuration"
 else
     test_fail "List configuration failed"
@@ -105,7 +107,7 @@ fi
 
 # Test 7: List Configuration as JSON
 test_start "List Configuration as JSON"
-if $CONFIG_MANAGER list --json | grep -q "{"; then
+if "$CONFIG_MANAGER" list --json | grep -q "{"; then
     test_pass "List configuration as JSON"
 else
     test_fail "List configuration as JSON failed"
@@ -113,7 +115,7 @@ fi
 
 # Test 8: Validate Configuration
 test_start "Validate Configuration"
-if $CONFIG_MANAGER validate 2>&1 | grep -q "validation passed\|Skipping validation"; then
+if "$CONFIG_MANAGER" validate 2>&1 | grep -q "validation passed\|Skipping validation"; then
     test_pass "Validate configuration"
 else
     test_fail "Validate configuration failed"
@@ -121,7 +123,7 @@ fi
 
 # Test 9: Create Backup
 test_start "Create Backup"
-if $CONFIG_MANAGER backup 2>&1 | grep -q "Backup created"; then
+if "$CONFIG_MANAGER" backup 2>&1 | grep -q "Backup created"; then
     test_pass "Create backup"
 else
     test_fail "Create backup failed"
@@ -129,7 +131,7 @@ fi
 
 # Test 10: State Update
 test_start "State Update"
-if $CONFIG_MANAGER state-set installation.status "in-progress" 2>&1; then
+if "$CONFIG_MANAGER" state-set installation.status "in-progress" 2>&1; then
     test_pass "State update"
 else
     test_fail "State update failed"
@@ -137,7 +139,7 @@ fi
 
 # Test 11: Get State
 test_start "Get State"
-status=$($CONFIG_MANAGER state installation.status)
+status=$("$CONFIG_MANAGER" state installation.status)
 if [[ -n "$status" ]]; then
     test_pass "Get state value"
 else
@@ -146,7 +148,7 @@ fi
 
 # Test 12: Profile Listing
 test_start "Profile Listing"
-if $CONFIG_MANAGER profiles | grep -q "standard"; then
+if "$CONFIG_MANAGER" profiles | grep -q "standard"; then
     test_pass "Profile listing"
 else
     test_fail "Profile listing failed"
@@ -156,7 +158,7 @@ fi
 test_start "Load Profile"
 # First backup current config
 cp "$PROJECT_ROOT/config/config.toml" "$PROJECT_ROOT/config/config.toml.test" 2>/dev/null || true
-if $CONFIG_MANAGER load-profile minimal 2>&1 | grep -q "Loaded profile"; then
+if "$CONFIG_MANAGER" load-profile minimal 2>&1 | grep -q "Loaded profile"; then
     test_pass "Load profile"
 else
     test_fail "Load profile failed"
@@ -166,7 +168,7 @@ mv "$PROJECT_ROOT/config/config.toml.test" "$PROJECT_ROOT/config/config.toml" 2>
 
 # Test 14: Save Profile
 test_start "Save Profile"
-if $CONFIG_MANAGER save-profile test-profile 2>&1 | grep -q "Saved profile"; then
+if "$CONFIG_MANAGER" save-profile test-profile 2>&1 | grep -q "Saved profile"; then
     test_pass "Save profile"
     # Clean up test profile
     rm -f "$PROJECT_ROOT/config/profiles/test-profile.toml"
@@ -176,7 +178,7 @@ fi
 
 # Test 15: Export Configuration
 test_start "Export Configuration"
-if $CONFIG_MANAGER export /tmp/config-export.json 2>&1 | grep -q "exported"; then
+if "$CONFIG_MANAGER" export /tmp/config-export.json 2>&1 | grep -q "exported"; then
     test_pass "Export configuration"
     # Clean up
     rm -f /tmp/config-export.json
@@ -203,15 +205,22 @@ try:
     with open('$PROJECT_ROOT/config/config.schema.json', 'r') as f:
         schema = json.load(f)
     
-    # Check required fields
-    required_fields = ['version', 'installation', 'properties']
-    for field in required_fields:
-        if field not in schema:
-            print(f'Missing required field: {field}', file=sys.stderr)
-            sys.exit(1)
-    
+    # Check key schema elements
+    if 'properties' not in schema:
+        print('Missing properties in schema', file=sys.stderr)
+        sys.exit(1)
+
+    if 'version' not in schema['properties']:
+        print('Missing version definition', file=sys.stderr)
+        sys.exit(1)
+
+    if 'installation' not in schema['properties']:
+        print('Missing installation definition', file=sys.stderr)
+        sys.exit(1)
+
     print('Schema validation passed')
     sys.exit(0)
+
 except Exception as e:
     print(f'Schema error: {e}', file=sys.stderr)
     sys.exit(1)

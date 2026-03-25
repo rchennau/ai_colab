@@ -1,2 +1,34 @@
-installation.status = "complete"
-installation.pathway = "cli"
+# Full ai-colab Profile
+# Everything enabled: Dashboard + Conductor + All Agents + Atari-LX + Chat Bridge
+
+version = "1.0.0"
+profile = "full"
+
+[installation]
+status = "complete"
+pathway = "cli"
+
+[llm.gemini]
+enabled = "true"
+
+[llm.qwen]
+enabled = "true"
+
+[llm.deepseek]
+enabled = "true"
+
+[llm.claude]
+enabled = "true"
+
+[llm.vllm]
+enabled = "true"
+host = "192.168.0.193"
+
+[compute]
+backend = "nvidia"
+
+[module.atari]
+enabled = "true"
+
+[module.chat_bridge]
+enabled = "true"

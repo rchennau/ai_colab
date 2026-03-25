@@ -14,7 +14,7 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 - [x] **Milestone 8: Hardware Visualization & Performance Dashboards** (Done ✅)
 - [x] **Milestone 9: Dynamic Plugin System & Fleet Orchestration** (Done ✅)
 - [x] **Milestone 10: Multi-Backend Compute & CI/CD Automation** (Done ✅)
-- [ ] **Milestone 11: Enhanced Installation & Launch Experience** (Active 🚀)
+- [ ] **Milestone 11: Enhanced Installation & Launch Experience** (Planning ⚪)
 - [ ] **Milestone 12: NeMo-Claude (nemoclaw) NVIDIA Integration** (Active 🚀)
 
 ---
@@ -117,35 +117,32 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - **Description:** Develop automation scripts to build agent containers and deploy them to RunPod or NVIDIA infrastructure.
 
 - [x] **Track: Autonomous Project Evolution** (Done ✅)
-  - [x] **Milestone 11: Enhanced Installation & Launch Experience** (Done ✅)
-  - [x] **Milestone 12: NeMo-Claude (nemoclaw) NVIDIA Integration** (Done ✅)
-  ---
+  - **Assigned:** @conductor
+  - **Description:** Enable the Conductor to autonomously suggest new development tracks based on project status and future goals.
 
-  ## 🏗️ Core Tracks
-  ...
-  - [x] **Track: nemoclaw NVIDIA NIM Integration** (Done ✅)
-    - **Assigned:** @architect
-    - **Description:** Configure and optimize the `nemoclaw` agent to use NVIDIA's NIM API for high-power architectural reasoning.
-    - [x] Create `scripts/nemoclaw-hcom.sh` and update `agent-wrapper.sh`.
-    - [x] Create `system-prompts/nemoclaw.md`.
-    - [x] Add verification check in `scripts/cicd-deploy-nvidia.sh`.
+- [ ] **Track: nemoclaw NVIDIA NIM Integration** (New)
+  - **Assigned:** @architect
+  - **Description:** Configure and optimize the `nemoclaw` agent to use NVIDIA's NIM API for high-power architectural reasoning.
 
-  - [ ] **Track: Specialized NeMo Module** (Active 🚀)
-    - **Assigned:** @conductor
-    - **Description:** Create a modular addon for `nemoclaw` with specialized architectural review commands and latency monitoring.
-    - [x] Architectural Review: COMPLETED (March 24, 2026)
+- [ ] **Track: Specialized NeMo Module** (New)
+  - **Assigned:** @conductor
+  - **Description:** Create a modular addon for `nemoclaw` with specialized architectural review commands and latency monitoring.
 
-  - [x] **Track: Enhanced Installation & Launch Experience** (Done ✅)
-    *Link: [./tracks/enhanced_install_launch_20260324/](./tracks/enhanced_install_launch_20260324/)*
-    - **Assigned:** @conductor, @all
-    - **Description:** Provide two installation pathways: Rich CLI Wizard and Web UI (Docker-based). Both support initial setup and post-installation reconfiguration.
-    - [x] Phase 1: Configuration Management Foundation
-    - [x] Phase 2: Rich CLI Wizard
-    - [x] Phase 3: Docker Container Setup
-    - [x] Phase 4: Web UI Backend
-    - [x] Phase 5: Web UI Frontend
-    - [x] Phase 6: Integration & Testing
-    - [x] Phase 7: Documentation & Deployment
+- [ ] **Track: Enhanced Installation & Launch Experience** (New)
+  *Link: [./tracks/enhanced_install_launch_20260324/](./tracks/enhanced_install_launch_20260324/)*
+  - **Assigned:** @conductor, @all
+  - **Description:** Provide two installation pathways: Rich CLI Wizard and Web UI (Docker-based). Both support initial setup and post-installation reconfiguration.
+  - [ ] Phase 1: Configuration Management Foundation
+  - [ ] Phase 2: Rich CLI Wizard
+  - [ ] Phase 3: Docker Container Setup
+  - [ ] Phase 4: Web UI Backend
+  - [ ] Phase 5: Web UI Frontend
+  - [ ] Phase 6: Integration & Testing
+  - [ ] Phase 7: Documentation & Deployment
+
+
+---
+
 ## 🛠️ Infrastructure & Maintenance
 
 - [x] **Project Documentation:** (Done)

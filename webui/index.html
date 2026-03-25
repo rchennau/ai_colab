@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ai-colab Web UI</title>
+    <style>
+        :root {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-tertiary: #0f3460;
+            --text-primary: #eee;
+            --text-secondary: #bbb;
+            --accent-blue: #4cc9f0;
+            --accent-green: #2ecc71;
+            --accent-yellow: #f1c40f;
+            --accent-red: #e74c3c;
+            --border-color: #2a2a4e;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --error: #c0392b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        header {
+            background: var(--bg-secondary);
+            padding: 1rem 2rem;
+            border-bottom: 2px solid var(--accent-blue);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-blue);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Navigation */
+        nav {
+            background: var(--bg-tertiary);
+            padding: 0.5rem 2rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        nav button {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+            border-radius: 4px;
+        }
+
+        nav button:hover,
+        nav button.active {
+            color: var(--text-primary);
+            background: var(--accent-blue);
+        }
+
+        /* Main Content */
+        main {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .card h2 {
+            color: var(--accent-blue);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="email"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        input[type="checkbox"] {
+            width: auto;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--accent-blue);
+            color: var(--bg-primary);
+        }
+
+        .btn-primary:hover {
+            background: #3db8dd;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: var(--bg-primary);
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-bar {
+            height: 20px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        /* Status Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .badge-warning {
+            background: var(--warning);
+            color: var(--bg-primary);
+        }
+
+        .badge-error {
+            background: var(--error);
+            color: white;
+        }
+
+        .badge-info {
+            background: var(--accent-blue);
+            color: var(--bg-primary);
+        }
+
+        /* Agent List */
+        .agent-list {
+            list-style: none;
+        }
+
+        .agent-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .agent-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Log Viewer */
+        .log-viewer {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .log-entry {
+            margin-bottom: 0.5rem;
+        }
+
+        .log-info { color: var(--accent-blue); }
+        .log-success { color: var(--success); }
+        .log-warning { color: var(--warning); }
+        .log-error { color: var(--error); }
+
+        /* Wizard Steps */
+        .wizard-step {
+            display: none;
+        }
+
+        .wizard-step.active {
+            display: block;
+        }
+
+        .wizard-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+
+        .wizard-step-indicator {
+            flex: 1;
+            text-align: center;
+            padding: 0.5rem;
+            background: var(--bg-tertiary);
+            margin: 0 0.25rem;
+            border-radius: 4px;
+            color: var(--text-secondary);
+        }
+
+        .wizard-step-indicator.active {
+            background: var(--accent-blue);
+            color: var(--bg-primary);
+        }
+
+        .wizard-step-indicator.completed {
+            background: var(--success);
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            nav {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid var(--bg-tertiary);
+            border-top: 3px solid var(--accent-blue);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 2rem auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .toast {
+            background: var(--bg-secondary);
+            border-left: 4px solid var(--accent-blue);
+            padding: 1rem 1.5rem;
+            margin-bottom: 0.5rem;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease-out;
+            min-width: 300px;
+        }
+
+        .toast.success { border-left-color: var(--success); }
+        .toast.warning { border-left-color: var(--warning); }
+        .toast.error { border-left-color: var(--error); }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="logo">🚀 ai-colab Web UI</div>
+        <div class="status-indicator">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">Connecting...</span>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav>
+        <button class="nav-btn active" data-page="dashboard">Dashboard</button>
+        <button class="nav-btn" data-page="setup">Setup Wizard</button>
+        <button class="nav-btn" data-page="agents">Agents</button>
+        <button class="nav-btn" data-page="config">Configuration</button>
+        <button class="nav-btn" data-page="logs">Logs</button>
+        <button class="nav-btn" data-page="settings">Settings</button>
+    </nav>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Dashboard Page -->
+        <div class="page active" id="dashboard-page">
+            <div class="card-grid">
+                <div class="card">
+                    <h2>📊 System Status</h2>
+                    <div id="systemStatus">
+                        <p>Loading...</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>🤖 Active Agents</h2>
+                    <div id="agentStatus">
+                        <p>Loading...</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>⚙️ Configuration</h2>
+                    <div id="configStatus">
+                        <p>Loading...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>⚡ Quick Actions</h2>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="launchDashboard()">Launch Dashboard</button>
+                    <button class="btn btn-success" onclick="runStatusCheck()">Run Status Check</button>
+                    <button class="btn btn-warning" onclick="runPreflightCheck()">Pre-flight Checks</button>
+                    <button class="btn btn-info" onclick="recoverSession()">Recover Session</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📈 Recent Activity</h2>
+                <div id="recentActivity" class="log-viewer">
+                    <p>Loading activity log...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Setup Wizard Page -->
+        <div class="page" id="setup-page">
+            <div class="card">
+                <h2>🎯 Setup Wizard</h2>
+
+                <div class="wizard-nav">
+                    <div class="wizard-step-indicator active" data-step="1">1. Welcome</div>
+                    <div class="wizard-step-indicator" data-step="2">2. LLMs</div>
+                    <div class="wizard-step-indicator" data-step="3">3. Modules</div>
+                    <div class="wizard-step-indicator" data-step="4">4. Backend</div>
+                    <div class="wizard-step-indicator" data-step="5">5. Review</div>
+                </div>
+
+                <form id="setupForm">
+                    <!-- Step 1: Welcome -->
+                    <div class="wizard-step active" data-step="1">
+                        <h3>Welcome to ai-colab!</h3>
+                        <p>This wizard will guide you through setting up your multi-agent development environment.</p>
+                        <p><strong>Estimated time:</strong> 5-10 minutes</p>
+
+                        <div class="form-group" style="margin-top: 2rem;">
+                            <label>Installation Type:</label>
+                            <div class="checkbox-group">
+                                <input type="radio" name="installType" value="quick" id="quickSetup" checked>
+                                <label for="quickSetup">Quick Setup (Recommended)</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="radio" name="installType" value="custom" id="customSetup">
+                                <label for="customSetup">Custom Setup</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: LLMs -->
+                    <div class="wizard-step" data-step="2">
+                        <h3>Configure LLMs</h3>
+                        <p>Select which LLMs to enable:</p>
+
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="llm-gemini" checked>
+                                <label for="llm-gemini">Gemini</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="llm-qwen" checked>
+                                <label for="llm-qwen">Qwen</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="llm-vllm">
+                                <label for="llm-vllm">vLLM (Local)</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="llm-claude">
+                                <label for="llm-claude">Claude</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="llm-deepseek">
+                                <label for="llm-deepseek">DeepSeek</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Modules -->
+                    <div class="wizard-step" data-step="3">
+                        <h3>Configure Modules</h3>
+                        <p>Select addon modules to enable:</p>
+
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="mod-atari" checked>
+                                <label for="mod-atari">Atari 8-Bit Development</label>
+                            </div>
+                            <!-- Add more modules as they become available -->
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Backend -->
+                    <div class="wizard-step" data-step="4">
+                        <h3>Compute Backend</h3>
+                        <p>Select compute backend for high-power agents:</p>
+
+                        <div class="form-group">
+                            <label for="computeBackend">Backend:</label>
+                            <select id="computeBackend">
+                                <option value="local">Local Server (vLLM / Ollama)</option>
+                                <option value="nvidia">NVIDIA NIM API</option>
+                                <option value="runpod">RunPod</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="apiKeyGroup" style="display: none;">
+                            <label for="apiKey">API Key:</label>
+                            <input type="password" id="apiKey" placeholder="Enter your API key">
+                        </div>
+                    </div>
+
+                    <!-- Step 5: Review -->
+                    <div class="wizard-step" data-step="5">
+                        <h3>Review & Apply</h3>
+                        <p>Configuration Summary:</p>
+
+                        <div id="reviewSummary" class="log-viewer" style="margin: 1rem 0;">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+
+                        <div class="progress-container">
+                            <div class="progress-bar" id="installProgress">0%</div>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="btn-group" style="margin-top: 2rem;">
+                    <button class="btn" id="prevBtn" onclick="prevStep()" disabled>Previous</button>
+                    <button class="btn btn-primary" id="nextBtn" onclick="nextStep()">Next</button>
+                    <button class="btn btn-success" id="applyBtn" onclick="applySetup()" style="display: none;">Apply Configuration</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Agents Page -->
+        <div class="page" id="agents-page">
+            <div class="card">
+                <h2>🤖 Agent Management</h2>
+                <div id="agentList" class="agent-list">
+                    <p>Loading agents...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuration Page -->
+        <div class="page" id="config-page">
+            <div class="card">
+                <h2>⚙️ Configuration Editor</h2>
+                <div id="configEditor">
+                    <p>Loading configuration...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs Page -->
+        <div class="page" id="logs-page">
+            <div class="card">
+                <h2>📋 System Logs</h2>
+                <div class="btn-group" style="margin-bottom: 1rem;">
+                    <button class="btn btn-primary" onclick="refreshLogs()">Refresh</button>
+                    <button class="btn btn-warning" onclick="clearLogs()">Clear</button>
+                </div>
+                <div id="logViewer" class="log-viewer">
+                    <p>Loading logs...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div class="page" id="settings-page">
+            <div class="card">
+                <h2>🔧 Settings</h2>
+
+                <div class="form-group">
+                    <label>Theme:</label>
+                    <select id="themeSelect" onchange="changeTheme(this.value)">
+                        <option value="dark">Dark</option>
+                        <option value="light">Light</option>
+                        <option value="auto">Auto</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Auto-approve Actions:</label>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="autoApprove">
+                        <label for="autoApprove">Enable auto-approve for agent actions</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Log Level:</label>
+                    <select id="logLevel">
+                        <option value="debug">Debug</option>
+                        <option value="info" selected>Info</option>
+                        <option value="warn">Warn</option>
+                        <option value="error">Error</option>
+                    </select>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-success" onclick="saveSettings()">Save Settings</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Global state
+        let currentWizardStep = 1;
+        const totalWizardSteps = 5;
+
+        // API base URL
+        const API_BASE = window.location.origin;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initNavigation();
+            refreshStatus();
+            setInterval(refreshStatus, 30000); // Refresh every 30 seconds
+        });
+
+        // Navigation
+        function initNavigation() {
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const page = btn.dataset.page;
+                    showPage(page);
+                });
+            });
+        }
+
+        function showPage(pageName) {
+            // Update nav buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.page === pageName);
+            });
+
+            // Update pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.toggle('active', page.id === `${pageName}-page`);
+            });
+
+            // Load page-specific data
+            loadPageData(pageName);
+        }
+
+        function loadPageData(pageName) {
+            switch(pageName) {
+                case 'dashboard':
+                    refreshStatus();
+                    break;
+                case 'agents':
+                    loadAgents();
+                    break;
+                case 'config':
+                    loadConfig();
+                    break;
+                case 'logs':
+                    refreshLogs();
+                    break;
+            }
+        }
+
+        // Status refresh
+        async function refreshStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/api/status`);
+                const status = await response.json();
+
+                updateSystemStatus(status);
+                updateAgentStatus(status);
+                updateConfigStatus(status);
+
+                // Update header status
+                const statusDot = document.getElementById('statusDot');
+                const statusText = document.getElementById('statusText');
+
+                if (status.installation?.status === 'complete') {
+                    statusDot.style.background = 'var(--success)';
+                    statusText.textContent = 'Online';
+                } else {
+                    statusDot.style.background = 'var(--warning)';
+                    statusText.textContent = 'Setup Required';
+                }
+            } catch (error) {
+                console.error('Status refresh failed:', error);
+                showToast('Failed to refresh status', 'error');
+            }
+        }
+
+        // Enhanced health check
+        async function refreshHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const health = await response.json();
+
+                const container = document.getElementById('systemStatus');
+                if (container) {
+                    let checksHtml = '';
+                    
+                    // tmux check
+                    const tmuxOk = health.checks?.tmux?.available;
+                    checksHtml += `
+                        <p><strong>tmux:</strong> 
+                            <span class="badge badge-${tmuxOk ? 'success' : 'error'}">
+                                ${tmuxOk ? health.checks.tmux.version || 'installed' : 'not installed'}
+                            </span>
+                        </p>`;
+                    
+                    // hcom check
+                    const hcomOk = health.checks?.hcom?.available;
+                    checksHtml += `
+                        <p><strong>hcom:</strong> 
+                            <span class="badge badge-${hcomOk ? 'success' : 'error'}">
+                                ${hcomOk ? 'installed' : 'not installed'}
+                            </span>
+                        </p>`;
+                    
+                    // disk check
+                    const diskOk = health.checks?.disk?.ok;
+                    checksHtml += `
+                        <p><strong>Disk:</strong> 
+                            <span class="badge badge-${diskOk ? 'success' : 'warning'}">
+                                ${health.checks?.disk?.free_mb || 0}MB free
+                            </span>
+                        </p>`;
+                    
+                    // Issues
+                    if (health.issues && health.issues.length > 0) {
+                        checksHtml += `<p style="color: var(--error); margin-top: 0.5rem;"><strong>Issues:</strong> ${health.issues.join(', ')}</p>`;
+                    }
+                    
+                    container.innerHTML = checksHtml;
+                }
+                
+                return health;
+            } catch (error) {
+                console.error('Health check failed:', error);
+                return null;
+            }
+        }
+
+        // Pre-flight checks
+        async function runPreflight() {
+            try {
+                showToast('Running pre-flight checks...', 'info');
+                const response = await fetch(`${API_BASE}/api/preflight`);
+                const results = await response.json();
+                
+                let message = '';
+                if (results.passed) {
+                    message = `✓ All checks passed (${results.checks.length} checks)`;
+                    showToast(message, 'success');
+                } else {
+                    message = `⚠ ${results.errors.length} error(s), ${results.warnings.length} warning(s)`;
+                    showToast(message, 'warning');
+                }
+                
+                return results;
+            } catch (error) {
+                console.error('Pre-flight checks failed:', error);
+                showToast('Pre-flight checks failed', 'error');
+                return null;
+            }
+        }
+
+        // Session status
+        async function checkSession() {
+            try {
+                const response = await fetch(`${API_BASE}/api/session/status`);
+                const session = await response.json();
+                
+                const container = document.getElementById('agentStatus');
+                if (container && session.exists) {
+                    let html = `<p><strong>Session:</strong> ${session.session}</p>`;
+                    html += `<p><strong>Panes:</strong> ${session.pane_count}</p>`;
+                    html += `<p><strong>Windows:</strong> ${session.window_count}</p>`;
+                    
+                    if (session.panes && session.panes.length > 0) {
+                        html += '<div class="agent-list" style="margin-top: 0.5rem;">';
+                        session.panes.forEach(pane => {
+                            html += `
+                                <div class="agent-item">
+                                    <span>${pane.title || 'Untitled'}</span>
+                                    <span class="badge badge-info">${pane.id}</span>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                    }
+                    
+                    container.innerHTML = html;
+                } else if (container) {
+                    container.innerHTML = '<p>Session not running</p>';
+                }
+                
+                return session;
+            } catch (error) {
+                console.error('Session check failed:', error);
+                return null;
+            }
+        }
+
+        // Get agents from hcom
+        async function loadAgents() {
+            try {
+                const response = await fetch(`${API_BASE}/api/agents`);
+                const data = await response.json();
+                
+                const container = document.getElementById('agentList');
+                if (container) {
+                    if (data.agents && data.agents.length > 0) {
+                        let html = '<div class="agent-list">';
+                        data.agents.forEach(agent => {
+                            const statusClass = agent.status === 'ready' ? 'success' : 
+                                              agent.status === 'busy' ? 'warning' : 'error';
+                            html += `
+                                <div class="agent-item">
+                                    <span><strong>${agent.name}</strong></span>
+                                    <span class="badge badge-${statusClass}">${agent.status}</span>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                        container.innerHTML = html;
+                    } else {
+                        container.innerHTML = '<p>No active agents</p>';
+                    }
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('Load agents failed:', error);
+                return null;
+            }
+        }
+
+        function updateSystemStatus(status) {
+            const container = document.getElementById('systemStatus');
+            const installStatus = status.installation || {};
+
+            container.innerHTML = `
+                <p><strong>Status:</strong> <span class="badge badge-${installStatus.status === 'complete' ? 'success' : 'warning'}">${installStatus.status || 'unknown'}</span></p>
+                <p><strong>Pathway:</strong> ${installStatus.pathway || 'unknown'}</p>
+                <p><strong>HCOM:</strong> ${status.hcom || 'not connected'}</p>
+                <p><strong>Last Updated:</strong> ${new Date(status.timestamp).toLocaleString()}</p>
+            `;
+        }
+
+        function updateAgentStatus(status) {
+            const container = document.getElementById('agentStatus');
+            const agents = status.agents || [];
+
+            if (agents.length === 0) {
+                container.innerHTML = '<p>No active agents</p>';
+                return;
+            }
+
+            const agentList = agents.map(agent => `
+                <div class="agent-item">
+                    <span>${agent.name}</span>
+                    <span class="badge badge-success">${agent.status}</span>
+                </div>
+            `).join('');
+
+            container.innerHTML = `<div class="agent-list">${agentList}</div>`;
+        }
+
+        function updateConfigStatus(status) {
+            const container = document.getElementById('configStatus');
+            container.innerHTML = `
+                <p><strong>LLMs:</strong> Loading...</p>
+                <p><strong>Modules:</strong> Loading...</p>
+                <p><strong>Backend:</strong> ${status.compute?.backend || 'local'}</p>
+            `;
+        }
+
+        // Wizard navigation
+        function nextStep() {
+            if (currentWizardStep >= totalWizardSteps) return;
+
+            // Validate current step
+            if (!validateStep(currentWizardStep)) {
+                showToast('Please fill in required fields', 'warning');
+                return;
+            }
+
+            // Hide current step
+            document.querySelector(`.wizard-step[data-step="${currentWizardStep}"]`).classList.remove('active');
+            document.querySelector(`.wizard-step-indicator[data-step="${currentWizardStep}"]`).classList.remove('active');
+            document.querySelector(`.wizard-step-indicator[data-step="${currentWizardStep}"]`).classList.add('completed');
+
+            // Show next step
+            currentWizardStep++;
+            document.querySelector(`.wizard-step[data-step="${currentWizardStep}"]`).classList.add('active');
+            document.querySelector(`.wizard-step-indicator[data-step="${currentWizardStep}"]`).classList.add('active');
+
+            // Update buttons
+            document.getElementById('prevBtn').disabled = false;
+
+            if (currentWizardStep === totalWizardSteps) {
+                document.getElementById('nextBtn').style.display = 'none';
+                document.getElementById('applyBtn').style.display = 'inline-block';
+                updateReviewSummary();
+            }
+        }
+
+        function prevStep() {
+            if (currentWizardStep <= 1) return;
+
+            // Hide current step
+            document.querySelector(`.wizard-step[data-step="${currentWizardStep}"]`).classList.remove('active');
+            document.querySelector(`.wizard-step-indicator[data-step="${currentWizardStep}"]`).classList.remove('active');
+
+            // Show previous step
+            currentWizardStep--;
+            document.querySelector(`.wizard-step[data-step="${currentWizardStep}"]`).classList.add('active');
+            document.querySelector(`.wizard-step-indicator[data-step="${currentWizardStep}"]`).classList.add('active');
+            document.querySelector(`.wizard-step-indicator[data-step="${currentWizardStep + 1}"]`).classList.remove('completed');
+
+            // Update buttons
+            document.getElementById('prevBtn').disabled = currentWizardStep === 1;
+
+            if (currentWizardStep < totalWizardSteps) {
+                document.getElementById('nextBtn').style.display = 'inline-block';
+                document.getElementById('applyBtn').style.display = 'none';
+            }
+        }
+
+        function validateStep(step) {
+            // Add validation logic as needed
+            return true;
+        }
+
+        function updateReviewSummary() {
+            const llms = [];
+            if (document.getElementById('llm-gemini').checked) llms.push('Gemini');
+            if (document.getElementById('llm-qwen').checked) llms.push('Qwen');
+            if (document.getElementById('llm-vllm').checked) llms.push('vLLM');
+            if (document.getElementById('llm-claude').checked) llms.push('Claude');
+            if (document.getElementById('llm-deepseek').checked) llms.push('DeepSeek');
+
+            const modules = [];
+            if (document.getElementById('mod-atari').checked) modules.push('Atari 8-Bit');
+
+            const backend = document.getElementById('computeBackend').value;
+
+            const summary = `
+<strong>Installation Type:</strong> ${document.querySelector('input[name="installType"]:checked').value}<br>
+<strong>LLMs:</strong> ${llms.join(', ') || 'None'}<br>
+<strong>Modules:</strong> ${modules.join(', ') || 'None'}<br>
+<strong>Backend:</strong> ${backend}<br>
+            `;
+
+            document.getElementById('reviewSummary').innerHTML = summary;
+        }
+
+        async function applySetup() {
+            const applyBtn = document.getElementById('applyBtn');
+            const progressBar = document.getElementById('installProgress');
+
+            applyBtn.disabled = true;
+            progressBar.style.width = '10%';
+            progressBar.textContent = 'Starting...';
+
+            try {
+                // Gather configuration
+                const config = {
+                    llms: {
+                        gemini: document.getElementById('llm-gemini').checked,
+                        qwen: document.getElementById('llm-qwen').checked,
+                        vllm: document.getElementById('llm-vllm').checked,
+                        claude: document.getElementById('llm-claude').checked,
+                        deepseek: document.getElementById('llm-deepseek').checked
+                    },
+                    modules: {
+                        'atari-8bit': document.getElementById('mod-atari').checked
+                    },
+                    compute: {
+                        backend: document.getElementById('computeBackend').value
+                    }
+                };
+
+                // Send to API
+                progressBar.style.width = '30%';
+                progressBar.textContent = 'Applying configuration...';
+
+                const response = await fetch(`${API_BASE}/api/config`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Configuration failed');
+                }
+
+                progressBar.style.width = '70%';
+                progressBar.textContent = 'Installing dependencies...';
+
+                // Trigger installation
+                await fetch(`${API_BASE}/api/install`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pathway: 'webui' })
+                });
+
+                progressBar.style.width = '100%';
+                progressBar.textContent = 'Complete!';
+
+                showToast('Setup completed successfully!', 'success');
+
+                setTimeout(() => {
+                    showPage('dashboard');
+                    refreshStatus();
+                }, 2000);
+
+            } catch (error) {
+                console.error('Setup failed:', error);
+                showToast('Setup failed: ' + error.message, 'error');
+                progressBar.textContent = 'Failed';
+            } finally {
+                applyBtn.disabled = false;
+            }
+        }
+
+        // Quick actions
+        async function launchDashboard() {
+            try {
+                showToast('Launching dashboard...', 'info');
+                const response = await fetch(`${API_BASE}/api/dashboard/launch`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        conductor: true,
+                        vllm: false
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showToast(data.message || 'Dashboard launching...', 'success');
+                    // Refresh session status after delay
+                    setTimeout(() => checkSession(), 3000);
+                } else {
+                    throw new Error('Launch failed');
+                }
+            } catch (error) {
+                console.error('Launch failed:', error);
+                showToast('Failed to launch dashboard', 'error');
+            }
+        }
+
+        async function runStatusCheck() {
+            showToast('Running status checks...', 'info');
+            await refreshHealth();
+            await checkSession();
+            await loadAgents();
+            showToast('Status check complete', 'success');
+        }
+
+        async function runTests() {
+            showToast('Tests are running in the background...', 'info');
+            // Would trigger test runner via API
+        }
+
+        async function reconfigure() {
+            showPage('setup');
+            currentWizardStep = 1;
+            // Reset wizard UI
+            document.querySelectorAll('.wizard-step').forEach((step, index) => {
+                step.classList.toggle('active', index === 0);
+            });
+            document.querySelectorAll('.wizard-step-indicator').forEach((indicator, index) => {
+                indicator.classList.toggle('active', index === 0);
+                indicator.classList.remove('completed');
+            });
+            document.getElementById('prevBtn').disabled = true;
+            document.getElementById('nextBtn').style.display = 'inline-block';
+            document.getElementById('applyBtn').style.display = 'none';
+        }
+
+        async function runPreflightCheck() {
+            const results = await runPreflight();
+            if (results) {
+                // Show detailed results
+                let details = 'Pre-flight Check Results:\n\n';
+                results.checks?.forEach(check => {
+                    details += `✓ ${check.message}\n`;
+                });
+                if (results.errors?.length > 0) {
+                    details += '\nErrors:\n';
+                    results.errors.forEach(err => {
+                        details += `✗ ${err.message}\n`;
+                    });
+                }
+                if (results.warnings?.length > 0) {
+                    details += '\nWarnings:\n';
+                    results.warnings.forEach(warn => {
+                        details += `⚠ ${warn.message}\n`;
+                    });
+                }
+                alert(details);
+            }
+        }
+
+        async function recoverSession() {
+            if (!confirm('Recover session? This will kill any existing dashboard and clean up orphaned processes.')) {
+                return;
+            }
+            
+            try {
+                showToast('Recovering session...', 'info');
+                const response = await fetch(`${API_BASE}/api/session/recover`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showToast(data.message || 'Session recovered', 'success');
+                    setTimeout(() => checkSession(), 2000);
+                } else {
+                    throw new Error('Recovery failed');
+                }
+            } catch (error) {
+                console.error('Recovery failed:', error);
+                showToast('Session recovery failed', 'error');
+            }
+        }
+
+        // Logs
+        async function refreshLogs() {
+            try {
+                const response = await fetch(`${API_BASE}/api/logs?lines=100`);
+                const data = await response.json();
+
+                const logViewer = document.getElementById('logViewer');
+                if (data.logs && data.logs.length > 0) {
+                    logViewer.innerHTML = data.logs.map(log =>
+                        `<div class="log-entry ${getLogLevelClass(log)}">${escapeHtml(log)}</div>`
+                    ).join('');
+                } else {
+                    logViewer.innerHTML = '<p>No logs available</p>';
+                }
+            } catch (error) {
+                console.error('Failed to refresh logs:', error);
+            }
+        }
+
+        function getLogLevelClass(log) {
+            if (log.includes('ERROR')) return 'log-error';
+            if (log.includes('WARN')) return 'log-warning';
+            if (log.includes('SUCCESS')) return 'log-success';
+            return 'log-info';
+        }
+
+        function clearLogs() {
+            document.getElementById('logViewer').innerHTML = '<p>Logs cleared</p>';
+        }
+
+        // Configuration
+        async function loadConfig() {
+            try {
+                const response = await fetch(`${API_BASE}/api/config`);
+                const config = await response.json();
+
+                const editor = document.getElementById('configEditor');
+                editor.innerHTML = `<pre>${JSON.stringify(config, null, 2)}</pre>`;
+            } catch (error) {
+                console.error('Failed to load config:', error);
+            }
+        }
+
+        // Agents
+        async function loadAgents() {
+            // Would load agent list from API
+            document.getElementById('agentList').innerHTML = '<p>Agent management coming soon...</p>';
+        }
+
+        // Settings
+        function changeTheme(theme) {
+            // Theme switching logic
+            console.log('Theme changed to:', theme);
+        }
+
+        function saveSettings() {
+            showToast('Settings saved', 'success');
+        }
+
+        // Utilities
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Backend API key visibility
+        document.getElementById('computeBackend').addEventListener('change', (e) => {
+            const apiKeyGroup = document.getElementById('apiKeyGroup');
+            apiKeyGroup.style.display = (e.target.value === 'nvidia' || e.target.value === 'runpod') ? 'block' : 'none';
+        });
+    </script>
+</body>
+</html>

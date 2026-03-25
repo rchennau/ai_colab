@@ -47,8 +47,7 @@ The Hub connects to various backends for specialized agent deployment:
 *   **Phase 8:** Hardware Visualization & Performance Dashboards (Done ✅)
 *   **Phase 9:** Dynamic Plugin System & Fleet Orchestration (Done ✅)
 *   **Phase 10:** Multi-Backend Compute & CI/CD Automation (Done ✅)
-*   **Phase 11:** Enhanced Installation & Launch Experience (Done ✅)
-*   **Phase 12:** NeMo-Claude (nemoclaw) NVIDIA Integration (Done ✅)
+*   **Phase 11:** NeMo-Claude (nemoclaw) NVIDIA Integration (Active 🚀)
 
 ## Future Considerations
 - Native IDE Integration (VS Code / Cursor Extension).

@@ -1,37 +1,97 @@
-# ai-colab Orchestration Core Dockerfile
-# This container hosts the 'Hub' (hcom relay, Conductor, Blackboard, and Web UI).
-# Agents and LLM models run OUTSIDE this container and connect via remote CLIs.
-FROM ubuntu:24.04
+# ai-colab Docker Image
+# Multi-agent development environment with Web UI support
 
-# Avoid interactive prompts
+FROM ubuntu:22.04
+
+# Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
 
-# Install core dependencies for orchestration
-RUN apt-get update && apt-get install -y \
-    bash curl git tmux sqlite3 python3 python3-pip \
-    nodejs npm build-essential \
-    && rm -rf /var/lib/apt/lists/*
+# Metadata
+LABEL maintainer="ai-colab team"
+LABEL version="2.0.0"
+LABEL description="Multi-agent development environment with Web UI"
 
-# Install Python dependencies for the web dashboard
-RUN python3 -m pip install --break-system-packages flask
+# Environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PIP_NO_CACHE_DIR=1
+ENV NODE_ENV=production
 
-# Install hcom (Messaging backbone)
+# Install base dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # Core utilities
+    bash \
+    curl \
+    wget \
+    git \
+    tmux \
+    sqlite3 \
+    ca-certificates \
+    gnupg \
+    lsb-release \
+    # Python
+    python3 \
+    python3-pip \
+    python3-venv \
+    python3-dev \
+    # Node.js (for LLM CLIs)
+    nodejs \
+    npm \
+    # Additional tools
+    jq \
+    vim \
+    less \
+    htop \
+    procps \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Install hcom
 RUN curl -fsSL https://raw.githubusercontent.com/aannoo/hcom/main/install.sh | sh
-ENV PATH="/root/.local/bin:${PATH}"
 
-# Install LLM Remote Connectors (Clients only)
-# These allow the Conductor to call remote models (Gemini, Claude, Qwen, etc.)
-RUN npm install -g @google/gemini-cli @anthropic-ai/claude-code @qwen-code/qwen-code
+# Create non-root user for security
+RUN useradd -m -s /bin/bash ai-colab && \
+    mkdir -p /home/ai-colab/.ai-colab && \
+    chown -R ai-colab:ai-colab /home/ai-colab
 
-# Create working directory
+# Set working directory
 WORKDIR /app
 
-# Copy orchestration scripts and modules
-COPY . /app
+# Copy project files
+COPY --chown=ai-colab:ai-colab . /app/
 
-# Ensure hcom config is in the expected location
-RUN mkdir -p /root/.hcom && ln -s /app/config.toml /root/.hcom/config.toml
+# Install Python dependencies for Web UI
+COPY requirements-webui.txt /tmp/requirements.txt
+RUN pip3 install --break-system-packages -r /tmp/requirements.txt && \
+    rm /tmp/requirements.txt
 
-# The core is self-hosted and acts as a controller for remote agents.
-# Entrypoint starts the hcom relay and the web dashboard backend.
-CMD ["bash", "-c", "hcom relay daemon start && python3 scripts/hcom-web-dashboard.py & sleep 2 && hcom relay daemon status && tail -f /dev/null"]
+# Create directories for persistence
+RUN mkdir -p /app/config \
+    /app/config/backups \
+    /app/config/profiles \
+    /app/modules \
+    /app/.ai-colab-backup \
+    && chown -R ai-colab:ai-colab /app
+
+# Copy entrypoint script
+COPY --chown=ai-colab:ai-colab docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Switch to non-root user
+USER ai-colab
+
+# Expose ports
+# 8080: Web UI
+# 8081: API
+EXPOSE 8080 8081
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Set entrypoint
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+# Default command
+CMD ["webui"]

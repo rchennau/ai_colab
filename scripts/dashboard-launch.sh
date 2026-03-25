@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# HCOM Unified Dashboard - v2.3 (Unified Command Center)
+# HCOM Unified Dashboard - v2.4 (Enhanced Stability & UX)
 # Implements a centralized monitoring and command layout
+# Improvements: Better error handling, health checks, pre-flight checks, session recovery
 
 set -euo pipefail
 
@@ -9,16 +10,118 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/utils.sh"
 
 SESSION="hcom-dashboard"
+SESSION_LOCK="/tmp/hcom-dashboard.lock"
 
 # Colors for output
+RED='\033[0;31m'
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
 NC='\033[0m'
+
+# Configuration
+MIN_TERMINAL_WIDTH=80
+MIN_TERMINAL_HEIGHT=24
+AGENT_STARTUP_DELAY=2
+MAX_AGENT_RESTARTS=3
+
+# Counters for agent health
+declare -A AGENT_RESTART_COUNT
 
 print_info() { echo -e "${BLUE}ℹ${NC} $1"; }
 print_success() { echo -e "${GREEN}✓${NC} $1"; }
-print_warning() { echo -e "${YELLOW}!${NC} $1"; }
+print_warning() { echo -e "${YELLOW}⚠${NC} $1"; }
+print_error() { echo -e "${RED}✗${NC} $1" >&2; }
+print_step() { echo -e "${CYAN}▶${NC} $1"; }
+
+# Pre-flight Checks
+preflight_checks() {
+    local errors=0
+    local warnings=0
+    
+    print_step "Running pre-flight checks..."
+    
+    # Check 1: tmux available
+    if ! has_command tmux; then
+        print_error "tmux is not installed"
+        echo "  Install with: brew install tmux (macOS) or sudo apt-get install tmux (Linux)"
+        ((errors++))
+    else
+        print_success "tmux is available ($(tmux -V))"
+    fi
+    
+    # Check 2: hcom available
+    if ! check_hcom; then
+        print_error "hcom is not installed"
+        echo "  Run ./install.sh to install hcom"
+        ((errors++))
+    else
+        print_success "hcom is available"
+    fi
+    
+    # Check 3: Terminal size
+    local term_width=$(tput cols 2>/dev/null || echo 80)
+    local term_height=$(tput lines 2>/dev/null || echo 24)
+    
+    if [[ $term_width -lt $MIN_TERMINAL_WIDTH ]]; then
+        print_warning "Terminal width ($term_width) is less than recommended ($MIN_TERMINAL_WIDTH)"
+        ((warnings++))
+    else
+        print_success "Terminal width is adequate ($term_width columns)"
+    fi
+    
+    if [[ $term_height -lt $MIN_TERMINAL_HEIGHT ]]; then
+        print_warning "Terminal height ($term_height) is less than recommended ($MIN_TERMINAL_HEIGHT)"
+        ((warnings++))
+    else
+        print_success "Terminal height is adequate ($term_height rows)"
+    fi
+    
+    # Check 4: PROJECT_ROOT exists
+    if [[ ! -d "${PROJECT_ROOT:-}" ]]; then
+        print_warning "PROJECT_ROOT not set or doesn't exist"
+        ((warnings++))
+    else
+        print_success "Project root found ($PROJECT_ROOT)"
+    fi
+    
+    # Check 5: Disk space (warn if less than 100MB free)
+    local free_space=$(df -k "${SCRIPT_DIR}" 2>/dev/null | tail -1 | awk '{print $4}' || echo 0)
+    if [[ $free_space -lt 102400 ]]; then
+        print_warning "Low disk space (< 100MB free)"
+        ((warnings++))
+    else
+        print_success "Disk space is adequate ($(($free_space / 1024))MB free)"
+    fi
+    
+    # Check 6: No stale lock file
+    if [[ -f "$SESSION_LOCK" ]]; then
+        local lock_age=$(find "$SESSION_LOCK" -mmin +60 2>/dev/null | wc -l)
+        if [[ $lock_age -gt 0 ]]; then
+            print_warning "Removing stale lock file"
+            rm -f "$SESSION_LOCK"
+        else
+            print_warning "Another dashboard instance may be starting"
+            ((warnings++))
+        fi
+    fi
+    
+    # Summary
+    echo ""
+    if [[ $errors -gt 0 ]]; then
+        print_error "Pre-flight checks failed with $errors error(s)"
+        echo "  Please fix the errors above and try again."
+        return 1
+    elif [[ $warnings -gt 0 ]]; then
+        print_warning "Pre-flight checks completed with $warnings warning(s)"
+        echo "  Continuing despite warnings..."
+    else
+        print_success "Pre-flight checks passed"
+    fi
+    
+    return 0
+}
 
 check_prereqs() {
     if ! has_command tmux; then
@@ -35,13 +138,100 @@ check_prereqs() {
 reconnect() {
     if tmux has-session -t $SESSION 2>/dev/null; then
         print_info "Attaching to existing dashboard session..."
+        
+        # Health check: Verify session is responsive
+        if ! tmux list-panes -t $SESSION -F "#{pane_id}" >/dev/null 2>&1; then
+            print_warning "Session appears corrupted, recreating..."
+            tmux kill-session -t $SESSION 2>/dev/null || true
+            rm -f "$SESSION_LOCK"
+            return 1
+        fi
+        
+        # Show session info
+        local pane_count=$(tmux list-panes -t $SESSION | wc -l)
+        local window_count=$(tmux list-windows -t $SESSION | wc -l)
+        print_success "Session is healthy with $pane_count pane(s) in $window_count window(s)"
+        
+        # Show agent status
+        print_info "Active agents:"
+        tmux list-panes -t $SESSION -F "  • #{pane_title} (#{pane_id})" 2>/dev/null || true
+        
         attach
         exit 0
     fi
+    return 1
+}
+
+# Session recovery - attempt to recover from crashed session
+recover_session() {
+    print_step "Attempting session recovery..."
+    
+    # Kill any orphaned sessions
+    if tmux has-session -t $SESSION 2>/dev/null; then
+        print_warning "Cleaning up orphaned session..."
+        tmux kill-session -t $SESSION 2>/dev/null || true
+    fi
+    
+    # Remove lock file
+    rm -f "$SESSION_LOCK"
+    
+    # Clean up any orphaned agent processes
+    pkill -f "agent-wrapper.sh.*hcom" 2>/dev/null || true
+    
+    print_success "Recovery complete"
+    return 0
+}
+
+# Agent health check
+check_agent_health() {
+    local agent_name="$1"
+    local pane_id="$2"
+    
+    # Check if pane exists and is running
+    if ! tmux list-panes -t $SESSION -F "#{pane_id}" 2>/dev/null | grep -q "^$pane_id$"; then
+        return 1
+    fi
+    
+    # Check if pane title indicates error
+    local pane_title=$(tmux display-message -p -t "$pane_id" "#{pane_title}" 2>/dev/null || echo "")
+    if [[ "$pane_title" == *"error"* ]] || [[ "$pane_title" == *"failed"* ]]; then
+        return 1
+    fi
+    
+    return 0
+}
+
+# Start agent with health monitoring
+start_agent_with_monitoring() {
+    local pane_id="$1"
+    local agent_name="$2"
+    local cmd="$3"
+    local title="$4"
+    
+    # Initialize restart counter
+    AGENT_RESTART_COUNT["$pane_id"]=0
+    
+    # Send the command
+    tmux send-keys -t "$pane_id" "export HCOM_NAME=$agent_name && $cmd" C-m
+    
+    # Set pane title
+    tmux select-pane -t "$pane_id" -T "$title"
+    
+    # Schedule health check
+    (
+        sleep 5
+        if ! check_agent_health "$agent_name" "$pane_id"; then
+            print_warning "Agent $title may have failed to start"
+        fi
+    ) &
 }
 
 create_dashboard() {
-    print_info "Creating Unified Command Center..."
+    print_step "Creating Unified Command Center..."
+    
+    # Create lock file to prevent concurrent starts
+    touch "$SESSION_LOCK"
+    trap "rm -f $SESSION_LOCK" EXIT
 
     # Step 1: Initialize hcom daemon and relay worker
     # Resolve hcom path for use in tmux
@@ -50,33 +240,56 @@ create_dashboard() {
         hcom_bin="hcom"
     fi
 
+    print_step "Initializing hcom services..."
+    
     # Ensure hooks are installed for status tracking
     if ! $hcom_bin hooks status 2>/dev/null | grep -q "installed"; then
-        $hcom_bin hooks add all > /dev/null 2>&1 || true
+        print_info "Installing hcom hooks..."
+        $hcom_bin hooks add all > /dev/null 2>&1 || print_warning "Failed to install hcom hooks"
+    else
+        print_success "hcom hooks are installed"
     fi
 
     # Start relay daemon if relay is enabled
     if $hcom_bin config relay_enabled --json 2>/dev/null | grep -q "true"; then
-        $hcom_bin relay daemon start > /dev/null 2>&1 || true
+        print_info "Starting hcom relay daemon..."
+        $hcom_bin relay daemon start > /dev/null 2>&1 || print_warning "Failed to start relay daemon"
     fi
 
     # Initialize Atari Integration (Addon)
     if [[ "${ENABLE_ATARI_LX:-false}" == "true" ]]; then
-        print_info "Initializing Atari-LX Module..."
-        bash "$PROJECT_ROOT/modules/atari-lx/scripts/init-atari-constants.sh" > /dev/null 2>&1 || true
-        bash "$PROJECT_ROOT/modules/atari-lx/scripts/hcom-atari-sync.sh" > /dev/null 2>&1 || true
+        print_step "Initializing Atari-LX Module..."
+        if bash "$PROJECT_ROOT/modules/atari-lx/scripts/init-atari-constants.sh" > /dev/null 2>&1; then
+            print_success "Atari constants initialized"
+        else
+            print_warning "Atari constants initialization skipped"
+        fi
+        if bash "$PROJECT_ROOT/modules/atari-lx/scripts/hcom-atari-sync.sh" > /dev/null 2>&1; then
+            print_success "Atari sync complete"
+        else
+            print_warning "Atari sync skipped"
+        fi
     fi
 
     sleep 1
 
     # Step 2: Create session with hcom TUI
-    tmux new-session -d -s $SESSION -n "dashboard" "$hcom_bin"
-    
-    if ! tmux has-session -t $SESSION 2>/dev/null; then
-        print_warning "Failed to create tmux session."
-        exit 1
+    print_step "Creating tmux session..."
+    if ! tmux new-session -d -s $SESSION -n "dashboard" "$hcom_bin" 2>&1; then
+        print_error "Failed to create tmux session"
+        rm -f "$SESSION_LOCK"
+        return 1
     fi
 
+    if ! tmux has-session -t $SESSION 2>/dev/null; then
+        print_error "Session creation failed"
+        rm -f "$SESSION_LOCK"
+        return 1
+    fi
+    
+    print_success "Session created successfully"
+
+    # Configure tmux
     tmux set-option -g mouse on
     tmux set-option -g pane-border-status top
     tmux set-option -g pane-border-format "#{?pane_active,#[reverse],} #P #[default] [#{@agent_name}] #{=20:pane_title} "
@@ -99,23 +312,27 @@ create_dashboard() {
     local num_right_panes=${#right_panes[@]}
     
     # Step 4: Layout Creation
-    
+
     # 4a. Create Console Pane (Bottom)
     local console_id=""
     if [ "${WITH_CONSOLE:-true}" == "true" ]; then
-        console_id=$(tmux split-window -v -t "$SESSION:dashboard.0" -l 5 -c "$PWD" -P -F "#{pane_id}")
+        # Use compatible tmux syntax (works with tmux 2.0+)
+        tmux split-window -v -t "$SESSION:dashboard.0" -l 5 -c "$PWD"
+        console_id=$(tmux display-message -p -t "$SESSION:dashboard.0" "#{pane_id}")
     fi
-    
+
     # 4b. Create Right Column
     # Split Pane 0 (HCOM) horizontally to create Right Column
-    local right_col_id=$(tmux split-window -h -t "$SESSION:dashboard.0" -c "$PWD" -P -F "#{pane_id}")
-    
+    tmux split-window -h -t "$SESSION:dashboard.0" -c "$PWD"
+    local right_col_id=$(tmux display-message -p -t "$SESSION:dashboard.0" "#{pane_id}")
+
     # 4c. Split Right Column for components
     local agent_pane_ids=("$right_col_id")
     if [ $num_right_panes -gt 1 ]; then
         local current_pane_id="$right_col_id"
         for ((i=1; i<num_right_panes; i++)); do
-            current_pane_id=$(tmux split-window -v -t "$current_pane_id" -c "$PWD" -P -F "#{pane_id}")
+            tmux split-window -v -t "$current_pane_id" -c "$PWD"
+            current_pane_id=$(tmux display-message -p -t "$current_pane_id" "#{pane_id}")
             agent_pane_ids+=("$current_pane_id")
             # Balancing space is critical to avoid "no space for new pane"
             tmux select-layout -t "$SESSION:dashboard" tiled >/dev/null 2>&1 || true
@@ -136,7 +353,12 @@ create_dashboard() {
         local console_idx=$(tmux display-message -p -t "$console_id" "#{pane_index}")
         local user_name="user_$(whoami)"
         print_info "Initializing Console in pane $console_idx..."
-        tmux send-keys -t "$console_id" "export HCOM_NAME=$user_name && hcom start --as \$HCOM_NAME" C-m
+        
+        # Send hcom initialization commands with proper error handling
+        tmux send-keys -t "$console_id" "export HCOM_NAME=$user_name" C-m
+        tmux send-keys -t "$console_id" "sleep 1" C-m
+        tmux send-keys -t "$console_id" "if command -v hcom >/dev/null 2>&1; then hcom start --as \$HCOM_NAME; else echo 'hcom not found, please run ./install.sh'; fi" C-m
+        tmux send-keys -t "$console_id" "sleep 2" C-m
         tmux send-keys -t "$console_id" "alias s='hcom send --name \$HCOM_NAME @conductor -- \"!status\"'" C-m
         tmux send-keys -t "$console_id" "alias t='hcom send --name \$HCOM_NAME @conductor -- \"!test\"'" C-m
         tmux send-keys -t "$console_id" "alias b='hcom send --name \$HCOM_NAME @conductor -- \"!build\"'" C-m
@@ -145,14 +367,14 @@ create_dashboard() {
         tmux send-keys -t "$console_id" "echo -e \"${BLUE}║           ai-colab HCOM User Console         ║${NC}\"" C-m
         tmux send-keys -t "$console_id" "echo -e \"${BLUE}╚══════════════════════════════════════════════╝${NC}\"" C-m
         tmux send-keys -t "$console_id" "echo -e \"Logged in as: ${GREEN}$user_name${NC}\"" C-m
-        tmux send-keys -t "$console_id" "echo -e \"\"" C-m
+        tmux send-keys -t "$console_id" "echo -e \\\"\\\"" C-m
         tmux send-keys -t "$console_id" "echo -e \"${YELLOW}Available Conductor Commands:${NC}\"" C-m
         tmux send-keys -t "$console_id" "echo -e \"  ${GREEN}s${NC} (!status)      - Get project health & progress\"" C-m
         tmux send-keys -t "$console_id" "echo -e \"  ${GREEN}t${NC} (!test)        - Run all automated tests\"" C-m
         tmux send-keys -t "$console_id" "echo -e \"  ${GREEN}b${NC} (!build)       - Build project and integrated apps\"" C-m
         tmux send-keys -t "$console_id" "echo -e \"  !kb <query>      - Search architectural knowledge base\"" C-m
         tmux send-keys -t "$console_id" "echo -e \"  !git-sync        - Pull latest changes from remote\"" C-m
-        
+
         if [[ "${ENABLE_ATARI_LX:-false}" == "true" ]]; then
             tmux send-keys -t "$console_id" "echo -e \"${YELLOW}Atari-LX Commands:${NC}\"" C-m
             tmux send-keys -t "$console_id" "echo -e \"  !screenshot      - Capture current emulator state\"" C-m
@@ -160,10 +382,11 @@ create_dashboard() {
             tmux send-keys -t "$console_id" "echo -e \"  !profile <file>  - Profile code performance (cycles)\"" C-m
             tmux send-keys -t "$console_id" "echo -e \"  !perf-trend <rt> - View historical performance trend\"" C-m
         fi
-        
+
         tmux send-keys -t "$console_id" "echo -e \"  !help            - Show all available commands\"" C-m
-        tmux send-keys -t "$console_id" "echo \"\"" C-m
-        
+        tmux send-keys -t "$console_id" "echo \\\"\\\"" C-m
+        tmux send-keys -t "$console_id" "echo -e \"${GREEN}HCOM Status:\${NC} \$(hcom status --name \$HCOM_NAME 2>&1 | head -1 || echo 'Not connected')\"" C-m
+
         tmux set-option -t "$console_id" -p @agent_name "CONSOLE"
         tmux select-pane -t "$console_id" -T "User Console ($user_name)"
     fi
@@ -244,31 +467,78 @@ create_dashboard() {
 
     # Step 8: Optional Bridge window
     if [ "${WITH_BRIDGE:-false}" == "true" ]; then
+        print_step "Starting Google Chat bridge..."
         tmux new-window -d -t $SESSION -n "bridge" "bash $SCRIPT_DIR/hcom-chat-bridge.sh"
     fi
 
     print_success "Unified Command Center Online"
+    
+    # Final status summary
+    echo ""
+    echo -e "${GREEN}+======================================================+${NC}"
+    echo -e "${GREEN}|              Dashboard Ready!                        |${NC}"
+    echo -e "${GREEN}+======================================================+${NC}"
+    echo ""
+    
+    local final_pane_count=$(tmux list-panes -t $SESSION | wc -l)
+    local final_window_count=$(tmux list-windows -t $SESSION | wc -l)
+    
+    echo -e "${BLUE}Session Summary:${NC}"
+    echo "  • Panes: $final_pane_count"
+    echo "  • Windows: $final_window_count"
+    echo "  • Session: $SESSION"
+    echo ""
+    echo -e "${BLUE}Navigation:${NC}"
+    echo "  • Ctrl+b Arrow Keys - Move between panes"
+    echo "  • Ctrl+b z - Zoom current pane"
+    echo "  • Ctrl+b d - Detach from session"
+    echo "  • Ctrl+b ? - Show all tmux shortcuts"
+    echo ""
+    
     sleep 1
 }
 
 attach() {
     print_info "Attaching in 1s..."
     sleep 1
-    print_info "Navigation: Ctrl+b Arrow Keys | Ctrl+b z zoom"
+    echo ""
+    echo -e "${CYAN}+======================================================+${NC}"
+    echo -e "${CYAN}|  Dashboard Navigation Guide                          |${NC}"
+    echo -e "${CYAN}+======================================================+${NC}"
+    echo "  Ctrl+b ->/<-/Up/Down : Navigate between panes"
+    echo "  Ctrl+b z        : Zoom/unzoom current pane"
+    echo "  Ctrl+b d        : Detach (keep running)"
+    echo "  Ctrl+b %        : Split vertically"
+    echo "  Ctrl+b \"       : Split horizontally"
+    echo "  Ctrl+b c        : Create new window"
+    echo "  Ctrl+b n/p      : Next/previous window"
+    echo "  Ctrl+b l        : Last window"
+    echo "  Ctrl+b ?        : Show all shortcuts"
+    echo -e "${CYAN}+======================================================+${NC}"
+    echo ""
     tmux attach -t $SESSION
 }
 
 main() {
     echo ""
-    echo -e "${BLUE}========================================${NC}"
-    echo -e "${BLUE}  HCOM Command Center v2.3${NC}"
-    echo -e "${BLUE}========================================${NC}"
+    echo -e "${BLUE}+======================================================+${NC}"
+    echo -e "${BLUE}|       HCOM Command Center v2.4 (Enhanced)           |${NC}"
+    echo -e "${BLUE}+======================================================+${NC}"
+    echo ""
+
+    # Run pre-flight checks first
+    if ! preflight_checks; then
+        echo ""
+        print_error "Dashboard launch aborted due to pre-flight failures"
+        exit 1
+    fi
+    
     echo ""
 
     # Defaults
     WITH_QWEN=true
     WITH_GEMINI=true
-    WITH_VLLM=true
+    WITH_VLLM=false  # vLLM is opt-in only
     WITH_DEEPSEEK=false
     WITH_CLAUDE=false
     WITH_NEMO=false

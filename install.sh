@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # ai-colab Master Installer
 # Installs project dependencies, LLM CLIs, and the Conductor Agent.
+# Supports: --wizard (interactive), --reconfigure (modify existing), --auto (non-interactive)
 
 set -e
 
@@ -24,10 +25,106 @@ if [ -f "$SCRIPT_DIR/scripts/terminal-detect.sh" ]; then
     init_terminal
 fi
 
+# Show guide
+show_guide() {
+    clear
+    echo -e "${BLUE}╔══════════════════════════════════════════════╗${NC}"
+    echo -e "${BLUE}║          ai-colab Installation Guide         ║${NC}"
+    echo -e "${BLUE}╚══════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo -e "${YELLOW}Pathway 1: Interactive CLI Wizard (Recommended)${NC}"
+    echo "  Best for: Developers who want a guided setup in their terminal."
+    echo "  Command:  ${CYAN}./install.sh --wizard${NC}"
+    echo ""
+    echo -e "${YELLOW}Pathway 2: Docker / Web UI${NC}"
+    echo "  Best for: Users who prefer a browser interface or containerization."
+    echo "  Command:  ${CYAN}docker-compose up -d${NC}"
+    echo "  Access:   http://localhost:8080"
+    echo ""
+    echo -e "${YELLOW}Pathway 3: Quick/Auto Install${NC}"
+    echo "  Best for: CI/CD or experienced users who want a standard setup."
+    echo "  Command:  ${CYAN}./install.sh --auto${NC}"
+    echo ""
+    echo -e "${YELLOW}Post-Installation:${NC}"
+    echo "  Reconfigure: ${CYAN}./install.sh --reconfigure${NC}"
+    echo "  Launch:      ${CYAN}./launch.sh${NC}"
+    echo ""
+    exit 0
+}
+
+# Parse command line arguments first
+INSTALL_MODE="interactive"
+RECONFIGURE_MODE=false
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --wizard|-w)
+            INSTALL_MODE="wizard"
+            shift
+            ;;
+        --reconfigure|-r)
+            RECONFIGURE_MODE=true
+            INSTALL_MODE="reconfigure"
+            shift
+            ;;
+        --auto|-a)
+            INSTALL_MODE="auto"
+            shift
+            ;;
+        --guide|-g)
+            show_guide
+            ;;
+        --help|-h)
+            echo "ai-colab Master Installer"
+            echo ""
+            echo "Usage: $0 [options]"
+            echo ""
+            echo "Options:"
+            echo "  --wizard, -w      Run interactive installation wizard"
+            echo "  --reconfigure, -r Reconfigure existing installation"
+            echo "  --auto, -a        Non-interactive auto-install (uses defaults)"
+            echo "  --guide, -g       Show detailed installation guide"
+            echo "  --help, -h        Show this help message"
+            echo ""
+            echo "Installation Pathways:"
+            echo "  CLI:              ./install.sh --wizard"
+            echo "  Web UI (Docker):  docker-compose up"
+            echo "  Quick Install:    ./install.sh --auto"
+            echo ""
+            exit 0
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
+
+# Handle wizard mode
+if [[ "$INSTALL_MODE" == "wizard" ]]; then
+    if [[ -f "$SCRIPT_DIR/scripts/install-wizard.sh" ]]; then
+        bash "$SCRIPT_DIR/scripts/install-wizard.sh"
+        # Continue installation based on configuration
+    else
+        echo -e "${RED}Error: install-wizard.sh not found${NC}"
+        exit 1
+    fi
+fi
+
+# Handle reconfigure mode
+if [[ "$INSTALL_MODE" == "reconfigure" ]]; then
+    if [[ -f "$SCRIPT_DIR/scripts/install-wizard.sh" ]]; then
+        exec bash "$SCRIPT_DIR/scripts/install-wizard.sh" --reconfigure
+    else
+        echo -e "${RED}Error: install-wizard.sh not found${NC}"
+        exit 1
+    fi
+fi
+
 echo -e "${BLUE}╔════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║       ai-colab Master Installer       ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════╝${NC}"
 echo ""
+
 
 # Terminal Detection & Optimization
 if [[ -n "$AI_COLAB_TERMINAL" ]]; then

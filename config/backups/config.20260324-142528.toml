@@ -1,0 +1,3 @@
+installation.status = "complete"
+installation.pathway = "cli"
+test.key = "test_value"
