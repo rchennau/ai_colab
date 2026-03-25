@@ -4,12 +4,123 @@
 # Ensure ~/.local/bin is in PATH for hcom
 export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
 
-# Colors
+# ============================================
+# UI & ANSI Graphics Utilities (80 Columns)
+# ============================================
+
+# Standard UI width
+UI_WIDTH=80
+
+# UI Border Characters
+UL="╔"
+UR="╗"
+LL="╚"
+LR="╝"
+HL="═"
+VL="║"
+ML="╠"
+MR="╣"
+
+# Colors (expanded)
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+MAGENTA='\033[0;35m'
+BOLD='\033[1m'
 NC='\033[0m'
+
+# Draw a horizontal line
+ui_line() {
+    local char="${1:-$HL}"
+    local color="${2:-$BLUE}"
+    local line=""
+    for ((i=0; i<UI_WIDTH; i++)); do line+="$char"; done
+    echo -e "${color}${line}${NC}"
+}
+
+# Draw a centered title with borders
+ui_banner() {
+    local title="$1"
+    local color="${2:-$BLUE}"
+    local padding=$(( (UI_WIDTH - ${#title} - 2) / 2 ))
+    
+    local top="$UL"
+    local mid="$VL"
+    local bot="$LL"
+    
+    for ((i=0; i<UI_WIDTH-2; i++)); do top+="$HL"; bot+="$HL"; done
+    top+="$UR"
+    bot+="$LR"
+    
+    echo -e "${color}${top}${NC}"
+    
+    # Calculate centering
+    local left_pad=""
+    for ((i=0; i<padding; i++)); do left_pad+=" "; done
+    local right_pad=""
+    local right_pad_len=$(( UI_WIDTH - 2 - padding - ${#title} ))
+    for ((i=0; i<right_pad_len; i++)); do right_pad+=" "; done
+    
+    echo -e "${color}${mid}${NC}${BOLD}${left_pad}${title}${right_pad}${color}${mid}${NC}"
+    echo -e "${color}${bot}${NC}"
+}
+
+# Draw a section title
+ui_title() {
+    local title=" $1 "
+    local color="${2:-$CYAN}"
+    local line_char="${3:-$HL}"
+    
+    local title_len=${#title}
+    local left_len=$(( (UI_WIDTH - title_len) / 2 ))
+    local right_len=$(( UI_WIDTH - title_len - left_len ))
+    
+    local left_line=""
+    for ((i=0; i<left_len; i++)); do left_line+="$line_char"; done
+    local right_line=""
+    for ((i=0; i<right_len; i++)); do right_line+="$line_char"; done
+    
+    echo -e "\n${color}${left_line}${NC}${BOLD}${title}${NC}${color}${right_line}${NC}"
+}
+
+# Draw a box around multiple lines of text
+ui_box() {
+    local color="${2:-$BLUE}"
+    local top="$UL"
+    local bot="$LL"
+    for ((i=0; i<UI_WIDTH-2; i++)); do top+="$HL"; bot+="$HL"; done
+    top+="$UR"
+    bot+="$LR"
+    
+    echo -e "${color}${top}${NC}"
+    while IFS= read -r line; do
+        # Strip ANSI codes for length calculation
+        local clean_line=$(echo -e "$line" | sed 's/\x1B\[[0-9;]*[JKmsu]//g')
+        local padding=$(( UI_WIDTH - 4 - ${#clean_line} ))
+        local pad_str=""
+        if [ $padding -gt 0 ]; then
+            for ((i=0; i<padding; i++)); do pad_str+=" "; done
+        fi
+        echo -e "${color}${VL}${NC}  ${line}${pad_str}  ${color}${VL}${NC}"
+    done <<< "$1"
+    echo -e "${color}${bot}${NC}"
+}
+
+# Display a status item
+ui_status() {
+    local label="$1"
+    local value="$2"
+    local color="${3:-$GREEN}"
+    
+    local label_len=${#label}
+    local dots=""
+    local dots_len=$(( UI_WIDTH - label_len - ${#value} - 4 ))
+    for ((i=0; i<dots_len; i++)); do dots+="."; done
+    
+    echo -e "  ${BOLD}${label}${NC} ${BLUE}${dots}${NC} ${color}${value}${NC}"
+}
 
 # Logging Utilities
 log_info() { echo -e "${BLUE}[$(date +%T)] INFO:${NC} $1"; }

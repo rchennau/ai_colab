@@ -25,25 +25,24 @@ if [ -f "$SCRIPT_DIR/scripts/terminal-detect.sh" ]; then
     init_terminal
 fi
 
-echo -e "${BLUE}╔════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║       ai-colab Unified Launcher       ║${NC}"
-echo -e "${BLUE}╚════════════════════════════════════════╝${NC}"
+clear
+ui_banner "ai-colab Unified Launcher" "${BLUE}"
 echo ""
 
 # Display terminal info if detected
 if [[ -n "$AI_COLAB_TERMINAL" ]]; then
-    echo -e "${GREEN}Terminal:${NC} $AI_COLAB_TERMINAL ($AI_COLAB_ENVIRONMENT)"
+    ui_status "Terminal" "$AI_COLAB_TERMINAL ($AI_COLAB_ENVIRONMENT)" "${CYAN}"
     
     if [[ "$AI_COLAB_TERMINAL" == "iterm2" ]]; then
-        echo -e "${BLUE}✓ iTerm2 optimizations active${NC}"
+        ui_status "Optimizations" "iTerm2 active" "${BLUE}"
     elif [[ "$AI_COLAB_ENVIRONMENT" == "wsl" ]]; then
-        echo -e "${BLUE}✓ WSL optimizations active${NC}"
+        ui_status "Optimizations" "WSL active" "${BLUE}"
     fi
-    echo ""
 fi
 
 # Check for hcom
 if ! has_command hcom; then
+    ui_banner "Dependency Error" "${RED}"
     echo -e "${RED}Error: hcom is not installed.${NC}"
     echo -e "Please run ./install.sh first."
     exit 1
@@ -51,6 +50,7 @@ fi
 
 # Check for tmux
 if ! has_command tmux; then
+    ui_banner "Dependency Error" "${RED}"
     echo -e "${RED}Error: tmux is not installed.${NC}"
     echo -e "Please run ./install.sh first."
     exit 1
@@ -58,10 +58,10 @@ fi
 
 # 1. Project Detection
 PROJECT_ROOT=$(detect_project_root 2>/dev/null || echo "$SCRIPT_DIR")
-echo -e "${GREEN}Project Root:${NC} $PROJECT_ROOT"
+ui_status "Project Root" "$PROJECT_ROOT" "${GREEN}"
 
 # 1.1 Project Artifact Detection & Migration
-echo -e "\n${BLUE}Scanning for existing AI/LLM integrations...${NC}"
+ui_title "Project Scanning" "${BLUE}"
 
 if [[ -f "$SCRIPT_DIR/scripts/migrate-project.sh" ]]; then
     # Run detection (non-interactive mode first)
@@ -81,8 +81,10 @@ if [[ -f "$SCRIPT_DIR/scripts/migrate-project.sh" ]]; then
         
         if [[ $REPLY =~ ^[Yy]$ || -z $REPLY ]]; then
             echo -e "\n${BLUE}Starting migration...${NC}"
+            export AI_COLAB_LAUNCHER=true
             bash "$SCRIPT_DIR/scripts/migrate-project.sh" "$PROJECT_ROOT"
             rm -f "$PROJECT_ROOT/.ai-colab-migration-pending"
+            echo -e "\n${GREEN}✓ Migration complete. Continuing to launch...${NC}"
         else
             echo -e "\n${YELLOW}Migration skipped. You can run it later with:${NC}"
             echo -e "  ${BLUE}./scripts/migrate-project.sh${NC}"
@@ -106,10 +108,11 @@ save_pref() {
 # Load previous choices from state if available
 LAST_LAUNCH_CHOICE=$(bash "$CONFIG_MGR" state last_launch_choice 3)
 
-echo -e "\n${BLUE}Select components to launch:${NC}"
-echo "1) Dashboard (hcom TUI + Agents)"
-echo "2) Conductor (Project Manager)"
-echo "3) Both (Recommended)"
+ui_title "Component Configuration" "${BLUE}"
+echo -e "Select components to launch:"
+echo -e "  ${CYAN}1)${NC} Dashboard (hcom TUI + Agents)"
+echo -e "  ${CYAN}2)${NC} Conductor (Project Manager)"
+echo -e "  ${CYAN}3)${NC} Both (Recommended)"
 echo ""
 read -p "Choice [1-3, default $LAST_LAUNCH_CHOICE]: " LAUNCH_CHOICE
 LAUNCH_CHOICE=${LAUNCH_CHOICE:-$LAST_LAUNCH_CHOICE}
@@ -126,7 +129,7 @@ case "$LAUNCH_CHOICE" in
 esac
 
 # 3. Module Selection
-echo -e "\n${BLUE}Available Addon Modules:${NC}"
+ui_title "Module Addons" "${BLUE}"
 MODULES_JSON=$(python3 "$SCRIPT_DIR/scripts/module-manager.py" list "$PROJECT_ROOT")
 # Simple extraction of IDs and Names from JSON
 MOD_IDS=$(echo "$MODULES_JSON" | grep -oP '"id": "\K[^"]+' || echo "")
@@ -137,36 +140,42 @@ IFS=$'\n'
 IDS_ARR=($MOD_IDS)
 NAMES_ARR=($MOD_NAMES)
 
-for i in "${!IDS_ARR[@]}"; do
-    ID="${IDS_ARR[$i]}"
-    NAME="${NAMES_ARR[$i]}"
-    PREF_KEY="MODULE_$(echo "$ID" | tr '-' '_' | tr '[:lower:]' '[:upper:]')"
-    LAST_VAL=$(load_pref "$PREF_KEY")
-    LAST_VAL=${LAST_VAL:-false}
-    
-    PROMPT_VAL="n"
-    [[ "$LAST_VAL" == "true" ]] && PROMPT_VAL="Y" || PROMPT_VAL="y"
-    
-    read -p "Enable $NAME ($ID)? [$PROMPT_VAL/n]: " -n 1 -r; echo ""
-    if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$LAST_VAL" == "true" ]]); then
-        save_pref "$PREF_KEY" "true"
-    else
-        save_pref "$PREF_KEY" "false"
-    fi
-done
+if [ ${#IDS_ARR[@]} -eq 0 ]; then
+    echo -e "  ${YELLOW}(No additional modules found)${NC}"
+else
+    for i in "${!IDS_ARR[@]}"; do
+        ID="${IDS_ARR[$i]}"
+        NAME="${NAMES_ARR[$i]}"
+        PREF_KEY="MODULE_$(echo "$ID" | tr '-' '_' | tr '[:lower:]' '[:upper:]')"
+        LAST_VAL=$(load_pref "$PREF_KEY")
+        LAST_VAL=${LAST_VAL:-false}
+        
+        PROMPT_VAL="n"
+        [[ "$LAST_VAL" == "true" ]] && PROMPT_VAL="Y" || PROMPT_VAL="y"
+        
+        read -p "  Enable $NAME ($ID)? [$PROMPT_VAL/n]: " -n 1 -r; echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$LAST_VAL" == "true" ]]); then
+            save_pref "$PREF_KEY" "true"
+        else
+            save_pref "$PREF_KEY" "false"
+        fi
+    done
+fi
 
 # Evaluate active module environment variables
 eval "$(python3 "$SCRIPT_DIR/scripts/module-manager.py" env "$PROJECT_ROOT")"
 
 # 3.1 Compute Backend Confirmation
 LAST_BACKEND=$(load_pref "compute.backend" "local")
-echo -e "\n${BLUE}Compute Backend:${NC} ${GREEN}$LAST_BACKEND${NC}"
-read -p "Use $LAST_BACKEND for high-power agents? [Y/n]: " -n 1 -r; echo ""
+ui_title "Compute Configuration" "${BLUE}"
+ui_status "Current Backend" "$LAST_BACKEND" "${GREEN}"
+
+read -p "  Use $LAST_BACKEND for high-power agents? [Y/n]: " -n 1 -r; echo ""
 if [[ $REPLY =~ ^[Nn]$ ]]; then
-    echo "1) NVIDIA NIM API"
-    echo "2) RunPod"
-    echo "3) Local Server"
-    read -p "Select backend [1-3]: " NEW_BACKEND
+    echo -e "  ${CYAN}1)${NC} NVIDIA NIM API"
+    echo -e "  ${CYAN}2)${NC} RunPod"
+    echo -e "  ${CYAN}3)${NC} Local Server"
+    read -p "  Select backend [1-3]: " NEW_BACKEND
     case "$NEW_BACKEND" in
         1) COMPUTE_BACKEND="nvidia" ;;
         2) COMPUTE_BACKEND="runpod" ;;
@@ -188,12 +197,13 @@ if [ "$DASHBOARD" = true ]; then
     # For backward compatibility with dashboard-launch.sh:
     [[ "${ENABLE_ATARI_LX:-false}" == "true" ]] && DASHBOARD_FLAGS+=" --atari"
     
-    echo -e "\n${BLUE}Select agents for the Dashboard:${NC}"
+    ui_title "Agent Configuration" "${BLUE}"
+    echo -e "Select agents for the Dashboard:"
     
     # Qwen
     DEFAULT_QWEN=$(load_pref "llm.qwen.enabled" "true")
     PROMPT_QWEN=$([[ "$DEFAULT_QWEN" == "true" ]] && echo "Y/n" || echo "y/N")
-    read -p "Include Qwen? [$PROMPT_QWEN]: " -n 1 -r; echo ""
+    read -p "  Include Qwen? [$PROMPT_QWEN]: " -n 1 -r; echo ""
     if [[ $REPLY =~ ^[Nn]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_QWEN" == "false" ]]); then
         DASHBOARD_FLAGS+=" --no-qwen"
     fi
@@ -201,7 +211,7 @@ if [ "$DASHBOARD" = true ]; then
     # Gemini
     DEFAULT_GEMINI=$(load_pref "llm.gemini.enabled" "true")
     PROMPT_GEMINI=$([[ "$DEFAULT_GEMINI" == "true" ]] && echo "Y/n" || echo "y/N")
-    read -p "Include Gemini? [$PROMPT_GEMINI]: " -n 1 -r; echo ""
+    read -p "  Include Gemini? [$PROMPT_GEMINI]: " -n 1 -r; echo ""
     if [[ $REPLY =~ ^[Nn]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_GEMINI" == "false" ]]); then
         DASHBOARD_FLAGS+=" --no-gemini"
     fi
@@ -209,10 +219,10 @@ if [ "$DASHBOARD" = true ]; then
     # vLLM
     DEFAULT_VLLM=$(load_pref "llm.vllm.enabled" "false")
     PROMPT_VLLM=$([[ "$DEFAULT_VLLM" == "true" ]] && echo "Y/n" || echo "y/N")
-    read -p "Include vLLM? [$PROMPT_VLLM]: " -n 1 -r; echo ""
+    read -p "  Include vLLM? [$PROMPT_VLLM]: " -n 1 -r; echo ""
     if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_VLLM" == "true" ]]); then
         LAST_VLLM_HOST=$(load_pref "llm.vllm.host" "192.168.0.193")
-        read -p "vLLM Host [default $LAST_VLLM_HOST]: " VLLM_HOST
+        read -p "  vLLM Host [default $LAST_VLLM_HOST]: " VLLM_HOST
         VLLM_HOST=${VLLM_HOST:-$LAST_VLLM_HOST}
         save_pref "llm.vllm.host" "$VLLM_HOST"
         export VLLM_BASE_URL="http://$VLLM_HOST:8000/v1"
@@ -222,7 +232,7 @@ if [ "$DASHBOARD" = true ]; then
     # Claude
     DEFAULT_CLAUDE=$(load_pref "llm.claude.enabled" "false")
     PROMPT_CLAUDE=$([[ "$DEFAULT_CLAUDE" == "true" ]] && echo "Y/n" || echo "y/N")
-    read -p "Include Claude? [$PROMPT_CLAUDE]: " -n 1 -r; echo ""
+    read -p "  Include Claude? [$PROMPT_CLAUDE]: " -n 1 -r; echo ""
     if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_CLAUDE" == "true" ]]); then
         DASHBOARD_FLAGS+=" --add-claude"
     fi
@@ -230,7 +240,7 @@ if [ "$DASHBOARD" = true ]; then
     # DeepSeek
     DEFAULT_DEEPSEEK=$(load_pref "llm.deepseek.enabled" "false")
     PROMPT_DEEPSEEK=$([[ "$DEFAULT_DEEPSEEK" == "true" ]] && echo "Y/n" || echo "y/N")
-    read -p "Include DeepSeek? [$PROMPT_DEEPSEEK]: " -n 1 -r; echo ""
+    read -p "  Include DeepSeek? [$PROMPT_DEEPSEEK]: " -n 1 -r; echo ""
     if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_DEEPSEEK" == "true" ]]); then
         DASHBOARD_FLAGS+=" --add-deepseek"
     fi
@@ -238,7 +248,7 @@ if [ "$DASHBOARD" = true ]; then
     # NeMo / nemoclaw
     DEFAULT_NEMOCLAW=$(load_pref "llm.nemoclaw.enabled" "false")
     PROMPT_NEMOCLAW=$([[ "$DEFAULT_NEMOCLAW" == "true" ]] && echo "Y/n" || echo "y/N")
-    read -p "Include nemoclaw (NVIDIA NIM)? [$PROMPT_NEMOCLAW]: " -n 1 -r; echo ""
+    read -p "  Include nemoclaw (NVIDIA NIM)? [$PROMPT_NEMOCLAW]: " -n 1 -r; echo ""
     if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_NEMOCLAW" == "true" ]]); then
         DASHBOARD_FLAGS+=" --add-nemoclaw"
         export NEMO_HOST="integrate.api.nvidia.com"
@@ -246,11 +256,11 @@ if [ "$DASHBOARD" = true ]; then
     else
         DEFAULT_NEMO=$(load_pref "llm.nemo.enabled" "false")
         PROMPT_NEMO=$([[ "$DEFAULT_NEMO" == "true" ]] && echo "Y/n" || echo "y/N")
-        read -p "Include generic NeMo? [$PROMPT_NEMO]: " -n 1 -r; echo ""
+        read -p "  Include generic NeMo? [$PROMPT_NEMO]: " -n 1 -r; echo ""
         if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_NEMO" == "true" ]]); then
             DASHBOARD_FLAGS+=" --add-nemo"
             LAST_NEMO_HOST=$(load_pref "llm.nemo.host" "integrate.api.nvidia.com")
-            read -p "NeMo Host [default $LAST_NEMO_HOST]: " NEMO_HOST
+            read -p "  NeMo Host [default $LAST_NEMO_HOST]: " NEMO_HOST
             NEMO_HOST=${NEMO_HOST:-$LAST_NEMO_HOST}
             save_pref "llm.nemo.host" "$NEMO_HOST"
             
@@ -272,8 +282,9 @@ if [ "$DASHBOARD" = true ]; then
 fi
 
 # 4. Launching
+ui_title "Finalizing Launch" "${BLUE}"
 if [ "$DASHBOARD" = true ]; then
-    echo -e "\n${GREEN}Launching Unified Dashboard...${NC}"
+    echo -e "  Launching Unified Dashboard..."
     # Change to project root to ensure dashboard detects it
     cd "$PROJECT_ROOT"
     exec bash "$SCRIPT_DIR/scripts/dashboard-launch.sh" $DASHBOARD_FLAGS

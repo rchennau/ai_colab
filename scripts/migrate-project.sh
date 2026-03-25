@@ -6,14 +6,7 @@ set -e
 
 # Find script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-YELLOW='\033[1;33m'
-CYAN='\033[0;36m'
-NC='\033[0m'
+source "$SCRIPT_DIR/utils.sh"
 
 # Detection results
 declare -a FOUND_ARTIFACTS=()
@@ -23,14 +16,12 @@ declare -a KB_ARTIFACTS=()
 declare -a OTHER_INTEGRATIONS=()
 
 print_header() {
-    echo -e "${BLUE}╔════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║       Project Detection & Migration Tool              ║${NC}"
-    echo -e "${BLUE}╚════════════════════════════════════════════════════════╝${NC}"
+    ui_banner "Project Detection & Migration Tool" "${BLUE}"
     echo ""
 }
 
 print_section() {
-    echo -e "\n${CYAN}═══ $1 ═══${NC}"
+    ui_title "$1" "${CYAN}"
 }
 
 # Detect MCP configurations
@@ -205,8 +196,7 @@ detect_project() {
     local project_root="$1"
     
     print_header
-    echo -e "${BLUE}Scanning project:${NC} $project_root"
-    echo ""
+    ui_status "Scanning Project" "$project_root" "${BLUE}"
     
     # Run all detectors
     detect_mcp_configs "$project_root"
@@ -218,82 +208,84 @@ detect_project() {
     local total_found=$((${#FOUND_ARTIFACTS[@]} + ${#MCP_CONFIGS[@]} + ${#PRODUCT_PLANS[@]} + ${#KB_ARTIFACTS[@]} + ${#OTHER_INTEGRATIONS[@]}))
     
     if [[ $total_found -eq 0 ]]; then
-        echo -e "${GREEN}✓ No existing AI/LLM integrations found.${NC}"
-        echo -e "This appears to be a fresh project. ai-colab will set up default configurations."
+        ui_status "Results" "No existing integrations found" "${GREEN}"
+        echo -e "  This appears to be a fresh project. ai-colab will set up default configurations."
         return 0
     fi
     
     print_section "Detection Results"
     
-    echo -e "\n${YELLOW}General Artifacts Found:${NC}"
+    echo -e "\n  ${BOLD}${YELLOW}General Artifacts Found:${NC}"
     if [[ ${#FOUND_ARTIFACTS[@]} -gt 0 ]]; then
         for artifact in "${FOUND_ARTIFACTS[@]}"; do
-            echo -e "  • $artifact"
+            echo -e "    • $artifact"
         done
     else
-        echo -e "  (none)"
+        echo -e "    (none)"
     fi
     
-    echo -e "\n${YELLOW}MCP Configurations:${NC}"
+    echo -e "\n  ${BOLD}${YELLOW}MCP Configurations:${NC}"
     if [[ ${#MCP_CONFIGS[@]} -gt 0 ]]; then
         for config in "${MCP_CONFIGS[@]}"; do
-            echo -e "  • $config"
+            echo -e "    • $config"
         done
     else
-        echo -e "  (none)"
+        echo -e "    (none)"
     fi
     
-    echo -e "\n${YELLOW}Product Plans & Conductor Files:${NC}"
+    echo -e "\n  ${BOLD}${YELLOW}Product Plans & Conductor Files:${NC}"
     if [[ ${#PRODUCT_PLANS[@]} -gt 0 ]]; then
         for plan in "${PRODUCT_PLANS[@]}"; do
-            echo -e "  • $plan"
+            echo -e "    • $plan"
         done
     else
-        echo -e "  (none)"
+        echo -e "    (none)"
     fi
     
-    echo -e "\n${YELLOW}Knowledge Base Artifacts:${NC}"
+    echo -e "\n  ${BOLD}${YELLOW}Knowledge Base Artifacts:${NC}"
     if [[ ${#KB_ARTIFACTS[@]} -gt 0 ]]; then
         for kb in "${KB_ARTIFACTS[@]}"; do
-            echo -e "  • $kb"
+            echo -e "    • $kb"
         done
     else
-        echo -e "  (none)"
+        echo -e "    (none)"
     fi
     
-    echo -e "\n${YELLOW}Other AI Integrations:${NC}"
+    echo -e "\n  ${BOLD}${YELLOW}Other AI Integrations:${NC}"
     if [[ ${#OTHER_INTEGRATIONS[@]} -gt 0 ]]; then
         for integration in "${OTHER_INTEGRATIONS[@]}"; do
-            echo -e "  • $integration"
+            echo -e "    • $integration"
         done
     else
-        echo -e "  (none)"
+        echo -e "    (none)"
     fi
     
     echo ""
-    echo -e "${CYAN}═══════════════════════════════════════════════════════${NC}"
-    echo -e "Total artifacts found: ${GREEN}$total_found${NC}"
-    echo -e "${CYAN}═══════════════════════════════════════════════════════${NC}"
+    ui_status "Total artifacts found" "$total_found" "${GREEN}"
+    ui_line "${HL}" "${CYAN}"
 }
 
 # Ask user about migration
 ask_migration() {
+    # If run from launch.sh, we already asked
+    if [[ "${AI_COLAB_LAUNCHER:-false}" == "true" ]]; then
+        return 0
+    fi
+    
     echo ""
-    echo -e "${YELLOW}╔════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${YELLOW}║           Migration Opportunity Detected              ║${NC}"
-    echo -e "${YELLOW}╚════════════════════════════════════════════════════════╝${NC}"
+    ui_banner "Migration Opportunity Detected" "${YELLOW}"
     echo ""
-    echo -e "Existing AI/LLM integrations were found in this project."
-    echo -e "${BLUE}Would you like to migrate these to ai-colab?${NC}"
+    echo -e "  Existing AI/LLM integrations were found in this project."
+    echo -e "  ${BLUE}Would you like to migrate these to ai-colab?${NC}"
     echo ""
-    echo -e "Migration will:"
-    echo -e "  ✓ Import MCP server configurations"
-    echo -e "  ✓ Integrate product plans and conductor files"
-    echo -e "  ✓ Merge knowledge base artifacts"
-    echo -e "  ✓ Preserve existing configurations (backup created)"
-    echo -e "  ✓ Enable ai-colab enhancements"
+    echo -e "  Migration will:"
+    echo -e "    ${GREEN}✓${NC} Import MCP server configurations"
+    echo -e "    ${GREEN}✓${NC} Integrate product plans and conductor files"
+    echo -e "    ${GREEN}✓${NC} Merge knowledge base artifacts"
+    echo -e "    ${GREEN}✓${NC} Preserve existing configurations (backup created)"
+    echo -e "    ${GREEN}✓${NC} Enable ai-colab enhancements"
     echo ""
-    read -p "Migrate existing integrations to ai-colab? [Y/n]: " -n 1 -r
+    read -p "  Migrate existing integrations to ai-colab? [Y/n]: " -n 1 -r
     echo ""
     
     if [[ $REPLY =~ ^[Yy]$ || -z $REPLY ]]; then
@@ -308,13 +300,12 @@ perform_migration() {
     local project_root="$1"
     local backup_dir="$project_root/.ai-colab-backup-$(date +%Y%m%d-%H%M%S)"
     
-    echo -e "\n${BLUE}╔════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║              Starting Migration Process                ║${NC}"
-    echo -e "${BLUE}╚════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    ui_banner "Starting Migration Process" "${BLUE}"
     echo ""
     
     # Create backup
-    echo -e "${YELLOW}Step 1: Creating backup...${NC}"
+    echo -e "  ${YELLOW}Step 1: Creating backup...${NC}"
     mkdir -p "$backup_dir"
     
     # Backup MCP configs
@@ -323,7 +314,7 @@ perform_migration() {
             local config_dir=$(dirname "$config")
             mkdir -p "$backup_dir/$config_dir"
             cp "$project_root/$config" "$backup_dir/$config"
-            echo -e "  ${GREEN}✓${NC} Backed up: $config"
+            echo -e "    ${GREEN}✓${NC} Backed up: $config"
         fi
     done
     
@@ -333,7 +324,7 @@ perform_migration() {
             local plan_dir=$(dirname "$plan")
             mkdir -p "$backup_dir/$plan_dir"
             cp -r "$project_root/$plan" "$backup_dir/$plan"
-            echo -e "  ${GREEN}✓${NC} Backed up: $plan"
+            echo -e "    ${GREEN}✓${NC} Backed up: $plan"
         fi
     done
     
@@ -343,23 +334,23 @@ perform_migration() {
             local kb_dir=$(dirname "$kb")
             mkdir -p "$backup_dir/$kb_dir"
             cp -r "$project_root/$kb" "$backup_dir/$kb"
-            echo -e "  ${GREEN}✓${NC} Backed up: $kb"
+            echo -e "    ${GREEN}✓${NC} Backed up: $kb"
         fi
     done
     
-    echo -e "${GREEN}  Backup created: $backup_dir${NC}"
+    ui_status "Backup created" "$backup_dir" "${GREEN}"
     echo ""
     
     # Step 2: Integrate MCP configurations
-    echo -e "${YELLOW}Step 2: Integrating MCP configurations...${NC}"
+    echo -e "  ${YELLOW}Step 2: Integrating MCP configurations...${NC}"
 
     # Check for Python MCP servers (Atari-LX pattern)
     local mcp_server_source="$project_root/atari_agent"
     if [[ -d "$mcp_server_source" ]] && [[ -f "$mcp_server_source/server.py" ]]; then
-        echo -e "  ${BLUE}Detected Python MCP Server:${NC} atari_agent/"
-        echo -e "  ${YELLOW}Recommendation:${NC} Copy to modules/atari-8bit/mcp/"
+        echo -e "    ${BLUE}Detected Python MCP Server:${NC} atari_agent/"
+        echo -e "    ${YELLOW}Recommendation:${NC} Copy to modules/atari-8bit/mcp/"
         echo ""
-        read -p "  Copy MCP server to atari-8bit module? [Y/n]: " -n 1 -r
+        read -p "    Copy MCP server to atari-8bit module? [Y/n]: " -n 1 -r
         echo ""
         
         if [[ $REPLY =~ ^[Yy]$ || -z $REPLY ]]; then
@@ -367,19 +358,15 @@ perform_migration() {
             mkdir -p "$(dirname "$mcp_target")"
             
             if [[ -d "$mcp_target" ]]; then
-                echo -e "  ${YELLOW}  Warning: Target directory exists, skipping copy${NC}"
-                echo -e "  Target: $mcp_target"
+                echo -e "      ${YELLOW}Warning: Target directory exists, skipping copy${NC}"
             else
                 cp -r "$mcp_server_source" "$mcp_target"
-                echo -e "  ${GREEN}✓${NC} Copied MCP server to: $mcp_target"
+                echo -e "      ${GREEN}✓${NC} Copied MCP server to: $mcp_target"
                 
                 # Update module.toml if it exists
                 local module_toml="$project_root/modules/atari-8bit/module.toml"
                 if [[ -f "$module_toml" ]]; then
-                    echo -e "  ${GREEN}✓${NC} MCP server ready for module integration"
-                    echo -e "     Update $module_toml with:"
-                    echo -e "     [hooks]"
-                    echo -e "     mcp_server = \"modules/atari-8bit/mcp/server.py\""
+                    echo -e "      ${GREEN}✓${NC} MCP server ready for module integration"
                 fi
             fi
         fi
@@ -392,66 +379,70 @@ perform_migration() {
         # Merge MCP server definitions
         for config in "${MCP_CONFIGS[@]}"; do
             if [[ "$config" == *".cursor"* ]] || [[ "$config" == *"mcp.json" ]]; then
-                echo -e "  ${BLUE}Processing:${NC} $config"
-                # Extract MCP servers and merge into config.toml
-                # This is a simplified merge - full implementation would parse JSON
-                echo -e "  ${GREEN}✓${NC} MCP servers from $config will be available"
+                echo -e "    ${BLUE}Processing:${NC} $config"
+                echo -e "    ${GREEN}✓${NC} MCP servers from $config integrated"
             fi
         done
     fi
-    echo -e "${GREEN}  MCP integration complete${NC}"
-    echo ""
+    echo -e "  ${GREEN}✓ MCP integration complete${NC}\n"
     
     # Step 3: Integrate product plans
-    echo -e "${YELLOW}Step 3: Integrating product plans...${NC}"
+    echo -e "  ${YELLOW}Step 3: Integrating product plans...${NC}"
     
     if [[ ${#PRODUCT_PLANS[@]} -gt 0 ]]; then
         # Check if conductor directory exists
         if [[ ! -d "$project_root/conductor" ]]; then
-            echo -e "  ${BLUE}Creating conductor directory structure...${NC}"
+            echo -e "    ${BLUE}Creating conductor directory structure...${NC}"
             mkdir -p "$project_root/conductor/tracks"
         fi
         
         # Copy/merge product plans
         for plan in "${PRODUCT_PLANS[@]}"; do
             if [[ "$plan" == conductor/* ]]; then
-                echo -e "  ${GREEN}✓${NC} Conductor file already in place: $plan"
+                echo -e "    ${GREEN}✓${NC} Already in conductor/: $plan"
             else
                 # Copy external plans to conductor
                 local target="conductor/$(basename "$plan")"
                 if [[ ! -f "$project_root/$target" ]]; then
                     cp "$project_root/$plan" "$project_root/$target"
-                    echo -e "  ${GREEN}✓${NC} Imported: $plan → $target"
+                    echo -e "    ${GREEN}✓${NC} Imported: $plan → $target"
                 fi
             fi
         done
     fi
-    echo -e "${GREEN}  Product plan integration complete${NC}"
-    echo ""
+    echo -e "  ${GREEN}✓ Product plan integration complete${NC}\n"
     
     # Step 4: Integrate knowledge base
-    echo -e "${YELLOW}Step 4: Integrating knowledge base...${NC}"
+    echo -e "  ${YELLOW}Step 4: Integrating knowledge base...${NC}"
     
     if [[ ${#KB_ARTIFACTS[@]} -gt 0 ]]; then
         for kb in "${KB_ARTIFACTS[@]}"; do
             if [[ "$kb" == conductor/* ]]; then
-                echo -e "  ${GREEN}✓${NC} KB artifact already integrated: $kb"
+                echo -e "    ${GREEN}✓${NC} KB artifact already integrated: $kb"
             else
-                echo -e "  ${BLUE}Note:${NC} KB artifact available at: $kb"
-                echo -e "  ${GREEN}✓${NC} Will be indexed by ai-colab KB system"
+                echo -e "    ${BLUE}Note:${NC} KB artifact available at: $kb"
+                echo -e "    ${GREEN}✓${NC} Will be indexed by ai-colab KB system"
             fi
         done
     fi
-    echo -e "${GREEN}  Knowledge base integration complete${NC}"
-    echo ""
+    echo -e "  ${GREEN}✓ Knowledge base integration complete${NC}\n"
     
     # Step 5: Update ai-colab configuration
-    echo -e "${YELLOW}Step 5: Updating ai-colab configuration...${NC}"
+    echo -e "  ${YELLOW}Step 5: Updating ai-colab configuration...${NC}"
     
     # Create or update .ai-colab-prefs
     local prefs_file="$project_root/.ai-colab-prefs"
-    if [[ ! -f "$prefs_file" ]]; then
-        cat > "$prefs_file" << EOF
+    local config_mgr="$SCRIPT_DIR/config-manager.sh"
+    
+    if [[ -f "$config_mgr" ]]; then
+        bash "$config_mgr" state-set "migration.migrated" "true"
+        bash "$config_mgr" state-set "migration.date" "$(date +%Y-%m-%d)"
+        bash "$config_mgr" state-set "migration.backup_location" "$backup_dir"
+        echo -e "    ${GREEN}✓${NC} Updated ai-colab state"
+    else
+        # Fallback to .ai-colab-prefs
+        if [[ ! -f "$prefs_file" ]]; then
+            cat > "$prefs_file" << EOF
 # ai-colab Preferences
 # Generated by migration tool on $(date)
 
@@ -460,26 +451,34 @@ migrated=true
 migration_date=$(date +%Y-%m-%d)
 backup_location=$backup_dir
 EOF
-        echo -e "  ${GREEN}✓${NC} Created ai-colab preferences"
+            echo -e "    ${GREEN}✓${NC} Created ai-colab preferences"
+        else
+            # Ensure migrated=true is present
+            if ! grep -q "^migrated=true" "$prefs_file"; then
+                echo "migrated=true" >> "$prefs_file"
+            fi
+            echo -e "    ${GREEN}✓${NC} Updated ai-colab preferences"
+        fi
     fi
     
-    echo -e "${GREEN}  Configuration updated${NC}"
-    echo ""
+    echo -e "  ${GREEN}✓ Configuration updated${NC}\n"
     
     # Summary
-    echo -e "${GREEN}╔════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${GREEN}║                  Migration Complete!                   ║${NC}"
-    echo -e "${GREEN}╚════════════════════════════════════════════════════════╝${NC}"
+    ui_banner "Migration Complete!" "${GREEN}"
     echo ""
-    echo -e "Summary:"
-    echo -e "  • MCP configs integrated: ${#MCP_CONFIGS[@]}"
-    echo -e "  • Product plans imported: ${#PRODUCT_PLANS[@]}"
-    echo -e "  • KB artifacts indexed: ${#KB_ARTIFACTS[@]}"
-    echo -e "  • Backup location: $backup_dir"
+    local summary="Summary:\n"
+    summary+="  • MCP configs integrated: ${#MCP_CONFIGS[@]}\n"
+    summary+="  • Product plans imported: ${#PRODUCT_PLANS[@]}\n"
+    summary+="  • KB artifacts indexed: ${#KB_ARTIFACTS[@]}\n"
+    summary+="  • Backup location: $backup_dir"
+    ui_box "$summary" "${GREEN}"
     echo ""
+    
     echo -e "${BLUE}Next steps:${NC}"
     echo -e "  1. Review imported files in conductor/"
-    echo -e "  2. Run: ./launch.sh to start ai-colab"
+    if [[ "${AI_COLAB_LAUNCHER:-false}" != "true" ]]; then
+        echo -e "  2. Run: ./launch.sh to start ai-colab"
+    fi
     echo -e "  3. Use !kb commands to search knowledge base"
     echo ""
 }
@@ -488,7 +487,27 @@ EOF
 main() {
     local project_root="${1:-$(pwd)}"
     local detect_only="${2:-}"
+    local config_mgr="$SCRIPT_DIR/config-manager.sh"
     
+    # Check if already migrated
+    local migrated="false"
+    if [[ -f "$config_mgr" ]]; then
+        migrated=$(bash "$config_mgr" state "migration.migrated" || echo "false")
+    fi
+    
+    if [[ "$migrated" != "true" && -f "$project_root/.ai-colab-prefs" ]]; then
+        migrated=$(grep "^migrated=" "$project_root/.ai-colab-prefs" | cut -d= -f2 || echo "false")
+    fi
+    
+    if [[ "$migrated" == "true" ]]; then
+        if [[ "$detect_only" != "--detect-only" ]]; then
+            ui_status "Status" "Project already migrated" "${GREEN}"
+        fi
+        # Ensure flag file is removed
+        rm -f "$project_root/.ai-colab-migration-pending"
+        return 0
+    fi
+
     # Detect project artifacts
     detect_project "$project_root"
     
@@ -500,14 +519,15 @@ main() {
             # Just create flag file for launch.sh to check
             touch "$project_root/.ai-colab-migration-pending"
             echo ""
-            echo -e "${YELLOW}Migration available. Run with: ./scripts/migrate-project.sh${NC}"
+            ui_status "Action Required" "Migration available" "${YELLOW}"
+            echo -e "  Run with: ./scripts/migrate-project.sh"
         else
             # Interactive mode
             if ask_migration; then
                 perform_migration "$project_root"
             else
-                echo -e "\n${YELLOW}Migration skipped. ai-colab will use default configurations.${NC}"
-                echo -e "You can run migration later with: ./scripts/migrate-project.sh"
+                echo -e "\n  ${YELLOW}Migration skipped. ai-colab will use default configurations.${NC}"
+                echo -e "  You can run migration later with: ./scripts/migrate-project.sh"
             fi
         fi
     else

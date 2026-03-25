@@ -26,9 +26,7 @@ NC='\033[0m'
 
 draw_header() {
     clear
-    echo -e "${BLUE}╔══════════════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║          ai-colab Installation Wizard        ║${NC}"
-    echo -e "${BLUE}╚══════════════════════════════════════════════╝${NC}"
+    ui_banner "ai-colab Installation Wizard" "${BLUE}"
     echo ""
 }
 
@@ -36,8 +34,7 @@ draw_step() {
     local step_num="$1"
     local total_steps="$2"
     local title="$3"
-    echo -e "${CYAN}Step $step_num of $total_steps: $title${NC}"
-    echo -e "${CYAN}------------------------------------------------${NC}"
+    ui_title "Step $step_num of $total_steps: $title" "${CYAN}"
 }
 
 # ============================================
@@ -49,17 +46,18 @@ prompt_choice() {
     local options=("${@:2}")
     local choice=""
     
-    echo -e "$prompt"
+    echo -e "  ${BOLD}$prompt${NC}"
     for i in "${!options[@]}"; do
-        echo -e "  $((i+1))) ${options[$i]}"
+        echo -e "    ${CYAN}$((i+1)))${NC} ${options[$i]}"
     done
+    echo ""
     
     while true; do
-        read -p "Choice [1-${#options[@]}]: " choice
+        read -p "  Choice [1-${#options[@]}]: " choice
         if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le "${#options[@]}" ]; then
             return $((choice - 1))
         fi
-        echo -e "${RED}Invalid choice. Please try again.${NC}"
+        echo -e "  ${RED}Invalid choice. Please try again.${NC}"
     done
 }
 
@@ -186,24 +184,26 @@ step_module_selection() {
 step_review_and_apply() {
     draw_step 5 5 "Review & Apply"
     
-    echo -e "${YELLOW}Configuration Summary:${NC}"
-    echo -e "  Profile: $PROFILE"
-    echo -e "  LLMs:"
-    echo -e "    Gemini:    $([[ $LLM_GEMINI == true ]] && echo -e "${GREEN}Enabled${NC}" || echo -e "${RED}Disabled${NC}")"
-    echo -e "    Qwen:      $([[ $LLM_QWEN == true ]] && echo -e "${GREEN}Enabled${NC}" || echo -e "${RED}Disabled${NC}")"
-    echo -e "    DeepSeek:  $([[ $LLM_DEEPSEEK == true ]] && echo -e "${GREEN}Enabled${NC}" || echo -e "${RED}Disabled${NC}")"
-    echo -e "    Claude:    $([[ $LLM_CLAUDE == true ]] && echo -e "${GREEN}Enabled${NC}" || echo -e "${RED}Disabled${NC}")"
-    echo -e "    vLLM:      $([[ $LLM_VLLM == true ]] && echo -e "${GREEN}Enabled (Host: $VLLM_HOST)${NC}" || echo -e "${RED}Disabled${NC}")"
-    echo -e "  Backend:     $BACKEND"
-    echo -e "  Modules:"
-    echo -e "    Atari-8bit: $([[ $MOD_ATARI == true ]] && echo -e "${GREEN}Enabled${NC}" || echo -e "${RED}Disabled${NC}")"
-    echo -e "    Chat Bridge: $([[ $MOD_CHAT_BRIDGE == true ]] && echo -e "${GREEN}Enabled${NC}" || echo -e "${RED}Disabled${NC}")"
+    local summary=""
+    summary+="Profile: $PROFILE\n"
+    summary+="Backend: $BACKEND\n"
+    summary+="\nLLMs:\n"
+    summary+="  Gemini:    $([[ $LLM_GEMINI == true ]] && echo -e "${GREEN}Enabled${NC}" || echo -e "${RED}Disabled${NC}")\n"
+    summary+="  Qwen:      $([[ $LLM_QWEN == true ]] && echo -e "${GREEN}Enabled${NC}" || echo -e "${RED}Disabled${NC}")\n"
+    summary+="  DeepSeek:  $([[ $LLM_DEEPSEEK == true ]] && echo -e "${GREEN}Enabled${NC}" || echo -e "${RED}Disabled${NC}")\n"
+    summary+="  Claude:    $([[ $LLM_CLAUDE == true ]] && echo -e "${GREEN}Enabled${NC}" || echo -e "${RED}Disabled${NC}")\n"
+    summary+="  vLLM:      $([[ $LLM_VLLM == true ]] && echo -e "${GREEN}Enabled (Host: $VLLM_HOST)${NC}" || echo -e "${RED}Disabled${NC}")\n"
+    summary+="\nModules:\n"
+    summary+="  Atari-8bit: $([[ $MOD_ATARI == true ]] && echo -e "${GREEN}Enabled${NC}" || echo -e "${RED}Disabled${NC}")\n"
+    summary+="  Chat Bridge: $([[ $MOD_CHAT_BRIDGE == true ]] && echo -e "${GREEN}Enabled${NC}" || echo -e "${RED}Disabled${NC}")"
+    
+    ui_box "$summary" "${BLUE}"
     echo ""
     
     if prompt_yes_no "Apply this configuration?" "y"; then
         apply_config
     else
-        echo -e "${YELLOW}Installation cancelled. No changes were made.${NC}"
+        echo -e "  ${YELLOW}Installation cancelled. No changes were made.${NC}"
         exit 0
     fi
 }
