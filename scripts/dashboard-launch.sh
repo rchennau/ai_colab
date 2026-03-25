@@ -291,7 +291,7 @@ create_dashboard() {
     # Configure tmux
     tmux set-option -g mouse on
     tmux set-option -g pane-border-status top
-    tmux set-option -g pane-border-format "#{?pane_active,#[reverse],} #P #[default] [#{@agent_name}] #{=20:pane_title} "
+    tmux set-option -g pane-border-format "#P: #{pane_title}"
     tmux set-option -g allow-rename off
 
     # Step 3: Setup pane list for Right Column
@@ -542,7 +542,7 @@ main() {
     WITH_CLAUDE=false
     WITH_NEMO=false
     WITH_NEMOCLAW=false
-    WITH_CONDUCTOR=false
+    WITH_CONDUCTOR=true   # Conductor is now recommended for project management
     WITH_BRIDGE=false
     WITH_CONSOLE=true
 

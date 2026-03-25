@@ -180,7 +180,7 @@ ui_status "Current Backend" "$LAST_BACKEND" "${GREEN}"
 
 read -p "  Configure Remote Compute Backend? [y/N]: " -n 1 -r; echo ""
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    echo -e "  ${CYAN}1)${NC} NVIDIA NIM (Cloud-hosted nemoclaw - Recommended)"
+    echo -e "  ${CYAN}1)${NC} NVIDIA NIM (Hosted nemoclaw spoke - Recommended)"
     echo -e "  ${CYAN}2)${NC} Remote vLLM (Private network GPU server)"
     echo -e "  ${CYAN}3)${NC} RunPod (On-demand cloud GPU)"
     echo -e "  ${CYAN}4)${NC} Local Server (Use only if you have local GPU)"
