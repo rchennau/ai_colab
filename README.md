@@ -121,7 +121,9 @@ Full support for WSL2 with Windows Terminal optimizations.
 
 | Script | Purpose |
 |--------|---------|
-| `./install.sh` | Master installer with `--wizard`, `--reconfigure`, and `--guide` |
+| `./install.sh` | Master installer with `--wizard`, `--reconfigure`, and `--auto` modes |
+| `./install.sh --wizard` | Interactive CLI installation wizard (5-step guided setup) |
+| `./install.sh --reconfigure` | Modify existing installation without reinstalling |
 | `./launch.sh` | Unified launcher with interactive module and agent selection |
 | `scripts/config-manager.sh` | Central configuration management and schema validation |
 | `scripts/install-wizard.sh` | Interactive terminal-based configuration wizard |
@@ -129,10 +131,11 @@ Full support for WSL2 with Windows Terminal optimizations.
 | `scripts/conductor-workflow.sh`| The orchestration heart (Git, KB, Tasking) |
 | `scripts/hcom-test-runner.sh` | Unified test execution and blackboard reporting |
 | `scripts/hcom-kb-index.sh` | Generates the semantic project map for `!kb` |
-| `scripts/conductor-dashboard.sh`| Renders the high-density terminal dashboard |
-| `webui/app.py` | Flask-based Web UI and API backend |
-| `tests/test_config_manager.sh` | Automated validation of the configuration system |
-| `tests/test_install_wizard.sh` | Integration tests for the installer and CLI experience |
+| `scripts/conductor-dashboard.sh`| Renders the high-density terminal dashboard (v2.4) |
+| `scripts/dashboard-launch.sh` | Enhanced dashboard launcher with pre-flight checks |
+| `webui/app.py` | Flask-based Web UI and API backend (v2.0) |
+| `tests/test_webui.sh` | Automated Web UI test suite (8 tests) |
+| `scripts/webui-test-watch.sh` | Local file watcher for automated testing |
 
 ---
 
@@ -140,15 +143,69 @@ Full support for WSL2 with Windows Terminal optimizations.
 
 ai-colab includes a comprehensive Web UI for browser-based management:
 
-- **Setup Wizard**: Interactive configuration via browser
-- **Dashboard**: Real-time system status and agent monitoring
+### Features
+- **Setup Wizard**: Interactive 5-step configuration via browser
+- **Dashboard**: Real-time system status with health monitoring
+- **Pre-flight Checks**: System readiness verification
+- **Session Management**: View and recover tmux sessions
+- **Agent Monitoring**: Real-time agent list from hcom
 - **Configuration Editor**: Visual config management with validation
 - **Logs Viewer**: Real-time log streaming and filtering
-- **Agent Management**: Start, stop, and monitor agents
+
+### Quick Start
+```bash
+# Docker deployment
+docker-compose up -d
+
+# Access at
+http://localhost:8080
+```
+
+### New API Endpoints (v2.0)
+- `GET /health` - Enhanced health with tmux/hcom/disk checks
+- `GET /api/preflight` - Pre-flight checks (mirrors CLI)
+- `GET /api/session/status` - tmux session monitoring
+- `POST /api/session/recover` - Session recovery
+- `GET /api/agents` - Real-time agent list
+- `POST /api/dashboard/launch` - Launch dashboard from browser
 
 **Access**: http://localhost:8080 (when running via Docker)
 
-📖 **Guide:** See [`docs/WEBUI_GUIDE.md`](docs/WEBUI_GUIDE.md)
+📖 **Guide:** See [`docs/WEBUI_GUIDE.md`](docs/WEBUI_GUIDE.md)  
+📖 **Testing:** See [`docs/AUTOMATED_WEBUI_TESTING.md`](docs/AUTOMATED_WEBUI_TESTING.md)
+
+---
+
+## 🧪 Automated Testing
+
+### Web UI Test Suite
+- **8 automated tests** covering all API endpoints
+- **GitHub Actions** CI/CD integration
+- **Local file watcher** for real-time feedback during development
+- **Test status badges** for visibility
+
+### Run Tests
+```bash
+# Manual test run
+./tests/test_webui.sh
+
+# Start file watcher (auto-runs on changes)
+./scripts/webui-test-watch.sh
+```
+
+### Test Coverage
+- ✅ Health endpoint with system checks
+- ✅ Pre-flight checks API
+- ✅ Session status monitoring
+- ✅ Agent list from hcom
+- ✅ Configuration management
+- ✅ System status endpoint
+- ✅ Dashboard launch endpoint
+- ✅ Frontend HTML verification
+
+**Status:** 8/8 tests passing ✅
+
+---
 
 ## 📋 Best Practices
 

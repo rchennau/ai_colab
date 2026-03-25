@@ -14,8 +14,9 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 - [x] **Milestone 8: Hardware Visualization & Performance Dashboards** (Done ✅)
 - [x] **Milestone 9: Dynamic Plugin System & Fleet Orchestration** (Done ✅)
 - [x] **Milestone 10: Multi-Backend Compute & CI/CD Automation** (Done ✅)
-- [ ] **Milestone 11: Enhanced Installation & Launch Experience** (Active 🚀)
-- [ ] **Milestone 12: NeMo-Claude (nemoclaw) NVIDIA Integration** (Active 🚀)
+- [x] **Milestone 11: Enhanced Installation & Launch Experience** (Done ✅)
+- [x] **Milestone 12: NeMo-Claude (nemoclaw) NVIDIA Integration** (Done ✅)
+- [ ] **Milestone 13: Native IDE Integration & Fleet Autonomy** (Planning ⚪)
 
 ---
 
@@ -130,10 +131,13 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
     - [x] Create `system-prompts/nemoclaw.md`.
     - [x] Add verification check in `scripts/cicd-deploy-nvidia.sh`.
 
-  - [ ] **Track: Specialized NeMo Module** (Active 🚀)
+  - [x] **Track: Specialized NeMo Module** (Done ✅)
     - **Assigned:** @conductor
     - **Description:** Create a modular addon for `nemoclaw` with specialized architectural review commands and latency monitoring.
     - [x] Architectural Review: COMPLETED (March 24, 2026)
+    - [x] Implement `!nemo-status` (latency/health monitoring).
+    - [x] Implement `!nemo-review` (architectural review trigger).
+    - [x] Dashboard TUI integration.
 
   - [x] **Track: Enhanced Installation & Launch Experience** (Done ✅)
     *Link: [./tracks/enhanced_install_launch_20260324/](./tracks/enhanced_install_launch_20260324/)*

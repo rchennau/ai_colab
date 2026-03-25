@@ -20,3 +20,6 @@ python-dotenv==1.0.0
 
 # Production Server (optional, for deployment)
 gunicorn==21.2.0
+
+# Testing & Development
+watchdog==3.0.0  # File watcher for automated testing
