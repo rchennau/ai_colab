@@ -390,31 +390,44 @@ PYTHON_EOF
 }
 
 # Get state value
-# Usage: get_state <key>
+# Usage: get_state <key> [default]
 get_state() {
     local key="$1"
+    local default="${2:-}"
     
     if [[ ! -f "$STATE_FILE" ]]; then
-        return 1
+        echo "$default"
+        return 0
     fi
     
     if has_command python3; then
         python3 << PYTHON_EOF
 import json
+import sys
 
-with open('$STATE_FILE', 'r') as f:
-    state = json.load(f)
+try:
+    with open('$STATE_FILE', 'r') as f:
+        state = json.load(f)
 
-keys = '$key'.split('.')
-current = state
-for key in keys:
-    if key not in current:
-        print("")
-        exit(1)
-    current = current[key]
-
-print(current if current else "")
+    keys = '$key'.split('.')
+    current = state
+    found = True
+    for key in keys:
+        if isinstance(current, dict) and key in current:
+            current = current[key]
+        else:
+            found = False
+            break
+            
+    if found:
+        print(current if current is not None else "")
+    else:
+        print('$default')
+except Exception:
+    print('$default')
 PYTHON_EOF
+    else
+        echo "$default"
     fi
 }
 

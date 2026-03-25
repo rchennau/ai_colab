@@ -25,7 +25,7 @@ fi
 
 echo "Preparing Plan Sync Bundle..."
 # Get a recent event ID to satisfy bundle requirements
-LAST_EV=$(hcom events --last 1 | grep -oP '"id":\K\d+')
+LAST_EV=$(hcom events --last 1 | sed -n 's/.*"id":[[:space:]]*\([0-9]*\).*/\1/p' || echo "0")
 
 # Broadcast sync message with inline bundle
 hcom send --name "$AGENT_NAME" \

@@ -44,7 +44,7 @@ QUERY="mutation {
 RESPONSE=$(curl -s -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $API_KEY" \
     -d "{\"query\": \"$QUERY\"}" https://api.runpod.io/graphql)
 
-POD_ID=$(echo "$RESPONSE" | grep -oP '"id": "\K[^"]+' | head -n 1 || echo "")
+POD_ID=$(echo "$RESPONSE" | sed -n 's/.*"id":[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1 || echo "")
 
 if [[ -n "$POD_ID" ]]; then
     log_success "Pod deployed! ID: $POD_ID"

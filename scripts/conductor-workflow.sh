@@ -26,7 +26,7 @@ LAST_BROADCAST_PCT=""
 LAST_BROADCAST_TRACK=""
 LAST_BROADCAST_TIME=0
 # Initialize last event ID to avoid processing old messages
-LAST_EVENT_ID=$(hcom events --last 1 | grep -oP '"id":\K\d+' || echo "0")
+LAST_EVENT_ID=$(hcom events --last 1 | sed -n 's/.*"id":[[:space:]]*\([0-9]*\).*/\1/p' || echo "0")
 
 # Agent registration
 export HCOM_NAME="conductor_$(hostname | tr "[:upper:]" "[:lower:]" | tr "." "_")_$$"

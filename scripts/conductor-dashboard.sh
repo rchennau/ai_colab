@@ -32,11 +32,11 @@ render_progress() {
 render_modular_sections() {
     local sections_json=$(python3 "$SCRIPT_DIR/module-manager.py" sections "$PROJECT_ROOT")
     
-    # Simple extraction of sections from JSON list
-    echo "$sections_json" | grep -oP '\{"name": "[^"]+", "type": "[^"]+", "source": "[^"]+"\}' | while read -r section; do
-        local name=$(echo "$section" | grep -oP '"name": "\K[^"]+')
-        local stype=$(echo "$section" | grep -oP '"type": "\K[^"]+')
-        local source=$(echo "$section" | grep -oP '"source": "\K[^"]+')
+    # Use python3 for portable and safe JSON iteration
+    echo "$sections_json" | python3 -c 'import json, sys; [print(f"{s[\"name\"]}|{s[\"type\"]}|{s[\"source\"]}") for s in json.load(sys.stdin)]' 2>/dev/null | while read -r section; do
+        local name=$(echo "$section" | cut -d'|' -f1)
+        local stype=$(echo "$section" | cut -d'|' -f2)
+        local source=$(echo "$section" | cut -d'|' -f3)
         
         echo -e "\n${YELLOW}--- $name ---${NC}"
         if [[ "$stype" == "sql" ]]; then

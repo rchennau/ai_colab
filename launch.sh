@@ -131,9 +131,10 @@ esac
 # 3. Module Selection
 ui_title "Module Addons" "${BLUE}"
 MODULES_JSON=$(python3 "$SCRIPT_DIR/scripts/module-manager.py" list "$PROJECT_ROOT")
-# Simple extraction of IDs and Names from JSON
-MOD_IDS=$(echo "$MODULES_JSON" | grep -oP '"id": "\K[^"]+' || echo "")
-MOD_NAMES=$(echo "$MODULES_JSON" | grep -oP '"name": "\K[^"]+' || echo "")
+
+# Use python3 for portable JSON extraction
+MOD_IDS=$(echo "$MODULES_JSON" | python3 -c 'import json, sys; print("\n".join([m["id"] for m in json.load(sys.stdin)]))' 2>/dev/null || echo "")
+MOD_NAMES=$(echo "$MODULES_JSON" | python3 -c 'import json, sys; print("\n".join([m["name"] for m in json.load(sys.stdin)]))' 2>/dev/null || echo "")
 
 # Iterate and ask
 IFS=$'\n'
