@@ -9,6 +9,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/utils.sh"
 
+# Ensure PROJECT_ROOT is set for pre-flight checks and components
+export PROJECT_ROOT="${PROJECT_ROOT:-$(detect_project_root 2>/dev/null || echo "$PWD")}"
+
 SESSION="hcom-dashboard"
 SESSION_LOCK="/tmp/hcom-dashboard.lock"
 
@@ -578,8 +581,11 @@ main() {
     done
 
     check_prereqs
-    reconnect
-    create_dashboard
+    
+    # Reconnect to existing session if possible. If not, create a new one.
+    # Note: reconnect will 'exit 0' if it successfully attaches.
+    reconnect || create_dashboard
+    
     attach
 }
 

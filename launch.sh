@@ -58,6 +58,7 @@ fi
 
 # 1. Project Detection
 PROJECT_ROOT=$(detect_project_root 2>/dev/null || echo "$SCRIPT_DIR")
+export PROJECT_ROOT
 ui_status "Project Root" "$PROJECT_ROOT" "${GREEN}"
 
 # 1.1 Project Artifact Detection & Migration
