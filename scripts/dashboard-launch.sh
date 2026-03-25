@@ -26,8 +26,8 @@ MIN_TERMINAL_HEIGHT=24
 AGENT_STARTUP_DELAY=2
 MAX_AGENT_RESTARTS=3
 
-# Counters for agent health
-declare -A AGENT_RESTART_COUNT
+# Counters for agent health (Placeholder for future health monitoring enhancements)
+# MAX_AGENT_RESTARTS is defined above but automated restart logic is handled by hcom directly.
 
 print_info() { echo -e "${BLUE}ℹ${NC} $1"; }
 print_success() { echo -e "${GREEN}✓${NC} $1"; }
@@ -207,12 +207,8 @@ start_agent_with_monitoring() {
     local agent_name="$2"
     local cmd="$3"
     local title="$4"
-    
-    # Initialize restart counter
-    AGENT_RESTART_COUNT["$pane_id"]=0
-    
-    # Send the command
-    tmux send-keys -t "$pane_id" "export HCOM_NAME=$agent_name && $cmd" C-m
+
+    # Send the command    tmux send-keys -t "$pane_id" "export HCOM_NAME=$agent_name && $cmd" C-m
     
     # Set pane title
     tmux select-pane -t "$pane_id" -T "$title"
