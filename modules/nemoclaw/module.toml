@@ -1,6 +1,6 @@
 [module]
 id = "nemoclaw"
-name = "NeMo-Claude Architect"
+name = "nemoclaw NVIDIA Architect"
 description = "High-power architectural reasoning via NVIDIA NIM API."
 version = "1.0.0"
 

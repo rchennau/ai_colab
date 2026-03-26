@@ -136,7 +136,7 @@ Full support for WSL2 with Windows Terminal optimizations.
 | `scripts/hcom-test-runner.sh` | Unified test execution and blackboard reporting |
 | `scripts/hcom-kb-index.sh` | Generates the semantic project map for `!kb` |
 | `scripts/conductor-dashboard.sh`| Renders the high-density terminal dashboard (v2.4) |
-| `scripts/dashboard-launch.sh` | Enhanced dashboard launcher with pre-flight checks |
+| `scripts/dashboard-launch.sh` | Enhanced dashboard launcher (v2.4) with pre-flight checks and cross-version tmux compatibility |
 | `webui/app.py` | Flask-based Web UI and API backend (v2.0) |
 | `tests/test_webui.sh` | Automated Web UI test suite (8 tests) |
 | `scripts/webui-test-watch.sh` | Local file watcher for automated testing |

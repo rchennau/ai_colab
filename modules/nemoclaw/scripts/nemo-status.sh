@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# NeMo-Claude Health Check
+# nemoclaw (NVIDIA NIM) Health Check
 # Verifies NVIDIA NIM API connectivity and model availability.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

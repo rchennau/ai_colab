@@ -1,4 +1,4 @@
-# Milestone 11: NeMo-Claude (nemoclaw) NVIDIA Integration & Spoke Ecosystem
+# Milestone 12: NVIDIA NIM nemoclaw NVIDIA Integration & Spoke Ecosystem
 
 ## Objective
 To establish a high-power "Architectural Spoke" by fully integrating NVIDIA's NIM API for the `nemoclaw` agent and creating a modular plugin system for specialized architectural tasks.
@@ -24,7 +24,7 @@ To establish a high-power "Architectural Spoke" by fully integrating NVIDIA's NI
 - [x] Integration scripts developed and verified.
 - [x] Specialized module initialized and registered.
 - [x] Dashboard support for `nemoclaw` active.
-- [x] Milestone 11 core tracks live in `conductor/tracks.md`.
+- [x] Milestone 12 core tracks live in `conductor/tracks.md`.
 
 ---
-*End of Milestone 11 Plan Report.*
+*End of Milestone 12 Plan Report.*

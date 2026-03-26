@@ -145,6 +145,21 @@ NAMES_ARR=($MOD_NAMES)
 if [ ${#IDS_ARR[@]} -eq 0 ]; then
     echo -e "  ${YELLOW}(No additional modules found)${NC}"
 else
+    # List current configuration
+    echo -e "  ${BLUE}Current Addons:${NC}"
+    ANY_ENABLED=false
+    for i in "${!IDS_ARR[@]}"; do
+        ID="${IDS_ARR[$i]}"
+        NAME="${NAMES_ARR[$i]}"
+        PREF_KEY="MODULE_$(echo "$ID" | tr '-' '_' | tr '[:lower:]' '[:upper:]')"
+        if [[ "$(load_pref "$PREF_KEY" "false")" == "true" ]]; then
+            echo -e "    ${GREEN}• $NAME ($ID)${NC}"
+            ANY_ENABLED=true
+        fi
+    done
+    [[ "$ANY_ENABLED" == "false" ]] && echo -e "    ${YELLOW}(None enabled)${NC}"
+    echo ""
+
     read -p "  Reconfigure Module Addons? [y/N]: " -n 1 -r; echo ""
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         for i in "${!IDS_ARR[@]}"; do
@@ -208,6 +223,16 @@ if [ "$DASHBOARD" = true ]; then
 Spoke agents will use the $COMPUTE_BACKEND backend." "${BLUE}"
     echo ""
 
+    # List current configuration
+    echo -e "  ${BLUE}Current Fleet:${NC}"
+    [[ $(load_pref "llm.qwen.enabled" "true") == "true" ]] && echo -e "    ${GREEN}• Qwen${NC}"
+    [[ $(load_pref "llm.gemini.enabled" "true") == "true" ]] && echo -e "    ${GREEN}• Gemini${NC}"
+    [[ $(load_pref "llm.nemoclaw.enabled" "false") == "true" && "$COMPUTE_BACKEND" == "nvidia" ]] && echo -e "    ${GREEN}• NVIDIA nemoclaw${NC}"
+    [[ $(load_pref "llm.vllm.enabled" "false") == "true" && ("$COMPUTE_BACKEND" == "vllm-remote" || "$COMPUTE_BACKEND" == "local") ]] && echo -e "    ${GREEN}• vLLM Spoke (${YELLOW}$(load_pref "llm.vllm.host" "192.168.0.193")${NC})"
+    [[ $(load_pref "llm.claude.enabled" "false") == "true" ]] && echo -e "    ${GREEN}• Anthropic Claude${NC}"
+    [[ $(load_pref "llm.deepseek.enabled" "false") == "true" ]] && echo -e "    ${GREEN}• DeepSeek${NC}"
+    echo ""
+
     read -p "  Reconfigure Collaboration Fleet? [y/N]: " -n 1 -r; echo ""
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         # Qwen
@@ -230,11 +255,11 @@ Spoke agents will use the $COMPUTE_BACKEND backend." "${BLUE}"
             save_pref "llm.gemini.enabled" "false"
         fi
 
-        # Spoke Agent: nemoclaw (NVIDIA NIM)
+        # Spoke Agent: NVIDIA nemoclaw (NIM)
         if [ "$COMPUTE_BACKEND" == "nvidia" ]; then
             DEFAULT_NEMOCLAW=$(load_pref "llm.nemoclaw.enabled" "true")
             PROMPT_NEMOCLAW=$([[ "$DEFAULT_NEMOCLAW" == "true" ]] && echo "Y/n" || echo "y/N")
-            read -p "  Include nemoclaw (NVIDIA NIM)? [$PROMPT_NEMOCLAW]: " -n 1 -r; echo ""
+            read -p "  Include NVIDIA nemoclaw (NIM Architect)? [$PROMPT_NEMOCLAW]: " -n 1 -r; echo ""
             if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_NEMOCLAW" == "true" ]]); then
                 save_pref "llm.nemoclaw.enabled" "true"
             else
@@ -258,10 +283,10 @@ Spoke agents will use the $COMPUTE_BACKEND backend." "${BLUE}"
             fi
         fi
 
-        # Claude
+        # Anthropic Claude
         DEFAULT_CLAUDE=$(load_pref "llm.claude.enabled" "false")
         PROMPT_CLAUDE=$([[ "$DEFAULT_CLAUDE" == "true" ]] && echo "Y/n" || echo "y/N")
-        read -p "  Include Claude? [$PROMPT_CLAUDE]: " -n 1 -r; echo ""
+        read -p "  Include Anthropic Claude? [$PROMPT_CLAUDE]: " -n 1 -r; echo ""
         if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_CLAUDE" == "true" ]]); then
             save_pref "llm.claude.enabled" "true"
         else
@@ -282,6 +307,7 @@ Spoke agents will use the $COMPUTE_BACKEND backend." "${BLUE}"
     # Set DASHBOARD_FLAGS based on finalized preferences
     [[ $(load_pref "llm.qwen.enabled" "true") == "false" ]] && DASHBOARD_FLAGS+=" --no-qwen"
     [[ $(load_pref "llm.gemini.enabled" "true") == "false" ]] && DASHBOARD_FLAGS+=" --no-gemini"
+    [[ $(load_pref "llm.vllm.enabled" "false") == "false" ]] && DASHBOARD_FLAGS+=" --no-vllm"
 
     if [[ $(load_pref "llm.nemoclaw.enabled" "false") == "true" && "$COMPUTE_BACKEND" == "nvidia" ]]; then
         DASHBOARD_FLAGS+=" --add-nemoclaw"

@@ -218,17 +218,17 @@ main() {
     local tests_failed=0
     
     # Run tests
-    test_tmux_version && ((tests_passed++)) || ((tests_failed++))
-    test_dashboard_syntax && ((tests_passed++)) || ((tests_failed++))
-    test_vllm_default && ((tests_passed++)) || ((tests_failed++))
-    test_tmux_syntax && ((tests_passed++)) || ((tests_failed++))
-    test_console_init && ((tests_passed++)) || ((tests_failed++))
-    test_launch_vllm_flag && ((tests_passed++)) || ((tests_failed++))
-    test_preflight_checks && ((tests_passed++)) || ((tests_failed++))
-    test_session_recovery && ((tests_passed++)) || ((tests_failed++))
-    test_agent_health && ((tests_passed++)) || ((tests_failed++))
-    test_version_update && ((tests_passed++)) || ((tests_failed++))
-    cleanup_test_session && ((tests_passed++)) || ((tests_failed++))
+    test_tmux_version && ((++tests_passed)) || ((++tests_failed))
+    test_dashboard_syntax && ((++tests_passed)) || ((++tests_failed))
+    test_vllm_default && ((++tests_passed)) || ((++tests_failed))
+    test_tmux_syntax && ((++tests_passed)) || ((++tests_failed))
+    test_console_init && ((++tests_passed)) || ((++tests_failed))
+    test_launch_vllm_flag && ((++tests_passed)) || ((++tests_failed))
+    test_preflight_checks && ((++tests_passed)) || ((++tests_failed))
+    test_session_recovery && ((++tests_passed)) || ((++tests_failed))
+    test_agent_health && ((++tests_passed)) || ((++tests_failed))
+    test_version_update && ((++tests_passed)) || ((++tests_failed))
+    cleanup_test_session && ((++tests_passed)) || ((++tests_failed))
     
     # Summary
     echo -e "\n${BLUE}══════════════════════════════════════════════════════${NC}"

@@ -81,8 +81,18 @@ You can modify your setup at any time by running:
 ```
 *Or by visiting the **Settings** page in the Web UI.*
 
-### Unified Configuration
-All settings are stored in `config/config.toml` and validated against `config/config.schema.json`. You can manually inspect these files, but we recommend using the configuration tools to avoid errors.
+### Dashboard Stability (v2.4)
+The ai-colab dashboard has been optimized for **tmux 2.0+** and includes several stability enhancements:
+-   **Cross-Version Compatibility:** Removed incompatible `-P` and `-F` flags from `tmux split-window` to ensure reliable operation on all systems.
+-   **Pre-flight Checks:** Automated system readiness verification before launch.
+-   **Session Recovery:** Automatic cleanup and recovery from crashed sessions.
+-   **Health Monitoring:** Real-time agent status tracking with automatic restarts.
+
+If you encounter issues launching the dashboard, we recommend verifying your tmux version:
+```bash
+tmux -V
+```
+*Note: Most modern Linux distributions and macOS (via Homebrew) provide tmux 3.0+, which is fully supported.*
 
 ### Compute Backends
 -   **Local:** Uses local model servers (vLLM or Ollama).

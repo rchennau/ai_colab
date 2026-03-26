@@ -315,15 +315,15 @@ create_dashboard() {
     # 4a. Create Console Pane (Bottom)
     local console_id=""
     if [ "${WITH_CONSOLE:-true}" == "true" ]; then
-        # Use compatible tmux syntax (works with tmux 2.0+)
+        # Split and capture the newly created pane ID
         tmux split-window -v -t "$SESSION:dashboard.0" -l 5 -c "$PWD"
-        console_id=$(tmux display-message -p -t "$SESSION:dashboard.0" "#{pane_id}")
+        console_id=$(tmux display-message -p "#{pane_id}")
     fi
 
     # 4b. Create Right Column
     # Split Pane 0 (HCOM) horizontally to create Right Column
     tmux split-window -h -t "$SESSION:dashboard.0" -c "$PWD"
-    local right_col_id=$(tmux display-message -p -t "$SESSION:dashboard.0" "#{pane_id}")
+    local right_col_id=$(tmux display-message -p "#{pane_id}")
 
     # 4c. Split Right Column for components
     local agent_pane_ids=("$right_col_id")
@@ -331,7 +331,7 @@ create_dashboard() {
         local current_pane_id="$right_col_id"
         for ((i=1; i<num_right_panes; i++)); do
             tmux split-window -v -t "$current_pane_id" -c "$PWD"
-            current_pane_id=$(tmux display-message -p -t "$current_pane_id" "#{pane_id}")
+            current_pane_id=$(tmux display-message -p "#{pane_id}")
             agent_pane_ids+=("$current_pane_id")
             # Balancing space is critical to avoid "no space for new pane"
             tmux select-layout -t "$SESSION:dashboard" tiled >/dev/null 2>&1 || true

@@ -25,4 +25,5 @@
 - [Track: nemoclaw NVIDIA Integration](./tracks/nemoclaw_nvidia_20260324/index.md)
 - [Track: Specialized NeMo Module](./tracks/nemo_module_20260324/index.md)
 - [Milestone 10 Plan](./milestone-10-plan.md)
-- [Milestone 11 Plan](./milestone-11-plan.md)
+- [Milestone 11 Plan](./tracks/enhanced_install_launch_20260324/plan.md)
+- [Milestone 12 Plan](./milestone-12-plan.md)

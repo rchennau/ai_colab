@@ -15,7 +15,7 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 - [x] **Milestone 9: Dynamic Plugin System & Fleet Orchestration** (Done ✅)
 - [x] **Milestone 10: Multi-Backend Compute & CI/CD Automation** (Done ✅)
 - [x] **Milestone 11: Enhanced Installation & Launch Experience** (Done ✅)
-- [x] **Milestone 12: NeMo-Claude (nemoclaw) NVIDIA Integration** (Done ✅)
+- [x] **Milestone 12: NVIDIA NIM nemoclaw Integration** (Done ✅)
 - [ ] **Milestone 13: Native IDE Integration & Fleet Autonomy** (Planning ⚪)
 
 ---
@@ -119,7 +119,7 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 
 - [x] **Track: Autonomous Project Evolution** (Done ✅)
   - [x] **Milestone 11: Enhanced Installation & Launch Experience** (Done ✅)
-  - [x] **Milestone 12: NeMo-Claude (nemoclaw) NVIDIA Integration** (Done ✅)
+  - [x] **Milestone 12: NVIDIA NIM nemoclaw Integration** (Done ✅)
   ---
 
   ## 🏗️ Core Tracks
@@ -150,6 +150,8 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
     - [x] Phase 5: Web UI Frontend
     - [x] Phase 6: Integration & Testing
     - [x] Phase 7: Documentation & Deployment
+    - [x] **Dashboard v2.4:** tmux compatibility, pre-flight checks, session recovery, and health monitoring.
+    - [x] **Bug Fixes:** Resolved tmux -P flag incompatibility and vLLM flag propagation issues.
 ## 🛠️ Infrastructure & Maintenance
 
 - [x] **Project Documentation:** (Done)

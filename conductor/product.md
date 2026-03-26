@@ -71,7 +71,7 @@ The Hub connects to various backends for specialized agent deployment:
     *   Session recovery and health monitoring
     *   **Project Migration Tool:** Automated import of existing AI configurations
     *   **80-Column ANSI UI:** Professional CLI graphics and status reporting
-*   **Phase 12:** NeMo-Claude (nemoclaw) NVIDIA Integration (Done ✅)
+*   **Phase 12:** NVIDIA NIM nemoclaw Integration (Done ✅)
 *   **Phase 13:** Automated Testing & CI/CD Integration (Done ✅)
     *   GitHub Actions workflow for Web UI testing
     *   Local file watcher for automated test execution

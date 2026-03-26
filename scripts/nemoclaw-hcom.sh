@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # nemoclaw Agent Wrapper
-# Connects the NeMo-Claude architect to the hcom hub via NVIDIA NIM API.
+# Connects the nemoclaw architect to the hcom hub via NVIDIA NIM API.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/utils.sh"

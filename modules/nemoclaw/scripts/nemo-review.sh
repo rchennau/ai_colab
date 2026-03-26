@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# NeMo-Claude Architectural Review
+# nemoclaw Architectural Review
 # Requests a high-level review of a project component from the architect.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
