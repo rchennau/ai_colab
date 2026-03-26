@@ -6,14 +6,14 @@
 *   **Documentation as Code:** Keep the `conductor/` directory as the source of truth for project state and tracks.
 
 ## Architectural Principles
-*   **Multi-Agent Modularity:** Design components that can be independently audited or modified by specialized agents (e.g., Qwen for 6502 assembly, DeepSeek for C logic).
+*   **Multi-Agent Modularity:** Design components that can be independently audited or modified by specialized domain experts (e.g., low-level optimization, high-level logic).
 *   **Shared State:** Leverage the `hcom-kv` blackboard for ephemeral project state to minimize file-system contention.
-*   **Hardware Alignment:** Prioritize code that respects Atari 8-bit hardware constraints (memory maps, cycle counts, interrupt safety).
+*   **Hardware Alignment:** Prioritize code that respects platform-specific constraints (memory maps, cycle counts, safety).
 
 ## Development Workflow
-*   **Automated Verification:** Every track should include automated validation steps (e.g., `cc65` compilation checks).
+*   **Automated Verification:** Every track should include automated validation steps.
 *   **Safe Experimentation:** Use the `scripts/` wrappers to ensure consistent agent identity and heartbeat monitoring.
-*   **Collaborative Debates:** Use the `atari-debate.sh` script to resolve architectural disagreements between agents.
+*   **Collaborative Debates:** Use specialized debate scripts to resolve architectural disagreements between agents.
 
 ## User Experience
 *   **Unified Interface:** Maintain the `launch.sh` dashboard as the primary entry point for human oversight.

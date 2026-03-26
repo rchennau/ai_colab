@@ -1,4 +1,4 @@
-# Addon Module: Atari-LX Development
+# Addon Module: Atari-8bit Development
 
 This module provides specialized tools and configurations for **Atari 8-bit Engineering**, featuring deep integration with 6502 assembly development, hardware awareness, and automated performance tracking.
 
@@ -13,14 +13,14 @@ This module provides specialized tools and configurations for **Atari 8-bit Engi
 ## 🚀 Setup
 
 ### 1. Installation
-During the main `ai-colab` installation, choose **Yes** when prompted to install the Atari-LX module.
+During the main `ai-colab` installation, choose **Yes** when prompted to install the Atari-8bit module.
 
 **Dependencies:**
 -   `cc65`: The 6502 C/Assembly toolchain.
 -   `atari800`: For emulator integration and screen capture.
 
 ### 2. Enablement
-When launching the dashboard via `./launch.sh`, choose **Yes** to enable the Atari-LX module. This activates the specialized Conductor commands and TUI sections.
+When launching the dashboard via `./launch.sh`, choose **Yes** to enable the Atari-8bit module. This activates the specialized Conductor commands and TUI sections.
 
 ## 🛠️ Specialized Commands
 
@@ -37,7 +37,7 @@ When launching the dashboard via `./launch.sh`, choose **Yes** to enable the Ata
 When this module is active, agents are pre-configured with the **atari-dev-agent** MCP server. This provides specialized tools for:
 -   `validate_6502_code(code)`: Checks for common assembly errors.
 -   `count_cycles(code)`: Exact cycle timing for scanline optimization.
--   `search_kb(query)`: Search the Atari-LX knowledge base.
+-   `search_kb(query)`: Search the Atari-8bit knowledge base.
 -   `analyze_atari_screen(image_path)`: Visual debugging via OCR/Vision.
 
 ### **Role-Based Intelligence**

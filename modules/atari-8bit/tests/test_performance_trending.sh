@@ -21,7 +21,7 @@ sqlite3 "$HCOM_DB_PATH" "INSERT INTO performance (timestamp, routine, cycles, co
 
 # 2. Test Trending
 echo "Testing trend report..."
-REPORT=$(bash "$SCRIPT_DIR/../modules/atari-lx/scripts/hcom-perf-trend.sh" "test_routine")
+REPORT=$(bash "$SCRIPT_DIR/../modules/atari-8bit/scripts/hcom-perf-trend.sh" "test_routine")
 
 if [[ "$REPORT" == *"Improvement"* ]]; then
     echo "SUCCESS: Trend identified improvement."
@@ -40,7 +40,7 @@ hcom() {
 }
 export -f hcom
 
-REPORT=$(bash "$SCRIPT_DIR/../modules/atari-lx/scripts/hcom-perf-trend.sh" "test_routine")
+REPORT=$(bash "$SCRIPT_DIR/../modules/atari-8bit/scripts/hcom-perf-trend.sh" "test_routine")
 
 if [[ "$REPORT" == *"Regression"* ]]; then
     echo "SUCCESS: Trend identified regression."

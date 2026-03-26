@@ -283,6 +283,9 @@ test_frontend() {
     
     local response=$(curl -s "$BASE_URL/")
     
+    # Temporarily disable pipefail for grep -q to avoid SIGPIPE errors with large HTML
+    set +o pipefail
+    local grep_status=0
     if echo "$response" | grep -q "ai-colab Web UI"; then
         print_success "Frontend HTML served correctly"
         
@@ -300,8 +303,10 @@ test_frontend() {
             echo -e "  ${GREEN}✓${NC} Session check function found"
         fi
         
+        set -o pipefail
         return 0
     else
+        set -o pipefail
         print_failure "Frontend HTML not served correctly"
         return 1
     fi
@@ -328,14 +333,14 @@ main() {
     print_header "Running API Tests"
     
     # Run tests
-    test_health && ((tests_passed++)) || ((tests_failed++))
-    test_preflight && ((tests_passed++)) || ((tests_failed++))
-    test_session_status && ((tests_passed++)) || ((tests_failed++))
-    test_agents && ((tests_passed++)) || ((tests_failed++))
-    test_config && ((tests_passed++)) || ((tests_failed++))
-    test_status && ((tests_passed++)) || ((tests_failed++))
-    test_dashboard_launch && ((tests_passed++)) || ((tests_failed++))
-    test_frontend && ((tests_passed++)) || ((tests_failed++))
+    if test_health; then ((tests_passed++)); else ((tests_failed++)); fi
+    if test_preflight; then ((tests_passed++)); else ((tests_failed++)); fi
+    if test_session_status; then ((tests_passed++)); else ((tests_failed++)); fi
+    if test_agents; then ((tests_passed++)); else ((tests_failed++)); fi
+    if test_config; then ((tests_passed++)); else ((tests_failed++)); fi
+    if test_status; then ((tests_passed++)); else ((tests_failed++)); fi
+    if test_dashboard_launch; then ((tests_passed++)); else ((tests_failed++)); fi
+    if test_frontend; then ((tests_passed++)); else ((tests_failed++)); fi
     
     # Stop server if we started it
     if [[ "$server_started" == true ]]; then

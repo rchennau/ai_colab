@@ -6,11 +6,11 @@ To provide a seamless, multi-agent development environment where human oversight
 ## 'Hub and Spoke' Architecture
 ai-colab follows a modular architecture where the core framework is separated from the intelligence providers:
 - **Orchestration Core (Hub)**: Self-hosted (native or Docker). Handles messaging (hcom), state (Blackboard), tasking (Conductor), and monitoring (Dashboard).
-- **Remote Agents (Spokes)**: High-power agents (like **nemoclaud**) run externally on specialized infrastructure (NVIDIA API, RunPod, etc.) and connect to the Hub via remote CLIs and MCP.
+- **Remote Agents (Spokes)**: High-power agents (like **nemoclaw**) run externally on specialized infrastructure (NVIDIA API, RunPod, etc.) and connect to the Hub via remote CLIs and MCP.
 
 ## Multi-Backend Compute
 The Hub connects to various backends for specialized agent deployment:
-- **NVIDIA NIM API**: Hosted inference for enterprise-grade models like **nemoclaud**.
+- **NVIDIA NIM API**: Hosted inference for enterprise-grade models like **nemoclaw**.
 - **RunPod / AWS / GCP**: Infrastructure for self-hosting specialized agent containers or model pods.
 - **Local Server**: Standard vLLM/Ollama execution for low-latency tasks.
 
@@ -45,7 +45,7 @@ The Hub connects to various backends for specialized agent deployment:
 *   **Enhanced Dashboard (v2.4):** Improved tmux dashboard with pre-flight checks, health monitoring, and better error handling.
 *   **80-Column ANSI UI:** Unified CLI aesthetic with professional ANSI graphics, banners, and status tracking across all core scripts.
 
-### **4. Modular Addons (Atari-LX)**
+### **4. Modular Addons (Atari-8bit)**
 *   **High-Performance Context:** Specific tools and prompts for 6502 assembly, Atari hardware constraints, and performance-critical systems.
 *   **Hardware Visualization:** ASCII-art memory map generator and performance trending dashboards.
 *   **Automated Debates:** A unique feature to have multiple agents argue the merits of different implementation strategies (`atari-debate.sh`).

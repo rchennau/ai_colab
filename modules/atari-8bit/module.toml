@@ -15,7 +15,17 @@ conductor_commands = [
     { trigger = "!perf-trend", script = "modules/atari-8bit/scripts/hcom-perf-trend.sh" }
 ]
 
+periodic_hooks = [
+    { name = "screenshot", script = "modules/atari-8bit/scripts/hcom-atari-screen.sh", interval = 600 }
+]
+
 dashboard_sections = [
     { name = "Latest Performance", type = "sql", source = "SELECT routine, cycles FROM performance ORDER BY timestamp DESC LIMIT 3" },
     { name = "Memory Allocation", type = "file", source = "conductor/reports/memory_map.txt" }
 ]
+
+[mcp]
+server = "python3"
+args = ["-m", "atari_agent.server"]
+name = "atari-dev-agent"
+

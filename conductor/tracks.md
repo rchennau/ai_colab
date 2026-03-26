@@ -11,7 +11,7 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 - [x] **Milestone 5: Intelligent Context & Shared Memory** (Done ✅)
 - [x] **Milestone 6: Unified Command Center & High-Density Monitoring** (Done ✅)
 - [x] **Milestone 7: Advanced Knowledge & Git Lifecycle Automation** (Done ✅)
-- [x] **Milestone 8: Hardware Visualization & Performance Dashboards** (Done ✅)
+- [x] **Milestone 8: Domain-Specific Modules & Performance Dashboards** (Done ✅)
 - [x] **Milestone 9: Dynamic Plugin System & Fleet Orchestration** (Done ✅)
 - [x] **Milestone 10: Multi-Backend Compute & CI/CD Automation** (Done ✅)
 - [x] **Milestone 11: Enhanced Installation & Launch Experience** (Done ✅)
@@ -22,13 +22,12 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 
 ## 🏗️ Core Tracks
 
-- [x] **Track: System Validation - cc65 Hello World**
+- [x] **Track: System Validation - Baseline Test**
   - **Assigned:** @all
-  - **Description:** A collaboration test where three agents (Gemini, Qwen, DeepSeek) work together to create a simple Hello World program in C for the Atari 8-bit using `cc65`.
-  - [x] Initialize collaboration environment (ensure 3 agents are active).
-  - [x] Jointly design the `hello_world.c` structure.
-  - [x] Implement `hello_world.c` with Atari-specific `cc65` headers.
-  - [x] Verify compilation with `cc65 -t atari`.
+  - **Description:** A collaboration test where agents work together to verify the core environment.
+  - [x] Initialize collaboration environment.
+  - [x] Jointly design a baseline test script.
+  - [x] Implement and verify the test results.
 
 - [x] **Track: Master Installer & Launcher**
   - **Assigned:** @conductor
@@ -39,15 +38,15 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 - [x] **Track: Blackboard Task Handoffs**
   - **Assigned:** @conductor
 
-- [x] **Track: Atari-LX Hardware Context**
-  - **Assigned:** @qwen-dev
+- [x] **Track: Domain-Specific Context (Example: Atari 8-bit)**
+  - **Assigned:** @domain-expert
   - [x] Symbol Synchronization (`hcom-atari-sync.sh`)
   - [x] Visual Debugging (`hcom-atari-screen.sh`)
   - [x] Hardware Constants (`init-atari-constants.sh`)
 
-- [x] **Track: Atari-LX Technical Debate**
+- [x] **Track: Technical Debate Framework**
   - **Assigned:** @all
-  - [x] Specialized debate wrapper (`atari-debate.sh`)
+  - [x] Generic debate wrapper (`scripts/debate.sh`)
   - [x] Automated project context injection (Blackboard/Build)
   - [x] Interactive role assignment (PRO/CON/JUDGE)
 
@@ -55,7 +54,7 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - **Assigned:** @conductor
   - [x] Google Workspace Auth Integration (`google-auth.sh`)
   - [x] Event monitoring & forwarding loop (`hcom-chat-bridge.sh`)
-  - [x] Remote monitoring space: "Atari-LX Multi-Agent"
+  - [x] Remote monitoring space: "Multi-Agent Monitoring"
 
 - [x] **Track: Implement Blackboard-Driven Conductor Tasking**
   *Link: [./tracks/blackboard_tasking_20260322/](./tracks/blackboard_tasking_20260322/)*
@@ -83,18 +82,11 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - [x] Semantic search in `conductor-workflow.sh`.
   - [x] Knowledge maintenance (periodic indexing).
 
-- [x] **Track: Visual Memory Map Generator** (Done ✅)
-  - **Assigned:** @qwen-dev
-  - **Description:** Create a tool to generate a visual representation of the Atari memory map from build artifacts.
-  - [x] Map file parsing (`atari-mem-map.sh`).
-  - [x] ASCII visualization generator.
-  - [x] Integrated `!memory-map` command.
-
-- [x] **Track: Performance Trending & Dashboard (v3.0)** (Done ✅)
+- [x] **Track: Performance Trending & Dashboard** (Done ✅)
   - **Assigned:** @conductor
-  - **Description:** Implement historical performance tracking and a high-density dashboard for cycle counts.
+  - **Description:** Implement historical performance tracking and a high-density dashboard for platform-specific metrics.
   - [x] Persistent performance history (SQLite).
-  - [x] Historical trending tool (`hcom-perf-trend.sh`).
+  - [x] Historical trending tool.
   - [x] High-density Conductor dashboard (`conductor-dashboard.sh`).
 
 - [x] **Track: Generic Module Plugin System** (Done ✅)

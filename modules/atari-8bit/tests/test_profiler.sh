@@ -29,7 +29,7 @@ echo "LDA #0" > "$DUMMY_FILE"
 
 # 1. Test Profiling
 echo "Testing profiling..."
-bash "$SCRIPT_DIR/../modules/atari-lx/scripts/hcom-profiler.sh" "$DUMMY_FILE" > /dev/null
+bash "$SCRIPT_DIR/../modules/atari-8bit/scripts/hcom-profiler.sh" "$DUMMY_FILE" > /dev/null
 
 BLACKBOARD_KEY="perf_$(echo "$DUMMY_FILE" | tr '/' '_')"
 RESULT=$(blackboard_get "$BLACKBOARD_KEY")

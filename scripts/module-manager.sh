@@ -469,6 +469,11 @@ main() {
             parse_module_env "$1"
             ;;
         commands)
+            local raw=false
+            if [[ "$1" == "--raw" ]]; then
+                raw=true
+                shift
+            fi
             if [[ -z "$1" ]]; then
                 echo -e "${RED}Error: Module ID required${NC}"
                 exit 1
@@ -477,14 +482,22 @@ main() {
                 # List commands from all active modules (for !help)
                 parse_all_conductor_commands | while IFS='|' read -r trigger script module_id; do
                     if [[ -n "$trigger" ]]; then
-                        echo "  $trigger → $script ($module_id)"
+                        if [[ "$raw" == true ]]; then
+                            echo "${trigger}|${script}|${module_id}"
+                        else
+                            echo "  $trigger → $script ($module_id)"
+                        fi
                     fi
                 done
             else
-                echo -e "${BLUE}Conductor Commands:${NC}"
+                [[ "$raw" == false ]] && echo -e "${BLUE}Conductor Commands:${NC}"
                 parse_conductor_commands "$1" | while IFS='|' read -r trigger script; do
                     if [[ -n "$trigger" ]]; then
-                        echo "  $trigger → $script"
+                        if [[ "$raw" == true ]]; then
+                            echo "${trigger}|${script}"
+                        else
+                            echo "  $trigger → $script"
+                        fi
                     fi
                 done
             fi

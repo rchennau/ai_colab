@@ -68,7 +68,7 @@ The **Hub** is the central controller. It is designed to be **self-hosted** (loc
 
 ### **Remote Spokes (Agents & Compute)**
 High-power agents and models run **externally** to the Hub:
-- **nemoclaud**: Hosted on NVIDIA NIM API or specialized cloud pods (RunPod).
+- **nemoclaw**: Hosted on NVIDIA NIM API or specialized cloud pods (RunPod).
 - **Remote LLMs**: Accessed via Gemini, Claude, and Qwen remote APIs.
 - **Fleet Workers**: Specialized agents running on distributed hardware.
 
@@ -90,18 +90,18 @@ The backbone of ai-colab. All agents communicate via [hcom](https://github.com/a
     *   `!kb <query>`: Semantic search for architectural guidance.
     *   `!build`: Triggers the project's local build system.
 
-## 🧩 Addon Modules
+## 🧩 Addon Modules (Examples)
 
-ai-colab is designed to be project-agnostic. Specialized functionality is provided via modules:
+ai-colab is designed to be project-agnostic. Specialized functionality is provided via modular addons:
 
-### **Atari-LX Development**
-Deep integration for 6502 assembly and Atari 8-bit hardware.
+### **Atari-8bit Development**
+Example module for 6502 assembly and Atari 8-bit hardware.
 - ✅ Visual Memory Map Generator (`!memory-map`)
 - ✅ Historical Performance Trending (`!perf-trend`)
 - ✅ Automated Screen Capture & Sync (`!screenshot`)
 - ✅ Technical Debate Mode for optimizations.
 
-📖 **See:** [`modules/atari-lx/README.md`](modules/atari-lx/README.md)
+📖 **See:** [`modules/atari-8bit/README.md`](modules/atari-8bit/README.md)
 
 ---
 

@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/utils.sh"
 
 # Configuration
-SPACE_NAME="Atari-LX Multi-Agent"
+SPACE_NAME="Atari 8-bit Multi-Agent"
 HCOM_NAME="messenger_bridge"
 
 # Register with hcom and start heartbeat
@@ -35,7 +35,7 @@ forward_to_chat() {
 }
 
 # Initial greeting
-forward_to_chat "*Bridge Online*: Remote monitoring enabled for Atari-LX team."
+forward_to_chat "*Bridge Online*: Remote monitoring enabled for Atari 8-bit team."
 
 # Event monitoring loop
 # We listen for:

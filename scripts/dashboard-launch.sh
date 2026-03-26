@@ -255,20 +255,24 @@ create_dashboard() {
         $hcom_bin relay daemon start > /dev/null 2>&1 || print_warning "Failed to start relay daemon"
     fi
 
-    # Initialize Atari Integration (Addon)
-    if [[ "${ENABLE_ATARI_LX:-false}" == "true" ]]; then
-        print_step "Initializing Atari-LX Module..."
-        if bash "$PROJECT_ROOT/modules/atari-lx/scripts/init-atari-constants.sh" > /dev/null 2>&1; then
-            print_success "Atari constants initialized"
-        else
-            print_warning "Atari constants initialization skipped"
+    # Initialize Active Modules
+    print_step "Initializing Active Modules..."
+    while IFS= read -r module_id; do
+        if [ -n "$module_id" ]; then
+            local module_dir=$("$SCRIPT_DIR/module-manager.sh" dir "$module_id" 2>/dev/null)
+            # Run any initialization scripts for the module if they exist
+            if [[ -f "$module_dir/scripts/init.sh" ]]; then
+                print_info "Initializing $module_id..."
+                bash "$module_dir/scripts/init.sh" > /dev/null 2>&1 || print_warning "Initialization for $module_id failed"
+            fi
+            
+            # Module-specific legacy hooks (e.g., atari constants)
+            if [[ "$module_id" == "atari-8bit" ]]; then
+                [ -f "$module_dir/scripts/init-atari-constants.sh" ] && bash "$module_dir/scripts/init-atari-constants.sh" > /dev/null 2>&1
+                [ -f "$module_dir/scripts/hcom-atari-sync.sh" ] && bash "$module_dir/scripts/hcom-atari-sync.sh" > /dev/null 2>&1
+            fi
         fi
-        if bash "$PROJECT_ROOT/modules/atari-lx/scripts/hcom-atari-sync.sh" > /dev/null 2>&1; then
-            print_success "Atari sync complete"
-        else
-            print_warning "Atari sync skipped"
-        fi
-    fi
+    done < <(bash "$SCRIPT_DIR/module-manager.sh" active 2>/dev/null)
 
     sleep 1
 
@@ -356,7 +360,8 @@ create_dashboard() {
         # Send hcom initialization commands with proper error handling
         tmux send-keys -t "$console_id" "export HCOM_NAME=$user_name" C-m
         tmux send-keys -t "$console_id" "sleep 1" C-m
-        tmux send-keys -t "$console_id" "if command -v hcom >/dev/null 2>&1; then hcom start --as \$HCOM_NAME; else echo 'hcom not found, please run ./install.sh'; fi" C-m
+        # Register user with hcom without blocking the shell
+        tmux send-keys -t "$console_id" "if command -v hcom >/dev/null 2>&1; then hcom status --name \$HCOM_NAME >/dev/null 2>&1; else echo 'hcom not found, please run ./install.sh'; fi" C-m
         tmux send-keys -t "$console_id" "sleep 2" C-m
         tmux send-keys -t "$console_id" "alias s='hcom send --name \$HCOM_NAME @conductor -- \"!status\"'" C-m
         tmux send-keys -t "$console_id" "alias t='hcom send --name \$HCOM_NAME @conductor -- \"!test\"'" C-m
@@ -374,13 +379,20 @@ create_dashboard() {
         tmux send-keys -t "$console_id" "echo -e \"  !kb <query>      - Search architectural knowledge base\"" C-m
         tmux send-keys -t "$console_id" "echo -e \"  !git-sync        - Pull latest changes from remote\"" C-m
 
-        if [[ "${ENABLE_ATARI_LX:-false}" == "true" ]]; then
-            tmux send-keys -t "$console_id" "echo -e \"${YELLOW}Atari-LX Commands:${NC}\"" C-m
-            tmux send-keys -t "$console_id" "echo -e \"  !screenshot      - Capture current emulator state\"" C-m
-            tmux send-keys -t "$console_id" "echo -e \"  !memory-map      - View visual memory allocation\"" C-m
-            tmux send-keys -t "$console_id" "echo -e \"  !profile <file>  - Profile code performance (cycles)\"" C-m
-            tmux send-keys -t "$console_id" "echo -e \"  !perf-trend <rt> - View historical performance trend\"" C-m
-        fi
+        # Dynamically list module-specific commands
+        while IFS= read -r module_id; do
+            if [ -n "$module_id" ]; then
+                local mod_name=$(bash "$SCRIPT_DIR/module-manager.sh" info "$module_id" 2>/dev/null | grep "^name=" | cut -d'=' -f2)
+                tmux send-keys -t "$console_id" "echo -e \"${YELLOW}${mod_name} Commands:${NC}\"" C-m
+                bash "$SCRIPT_DIR/module-manager.sh" commands --raw "$module_id" 2>/dev/null | while IFS='|' read -r trigger script; do
+                    if [ -n "$trigger" ]; then
+                        # Clean up script path for display (relative to project root)
+                        local display_script=${script#$PROJECT_ROOT/}
+                        tmux send-keys -t "$console_id" "echo -e \"  ${GREEN}${trigger}${NC} - Module task\"" C-m
+                    fi
+                done
+            fi
+        done < <(bash "$SCRIPT_DIR/module-manager.sh" active 2>/dev/null)
 
         tmux send-keys -t "$console_id" "echo -e \"  !help            - Show all available commands\"" C-m
         tmux send-keys -t "$console_id" "echo \\\"\\\"" C-m

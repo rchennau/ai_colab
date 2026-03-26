@@ -70,15 +70,20 @@ fi
 # 2. Project Detection
 PROJECT_ROOT=$(detect_project_root 2>/dev/null || dirname "$SCRIPT_DIR")
 
-# 2.1 Module-Specific Configuration (e.g., Atari-LX)
-if [[ "${ENABLE_ATARI_LX:-false}" == "true" ]]; then
-    ATARI_LX_DIR="$(dirname "$PROJECT_ROOT")/Atari-LX"
-    ATARI_AGENT_DIR="$ATARI_LX_DIR/atari_agent"
-
-    if [ -d "$ATARI_AGENT_DIR" ]; then
-        # Inject MCP server into environment/args if supported by the tool
-        export PYTHONPATH="$ATARI_AGENT_DIR:${PYTHONPATH:-}"
-    fi
+# 2.1 Load Active Modules
+# Load all active modules and their environment variables/MCPs
+if [ -f "$SCRIPT_DIR/module-manager.sh" ]; then
+    # Capture all active modules and load their environment
+    while IFS= read -r module_id; do
+        if [ -n "$module_id" ]; then
+            # Parse and export module environment
+            while IFS='=' read -r key value; do
+                if [[ -n "$key" ]]; then
+                    export "$key=$value"
+                fi
+            done < <(bash "$SCRIPT_DIR/module-manager.sh" env "$module_id" 2>/dev/null)
+        fi
+    done < <(bash "$SCRIPT_DIR/module-manager.sh" active 2>/dev/null)
 fi
 
 # 2.2 Core Dev MCP Configuration

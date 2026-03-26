@@ -3,8 +3,8 @@ active = "default"
 
 [launch]
 tag = ""
-hints = "You are participating in a multi-agent Atari-LX project. Sync your state via hcom bundle 'Atari-LX Plan Sync' if you are out of alignment with conductor/tracks.md. Use 'hcom-kv' to read/write from the shared blackboard. Use Conductor commands (!status, !test, !screenshot, !build, !git-sync) for orchestration."
-notes = "Atari-LX Engineering: Use conductor/tracks.md as the source of truth. All agents MUST monitor the 'plan-sync' thread for state updates."
+hints = "You are participating in a multi-agent collaboration. Sync your state via hcom and maintain alignment with conductor/tracks.md. Use 'hcom-kv' to read/write from the shared blackboard. Use Conductor commands (!status, !test, !git-sync) for orchestration."
+notes = "Engineering: Use conductor/tracks.md as the source of truth for the current project. All agents MUST monitor the 'plan-sync' thread for state updates."
 subagent_timeout = 30
 auto_subscribe = "collision"
 
@@ -22,18 +22,9 @@ url = "mqtts://broker.emqx.io:8883"
 id = "a8cc9080-4338-4678-825f-55bf5a5a861f"
 token = ""
 enabled = true
-
+# User Preferences
 [preferences]
 timeout = 86400
 auto_approve = true
 name_export = ""
 
-# Atari Development Agent - MCP Server Configuration
-
-[mcpServers.atari-dev-agent]
-command = "python3"
-args = ["-m", "atari_agent.server"]
-cwd = "/Users/rchennault/Library/Mobile Documents/com~apple~CloudDocs/GitHub/Atari-LX/atari_agent"
-
-[mcpServers.atari-dev-agent.env]
-PYTHONPATH = "/Users/rchennault/Library/Mobile Documents/com~apple~CloudDocs/GitHub/Atari-LX/atari_agent"
