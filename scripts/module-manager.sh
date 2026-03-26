@@ -120,6 +120,20 @@ get_module_manifest() {
     echo "$MODULES_DIR/$module_id/module.toml"
 }
 
+# Get module init script
+# Usage: get_init_script "module-id"
+get_init_script() {
+    local module_id="$1"
+    local manifest=$(get_module_manifest "$module_id")
+    
+    if [[ ! -f "$manifest" ]]; then
+        return 1
+    fi
+    
+    # Extract init_script value
+    grep "^init_script[[:space:]]*=[[:space:]]*" "$manifest" | cut -d'"' -f2
+}
+
 # ============================================
 # Module Metadata Extraction
 # ============================================
@@ -513,6 +527,13 @@ main() {
                     echo "  $name ($type): $source"
                 fi
             done
+            ;;
+        init)
+            if [[ -z "$1" ]]; then
+                echo -e "${RED}Error: Module ID required${NC}"
+                exit 1
+            fi
+            get_init_script "$1"
             ;;
         load)
             load_all_modules

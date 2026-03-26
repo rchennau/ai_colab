@@ -1,5 +1,5 @@
 # Full ai-colab Profile
-# Everything enabled: Dashboard + Conductor + All Agents + Atari-LX + Chat Bridge
+# Everything enabled: Dashboard + Conductor + All Agents + Active Modules + Chat Bridge
 
 version = "1.0.0"
 profile = "full"

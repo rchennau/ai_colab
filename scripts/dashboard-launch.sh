@@ -259,17 +259,10 @@ create_dashboard() {
     print_step "Initializing Active Modules..."
     while IFS= read -r module_id; do
         if [ -n "$module_id" ]; then
-            local module_dir=$("$SCRIPT_DIR/module-manager.sh" dir "$module_id" 2>/dev/null)
-            # Run any initialization scripts for the module if they exist
-            if [[ -f "$module_dir/scripts/init.sh" ]]; then
+            local init_script=$("$SCRIPT_DIR/module-manager.sh" init "$module_id" 2>/dev/null)
+            if [[ -n "$init_script" && -f "$PROJECT_ROOT/$init_script" ]]; then
                 print_info "Initializing $module_id..."
-                bash "$module_dir/scripts/init.sh" > /dev/null 2>&1 || print_warning "Initialization for $module_id failed"
-            fi
-            
-            # Module-specific legacy hooks (e.g., atari constants)
-            if [[ "$module_id" == "atari-8bit" ]]; then
-                [ -f "$module_dir/scripts/init-atari-constants.sh" ] && bash "$module_dir/scripts/init-atari-constants.sh" > /dev/null 2>&1
-                [ -f "$module_dir/scripts/hcom-atari-sync.sh" ] && bash "$module_dir/scripts/hcom-atari-sync.sh" > /dev/null 2>&1
+                bash "$PROJECT_ROOT/$init_script" > /dev/null 2>&1 || print_warning "Initialization for $module_id failed"
             fi
         fi
     done < <(bash "$SCRIPT_DIR/module-manager.sh" active 2>/dev/null)

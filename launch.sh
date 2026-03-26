@@ -5,6 +5,15 @@
 
 set -e
 
+# 0. Argument Parsing (Pre-launch)
+INTERACTIVE=true
+for arg in "$@"; do
+    if [[ "$arg" == "--no-interactive" || "$arg" == "--auto" ]]; then
+        INTERACTIVE=false
+        break
+    fi
+done
+
 # Find script directory and source utils
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ -f "$SCRIPT_DIR/scripts/utils.sh" ]; then
@@ -15,6 +24,7 @@ else
     GREEN='\033[0;32m'
     BLUE='\033[0;34m'
     YELLOW='\033[1;33m'
+    CYAN='\033[0;36m'
     NC='\033[0m'
     has_command() { command -v "$1" >/dev/null 2>&1; }
 fi
@@ -62,33 +72,35 @@ export PROJECT_ROOT
 ui_status "Project Root" "$PROJECT_ROOT" "${GREEN}"
 
 # 1.1 Project Artifact Detection & Migration
-ui_title "Project Scanning" "${BLUE}"
-
 if [[ -f "$SCRIPT_DIR/scripts/migrate-project.sh" ]]; then
     # Run detection (non-interactive mode first)
     bash "$SCRIPT_DIR/scripts/migrate-project.sh" "$PROJECT_ROOT" --detect-only 2>/dev/null || true
     
     # Check if migration is needed
     if [[ -f "$PROJECT_ROOT/.ai-colab-migration-pending" ]]; then
-        echo -e "\n${YELLOW}═══════════════════════════════════════════════════════${NC}"
-        echo -e "${YELLOW}  Existing AI/LLM integrations detected!${NC}"
-        echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
-        echo ""
-        echo -e "Found existing MCP configurations, product plans, or knowledge base artifacts."
-        echo -e "${BLUE}Would you like to migrate these to ai-colab?${NC}"
-        echo ""
-        read -p "Run migration now? [Y/n]: " -n 1 -r
-        echo ""
-        
-        if [[ $REPLY =~ ^[Yy]$ || -z $REPLY ]]; then
-            echo -e "\n${BLUE}Starting migration...${NC}"
-            export AI_COLAB_LAUNCHER=true
-            bash "$SCRIPT_DIR/scripts/migrate-project.sh" "$PROJECT_ROOT"
-            rm -f "$PROJECT_ROOT/.ai-colab-migration-pending"
-            echo -e "\n${GREEN}✓ Migration complete. Continuing to launch...${NC}"
+        if [ "$INTERACTIVE" = true ]; then
+            echo -e "\n${YELLOW}═══════════════════════════════════════════════════════${NC}"
+            echo -e "${YELLOW}  Existing AI/LLM integrations detected!${NC}"
+            echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
+            echo ""
+            echo -e "Found existing MCP configurations, product plans, or knowledge base artifacts."
+            echo -e "${BLUE}Would you like to migrate these to ai-colab?${NC}"
+            echo ""
+            read -p "  Run migration now? [Y/n]: " -n 1 -r
+            echo ""
+            
+            if [[ $REPLY =~ ^[Yy]$ || -z $REPLY ]]; then
+                echo -e "\n${BLUE}Starting migration...${NC}"
+                export AI_COLAB_LAUNCHER=true
+                bash "$SCRIPT_DIR/scripts/migrate-project.sh" "$PROJECT_ROOT"
+                rm -f "$PROJECT_ROOT/.ai-colab-migration-pending"
+                echo -e "\n${GREEN}✓ Migration complete. Continuing to launch...${NC}"
+            else
+                echo -e "\n${YELLOW}Migration skipped. You can run it later with:${NC}"
+                echo -e "  ${BLUE}./scripts/migrate-project.sh${NC}"
+            fi
         else
-            echo -e "\n${YELLOW}Migration skipped. You can run it later with:${NC}"
-            echo -e "  ${BLUE}./scripts/migrate-project.sh${NC}"
+             log_info "Project migration pending. Run ./scripts/migrate-project.sh to import existing artifacts."
         fi
         echo ""
     fi
@@ -109,228 +121,256 @@ save_pref() {
 # Load previous choices from state if available
 LAST_LAUNCH_CHOICE=$(bash "$CONFIG_MGR" state last_launch_choice 3)
 
-ui_title "Component Configuration" "${BLUE}"
-echo -e "Select components to launch:"
-echo -e "  ${CYAN}1)${NC} Dashboard (hcom TUI + Agents)"
-echo -e "  ${CYAN}2)${NC} Conductor (Project Manager)"
-echo -e "  ${CYAN}3)${NC} Both (Recommended)"
-echo ""
-read -p "Choice [1-3, default $LAST_LAUNCH_CHOICE]: " LAUNCH_CHOICE
-LAUNCH_CHOICE=${LAUNCH_CHOICE:-$LAST_LAUNCH_CHOICE}
+if [ "$INTERACTIVE" = true ]; then
+    ui_title "Component Configuration" "${BLUE}"
+    echo -e "Select components to launch:"
+    echo -e "  ${CYAN}1)${NC} Dashboard (hcom TUI + Agents)"
+    echo -e "  ${CYAN}2)${NC} Conductor (Project Manager)"
+    echo -e "  ${CYAN}3)${NC} Both (Recommended)"
+    echo -e "  ${CYAN}4)${NC} Web UI (Browser-based management)"
+    echo ""
+    read -p "  Choice [1-4, default $LAST_LAUNCH_CHOICE]: " LAUNCH_CHOICE
+    LAUNCH_CHOICE=${LAUNCH_CHOICE:-$LAST_LAUNCH_CHOICE}
+else
+    LAUNCH_CHOICE=$LAST_LAUNCH_CHOICE
+fi
 bash "$CONFIG_MGR" state-set last_launch_choice "$LAUNCH_CHOICE"
 
 DASHBOARD=false
 CONDUCTOR=false
+WEBUI=false
 
 case "$LAUNCH_CHOICE" in
     1) DASHBOARD=true ;;
     2) CONDUCTOR=true ;;
     3) DASHBOARD=true; CONDUCTOR=true ;;
+    4) WEBUI=true ;;
     *) echo "Invalid choice"; exit 1 ;;
 esac
 
 # 3. Module Selection
-ui_title "Module Addons" "${BLUE}"
-MODULES_JSON=$(python3 "$SCRIPT_DIR/scripts/module-manager.py" list "$PROJECT_ROOT")
+if [ "$WEBUI" = false ]; then
+    ui_title "Module Addons" "${BLUE}"
+    MODULES_JSON=$(python3 "$SCRIPT_DIR/scripts/module-manager.py" list "$PROJECT_ROOT")
 
-# Use python3 for portable JSON extraction
-MOD_IDS=$(echo "$MODULES_JSON" | python3 -c 'import json, sys; print("\n".join([m["id"] for m in json.load(sys.stdin)]))' 2>/dev/null || echo "")
-MOD_NAMES=$(echo "$MODULES_JSON" | python3 -c 'import json, sys; print("\n".join([m["name"] for m in json.load(sys.stdin)]))' 2>/dev/null || echo "")
+    # Use python3 for portable JSON extraction
+    MOD_IDS=$(echo "$MODULES_JSON" | python3 -c 'import json, sys; print("\n".join([m["id"] for m in json.load(sys.stdin)]))' 2>/dev/null || echo "")
+    MOD_NAMES=$(echo "$MODULES_JSON" | python3 -c 'import json, sys; print("\n".join([m["name"] for m in json.load(sys.stdin)]))' 2>/dev/null || echo "")
 
-# Iterate and ask
-IFS=$'\n'
-IDS_ARR=($MOD_IDS)
-NAMES_ARR=($MOD_NAMES)
+    # Iterate and ask
+    IFS=$'\n'
+    IDS_ARR=($MOD_IDS)
+    NAMES_ARR=($MOD_NAMES)
 
-if [ ${#IDS_ARR[@]} -eq 0 ]; then
-    echo -e "  ${YELLOW}(No additional modules found)${NC}"
-else
-    # List current configuration
-    echo -e "  ${BLUE}Current Addons:${NC}"
-    ANY_ENABLED=false
-    for i in "${!IDS_ARR[@]}"; do
-        ID="${IDS_ARR[$i]}"
-        NAME="${NAMES_ARR[$i]}"
-        PREF_KEY="MODULE_$(echo "$ID" | tr '-' '_' | tr '[:lower:]' '[:upper:]')"
-        if [[ "$(load_pref "$PREF_KEY" "false")" == "true" ]]; then
-            echo -e "    ${GREEN}• $NAME ($ID)${NC}"
-            ANY_ENABLED=true
-        fi
-    done
-    [[ "$ANY_ENABLED" == "false" ]] && echo -e "    ${YELLOW}(None enabled)${NC}"
-    echo ""
-
-    read -p "  Reconfigure Module Addons? [y/N]: " -n 1 -r; echo ""
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
+    if [ ${#IDS_ARR[@]} -eq 0 ]; then
+        echo -e "  ${YELLOW}(No additional modules found)${NC}"
+    else
+        # List current configuration
+        echo -e "  ${BLUE}Current Addons:${NC}"
+        ANY_ENABLED=false
         for i in "${!IDS_ARR[@]}"; do
             ID="${IDS_ARR[$i]}"
             NAME="${NAMES_ARR[$i]}"
             PREF_KEY="MODULE_$(echo "$ID" | tr '-' '_' | tr '[:lower:]' '[:upper:]')"
-            LAST_VAL=$(load_pref "$PREF_KEY")
-            LAST_VAL=${LAST_VAL:-false}
-
-            PROMPT_VAL="n"
-            [[ "$LAST_VAL" == "true" ]] && PROMPT_VAL="Y" || PROMPT_VAL="y"
-
-            read -p "  Enable $NAME ($ID)? [$PROMPT_VAL/n]: " -n 1 -r; echo ""
-            if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$LAST_VAL" == "true" ]]); then
-                save_pref "$PREF_KEY" "true"
-            else
-                save_pref "$PREF_KEY" "false"
+            if [[ "$(load_pref "$PREF_KEY" "false")" == "true" ]]; then
+                echo -e "    ${GREEN}• $NAME ($ID)${NC}"
+                ANY_ENABLED=true
             fi
         done
+        [[ "$ANY_ENABLED" == "false" ]] && echo -e "    ${YELLOW}(None enabled)${NC}"
+        echo ""
+
+        if [ "$INTERACTIVE" = true ]; then
+            read -p "  Reconfigure Module Addons? [y/N]: " -n 1 -r; echo ""
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                for i in "${!IDS_ARR[@]}"; do
+                    ID="${IDS_ARR[$i]}"
+                    NAME="${NAMES_ARR[$i]}"
+                    PREF_KEY="MODULE_$(echo "$ID" | tr '-' '_' | tr '[:lower:]' '[:upper:]')"
+                    LAST_VAL=$(load_pref "$PREF_KEY")
+                    LAST_VAL=${LAST_VAL:-false}
+
+                    PROMPT_VAL="n"
+                    [[ "$LAST_VAL" == "true" ]] && PROMPT_VAL="Y" || PROMPT_VAL="y"
+
+                    read -p "  Enable $NAME ($ID)? [$PROMPT_VAL/n]: " -n 1 -r; echo ""
+                    if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$LAST_VAL" == "true" ]]); then
+                        save_pref "$PREF_KEY" "true"
+                    else
+                        save_pref "$PREF_KEY" "false"
+                    fi
+                done
+            fi
+        fi
     fi
-fi
 
-# Evaluate active module environment variables
-eval "$(python3 "$SCRIPT_DIR/scripts/module-manager.py" env "$PROJECT_ROOT")"
+    # Evaluate active module environment variables
+    eval "$(python3 "$SCRIPT_DIR/scripts/module-manager.py" env "$PROJECT_ROOT")"
 
-# 3.1 Compute Backend (Spoke Architecture)
-LAST_BACKEND=$(load_pref "compute.backend" "local")
-ui_title "Remote Compute (Spokes)" "${BLUE}"
-ui_box "The ai-colab Hub runs on this local machine. High-power agents
-(Spokes) require external GPU compute for inference." "${BLUE}"
-echo ""
-ui_status "Current Backend" "$LAST_BACKEND" "${GREEN}"
-
-read -p "  Configure Remote Compute Backend? [y/N]: " -n 1 -r; echo ""
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    echo -e "  ${CYAN}1)${NC} NVIDIA NIM (Hosted nemoclaw spoke - Recommended)"
-    echo -e "  ${CYAN}2)${NC} Remote vLLM (Private network GPU server)"
-    echo -e "  ${CYAN}3)${NC} RunPod (On-demand cloud GPU)"
-    echo -e "  ${CYAN}4)${NC} Local Server (Use only if you have local GPU)"
-    read -p "  Select backend [1-4]: " NEW_BACKEND
-    case "$NEW_BACKEND" in
-        1) COMPUTE_BACKEND="nvidia" ;;
-        2) COMPUTE_BACKEND="vllm-remote" ;;
-        3) COMPUTE_BACKEND="runpod" ;;
-        *) COMPUTE_BACKEND="local" ;;
-    esac
-    save_pref "compute.backend" "$COMPUTE_BACKEND"
-else
-    COMPUTE_BACKEND="$LAST_BACKEND"
-fi
-export COMPUTE_BACKEND="$COMPUTE_BACKEND"
-
-# Load backend-specific env vars if they exist
-[ -f "$HOME/.ai-colab-env" ] && source "$HOME/.ai-colab-env"
-
-# 4. Agent Selection (if dashboard)
-DASHBOARD_FLAGS=""
-if [ "$DASHBOARD" = true ]; then
-    ui_title "Collaboration Fleet" "${BLUE}"
-    ui_box "Select agents to enable multi-agent collaboration.
-Spoke agents will use the $COMPUTE_BACKEND backend." "${BLUE}"
+    # 3.1 Compute Backend (Spoke Architecture)
+    LAST_BACKEND=$(load_pref "compute.backend" "local")
+    ui_title "Remote Compute (Spokes)" "${BLUE}"
+    ui_box "The ai-colab Hub runs on this local machine. High-power agents
+    (Spokes) require external GPU compute for inference." "${BLUE}"
     echo ""
+    ui_status "Current Backend" "$LAST_BACKEND" "${GREEN}"
 
-    # List current configuration
-    echo -e "  ${BLUE}Current Fleet:${NC}"
-    [[ $(load_pref "llm.qwen.enabled" "true") == "true" ]] && echo -e "    ${GREEN}• Qwen${NC}"
-    [[ $(load_pref "llm.gemini.enabled" "true") == "true" ]] && echo -e "    ${GREEN}• Gemini${NC}"
-    [[ $(load_pref "llm.nemoclaw.enabled" "false") == "true" && "$COMPUTE_BACKEND" == "nvidia" ]] && echo -e "    ${GREEN}• NVIDIA nemoclaw${NC}"
-    [[ $(load_pref "llm.vllm.enabled" "false") == "true" && ("$COMPUTE_BACKEND" == "vllm-remote" || "$COMPUTE_BACKEND" == "local") ]] && echo -e "    ${GREEN}• vLLM Spoke (${YELLOW}$(load_pref "llm.vllm.host" "192.168.0.193")${NC})"
-    [[ $(load_pref "llm.claude.enabled" "false") == "true" ]] && echo -e "    ${GREEN}• Anthropic Claude${NC}"
-    [[ $(load_pref "llm.deepseek.enabled" "false") == "true" ]] && echo -e "    ${GREEN}• DeepSeek${NC}"
-    echo ""
-
-    read -p "  Reconfigure Collaboration Fleet? [y/N]: " -n 1 -r; echo ""
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        # Qwen
-        DEFAULT_QWEN=$(load_pref "llm.qwen.enabled" "true")
-        PROMPT_QWEN=$([[ "$DEFAULT_QWEN" == "true" ]] && echo "Y/n" || echo "y/N")
-        read -p "  Include Qwen? [$PROMPT_QWEN]: " -n 1 -r; echo ""
-        if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_QWEN" == "true" ]]); then
-            save_pref "llm.qwen.enabled" "true"
+    if [ "$INTERACTIVE" = true ]; then
+        read -p "  Configure Remote Compute Backend? [y/N]: " -n 1 -r; echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            echo -e "  ${CYAN}1)${NC} NVIDIA NIM (Hosted nemoclaw spoke - Recommended)"
+            echo -e "  ${CYAN}2)${NC} Remote vLLM (Private network GPU server)"
+            echo -e "  ${CYAN}3)${NC} RunPod (On-demand cloud GPU)"
+            echo -e "  ${CYAN}4)${NC} Local Server (Use only if you have local GPU)"
+            read -p "  Select backend [1-4]: " NEW_BACKEND
+            case "$NEW_BACKEND" in
+                1) COMPUTE_BACKEND="nvidia" ;;
+                2) COMPUTE_BACKEND="vllm-remote" ;;
+                3) COMPUTE_BACKEND="runpod" ;;
+                *) COMPUTE_BACKEND="local" ;;
+            esac
+            save_pref "compute.backend" "$COMPUTE_BACKEND"
         else
-            save_pref "llm.qwen.enabled" "false"
+            COMPUTE_BACKEND="$LAST_BACKEND"
         fi
+    else
+        COMPUTE_BACKEND="$LAST_BACKEND"
+    fi
+    export COMPUTE_BACKEND="$COMPUTE_BACKEND"
 
-        # Gemini
-        DEFAULT_GEMINI=$(load_pref "llm.gemini.enabled" "true")
-        PROMPT_GEMINI=$([[ "$DEFAULT_GEMINI" == "true" ]] && echo "Y/n" || echo "y/N")
-        read -p "  Include Gemini? [$PROMPT_GEMINI]: " -n 1 -r; echo ""
-        if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_GEMINI" == "true" ]]); then
-            save_pref "llm.gemini.enabled" "true"
-        else
-            save_pref "llm.gemini.enabled" "false"
-        fi
+    # Load backend-specific env vars if they exist
+    [ -f "$HOME/.ai-colab-env" ] && source "$HOME/.ai-colab-env"
 
-        # Spoke Agent: NVIDIA nemoclaw (NIM)
-        if [ "$COMPUTE_BACKEND" == "nvidia" ]; then
-            DEFAULT_NEMOCLAW=$(load_pref "llm.nemoclaw.enabled" "true")
-            PROMPT_NEMOCLAW=$([[ "$DEFAULT_NEMOCLAW" == "true" ]] && echo "Y/n" || echo "y/N")
-            read -p "  Include NVIDIA nemoclaw (NIM Architect)? [$PROMPT_NEMOCLAW]: " -n 1 -r; echo ""
-            if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_NEMOCLAW" == "true" ]]); then
-                save_pref "llm.nemoclaw.enabled" "true"
-            else
-                save_pref "llm.nemoclaw.enabled" "false"
+    # 4. Agent Selection (if dashboard)
+    DASHBOARD_FLAGS=""
+    if [ "$DASHBOARD" = true ]; then
+        ui_title "Collaboration Fleet" "${BLUE}"
+        ui_box "Select agents to enable multi-agent collaboration.
+        Spoke agents will use the $COMPUTE_BACKEND backend." "${BLUE}"
+        echo ""
+
+        # List current configuration
+        echo -e "  ${BLUE}Current Fleet:${NC}"
+        [[ $(load_pref "llm.qwen.enabled" "true") == "true" ]] && echo -e "    ${GREEN}• Qwen${NC}"
+        [[ $(load_pref "llm.gemini.enabled" "true") == "true" ]] && echo -e "    ${GREEN}• Gemini${NC}"
+        [[ $(load_pref "llm.nemoclaw.enabled" "false") == "true" && "$COMPUTE_BACKEND" == "nvidia" ]] && echo -e "    ${GREEN}• NVIDIA nemoclaw${NC}"
+        [[ $(load_pref "llm.vllm.enabled" "false") == "true" && ("$COMPUTE_BACKEND" == "vllm-remote" || "$COMPUTE_BACKEND" == "local") ]] && echo -e "    ${GREEN}• vLLM Spoke (${YELLOW}$(load_pref "llm.vllm.host" "192.168.0.193")${NC})"
+        [[ $(load_pref "llm.claude.enabled" "false") == "true" ]] && echo -e "    ${GREEN}• Anthropic Claude${NC}"
+        [[ $(load_pref "llm.deepseek.enabled" "false") == "true" ]] && echo -e "    ${GREEN}• DeepSeek${NC}"
+        echo ""
+
+        if [ "$INTERACTIVE" = true ]; then
+            read -p "  Reconfigure Collaboration Fleet? [y/N]: " -n 1 -r; echo ""
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                # Qwen
+                DEFAULT_QWEN=$(load_pref "llm.qwen.enabled" "true")
+                PROMPT_QWEN=$([[ "$DEFAULT_QWEN" == "true" ]] && echo "Y/n" || echo "y/N")
+                read -p "  Include Qwen? [$PROMPT_QWEN]: " -n 1 -r; echo ""
+                if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_QWEN" == "true" ]]); then
+                    save_pref "llm.qwen.enabled" "true"
+                else
+                    save_pref "llm.qwen.enabled" "false"
+                fi
+
+                # Gemini
+                DEFAULT_GEMINI=$(load_pref "llm.gemini.enabled" "true")
+                PROMPT_GEMINI=$([[ "$DEFAULT_GEMINI" == "true" ]] && echo "Y/n" || echo "y/N")
+                read -p "  Include Gemini? [$PROMPT_GEMINI]: " -n 1 -r; echo ""
+                if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_GEMINI" == "true" ]]); then
+                    save_pref "llm.gemini.enabled" "true"
+                else
+                    save_pref "llm.gemini.enabled" "false"
+                fi
+
+                # Spoke Agent: NVIDIA nemoclaw (NIM)
+                if [ "$COMPUTE_BACKEND" == "nvidia" ]; then
+                    DEFAULT_NEMOCLAW=$(load_pref "llm.nemoclaw.enabled" "true")
+                    PROMPT_NEMOCLAW=$([[ "$DEFAULT_NEMOCLAW" == "true" ]] && echo "Y/n" || echo "y/N")
+                    read -p "  Include NVIDIA nemoclaw (NIM Architect)? [$PROMPT_NEMOCLAW]: " -n 1 -r; echo ""
+                    if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_NEMOCLAW" == "true" ]]); then
+                        save_pref "llm.nemoclaw.enabled" "true"
+                    else
+                        save_pref "llm.nemoclaw.enabled" "false"
+                    fi
+                fi
+
+                # Spoke Agent: vLLM
+                if [[ "$COMPUTE_BACKEND" == "vllm-remote" || "$COMPUTE_BACKEND" == "local" ]]; then
+                    DEFAULT_VLLM=$(load_pref "llm.vllm.enabled" "false")
+                    PROMPT_VLLM=$([[ "$DEFAULT_VLLM" == "true" ]] && echo "Y/n" || echo "y/N")
+                    read -p "  Include vLLM Spoke? [$PROMPT_VLLM]: " -n 1 -r; echo ""
+                    if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_VLLM" == "true" ]]); then
+                        LAST_VLLM_HOST=$(load_pref "llm.vllm.host" "192.168.0.193")
+                        read -p "  vLLM Host [default $LAST_VLLM_HOST]: " VLLM_HOST
+                        VLLM_HOST=${VLLM_HOST:-$LAST_VLLM_HOST}
+                        save_pref "llm.vllm.host" "$VLLM_HOST"
+                        save_pref "llm.vllm.enabled" "true"
+                    else
+                        save_pref "llm.vllm.enabled" "false"
+                    fi
+                fi
+
+                # Anthropic Claude
+                DEFAULT_CLAUDE=$(load_pref "llm.claude.enabled" "false")
+                PROMPT_CLAUDE=$([[ "$DEFAULT_CLAUDE" == "true" ]] && echo "Y/n" || echo "y/N")
+                read -p "  Include Anthropic Claude? [$PROMPT_CLAUDE]: " -n 1 -r; echo ""
+                if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_CLAUDE" == "true" ]]); then
+                    save_pref "llm.claude.enabled" "true"
+                else
+                    save_pref "llm.claude.enabled" "false"
+                fi
+
+                # DeepSeek
+                DEFAULT_DEEPSEEK=$(load_pref "llm.deepseek.enabled" "false")
+                PROMPT_DEEPSEEK=$([[ "$DEFAULT_DEEPSEEK" == "true" ]] && echo "Y/n" || echo "y/N")
+                read -p "  Include DeepSeek? [$PROMPT_DEEPSEEK]: " -n 1 -r; echo ""
+                if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_DEEPSEEK" == "true" ]]); then
+                    save_pref "llm.deepseek.enabled" "true"
+                else
+                    save_pref "llm.deepseek.enabled" "false"
+                fi
             fi
         fi
 
-        # Spoke Agent: vLLM
-        if [[ "$COMPUTE_BACKEND" == "vllm-remote" || "$COMPUTE_BACKEND" == "local" ]]; then
-            DEFAULT_VLLM=$(load_pref "llm.vllm.enabled" "false")
-            PROMPT_VLLM=$([[ "$DEFAULT_VLLM" == "true" ]] && echo "Y/n" || echo "y/N")
-            read -p "  Include vLLM Spoke? [$PROMPT_VLLM]: " -n 1 -r; echo ""
-            if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_VLLM" == "true" ]]); then
-                LAST_VLLM_HOST=$(load_pref "llm.vllm.host" "192.168.0.193")
-                read -p "  vLLM Host [default $LAST_VLLM_HOST]: " VLLM_HOST
-                VLLM_HOST=${VLLM_HOST:-$LAST_VLLM_HOST}
-                save_pref "llm.vllm.host" "$VLLM_HOST"
-                save_pref "llm.vllm.enabled" "true"
-            else
-                save_pref "llm.vllm.enabled" "false"
-            fi
+        # Set DASHBOARD_FLAGS based on finalized preferences
+        [[ $(load_pref "llm.qwen.enabled" "true") == "false" ]] && DASHBOARD_FLAGS+=" --no-qwen"
+        [[ $(load_pref "llm.gemini.enabled" "true") == "false" ]] && DASHBOARD_FLAGS+=" --no-gemini"
+        [[ $(load_pref "llm.vllm.enabled" "false") == "false" ]] && DASHBOARD_FLAGS+=" --no-vllm"
+
+        if [[ $(load_pref "llm.nemoclaw.enabled" "false") == "true" && "$COMPUTE_BACKEND" == "nvidia" ]]; then
+            DASHBOARD_FLAGS+=" --add-nemoclaw"
+            export NEMO_HOST="integrate.api.nvidia.com"
+            export NEMO_BASE_URL="https://integrate.api.nvidia.com/v1"
         fi
 
-        # Anthropic Claude
-        DEFAULT_CLAUDE=$(load_pref "llm.claude.enabled" "false")
-        PROMPT_CLAUDE=$([[ "$DEFAULT_CLAUDE" == "true" ]] && echo "Y/n" || echo "y/N")
-        read -p "  Include Anthropic Claude? [$PROMPT_CLAUDE]: " -n 1 -r; echo ""
-        if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_CLAUDE" == "true" ]]); then
-            save_pref "llm.claude.enabled" "true"
-        else
-            save_pref "llm.claude.enabled" "false"
+        if [[ $(load_pref "llm.vllm.enabled" "false") == "true" && ("$COMPUTE_BACKEND" == "vllm-remote" || "$COMPUTE_BACKEND" == "local") ]]; then
+            DASHBOARD_FLAGS+=" --vllm"
+            VLLM_HOST=$(load_pref "llm.vllm.host" "192.168.0.193")
+            export VLLM_BASE_URL="http://$VLLM_HOST:8000/v1"
         fi
 
-        # DeepSeek
-        DEFAULT_DEEPSEEK=$(load_pref "llm.deepseek.enabled" "false")
-        PROMPT_DEEPSEEK=$([[ "$DEFAULT_DEEPSEEK" == "true" ]] && echo "Y/n" || echo "y/N")
-        read -p "  Include DeepSeek? [$PROMPT_DEEPSEEK]: " -n 1 -r; echo ""
-        if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$DEFAULT_DEEPSEEK" == "true" ]]); then
-            save_pref "llm.deepseek.enabled" "true"
-        else
-            save_pref "llm.deepseek.enabled" "false"
+        [[ $(load_pref "llm.claude.enabled" "false") == "true" ]] && DASHBOARD_FLAGS+=" --add-claude"
+        [[ $(load_pref "llm.deepseek.enabled" "false") == "true" ]] && DASHBOARD_FLAGS+=" --add-deepseek"
+
+        if [ "$CONDUCTOR" = true ]; then
+            DASHBOARD_FLAGS+=" --conductor"
         fi
-    fi
-
-    # Set DASHBOARD_FLAGS based on finalized preferences
-    [[ $(load_pref "llm.qwen.enabled" "true") == "false" ]] && DASHBOARD_FLAGS+=" --no-qwen"
-    [[ $(load_pref "llm.gemini.enabled" "true") == "false" ]] && DASHBOARD_FLAGS+=" --no-gemini"
-    [[ $(load_pref "llm.vllm.enabled" "false") == "false" ]] && DASHBOARD_FLAGS+=" --no-vllm"
-
-    if [[ $(load_pref "llm.nemoclaw.enabled" "false") == "true" && "$COMPUTE_BACKEND" == "nvidia" ]]; then
-        DASHBOARD_FLAGS+=" --add-nemoclaw"
-        export NEMO_HOST="integrate.api.nvidia.com"
-        export NEMO_BASE_URL="https://integrate.api.nvidia.com/v1"
-    fi
-
-    if [[ $(load_pref "llm.vllm.enabled" "false") == "true" && ("$COMPUTE_BACKEND" == "vllm-remote" || "$COMPUTE_BACKEND" == "local") ]]; then
-        DASHBOARD_FLAGS+=" --vllm"
-        VLLM_HOST=$(load_pref "llm.vllm.host" "192.168.0.193")
-        export VLLM_BASE_URL="http://$VLLM_HOST:8000/v1"
-    fi
-
-    [[ $(load_pref "llm.claude.enabled" "false") == "true" ]] && DASHBOARD_FLAGS+=" --add-claude"
-    [[ $(load_pref "llm.deepseek.enabled" "false") == "true" ]] && DASHBOARD_FLAGS+=" --add-deepseek"
-
-    if [ "$CONDUCTOR" = true ]; then
-        DASHBOARD_FLAGS+=" --conductor"
     fi
 fi
+
 # 4. Launching
 ui_title "Finalizing Launch" "${BLUE}"
-if [ "$DASHBOARD" = true ]; then
+if [ "$WEBUI" = true ]; then
+    ui_banner "Launching Web UI" "${GREEN}"
+    echo ""
+    echo -e "  Starting Flask server on http://localhost:8080..."
+    echo -e "  (Press Ctrl+C to stop)"
+    echo ""
+    if [ -d "$SCRIPT_DIR/webui-venv" ]; then
+        source "$SCRIPT_DIR/webui-venv/bin/activate"
+    fi
+    exec python3 "$SCRIPT_DIR/../webui/app.py"
+elif [ "$DASHBOARD" = true ]; then
     echo -e "  Launching Unified Dashboard..."
     # Change to project root to ensure dashboard detects it
     cd "$PROJECT_ROOT"

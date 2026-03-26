@@ -5,11 +5,21 @@
 export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
 
 # ============================================
-# UI & ANSI Graphics Utilities (80 Columns)
+# UI & ANSI Graphics Utilities (Dynamic Width)
 # ============================================
 
-# Standard UI width
-UI_WIDTH=80
+# Detect terminal width with fallback
+if command -v tput >/dev/null 2>&1; then
+    UI_WIDTH=$(tput cols)
+elif command -v stty >/dev/null 2>&1; then
+    UI_WIDTH=$(stty size | cut -d' ' -f2)
+else
+    UI_WIDTH=80
+fi
+
+# Cap width at 100 for readability on ultra-wide screens, but ensure min 80
+if [ $UI_WIDTH -gt 100 ]; then UI_WIDTH=100; fi
+if [ $UI_WIDTH -lt 80 ]; then UI_WIDTH=80; fi
 
 # UI Border Characters
 UL="╔"
