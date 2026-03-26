@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hcom Atari-LX Build Sync
+# hcom Atari-8bit Build Sync
 # Synchronizes build artifacts (symbols, segment addresses) to the Shared Blackboard
 
 set -euo pipefail
@@ -13,7 +13,7 @@ PROJECT_ROOT=$(detect_project_root)
 MAP_FILE="$PROJECT_ROOT/build/bin/atari-lx.map"
 KV_TOOL="$SCRIPT_DIR/hcom-kv"
 
-echo "Synchronizing Atari-LX build state to Blackboard..."
+echo "Synchronizing Atari-8bit build state to Blackboard..."
 
 if [[ ! -f "$MAP_FILE" ]]; then
     echo "Warning: Map file not found at $MAP_FILE. Run 'make build' first."

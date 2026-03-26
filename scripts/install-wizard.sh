@@ -111,7 +111,7 @@ step_installation_type() {
     local options=(
         "Minimal (Core only - Gemini & Qwen)"
         "Standard (Recommended - Dashboard + Conductor)"
-        "Full (All agents + Atari-LX + Web UI)"
+        "Full (All agents + Active Modules + Web UI)"
     )
     
     prompt_choice "Select installation profile:" "${options[@]}"

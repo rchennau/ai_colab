@@ -1,6 +1,6 @@
 # Implementation Plan: Shared Blackboard and Automated Conductor Agent
 
-This plan introduces a shared Key-Value store (Blackboard) for agent coordination and an automated Conductor Agent to manage project lifecycle and track alignment for Atari-LX.
+This plan introduces a shared Key-Value store (Blackboard) for agent coordination and an automated Conductor Agent to manage project lifecycle and track alignment for the current project.
 
 ## Phase 1: Shared Blackboard (KV Store)
 

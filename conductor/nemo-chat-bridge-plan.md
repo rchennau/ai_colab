@@ -22,7 +22,7 @@ Add a `[launch.nemo]` section to define default arguments and system prompts.
 Create a persistent bridge script that monitors `hcom` events and forwards them to a Google Chat space.
 
 **Logic:**
-1. **Startup**: Locate or create a Google Chat space named "Atari-LX Multi-Agent".
+1. **Startup**: Locate or create a Google Chat space named "Multi-Agent Monitoring".
 2. **Subscription**: Use `hcom events sub` to listen for critical events (e.g., `plan-sync`, `visual-debug`, `life_action=batch_launched`).
 3. **Forwarding Loop**:
    - For each new event, format a Google Chat markdown message.

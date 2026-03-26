@@ -80,10 +80,10 @@ These commands can be sent from any agent chat or the **User Command Console**.
 | `!build` | Core | Run the project build system. |
 | `!git-sync` | Core | Pull latest changes from remote. |
 | `!switch <path>` | Core | Change conductor focus to another project. |
-| `!screenshot` | Atari-LX | Capture current emulator state. |
-| `!memory-map` | Atari-LX | View visual memory allocation. |
-| `!profile <file>` | Atari-LX | Analyze 6502 code cycle counts. |
-| `!perf-trend <rt>` | Atari-LX | View historical performance trend. |
+| `!screenshot` | Atari-8bit | Capture current emulator state. |
+| `!memory-map` | Atari-8bit | View visual memory allocation. |
+| `!profile <file>` | Atari-8bit | Analyze 6502 code cycle counts. |
+| `!perf-trend <rt>` | Atari-8bit | View historical performance trend. |
 
 ---
 

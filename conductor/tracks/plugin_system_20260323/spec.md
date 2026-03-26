@@ -1,7 +1,7 @@
 # Track: Generic Module Plugin System
 
 ## 1. Objective
-Transform ai-colab into a fully modular framework where domain-specific functionality (like Atari-LX) can be added or removed via a standardized manifest-based plugin system.
+Transform ai-colab into a fully modular framework where domain-specific functionality (like platform-specific tools) can be added or removed via a standardized manifest-based plugin system.
 
 ## 2. Specification
 
@@ -9,29 +9,23 @@ Transform ai-colab into a fully modular framework where domain-specific function
 Each module must contain a `module.toml` in its root directory with the following structure:
 ```toml
 [module]
-id = "atari-lx"
-name = "Atari-LX Development"
-description = "Specialized tools for 6502 assembly and Atari hardware."
+id = "example-module"
+name = "Example Addon"
+description = "Specialized tools for a specific domain."
 version = "1.0.0"
 
 [env]
-ENABLE_ATARI_LX = "true"
-
-[scripts]
-install = "scripts/install-deps.sh" # Optional
-init = "scripts/init-blackboard.sh" # Optional
+ENABLE_EXAMPLE_MODULE = "true"
 
 [hooks]
 # Commands added to the Conductor
 conductor_commands = [
-    { trigger = "!screenshot", script = "scripts/hcom-atari-screen.sh" },
-    { trigger = "!memory-map", script = "scripts/atari-mem-map.sh" }
+    { trigger = "!custom-cmd", script = "scripts/custom-handler.sh" }
 ]
 
 # Sections added to the Conductor Dashboard TUI
 dashboard_sections = [
-    { name = "Latest Performance", type = "table", source = "sql:SELECT routine, cycles FROM performance..." },
-    { name = "Memory Allocation", type = "text", source = "file:conductor/reports/memory_map.txt" }
+    { name = "Domain Status", type = "table", source = "sql:SELECT status FROM domain_table..." }
 ]
 ```
 
@@ -42,7 +36,7 @@ dashboard_sections = [
 - **Dashboard**: `conductor-dashboard.sh` should render sections based on the active modules' manifests.
 
 ## 3. Success Criteria
-- [ ] No hardcoded Atari-LX logic remains in the core scripts.
-- [ ] A new module can be added by simply placing it in the `modules/` directory.
-- [ ] Conductor `!help` dynamically lists commands from active modules.
-- [ ] Dashboard UI adapts its sections based on active plugins.
+- [x] No hardcoded domain-specific logic remains in the core scripts.
+- [x] A new module can be added by simply placing it in the `modules/` directory.
+- [x] Conductor `!help` dynamically lists commands from active modules.
+- [x] Dashboard UI adapts its sections based on active plugins.

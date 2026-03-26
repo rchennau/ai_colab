@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hcom Atari-LX Hardware Register Initialization
+# hcom Atari-8bit Hardware Register Initialization
 # Populates the Blackboard with standard Atari 8-bit constants
 
 set -euo pipefail

@@ -7,7 +7,7 @@ To extend ai-colab's reach by separating the self-hosted orchestration core from
 
 ### 1. Hub and Spoke Architecture
 - **Self-Hosted Hub**: The `ai-colab-core` Docker image and framework now focus purely on orchestration (hcom, Conductor, Blackboard, Dashboard).
-- **Remote Spokes**: High-power agents (like **nemoclaud**) run externally on specialized cloud infrastructure.
+- **Remote Spokes**: High-power agents (like **nemoclaw**) run externally on specialized cloud infrastructure.
 - **Remote Connectors**: Integrated client CLIs into the Hub to bridge the gap between local orchestration and remote intelligence.
 
 ### 2. Multi-Backend Selection

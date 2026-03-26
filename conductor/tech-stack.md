@@ -8,16 +8,15 @@
 *   **Database:** `sqlite3` for local persistent storage (Blackboard & Semantic Index).
 *   **Python:** Supporting language for advanced utilities and terminal detection.
 
-## Atari-LX Module (Optional Addon)
-*   **6502 Assembly:** Primary language for performance-critical Atari 8-bit routines.
-*   **C (cc65):** Used for higher-level application logic and Atari system integration.
-*   **Build System:** `cc65` toolchain for Atari target compilation.
-*   **MCP (Model Context Protocol):** Specialized Atari development server (`atari-dev-agent`) for 6502 validation and hardware context.
-*   **Emulator:** `Atari800` for automated screenshot capture and validation.
+## Modular Addons (Example: Atari-8bit)
+*   **Domain-Specific Languages:** Support for 6502 Assembly, C (cc65), etc.
+*   **Custom Tooling:** Manifest-driven integration of specialized profilers and debuggers.
+*   **Compute Spoke Integration:** Specialized MCP servers for domain-specific hardware context.
+*   **Visual Debugging:** Integrated support for emulator screenshots and state validation.
 
 ## Specialized Agent Roles
 *   **Gemini:** Architect & Orchestrator (Project Lead).
-*   **Qwen:** Assembly & Hardware Expert (Timing-critical 6502 - active in Atari module).
+*   **Qwen:** Assembly & Hardware Expert (Timing-critical code - active in modular addons).
 *   **DeepSeek:** Logic & Optimization Specialist (C and Algorithm optimization).
 *   **Claude:** Generalist & Documentation Expert.
 

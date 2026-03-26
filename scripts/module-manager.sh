@@ -96,7 +96,7 @@ discover_modules() {
 }
 
 # Check if a module is active (enabled)
-# Usage: is_module_active "atari-lx"
+# Usage: is_module_active "module-id"
 is_module_active() {
     local module_id="$1"
     # Convert to uppercase and replace hyphens with underscores
@@ -107,14 +107,14 @@ is_module_active() {
 }
 
 # Get module directory path
-# Usage: get_module_dir "atari-lx"
+# Usage: get_module_dir "module-id"
 get_module_dir() {
     local module_id="$1"
     echo "$MODULES_DIR/$module_id"
 }
 
 # Get module manifest path
-# Usage: get_module_manifest "atari-lx"
+# Usage: get_module_manifest "module-id"
 get_module_manifest() {
     local module_id="$1"
     echo "$MODULES_DIR/$module_id/module.toml"
@@ -139,7 +139,7 @@ get_init_script() {
 # ============================================
 
 # Parse module metadata from manifest
-# Usage: parse_module_metadata "atari-lx"
+# Usage: parse_module_metadata "module-id"
 # Returns: JSON-like output with module info
 parse_module_metadata() {
     local module_id="$1"
@@ -186,7 +186,7 @@ parse_module_metadata() {
 # ============================================
 
 # Extract environment variables from module manifest
-# Usage: parse_module_env "atari-lx"
+# Usage: parse_module_env "module-id"
 parse_module_env() {
     local module_id="$1"
     local manifest=$(get_module_manifest "$module_id")
@@ -217,7 +217,7 @@ parse_module_env() {
 }
 
 # Export environment variables for a module
-# Usage: export_module_env "atari-lx"
+# Usage: export_module_env "module-id"
 export_module_env() {
     local module_id="$1"
     
@@ -234,7 +234,7 @@ export_module_env() {
 # ============================================
 
 # Parse conductor command hooks from module manifest
-# Usage: parse_conductor_commands "atari-lx"
+# Usage: parse_conductor_commands "module-id"
 # Output: trigger|script pairs, one per line
 parse_conductor_commands() {
     local module_id="$1"
@@ -316,7 +316,7 @@ parse_all_conductor_commands() {
 # ============================================
 
 # Parse dashboard sections from module manifest
-# Usage: parse_dashboard_sections "atari-lx"
+# Usage: parse_dashboard_sections "module-id"
 # Output: name|type|source triples, one per line
 parse_dashboard_sections() {
     local module_id="$1"
@@ -432,8 +432,8 @@ Commands:
 
 Examples:
     $(basename "$0") list
-    $(basename "$0") info atari-lx
-    $(basename "$0") commands atari-lx
+    $(basename "$0") info example-module
+    $(basename "$0") commands example-module
     $(basename "$0") load
 
 Environment Variables:

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Atari-LX Technical Debate Wrapper
+# Atari-8bit Technical Debate Wrapper
 # Automates starting a technical debate between active agents with project context.
 
 set -euo pipefail
@@ -58,7 +58,7 @@ echo "Rounds: $ROUNDS"
 echo "Gathering project context..."
 # Use relative script path for hcom-kv
 BLACKBOARD_CONTEXT=$("$SCRIPT_DIR/hcom-kv" list 2>/dev/null | head -n 20 || echo "No blackboard data")
-BUILD_STATE=$(hcom status 2>/dev/null | grep "dir:" || echo "Atari-LX project root")
+BUILD_STATE=$(hcom status 2>/dev/null | grep "dir:" || echo "Atari-8bit project root")
 
 FULL_CONTEXT="
 Project State:

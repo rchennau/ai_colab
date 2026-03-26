@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hcom Atari-LX Visual Debugging
+# hcom Atari-8bit Visual Debugging
 # Captures emulator screenshot and broadcasts analysis to the team.
 
 set -euo pipefail

@@ -42,7 +42,7 @@ log_info "Extracting segments..."
 # Header for output
 {
     echo "================================================================"
-    echo "  Atari-LX Memory Map Visualization"
+    echo "  Atari-8bit Memory Map Visualization"
     echo "  Generated: $(date)"
     echo "================================================================"
     echo ""
