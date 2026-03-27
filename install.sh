@@ -5,23 +5,26 @@
 
 set -e
 
-# Find script directory - resolve symlinks to get actual physical path
+# Find script directory - resolve ALL symlinks to get actual physical path
 get_script_dir() {
     local source="${BASH_SOURCE[0]}"
+    
+    # If BASH_SOURCE is relative, make it absolute
+    [[ $source != /* ]] && source="$(pwd)/$source"
+    
+    # Resolve all symlinks
     while [ -h "$source" ]; do
         local dir="$(cd -P "$(dirname "$source")" && pwd)"
         source="$(readlink "$source")"
         [[ $source != /* ]] && source="$dir/$source"
     done
-    cd -P "$(dirname "$source")" && pwd
+    
+    # Get the directory and resolve it physically
+    local dir="$(cd -P "$(dirname "$source")" && pwd -P)"
+    echo "$dir"
 }
 
 SCRIPT_DIR="$(get_script_dir)"
-# Ensure SCRIPT_DIR is the project root (install.sh is in project root)
-# If we're in scripts/ directory, go up one level
-if [[ "$SCRIPT_DIR" == */scripts ]]; then
-    SCRIPT_DIR="$(dirname "$SCRIPT_DIR")"
-fi
 PROJECT_ROOT="$SCRIPT_DIR"
 export PROJECT_ROOT
 
