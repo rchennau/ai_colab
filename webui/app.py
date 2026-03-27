@@ -1,7 +1,7 @@
 """
-ai-colab Web UI Backend v2.1 (Real-time Enhanced)
+ai-colab Web UI Backend v2.2 (Security Enhanced)
 Flask-based API and web server for configuration management and monitoring
-Improvements: WebSocket support, real-time updates, enhanced dashboard pages
+Improvements: WebSocket support, real-time updates, enhanced dashboard pages, rate limiting
 """
 
 import os
@@ -19,6 +19,15 @@ from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 import toml
 import jsonschema
+
+# SECURITY: Rate limiting
+try:
+    from flask_limiter import Limiter
+    from flask_limiter.util import get_remote_address
+    RATE_LIMIT_AVAILABLE = True
+except ImportError:
+    RATE_LIMIT_AVAILABLE = False
+    logger.warning("flask-limiter not installed. Install with: pip install flask-limiter")
 
 # Configure logging
 logging.basicConfig(
@@ -49,11 +58,24 @@ def create_app():
     # Enable CORS
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
+    # SECURITY: Initialize rate limiter
+    if RATE_LIMIT_AVAILABLE:
+        limiter = Limiter(
+            app=app,
+            key_func=get_remote_address,
+            default_limits=["100 per minute", "1000 per hour"],
+            storage_uri="memory://"
+        )
+        logger.info("Rate limiting enabled: 100 req/min, 1000 req/hour")
+    else:
+        limiter = None
+        logger.warning("Rate limiting disabled (flask-limiter not installed)")
+
     # Initialize SocketIO for real-time updates
     socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
     # Register routes
-    register_routes(app, socketio)
+    register_routes(app, socketio, limiter)
 
     # Start background thread for real-time updates
     start_realtime_updates(socketio)
@@ -61,7 +83,7 @@ def create_app():
     return app
 
 
-def register_routes(app, socketio):
+def register_routes(app, socketio, limiter=None):
 
     # WebSocket event handlers
     @socketio.on('connect')
@@ -743,32 +765,60 @@ def register_routes(app, socketio):
             logger.error(f"Error applying profile: {e}")
             return jsonify({"error": str(e)}), 500
 
-    @app.route('/api/kb/search', methods=['GET'])
-    def kb_search():
+    # SECURITY: Rate-limited KB endpoints
+    if limiter:
+        @app.route('/api/kb/search', methods=['GET'])
+        @limiter.limit("30 per minute")
+        def kb_search():
+            return _kb_search_impl()
+    else:
+        @app.route('/api/kb/search', methods=['GET'])
+        def kb_search():
+            return _kb_search_impl()
+    
+    def _kb_search_impl():
         """Search knowledge base using RAG"""
         try:
             query = request.args.get('query', '')
             top_k = request.args.get('top_k', '5', type=int)
             source = request.args.get('source', None)
             
-            if not query:
+            # SECURITY: Input validation
+            if not query or not query.strip():
                 return jsonify({"error": "Query parameter 'query' is required"}), 400
             
+            # Validate query length (prevent DoS)
+            if len(query) > 500:
+                return jsonify({"error": "Query too long (max 500 characters)"}), 400
+            
+            # Validate top_k range
+            if top_k < 1 or top_k > 50:
+                return jsonify({"error": "top_k must be between 1 and 50"}), 400
+            
+            # Validate source pattern (prevent path traversal)
+            if source:
+                import re
+                if not re.match(r'^[a-zA-Z0-9_\-*/.]+$', source):
+                    return jsonify({"error": "Invalid source pattern"}), 400
+                # Prevent path traversal
+                if '..' in source or source.startswith('/'):
+                    return jsonify({"error": "Invalid source pattern"}), 400
+
             # Import RAG client
             import sys
             sys.path.insert(0, str(APP_DIR))
             from rag.client import RAGClient
-            
+
             client = RAGClient()
-            
+
             # Build filters
             filters = None
             if source:
                 filters = {'source': source}
-            
+
             # Search
             results = client.search(query, top_k=top_k, filters=filters)
-            
+
             # Format results
             formatted = []
             for result in results:
@@ -779,11 +829,11 @@ def register_routes(app, socketio):
                     'source': result.get('source', ''),
                     'excerpt': result.get('excerpt', '')[:500]
                 })
-            
+
             client.close()
-            
+
             return jsonify(formatted)
-            
+
         except ImportError as e:
             logger.error(f"RAG not available: {e}")
             return jsonify({
@@ -797,16 +847,35 @@ def register_routes(app, socketio):
     def kb_index():
         """Trigger knowledge base indexing"""
         try:
+            # SECURITY: Rate limit indexing (expensive operation)
+            import time
+            last_index = APP_DIR / ".last_index_time"
+            if last_index.exists():
+                try:
+                    with open(last_index) as f:
+                        last_time = float(f.read().strip())
+                    if time.time() - last_time < 60:  # 1 minute cooldown
+                        return jsonify({
+                            "status": "error",
+                            "error": "Please wait before re-indexing (1 minute cooldown)"
+                        }), 429
+                except (ValueError, IOError):
+                    pass
+            
             import sys
             sys.path.insert(0, str(APP_DIR))
             from rag.client import RAGClient
-            
+
             client = RAGClient()
             result = client.index(force=False)
             client.close()
             
+            # Record last index time
+            with open(last_index, 'w') as f:
+                f.write(str(time.time()))
+
             return jsonify(result)
-            
+
         except ImportError as e:
             logger.error(f"RAG not available: {e}")
             return jsonify({

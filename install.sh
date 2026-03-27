@@ -206,7 +206,27 @@ if ! has_command hcom; then
     echo ""
     if [[ $REPLY =~ ^[Yy]$ || -z $REPLY ]]; then
         echo "Installing hcom..."
-        curl -fsSL https://raw.githubusercontent.com/aannoo/hcom/main/install.sh | sh
+        
+        # SECURE: Download, verify, then execute (not curl | bash)
+        HCOM_INSTALL_SCRIPT=$(mktemp /tmp/hcom-install.XXXXXX.sh)
+        trap "rm -f $HCOM_INSTALL_SCRIPT" EXIT
+        
+        echo "  Downloading hcom installer..."
+        if curl -fsSL -o "$HCOM_INSTALL_SCRIPT" https://raw.githubusercontent.com/aannoo/hcom/main/install.sh; then
+            echo "  Verifying installer..."
+            # Basic verification: check script starts with shebang
+            if head -1 "$HCOM_INSTALL_SCRIPT" | grep -q "^#!"; then
+                echo "  Running installer..."
+                bash "$HCOM_INSTALL_SCRIPT"
+                echo -e "${GREEN}✓ hcom installed successfully${NC}"
+            else
+                print_error "Installer verification failed: invalid script format"
+                exit 1
+            fi
+        else
+            print_error "Failed to download hcom installer"
+            exit 1
+        fi
 
         # Source profile to make hcom available in the current script process
         if [ -n "$SHELL_CONFIG" ] && [ -f "$SHELL_CONFIG" ] && [[ "$SHELL_CONFIG" != *".zshrc" ]]; then
@@ -318,7 +338,25 @@ for llm in $LLMS_TO_INSTALL; do
                 if [[ "$IS_MACOS" == true ]] && has_command brew; then
                     brew install ollama
                 else
-                    curl -fsSL https://ollama.com/install.sh | sh
+                    # SECURE: Download, verify, then execute (not curl | bash)
+                    OLLAMA_INSTALL_SCRIPT=$(mktemp /tmp/ollama-install.XXXXXX.sh)
+                    trap "rm -f $OLLAMA_INSTALL_SCRIPT" EXIT
+                    
+                    echo "  Downloading Ollama installer..."
+                    if curl -fsSL -o "$OLLAMA_INSTALL_SCRIPT" https://ollama.com/install.sh; then
+                        echo "  Verifying installer..."
+                        if head -1 "$OLLAMA_INSTALL_SCRIPT" | grep -q "^#!"; then
+                            echo "  Running installer..."
+                            bash "$OLLAMA_INSTALL_SCRIPT"
+                            echo -e "${GREEN}✓ Ollama installed successfully${NC}"
+                        else
+                            print_error "Installer verification failed: invalid script format"
+                            exit 1
+                        fi
+                    else
+                        print_error "Failed to download Ollama installer"
+                        exit 1
+                    fi
                 fi
             else
                 echo -e "  ✓ Ollama is already installed."
@@ -384,6 +422,9 @@ if [[ -f "$SCRIPT_DIR/scripts/module-manager.sh" ]]; then
                 fi
             fi
         done
+        
+        # SECURITY: Set secure file permissions on prefs file
+        chmod 600 "$SCRIPT_DIR/.ai-colab-prefs" 2>/dev/null || true
     else
         echo -e "${YELLOW}○ No modules directory found${NC}"
     fi

@@ -214,11 +214,14 @@ config_set() {
         # Add new key
         echo "${key} = \"${value}\"" >> "$CONFIG_FILE"
     fi
+    
+    # SECURITY: Set secure file permissions (owner read/write only)
+    chmod 600 "$CONFIG_FILE" 2>/dev/null || true
 
-    print_success "Configuration updated: ${key} = ${value}"    
+    print_success "Configuration updated: ${key} = ${value}"
     # Update state
     update_state "config_changed" "$(date -Iseconds)"
-    
+
     return 0
 }
 
