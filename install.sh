@@ -5,8 +5,21 @@
 
 set -e
 
-# Find script directory and source utils
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Find script directory - resolve symlinks to get actual physical path
+get_script_dir() {
+    local source="${BASH_SOURCE[0]}"
+    while [ -h "$source" ]; do
+        local dir="$(cd -P "$(dirname "$source")" && pwd)"
+        source="$(readlink "$source")"
+        [[ $source != /* ]] && source="$dir/$source"
+    done
+    cd -P "$(dirname "$source")" && pwd
+}
+
+SCRIPT_DIR="$(get_script_dir)"
+PROJECT_ROOT="$SCRIPT_DIR"
+export PROJECT_ROOT
+
 if [ -f "$SCRIPT_DIR/scripts/utils.sh" ]; then
     source "$SCRIPT_DIR/scripts/utils.sh"
 else
