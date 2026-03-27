@@ -139,7 +139,8 @@ if [[ "$PYTHON_DEPS_OK" == "false" ]]; then
     echo ""
     if [[ $REPLY =~ ^[Yy]$ || -z $REPLY ]]; then
         echo -e "\n${BLUE}Installing dependencies...${NC}"
-        bash "$SCRIPT_DIR/install.sh" --auto
+        # install.sh is in PROJECT_ROOT, not SCRIPT_DIR
+        bash "$PROJECT_ROOT/install.sh" --auto
     fi
 fi
 
