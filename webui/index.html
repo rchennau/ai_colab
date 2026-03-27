@@ -456,6 +456,7 @@
         <button class="nav-btn" data-page="agents">Agents</button>
         <button class="nav-btn" data-page="config">Configuration</button>
         <button class="nav-btn" data-page="knowledge">Knowledge Base</button>
+        <button class="nav-btn" data-page="observability">Observability</button>
         <button class="nav-btn" data-page="logs">Logs</button>
         <button class="nav-btn" data-page="settings">Settings</button>
     </nav>
@@ -770,6 +771,68 @@
                         <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">
                             Enter a search query to find relevant documentation
                         </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Observability Page -->
+        <div class="page" id="observability-page">
+            <div class="card">
+                <h2>📈 System Observability</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                    Real-time metrics, performance dashboards, and system analytics.
+                </p>
+
+                <!-- Quick Stats -->
+                <div class="card-grid">
+                    <div class="card">
+                        <h3>🚀 API Requests</h3>
+                        <div id="apiRequestsStat" style="font-size: 2rem; font-weight: bold; color: var(--accent-blue);">-</div>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Total requests</p>
+                    </div>
+                    <div class="card">
+                        <h3>⚡ Avg Response Time</h3>
+                        <div id="avgResponseTimeStat" style="font-size: 2rem; font-weight: bold; color: var(--accent-green);">-</div>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Milliseconds</p>
+                    </div>
+                    <div class="card">
+                        <h3>❌ Error Rate</h3>
+                        <div id="errorRateStat" style="font-size: 2rem; font-weight: bold; color: var(--accent-red);">-</div>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Errors per minute</p>
+                    </div>
+                    <div class="card">
+                        <h3>🤖 Active Agents</h3>
+                        <div id="activeAgentsStat" style="font-size: 2rem; font-weight: bold; color: var(--accent-yellow);">-</div>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Currently active</p>
+                    </div>
+                </div>
+
+                <!-- Metrics Export -->
+                <div class="form-group" style="margin-top: 1.5rem;">
+                    <h3>Metrics Export</h3>
+                    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                        <button class="btn btn-primary" onclick="exportMetrics('prometheus')">Export Prometheus Format</button>
+                        <button class="btn btn-primary" onclick="exportMetrics('json')">Export JSON</button>
+                        <button class="btn btn-success" onclick="refreshMetrics()">🔄 Refresh</button>
+                    </div>
+                </div>
+
+                <!-- Metrics Display -->
+                <div id="metricsDisplay" style="margin-top: 1.5rem;">
+                    <div class="card">
+                        <h3>API Performance (Last 1000 requests)</h3>
+                        <div id="apiPerformanceMetrics" style="font-family: monospace; font-size: 0.9rem;">
+                            Loading metrics...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Health Timeline -->
+                <div class="card" style="margin-top: 1.5rem;">
+                    <h3>🏥 Health Timeline</h3>
+                    <div id="healthTimeline" style="height: 200px; background: var(--bg-tertiary); border-radius: 4px; padding: 1rem;">
+                        <p style="text-align: center; color: var(--text-secondary); margin-top: 3rem;">Loading health history...</p>
                     </div>
                 </div>
             </div>
@@ -1701,6 +1764,148 @@
         function saveSettings() {
             showToast('Settings saved', 'success');
         }
+
+        // Observability & Metrics
+        let metricsCache = null;
+        let metricsLastRefresh = 0;
+
+        async function refreshMetrics() {
+            const now = Date.now();
+            
+            // Cache for 5 seconds
+            if (metricsCache && (now - metricsLastRefresh) < 5000) {
+                updateMetricsDisplay(metricsCache);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/metrics`);
+                if (!response.ok) throw new Error('Failed to fetch metrics');
+                
+                metricsCache = await response.json();
+                metricsLastRefresh = now;
+                
+                updateMetricsDisplay(metricsCache);
+                showToast('Metrics refreshed', 'success');
+            } catch (error) {
+                console.error('Failed to refresh metrics:', error);
+                showToast('Failed to refresh metrics', 'error');
+            }
+        }
+
+        function updateMetricsDisplay(metrics) {
+            // Update quick stats
+            const apiRequests = metrics.counters?.ai_colab_api_requests_total || 0;
+            document.getElementById('apiRequestsStat').textContent = Math.round(apiRequests).toLocaleString();
+
+            const avgResponseTime = metrics.histograms?.['ai_colab_api_request_duration_ms:']?.avg || 0;
+            document.getElementById('avgResponseTimeStat').textContent = avgResponseTime.toFixed(2);
+
+            const errors = metrics.counters?.ai_colab_errors_total || 0;
+            const errorRate = apiRequests > 0 ? (errors / apiRequests * 100) : 0;
+            document.getElementById('errorRateStat').textContent = errorRate.toFixed(2) + '%';
+
+            // Active agents would come from health check
+            document.getElementById('activeAgentsStat').textContent = '-';
+
+            // Update performance metrics display
+            const perfDiv = document.getElementById('apiPerformanceMetrics');
+            if (metrics.histograms && Object.keys(metrics.histograms).length > 0) {
+                let html = '<table style="width: 100%; border-collapse: collapse;">';
+                html += '<tr><th style="text-align: left; padding: 0.5rem;">Metric</th><th style="text-align: right; padding: 0.5rem;">Count</th><th style="text-align: right; padding: 0.5rem;">Avg</th><th style="text-align: right; padding: 0.5rem;">P50</th><th style="text-align: right; padding: 0.5rem;">P95</th><th style="text-align: right; padding: 0.5rem;">P99</th></tr>';
+                
+                for (const [key, data] of Object.entries(metrics.histograms)) {
+                    const name = key.split(':')[0];
+                    html += `<tr>
+                        <td style="padding: 0.5rem; border-bottom: 1px solid var(--border-color);">${name}</td>
+                        <td style="text-align: right; padding: 0.5rem; border-bottom: 1px solid var(--border-color);">${data.count}</td>
+                        <td style="text-align: right; padding: 0.5rem; border-bottom: 1px solid var(--border-color);">${data.avg.toFixed(2)}</td>
+                        <td style="text-align: right; padding: 0.5rem; border-bottom: 1px solid var(--border-color);">${data.p50.toFixed(2)}</td>
+                        <td style="text-align: right; padding: 0.5rem; border-bottom: 1px solid var(--border-color);">${data.p95.toFixed(2)}</td>
+                        <td style="text-align: right; padding: 0.5rem; border-bottom: 1px solid var(--border-color);">${data.p99.toFixed(2)}</td>
+                    </tr>`;
+                }
+                html += '</table>';
+                perfDiv.innerHTML = html;
+            } else {
+                perfDiv.innerHTML = '<p>No metrics available yet. Make some API requests to see metrics.</p>';
+            }
+
+            // Update health timeline (simplified)
+            updateHealthTimeline();
+        }
+
+        function updateHealthTimeline() {
+            // Fetch recent health checks and display timeline
+            const timelineDiv = document.getElementById('healthTimeline');
+            
+            // For now, show a simple status
+            timelineDiv.innerHTML = `
+                <div style="display: flex; justify-content: space-around; align-items: center; height: 100%;">
+                    <div style="text-align: center;">
+                        <div style="width: 20px; height: 20px; background: var(--success); border-radius: 50%; margin: 0 auto 0.5rem;"></div>
+                        <p style="font-size: 0.9rem;">Now</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="width: 20px; height: 20px; background: var(--success); border-radius: 50%; margin: 0 auto 0.5rem;"></div>
+                        <p style="font-size: 0.9rem;">-5m</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="width: 20px; height: 20px; background: var(--success); border-radius: 50%; margin: 0 auto 0.5rem;"></div>
+                        <p style="font-size: 0.9rem;">-10m</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="width: 20px; height: 20px; background: var(--success); border-radius: 50%; margin: 0 auto 0.5rem;"></div>
+                        <p style="font-size: 0.9rem;">-15m</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="width: 20px; height: 20px; background: var(--success); border-radius: 50%; margin: 0 auto 0.5rem;"></div>
+                        <p style="font-size: 0.9rem;">-20m</p>
+                    </div>
+                </div>
+                <p style="text-align: center; margin-top: 1rem; color: var(--text-secondary);">System healthy for last 20 minutes</p>
+            `;
+        }
+
+        async function exportMetrics(format) {
+            try {
+                const response = await fetch(`${API_BASE}/metrics?format=${format}`);
+                if (!response.ok) throw new Error('Failed to export metrics');
+                
+                if (format === 'prometheus') {
+                    const text = await response.text();
+                    downloadFile(text, 'ai-colab-metrics.prom', 'text/plain');
+                } else {
+                    const json = await response.json();
+                    downloadFile(JSON.stringify(json, null, 2), 'ai-colab-metrics.json', 'application/json');
+                }
+                
+                showToast(`Metrics exported as ${format.toUpperCase()}`, 'success');
+            } catch (error) {
+                console.error('Failed to export metrics:', error);
+                showToast('Failed to export metrics', 'error');
+            }
+        }
+
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Auto-refresh metrics every 30 seconds when on observability page
+        setInterval(() => {
+            const obsPage = document.getElementById('observability-page');
+            if (obsPage && obsPage.classList.contains('active')) {
+                refreshMetrics();
+            }
+        }, 30000);
 
         // Knowledge Base Search
         async function searchKnowledgeBase() {

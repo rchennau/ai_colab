@@ -286,6 +286,75 @@ def register_routes(app, socketio, limiter=None):
                 'error': str(e)
             }), 500
 
+    @app.route('/metrics', methods=['GET'])
+    def metrics_endpoint():
+        """Export metrics in Prometheus or JSON format"""
+        try:
+            sys.path.insert(0, str(PROJECT_ROOT / 'scripts'))
+            from metrics import get_metrics_registry
+            
+            registry = get_metrics_registry()
+            format_type = request.args.get('format', 'json').lower()
+            
+            if format_type == 'prometheus':
+                # Export in Prometheus text format
+                metrics_text = registry.to_prometheus()
+                return Response(
+                    metrics_text,
+                    mimetype='text/plain',
+                    headers={
+                        'Content-Type': 'text/plain; version=0.0.4; charset=utf-8'
+                    }
+                )
+            else:
+                # Export as JSON
+                metrics_dict = registry.get_metrics()
+                return jsonify(metrics_dict)
+                
+        except ImportError as e:
+            logger.error(f"Metrics not available: {e}")
+            return jsonify({
+                'status': 'error',
+                'error': 'Metrics system not initialized'
+            }), 503
+        except Exception as e:
+            logger.error(f"Metrics export failed: {e}")
+            return jsonify({
+                'status': 'error',
+                'error': str(e)
+            }), 500
+
+    @app.route('/metrics/export')
+    def export_metrics_file():
+        """Export metrics as downloadable file"""
+        try:
+            sys.path.insert(0, str(PROJECT_ROOT / 'scripts'))
+            from metrics import get_metrics_registry
+            
+            registry = get_metrics_registry()
+            format_type = request.args.get('format', 'json').lower()
+            
+            if format_type == 'prometheus':
+                metrics_text = registry.to_prometheus()
+                return Response(
+                    metrics_text,
+                    mimetype='text/plain',
+                    headers={
+                        'Content-Disposition': 'attachment; filename=ai-colab-metrics.prom',
+                        'Content-Type': 'text/plain; version=0.0.4; charset=utf-8'
+                    }
+                )
+            else:
+                metrics_dict = registry.get_metrics()
+                return jsonify(metrics_dict)
+                
+        except Exception as e:
+            logger.error(f"Metrics export failed: {e}")
+            return jsonify({
+                'status': 'error',
+                'error': str(e)
+            }), 500
+
     @app.route('/api/preflight', methods=['GET'])
     def preflight_checks():
         """Comprehensive pre-flight checks (mirrors dashboard-launch.sh)"""
