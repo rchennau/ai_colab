@@ -1,5 +1,6 @@
 # Inference Gateway Configuration
-# Routes inference requests through existing CLI tools (FREE access)
+# Supports both FREE CLI access and PAID API access
+# Default: CLI (free), set access_method: 'api' for paid API
 
 gateway:
   enabled: true
@@ -14,84 +15,102 @@ gateway:
   # Caching configuration
   cache:
     enabled: true
-    backend: memory  # memory or redis
-    redis_host: localhost
-    redis_port: 6379
+    backend: memory
     ttl_seconds: 300
-    max_memory_mb: 512
   
-  # Rate limiting per model (CLI rate limits, not API limits)
+  # Rate limiting
   rate_limits:
     gemini:
       requests_per_minute: 60
       concurrent_requests: 10
-    
     qwen:
       requests_per_minute: 100
       concurrent_requests: 20
-    
     claude:
       requests_per_minute: 50
       concurrent_requests: 5
-    
+    deepseek:
+      requests_per_minute: 1000
+      concurrent_requests: 50
     vllm_local:
       requests_per_minute: 1000
       concurrent_requests: 50
   
-  # Fallback configuration
+  # Fallback chain (CLI first, then paid APIs)
   fallback:
     enabled: true
     order:
-      - gemini
-      - qwen
-      - claude
-      - vllm_local
+      - gemini        # FREE via CLI
+      - qwen          # FREE via CLI
+      - claude        # FREE via CLI (beta)
+      - deepseek      # CHEAPEST paid ($0.00014/1K)
+      - vllm_local    # FREE local
     circuit_breaker_threshold: 5
     circuit_breaker_timeout_seconds: 60
-  
-  # Analytics configuration
-  analytics:
-    enabled: true
-    export_interval_seconds: 60
-    retention_days: 30
 
-# Model configurations (CLI-based, FREE access)
+# Model configurations
+# Default: access_method: 'cli' (FREE)
+# To use paid API: change to access_method: 'api' and set api_key_env
 models:
   gemini:
     provider: google
     name: Gemini 2.0 Flash
+    access_method: cli  # 'cli' (FREE) or 'api' (PAID)
     cli_command: gemini
     cli_args: ["shell"]
+    # API configuration (optional fallback)
+    api_endpoint: https://generativelanguage.googleapis.com/v1
+    api_key_env: GEMINI_API_KEY
     model_id: gemini-2.0-flash
     max_tokens: 32768
-    cost_per_1k_input: 0  # FREE via CLI
-    cost_per_1k_output: 0
+    cost_per_1k_input: 0.0005   # Only if using API
+    cost_per_1k_output: 0.0015  # Only if using API
   
   qwen:
     provider: alibaba
     name: Qwen3 Next 80B
+    access_method: cli  # FREE
     cli_command: qwen
     cli_args: []
+    # API configuration (optional)
+    api_endpoint: https://dashscope.aliyuncs.com/api/v1
+    api_key_env: QWEN_API_KEY
     model_id: qwen3-next-80b-a3b-instruct
     max_tokens: 32768
-    cost_per_1k_input: 0  # FREE via CLI
-    cost_per_1k_output: 0
+    cost_per_1k_input: 0.0004
+    cost_per_1k_output: 0.0012
   
   claude:
     provider: anthropic
     name: Claude 3.5 Sonnet
+    access_method: cli  # FREE (beta)
     cli_command: claude
     cli_args: []
+    # API configuration (optional)
+    api_endpoint: https://api.anthropic.com/v1
+    api_key_env: ANTHROPIC_API_KEY
     model_id: claude-3-5-sonnet-20241022
     max_tokens: 32768
-    cost_per_1k_input: 0  # FREE via CLI (beta)
-    cost_per_1k_output: 0
+    cost_per_1k_input: 0.003
+    cost_per_1k_output: 0.015
+  
+  # CHEAPEST PAID OPTION
+  deepseek:
+    provider: deepseek
+    name: DeepSeek-V3 (Cheapest Paid)
+    access_method: api  # API only (no CLI)
+    api_endpoint: https://api.deepseek.com/v1
+    api_key_env: DEEPSEEK_API_KEY
+    model_id: deepseek-chat
+    max_tokens: 64000
+    cost_per_1k_input: 0.00014  # CHEAPEST!
+    cost_per_1k_output: 0.00028
   
   vllm_local:
     provider: local
-    name: DeepSeek Coder (Local)
-    cli_command: null  # Uses HTTP endpoint
-    endpoint: http://localhost:8000/v1
+    name: Local vLLM Server
+    access_method: api  # Local API
+    api_endpoint: http://localhost:8000/v1
     model_id: deepseek-coder
     max_tokens: 16384
     cost_per_1k_input: 0  # FREE (local)

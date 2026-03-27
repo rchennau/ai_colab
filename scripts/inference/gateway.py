@@ -94,8 +94,12 @@ class ModelConfig:
     id: str
     name: str
     provider: str
-    endpoint: str
+    access_method: str = 'cli'  # 'cli' or 'api'
+    cli_command: Optional[str] = None
+    cli_args: List[str] = field(default_factory=list)
+    api_endpoint: Optional[str] = None
     api_key_env: Optional[str] = None
+    model_id: Optional[str] = None
     max_tokens: int = 32768
     cost_per_1k_input: float = 0.0
     cost_per_1k_output: float = 0.0
@@ -127,70 +131,112 @@ class ModelClient(ABC):
 
 
 # ============================================================================
-# Gemini CLI Client (FREE via gemini-cli)
+# Gemini Client (CLI or API)
 # ============================================================================
 
 class GeminiClient(ModelClient):
-    """Google Gemini via gemini-cli (FREE)"""
+    """Google Gemini via CLI (FREE) or API (PAID)"""
     
     def __init__(self, config: ModelConfig):
         super().__init__(config)
-        # No API key needed - uses gemini-cli's authenticated session
+        self.api_key = os.environ.get(config.api_key_env or 'GEMINI_API_KEY') if config.access_method == 'api' else None
+        self.base_url = config.api_endpoint if config.access_method == 'api' else None
     
     async def execute(self, request: InferenceRequest) -> InferenceResponse:
-        """Execute request via gemini-cli"""
+        """Execute request via CLI or API based on config"""
+        if self.config.access_method == 'api' and self.api_key:
+            return await self._execute_api(request)
+        else:
+            return await self._execute_cli(request)
+    
+    async def _execute_cli(self, request: InferenceRequest) -> InferenceResponse:
+        """Execute via gemini-cli (FREE)"""
         start_time = time.time()
         
         try:
-            # Build gemini-cli command
-            cmd = [
-                'gemini', 'shell',
-                '--prompt', request.prompt,
-                '--model', self.config.id,
-                '--max-tokens', str(request.max_tokens),
-                '--temperature', str(request.temperature)
-            ]
+            cmd = ['gemini', 'shell', '--prompt', request.prompt]
+            if self.config.model_id:
+                cmd.extend(['--model', self.config.model_id])
+            cmd.extend(['--max-tokens', str(request.max_tokens)])
+            cmd.extend(['--temperature', str(request.temperature)])
             
-            # Execute via subprocess
             process = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
+                *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
                 cwd=str(PROJECT_ROOT)
             )
             
             stdout, stderr = await asyncio.wait_for(
-                process.communicate(),
-                timeout=request.timeout_ms / 1000
+                process.communicate(), timeout=request.timeout_ms / 1000
             )
             
             if process.returncode != 0:
                 raise Exception(f"gemini-cli error: {stderr.decode()}")
             
-            response_text = stdout.decode().strip()
-            
-            # Estimate tokens
-            input_tokens = len(request.prompt) // 4
-            output_tokens = len(response_text) // 4
-            
-            latency_ms = (time.time() - start_time) * 1000
-            
-            self.request_count += 1
-            self.total_tokens += input_tokens + output_tokens
-            
-            return InferenceResponse(
-                request_id=request.request_id,
-                response=response_text,
-                model_used=self.config.id,
-                tokens_used={'input': input_tokens, 'output': output_tokens},
-                latency_ms=latency_ms,
-                cached=False,
-                cost_usd=0.0  # FREE via CLI
-            )
+            return self._create_response(request, stdout.decode().strip(), start_time)
         
         except Exception as e:
-            latency_ms = (time.time() - start_time) * 1000
-            raise Exception(f"gemini-cli request failed: {e}")
+            # Fallback to API if CLI fails and API is configured
+            if self.api_key:
+                logger.warning(f"gemini-cli failed, falling back to API: {e}")
+                return await self._execute_api(request)
+            raise
+    
+    async def _execute_api(self, request: InferenceRequest) -> InferenceResponse:
+        """Execute via Gemini API (PAID)"""
+        import aiohttp
+        
+        start_time = time.time()
+        
+        try:
+            url = f"{self.base_url}/models/{self.config.model_id}:generateContent"
+            headers = {'Content-Type': 'application/json', 'x-goog-api-key': self.api_key}
+            payload = {
+                'contents': [{'parts': [{'text': request.prompt}]}],
+                'generationConfig': {
+                    'maxOutputTokens': request.max_tokens,
+                    'temperature': request.temperature,
+                    'topP': request.top_p
+                }
+            }
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url, headers=headers, json=payload,
+                                       timeout=aiohttp.ClientTimeout(total=request.timeout_ms/1000)) as resp:
+                    if resp.status != 200:
+                        raise Exception(f"Gemini API error: {resp.status}")
+                    result = await resp.json()
+                    response_text = result['candidates'][0]['content']['parts'][0]['text']
+                    input_tokens = len(request.prompt) // 4
+                    output_tokens = len(response_text) // 4
+                    latency_ms = (time.time() - start_time) * 1000
+                    cost = self.calculate_cost(input_tokens, output_tokens)
+                    
+                    self.request_count += 1
+                    self.total_tokens += input_tokens + output_tokens
+                    
+                    return InferenceResponse(
+                        request_id=request.request_id, response=response_text,
+                        model_used=self.config.id,
+                        tokens_used={'input': input_tokens, 'output': output_tokens},
+                        latency_ms=latency_ms, cached=False, cost_usd=cost
+                    )
+        except Exception as e:
+            raise Exception(f"Gemini API request failed: {e}")
+    
+    def _create_response(self, request: InferenceRequest, response_text: str, start_time: float) -> InferenceResponse:
+        """Create response object"""
+        input_tokens = len(request.prompt) // 4
+        output_tokens = len(response_text) // 4
+        latency_ms = (time.time() - start_time) * 1000
+        self.request_count += 1
+        self.total_tokens += input_tokens + output_tokens
+        
+        return InferenceResponse(
+            request_id=request.request_id, response=response_text,
+            model_used=self.config.id,
+            tokens_used={'input': input_tokens, 'output': output_tokens},
+            latency_ms=latency_ms, cached=False, cost_usd=0.0  # FREE via CLI
+        )
 
 
 # ============================================================================

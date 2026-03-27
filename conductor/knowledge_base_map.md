@@ -1,18 +1,16 @@
 # ai-colab Project Map (Semantic Knowledge Base)
-Last Updated: 2026-03-25 (Dashboard v2.4 Fixes & Stability Update)
+Last Updated: 2026-03-26 (Fleet Autonomy & Self-Healing Update)
 
 ## Orchestration Core (Hub)
-- `launch.sh`: Unified launcher for the Dashboard and Conductor. Refactored to use central `config-manager.sh`.
+- `launch.sh`: Unified launcher for the Dashboard, Conductor, and Web UI. Refactored to use central `config-manager.sh` and dynamic terminal detection.
 - `install.sh`: Master installer for project dependencies. Supports `--wizard`, `--reconfigure`, and `--auto` modes.
 - `scripts/install-wizard.sh`: Interactive terminal-based configuration wizard (5-step guided setup). Enhanced with 80-column ANSI UI.
 - `scripts/migrate-project.sh`: Project Detection & Migration Tool. Automatically imports existing AI integrations.
-- `scripts/utils.sh`: Shared utilities including new 80-column ANSI UI helpers (banners, boxes, status items).
-- `scripts/config-manager.sh`: Unified configuration management with validation against `config/config.schema.json`. Supports get/set/validate/backup/restore operations.
-- `config/config.schema.json`: Central source of truth for all project configurations and preferences.
-- `config/profiles/`: Pre-defined configuration profiles (minimal, standard, full).
-- `scripts/conductor-workflow.sh`: The heart of the orchestration logic. Handles Git lifecycle, semantic KB search, and task spawning.
-- `scripts/conductor-dashboard.sh`: High-density TUI for real-time project monitoring.
-- `scripts/dashboard-launch.sh`: Enhanced dashboard launcher (v2.4) with pre-flight checks, session recovery, health monitoring, and cross-version tmux compatibility (fixes -P flag incompatibility).
+- `scripts/utils.sh`: Shared utilities including 80-column ANSI UI helpers and **Health 2.0** reporting logic (`report_health`, `get_ms`).
+- `scripts/config-manager.sh`: Unified configuration management with validation against `config/config.schema.json`.
+- `scripts/conductor-workflow.sh`: The heart of the orchestration logic. Now includes an **Autonomous Fleet Watchdog** for stale agent detection and recovery.
+- `scripts/conductor-dashboard.sh`: High-density TUI for real-time project monitoring. Features a new **Fleet Health** section for spoke monitoring.
+- `scripts/dashboard-launch.sh`: Enhanced dashboard launcher (v2.4) with pre-flight checks, session recovery, and dynamic module initialization.
 - `webui/app.py`: Flask-based API and web server (v2.0) with enhanced health checks, session management, and agent monitoring.
 - `webui/index.html`: Single-page application for the Web UI, featuring setup wizards, real-time monitoring, and pre-flight checks.
 - `scripts/module-manager.py`: Logic for discovering and registering manifest-based modular addons.
