@@ -5,6 +5,21 @@
 export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
 
 # ============================================
+# Logging Integration
+# ============================================
+
+# Source centralized logging
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -f "$SCRIPT_DIR/logging.sh" ]]; then
+    source "$SCRIPT_DIR/logging.sh"
+fi
+
+# Initialize logging for scripts that source utils
+if type -t init_logging &> /dev/null; then
+    init_logging "$(basename "$0")" 2>/dev/null || true
+fi
+
+# ============================================
 # UI & ANSI Graphics Utilities (Dynamic Width)
 # ============================================
 

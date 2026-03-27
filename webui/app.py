@@ -20,6 +20,23 @@ from flask_socketio import SocketIO, emit
 import toml
 import jsonschema
 
+# SECURITY: Import centralized logging
+try:
+    import sys
+    sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
+    from logging_config import (
+        get_logger,
+        get_security_logger,
+        get_api_logger,
+        log_security_event,
+        log_api_request,
+        get_log_stats
+    )
+    LOGGING_AVAILABLE = True
+except ImportError as e:
+    LOGGING_AVAILABLE = False
+    print(f"Warning: Centralized logging not available: {e}")
+
 # SECURITY: Rate limiting
 try:
     from flask_limiter import Limiter
@@ -30,11 +47,18 @@ except ImportError:
     logger.warning("flask-limiter not installed. Install with: pip install flask-limiter")
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+if LOGGING_AVAILABLE:
+    logger = get_logger('ai_colab.webui')
+    security_logger = get_security_logger()
+    api_logger = get_api_logger()
+else:
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    logger = logging.getLogger(__name__)
+    security_logger = logger
+    api_logger = logger
 
 # App configuration
 APP_DIR = Path(__file__).parent.parent
@@ -74,6 +98,61 @@ def create_app():
     # Initialize SocketIO for real-time updates
     socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
+    # Add request logging middleware
+    @app.before_request
+    def log_request():
+        """Log all API requests for monitoring and debugging"""
+        request.start_time = time.time()
+        
+        # Skip logging for static files
+        if request.path.startswith('/static') or request.path == '/':
+            return None
+        
+        client_ip = request.remote_addr
+        logger.debug(f"Request: {request.method} {request.path} from {client_ip}")
+        
+        # Log security events for sensitive endpoints
+        if request.path.startswith('/api/'):
+            # Check for suspicious patterns
+            if '..' in request.path or request.path.count('/') > 10:
+                log_security_event('SUSPICIOUS_PATH', f'{request.method} {request.path}', client_ip)
+        
+        return None
+    
+    @app.after_request
+    def log_response(response):
+        """Log response status and duration"""
+        if hasattr(request, 'start_time'):
+            duration_ms = (time.time() - request.start_time) * 1000
+        else:
+            duration_ms = 0
+        
+        # Skip logging for static files
+        if request.path.startswith('/static') or request.path == '/':
+            return response
+        
+        client_ip = request.remote_addr
+        
+        # Log API requests
+        if request.path.startswith('/api/'):
+            log_api_request(
+                request.method,
+                request.path,
+                response.status_code,
+                duration_ms,
+                client_ip
+            )
+        
+        # Log errors and warnings
+        if response.status_code >= 500:
+            logger.error(f"Server error: {request.method} {request.path} -> {response.status_code}")
+        elif response.status_code >= 400:
+            logger.warning(f"Client error: {request.method} {request.path} -> {response.status_code}")
+        else:
+            logger.debug(f"Success: {request.method} {request.path} -> {response.status_code} ({duration_ms:.2f}ms)")
+        
+        return response
+
     # Register routes
     register_routes(app, socketio, limiter)
 
@@ -111,79 +190,100 @@ def register_routes(app, socketio, limiter=None):
 
     @app.route('/health')
     def health():
-        """Enhanced health check endpoint with system status"""
+        """Enhanced health check endpoint with comprehensive system status"""
         try:
-            # Check tmux
-            tmux_available = shutil.which('tmux') is not None
-            tmux_version = None
-            if tmux_available:
-                try:
-                    result = subprocess.run(['tmux', '-V'], capture_output=True, text=True, timeout=2)
-                    tmux_version = result.stdout.strip() if result.returncode == 0 else None
-                except:
-                    pass
-
-            # Check hcom
-            hcom_available = shutil.which('hcom') is not None
-
-            # Check disk space
-            try:
-                stat = shutil.disk_usage(APP_DIR)
-                disk_free_mb = stat.free / (1024 * 1024)
-            except:
-                disk_free_mb = 0
-
-            # Check for stale lock
-            lock_exists = os.path.exists(SESSION_LOCK)
-            lock_stale = False
-            if lock_exists:
-                try:
-                    lock_age = datetime.now().timestamp() - os.path.getmtime(SESSION_LOCK)
-                    lock_stale = lock_age > 3600  # > 1 hour
-                except:
-                    pass
-
-            # Determine overall health
-            critical_issues = []
-            if not tmux_available:
-                critical_issues.append("tmux not installed")
-            if not hcom_available:
-                critical_issues.append("hcom not installed")
-            if disk_free_mb < MIN_DISK_SPACE_MB:
-                critical_issues.append(f"low disk space ({disk_free_mb:.0f}MB)")
-
-            status = "unhealthy" if critical_issues else "healthy"
-            status_code = 503 if critical_issues else 200
-
+            # Import health monitor
+            sys.path.insert(0, str(PROJECT_ROOT / 'scripts'))
+            from health_monitor import get_health_monitor
+            
+            monitor = get_health_monitor()
+            health_data = monitor.get_health(force_refresh=True)
+            
+            # Determine status code
+            status_code = 200 if health_data.status == 'healthy' else 503
+            
+            # Log health status
+            if health_data.status != 'healthy':
+                logger.warning(f"Health check: {health_data.status}")
+                for name, status in health_data.components.items():
+                    if status.status != 'healthy':
+                        logger.warning(f"  {name}: {status.status} - {status.message}")
+            
             return jsonify({
-                "status": status,
-                "timestamp": datetime.now().isoformat(),
-                "version": "2.0.0",
-                "checks": {
-                    "tmux": {
-                        "available": tmux_available,
-                        "version": tmux_version
-                    },
-                    "hcom": {
-                        "available": hcom_available
-                    },
-                    "disk": {
-                        "free_mb": round(disk_free_mb, 1),
-                        "minimum_mb": MIN_DISK_SPACE_MB,
-                        "ok": disk_free_mb >= MIN_DISK_SPACE_MB
-                    },
-                    "session": {
-                        "lock_exists": lock_exists,
-                        "lock_stale": lock_stale
+                'status': health_data.status,
+                'timestamp': health_data.timestamp,
+                'uptime_seconds': health_data.uptime_seconds,
+                'version': health_data.version,
+                'components': {
+                    name: {
+                        'status': status.status,
+                        'message': status.message,
+                        'details': status.details
                     }
-                },
-                "issues": critical_issues
+                    for name, status in health_data.components.items()
+                }
             }), status_code
+            
+        except ImportError as e:
+            logger.error(f"Health monitor not available: {e}")
+            # Fallback to basic health check
+            return jsonify({
+                'status': 'degraded',
+                'message': 'Health monitor not available',
+                'error': str(e)
+            }), 503
         except Exception as e:
             logger.error(f"Health check failed: {e}")
             return jsonify({
-                "status": "error",
-                "error": str(e)
+                'status': 'error',
+                'error': str(e)
+            }), 500
+    
+    @app.route('/health/detailed')
+    def health_detailed():
+        """Detailed health check with all metrics"""
+        try:
+            sys.path.insert(0, str(PROJECT_ROOT / 'scripts'))
+            from health_monitor import get_health_monitor
+            
+            monitor = get_health_monitor()
+            return jsonify(json.loads(monitor.get_health_json(force_refresh=True)))
+            
+        except Exception as e:
+            logger.error(f"Detailed health check failed: {e}")
+            return jsonify({
+                'status': 'error',
+                'error': str(e)
+            }), 500
+    
+    @app.route('/health/logs')
+    def health_logs():
+        """Get log statistics and recent entries"""
+        try:
+            sys.path.insert(0, str(PROJECT_ROOT / 'scripts'))
+            from logging_config import get_log_stats, LOG_DIR
+            
+            stats = get_log_stats()
+            
+            # Get recent error entries
+            error_log = LOG_DIR / 'error.log'
+            recent_errors = []
+            
+            if error_log.exists():
+                with open(error_log, 'r') as f:
+                    lines = f.readlines()
+                    recent_errors = lines[-50:]  # Last 50 errors
+            
+            stats['recent_errors'] = recent_errors
+            stats['log_directory'] = str(LOG_DIR)
+            
+            return jsonify(stats)
+            
+        except Exception as e:
+            logger.error(f"Log stats failed: {e}")
+            return jsonify({
+                'status': 'error',
+                'error': str(e)
             }), 500
 
     @app.route('/api/preflight', methods=['GET'])
