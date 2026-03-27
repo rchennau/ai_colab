@@ -139,13 +139,18 @@ if [[ "$PYTHON_DEPS_OK" == "false" ]]; then
     echo ""
     if [[ $REPLY =~ ^[Yy]$ || -z $REPLY ]]; then
         echo -e "\n${BLUE}Installing dependencies...${NC}"
-        # install.sh is in PROJECT_ROOT, not SCRIPT_DIR
-        bash "$PROJECT_ROOT/install.sh" --auto
+        # Use SCRIPT_DIR since launch.sh is in project root
+        bash "$SCRIPT_DIR/install.sh" --auto
     fi
 fi
 
 # 1. Project Detection
-PROJECT_ROOT=$(detect_project_root 2>/dev/null || echo "$SCRIPT_DIR")
+# Ensure PROJECT_ROOT is set correctly (launch.sh is in project root)
+if [[ -f "$SCRIPT_DIR/install.sh" ]]; then
+    PROJECT_ROOT="$SCRIPT_DIR"
+else
+    PROJECT_ROOT=$(detect_project_root 2>/dev/null || echo "$SCRIPT_DIR")
+fi
 export PROJECT_ROOT
 ui_status "Project Root" "$PROJECT_ROOT" "${GREEN}"
 
