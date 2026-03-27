@@ -139,8 +139,14 @@ if [[ "$PYTHON_DEPS_OK" == "false" ]]; then
     echo ""
     if [[ $REPLY =~ ^[Yy]$ || -z $REPLY ]]; then
         echo -e "\n${BLUE}Installing dependencies...${NC}"
-        # Use SCRIPT_DIR since launch.sh is in project root
-        bash "$SCRIPT_DIR/install.sh" --auto
+        # Find install.sh - it's in the same directory as launch.sh
+        INSTALL_SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/install.sh"
+        if [[ -f "$INSTALL_SCRIPT" ]]; then
+            bash "$INSTALL_SCRIPT" --auto
+        else
+            print_error "Could not find install.sh at $INSTALL_SCRIPT"
+            echo -e "${YELLOW}Please run: pip3 install -r requirements-webui.txt${NC}"
+        fi
     fi
 fi
 
