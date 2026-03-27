@@ -53,20 +53,19 @@ Last Updated: 2026-03-26 (Fleet Autonomy & Self-Healing Update)
 - `tests/test_config_manager.sh`: Automated test suite for the unified configuration foundation.
 - `tests/test_install_wizard.sh`: Integration tests for the interactive installer and CLI experience.
 - `tests/webui-test-config.ini`: Configuration file for automated testing system.
+- `tests/test_fleet_autonomy.sh`: Verification of Health 2.0 metrics and Blackboard reporting.
+- `tests/test_fleet_recovery.sh`: End-to-end simulation of agent crash detection and Watchdog recovery.
+- `tests/test_module_hooks.sh`: Verification of dynamic periodic hooks and manifest parsing.
 
 ## Documentation
 - `docs/INSTALLATION.md`: Comprehensive installation guide covering CLI wizard, Web UI, and Docker pathways.
 - `docs/WEBUI_GUIDE.md`: Complete Web UI user guide with API reference.
 - `docs/AUTOMATED_WEBUI_TESTING.md`: Guide for automated testing setup and usage.
 - `conductor/tracks/enhanced_install_launch_20260324/`: Milestone 11 implementation track.
-  - `dashboard-improvements-v2.4.md`: CLI dashboard enhancement documentation.
-  - `webui-improvements-v2.0.md`: Web UI enhancement documentation.
-  - `webui-test-results.md`: Web UI test results and verification.
-  - `webui-automation-summary.md`: Automated testing implementation summary.
-  - `dashboard-fixes.md`: Original dashboard bug fixes documentation.
+- `conductor/tracks/fleet_autonomy_20260326/`: Milestone 13 implementation track (Fleet Autonomy & Self-Healing).
 
 ## Index Metadata
 - Status: Active
 - Source: Milestone 11, 12 & 13 Architectural Review
 - Architecture: Hub and Spoke (Self-Hosted Hub)
-- Latest Enhancements: Web UI v2.0, Dashboard v2.4, Automated Testing CI/CD
+- Latest Enhancements: Web UI v2.0, Dashboard v2.4, Fleet Autonomy & Self-Healing, Health 2.0
