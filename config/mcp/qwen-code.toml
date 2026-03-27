@@ -1,0 +1,19 @@
+# ai-colab MCP Server Configuration for qwen-code
+# Copy to ~/.qwen/config.toml or merge with existing config
+
+[mcp]
+enabled = true
+
+[mcp.servers.ai-colab]
+name = "ai-colab"
+type = "stdio"
+command = "python"
+args = ["-m", "mcp.ai_colab_server"]
+cwd = "{{PROJECT_ROOT}}"
+
+# Alternative: SSE transport (for remote connections)
+# Uncomment below and comment stdio section above
+# [mcp.servers.ai-colab]
+# name = "ai-colab"
+# type = "sse"
+# endpoint = "http://localhost:8765/sse"

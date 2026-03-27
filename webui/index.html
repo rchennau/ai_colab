@@ -407,6 +407,36 @@
                 opacity: 1;
             }
         }
+
+        /* Real-time Update Indicator */
+        .realtime-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--accent-blue);
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            z-index: 999;
+        }
+
+        .realtime-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        .realtime-dot.disconnected {
+            background: var(--error);
+            animation: none;
+        }
     </style>
 </head>
 <body>
@@ -425,12 +455,19 @@
         <button class="nav-btn" data-page="setup">Setup Wizard</button>
         <button class="nav-btn" data-page="agents">Agents</button>
         <button class="nav-btn" data-page="config">Configuration</button>
+        <button class="nav-btn" data-page="knowledge">Knowledge Base</button>
         <button class="nav-btn" data-page="logs">Logs</button>
         <button class="nav-btn" data-page="settings">Settings</button>
     </nav>
 
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Real-time Update Indicator -->
+    <div class="realtime-indicator" id="realtimeIndicator">
+        <div class="realtime-dot" id="realtimeDot"></div>
+        <span id="realtimeText">Live</span>
+    </div>
 
     <!-- Main Content -->
     <main>
@@ -610,8 +647,130 @@
         <div class="page" id="config-page">
             <div class="card">
                 <h2>⚙️ Configuration Editor</h2>
-                <div id="configEditor">
-                    <p>Loading configuration...</p>
+                
+                <div class="btn-group" style="margin-bottom: 1rem;">
+                    <button class="btn btn-primary" onclick="loadConfig()">Load Configuration</button>
+                    <button class="btn btn-success" onclick="saveConfig()">Save Configuration</button>
+                    <button class="btn btn-warning" onclick="loadProfiles()">Load Profile</button>
+                </div>
+
+                <!-- LLM Configuration -->
+                <div class="form-group">
+                    <h3 style="color: var(--accent-blue); margin-bottom: 0.5rem;">LLM Providers</h3>
+                    <div id="llmConfig">
+                        <div class="checkbox-group" style="margin-bottom: 0.5rem;">
+                            <input type="checkbox" id="cfg-llm-gemini">
+                            <label for="cfg-llm-gemini">Gemini</label>
+                        </div>
+                        <div class="checkbox-group" style="margin-bottom: 0.5rem;">
+                            <input type="checkbox" id="cfg-llm-qwen">
+                            <label for="cfg-llm-qwen">Qwen</label>
+                        </div>
+                        <div class="checkbox-group" style="margin-bottom: 0.5rem;">
+                            <input type="checkbox" id="cfg-llm-vllm">
+                            <label for="cfg-llm-vllm">vLLM (Local)</label>
+                        </div>
+                        <div class="checkbox-group" style="margin-bottom: 0.5rem;">
+                            <input type="checkbox" id="cfg-llm-claude">
+                            <label for="cfg-llm-claude">Claude</label>
+                        </div>
+                        <div class="checkbox-group" style="margin-bottom: 0.5rem;">
+                            <input type="checkbox" id="cfg-llm-deepseek">
+                            <label for="cfg-llm-deepseek">DeepSeek</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modules Configuration -->
+                <div class="form-group">
+                    <h3 style="color: var(--accent-blue); margin-bottom: 0.5rem;">Modules</h3>
+                    <div id="modulesConfig">
+                        <div class="checkbox-group" style="margin-bottom: 0.5rem;">
+                            <input type="checkbox" id="cfg-mod-atari">
+                            <label for="cfg-mod-atari">Atari 8-Bit Development</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Compute Backend -->
+                <div class="form-group">
+                    <h3 style="color: var(--accent-blue); margin-bottom: 0.5rem;">Compute Backend</h3>
+                    <label for="cfg-compute-backend">Backend:</label>
+                    <select id="cfg-compute-backend" style="margin-bottom: 0.5rem;">
+                        <option value="local">Local Server (vLLM / Ollama)</option>
+                        <option value="nvidia">NVIDIA NIM API</option>
+                        <option value="runpod">RunPod</option>
+                    </select>
+                    
+                    <div id="cfg-api-key-group" style="display: none;">
+                        <label for="cfg-api-key">API Key:</label>
+                        <input type="password" id="cfg-api-key" placeholder="Enter your API key">
+                    </div>
+                </div>
+
+                <!-- JSON Editor (Advanced) -->
+                <div class="form-group" style="margin-top: 1rem;">
+                    <h3 style="color: var(--accent-blue); margin-bottom: 0.5rem;">Advanced: JSON Editor</h3>
+                    <textarea id="configJsonEditor" rows="15" style="width: 100%; font-family: monospace; background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.75rem;"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Knowledge Base Page -->
+        <div class="page" id="knowledge-page">
+            <div class="card">
+                <h2>📚 Knowledge Base Search</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                    Search project documentation, architecture docs, and code comments using semantic search.
+                </p>
+
+                <!-- Search Box -->
+                <div class="form-group">
+                    <label for="kbQuery">Search Query:</label>
+                    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                        <input type="text" id="kbQuery" placeholder="e.g., How does the blackboard work?" 
+                               style="flex: 1;" onkeypress="if(event.key==='Enter') searchKnowledgeBase()">
+                        <button class="btn btn-primary" onclick="searchKnowledgeBase()">Search</button>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="form-group" style="display: flex; gap: 1rem; align-items: center; margin-top: 1rem;">
+                    <div>
+                        <label for="kbTopK">Results:</label>
+                        <select id="kbTopK" style="width: auto;">
+                            <option value="3">3</option>
+                            <option value="5" selected>5</option>
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="kbSource">Source:</label>
+                        <select id="kbSource" style="width: auto;">
+                            <option value="">All Sources</option>
+                            <option value="conductor/*">Conductor Docs</option>
+                            <option value="tracks/*">Track Plans</option>
+                            <option value="system-prompts/*">System Prompts</option>
+                            <option value="docs/*">User Docs</option>
+                            <option value="scripts/*">Scripts</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-warning" onclick="triggerIndex()" style="margin-top: 1.4rem;">
+                        🔄 Re-index
+                    </button>
+                    <button class="btn btn-info" onclick="showKBStats()" style="margin-top: 1.4rem;">
+                        📊 Stats
+                    </button>
+                </div>
+
+                <!-- Results -->
+                <div id="kbResults" style="margin-top: 1.5rem;">
+                    <div id="kbResultsContent">
+                        <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">
+                            Enter a search query to find relevant documentation
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -669,20 +828,144 @@
         </div>
     </main>
 
+    <!-- Socket.IO Client Library -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    
     <script>
         // Global state
         let currentWizardStep = 1;
         const totalWizardSteps = 5;
+        let socket = null;
+        let websocketConnected = false;
 
         // API base URL
         const API_BASE = window.location.origin;
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            initWebSocket();
             initNavigation();
             refreshStatus();
             setInterval(refreshStatus, 30000); // Refresh every 30 seconds
         });
+
+        // WebSocket Initialization
+        function initWebSocket() {
+            try {
+                socket = io(API_BASE, {
+                    transports: ['websocket', 'polling'],
+                    reconnection: true,
+                    reconnectionDelay: 1000,
+                    reconnectionAttempts: 10
+                });
+
+                socket.on('connect', () => {
+                    console.log('WebSocket connected');
+                    websocketConnected = true;
+                    updateRealtimeIndicator(true);
+                    showToast('Connected to real-time updates', 'success');
+                    socket.emit('subscribe_status');
+                });
+
+                socket.on('disconnect', () => {
+                    console.log('WebSocket disconnected');
+                    websocketConnected = false;
+                    updateRealtimeIndicator(false);
+                    showToast('Disconnected from real-time updates', 'warning');
+                });
+
+                socket.on('status_update', (data) => {
+                    console.log('Received status update:', data);
+                    handleRealtimeStatusUpdate(data);
+                });
+
+                socket.on('connected', (data) => {
+                    console.log('Server acknowledged connection:', data.message);
+                });
+
+            } catch (error) {
+                console.error('WebSocket initialization failed:', error);
+                updateRealtimeIndicator(false);
+            }
+        }
+
+        function updateRealtimeIndicator(connected) {
+            const dot = document.getElementById('realtimeDot');
+            const text = document.getElementById('realtimeText');
+            
+            if (connected) {
+                dot.classList.remove('disconnected');
+                text.textContent = 'Live';
+            } else {
+                dot.classList.add('disconnected');
+                text.textContent = 'Disconnected';
+            }
+        }
+
+        function handleRealtimeStatusUpdate(data) {
+            // Update dashboard with real-time data
+            if (data.system) {
+                updateSystemStatusRealtime(data.system);
+            }
+            if (data.agents) {
+                updateAgentsRealtime(data.agents);
+            }
+            if (data.session) {
+                updateSessionRealtime(data.session);
+            }
+        }
+
+        function updateSystemStatusRealtime(system) {
+            const container = document.getElementById('systemStatus');
+            if (!container) return;
+
+            const healthy = system.healthy ? 'success' : 'error';
+            const tmuxStatus = system.tmux ? 'success' : 'error';
+            const hcomStatus = system.hcom ? 'success' : 'error';
+            const diskStatus = system.disk_free_mb >= 100 ? 'success' : 'warning';
+
+            container.innerHTML = `
+                <p><strong>System Health:</strong> <span class="badge badge-${healthy}">${system.healthy ? 'Healthy' : 'Unhealthy'}</span></p>
+                <p><strong>tmux:</strong> <span class="badge badge-${tmuxStatus}">${system.tmux ? 'Running' : 'Not Found'}</span></p>
+                <p><strong>hcom:</strong> <span class="badge badge-${hcomStatus}">${system.hcom ? 'Running' : 'Not Found'}</span></p>
+                <p><strong>Disk:</strong> <span class="badge badge-${diskStatus}">${system.disk_free_mb}MB free</span></p>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">Updated: ${new Date().toLocaleTimeString()}</p>
+            `;
+        }
+
+        function updateAgentsRealtime(agents) {
+            const container = document.getElementById('agentStatus');
+            if (!container) return;
+
+            if (agents.length === 0) {
+                container.innerHTML = '<p>No active agents</p>';
+                return;
+            }
+
+            const agentList = agents.map(agent => {
+                const statusClass = agent.status === 'ready' ? 'success' : 
+                                   agent.status === 'busy' ? 'warning' : 'error';
+                return `
+                    <div class="agent-item">
+                        <span>${agent.name}</span>
+                        <span class="badge badge-${statusClass}">${agent.status}</span>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `<div class="agent-list">${agentList}</div>`;
+        }
+
+        function updateSessionRealtime(session) {
+            // Update session status if visible
+            const indicator = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            
+            if (session.active && indicator && statusText) {
+                indicator.style.background = 'var(--success)';
+                statusText.textContent = 'Session Active';
+            }
+        }
 
         // Navigation
         function initNavigation() {
@@ -1229,17 +1512,184 @@
                 const response = await fetch(`${API_BASE}/api/config`);
                 const config = await response.json();
 
-                const editor = document.getElementById('configEditor');
-                editor.innerHTML = `<pre>${JSON.stringify(config, null, 2)}</pre>`;
+                // Update LLM checkboxes
+                const llms = config.llms || [];
+                const llmNames = llms.map(llm => llm.name.toLowerCase());
+                
+                document.getElementById('cfg-llm-gemini').checked = llmNames.includes('gemini');
+                document.getElementById('cfg-llm-qwen').checked = llmNames.includes('qwen');
+                document.getElementById('cfg-llm-vllm').checked = llmNames.includes('vllm');
+                document.getElementById('cfg-llm-claude').checked = llmNames.includes('claude');
+                document.getElementById('cfg-llm-deepseek').checked = llmNames.includes('deepseek');
+
+                // Update modules
+                const modules = config.modules || [];
+                const moduleIds = modules.map(m => m.id);
+                document.getElementById('cfg-mod-atari').checked = moduleIds.includes('atari-8bit');
+
+                // Update compute backend
+                const backend = config.compute?.backend || 'local';
+                document.getElementById('cfg-compute-backend').value = backend;
+                
+                // Show/hide API key field
+                const apiKeyGroup = document.getElementById('cfg-api-key-group');
+                apiKeyGroup.style.display = (backend === 'nvidia' || backend === 'runpod') ? 'block' : 'none';
+
+                // Update JSON editor
+                document.getElementById('configJsonEditor').value = JSON.stringify(config, null, 2);
+
+                showToast('Configuration loaded', 'success');
             } catch (error) {
                 console.error('Failed to load config:', error);
+                showToast('Failed to load configuration', 'error');
+            }
+        }
+
+        async function saveConfig() {
+            try {
+                // Build configuration from form inputs
+                const llms = [];
+                if (document.getElementById('cfg-llm-gemini').checked) {
+                    llms.push({ name: 'gemini', enabled: true, model: 'gemini-2.0-flash-exp' });
+                }
+                if (document.getElementById('cfg-llm-qwen').checked) {
+                    llms.push({ name: 'qwen', enabled: true, model: 'qwen2.5-coder-32b-instruct' });
+                }
+                if (document.getElementById('cfg-llm-vllm').checked) {
+                    llms.push({ name: 'vllm', enabled: true, endpoint: 'http://localhost:8000/v1' });
+                }
+                if (document.getElementById('cfg-llm-claude').checked) {
+                    llms.push({ name: 'claude', enabled: true, model: 'claude-3-5-sonnet-20241022' });
+                }
+                if (document.getElementById('cfg-llm-deepseek').checked) {
+                    llms.push({ name: 'deepseek', enabled: true, model: 'deepseek-coder' });
+                }
+
+                const modules = [];
+                if (document.getElementById('cfg-mod-atari').checked) {
+                    modules.push({ id: 'atari-8bit', enabled: true });
+                }
+
+                const config = {
+                    version: '1.0.0',
+                    llms: llms,
+                    modules: modules,
+                    compute: {
+                        backend: document.getElementById('cfg-compute-backend').value
+                    },
+                    preferences: {
+                        theme: 'dark',
+                        auto_approve: document.getElementById('autoApprove').checked
+                    }
+                };
+
+                // Validate JSON if editor was modified
+                const jsonEditor = document.getElementById('configJsonEditor').value;
+                if (jsonEditor) {
+                    try {
+                        const editedConfig = JSON.parse(jsonEditor);
+                        // Use edited config if it's valid
+                        Object.assign(config, editedConfig);
+                    } catch (e) {
+                        showToast('Invalid JSON in editor, using form values', 'warning');
+                    }
+                }
+
+                // Validate against schema
+                const validateResponse = await fetch(`${API_BASE}/api/config/validate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                const validateResult = await validateResponse.json();
+                
+                if (!validateResult.valid) {
+                    showToast('Configuration validation failed: ' + validateResult.error, 'error');
+                    return;
+                }
+
+                // Save configuration
+                const response = await fetch(`${API_BASE}/api/config`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+
+                if (response.ok) {
+                    showToast('Configuration saved successfully', 'success');
+                    // Refresh the editor
+                    document.getElementById('configJsonEditor').value = JSON.stringify(config, null, 2);
+                } else {
+                    const error = await response.json();
+                    showToast('Failed to save: ' + error.error, 'error');
+                }
+            } catch (error) {
+                console.error('Failed to save config:', error);
+                showToast('Failed to save configuration', 'error');
+            }
+        }
+
+        async function loadProfiles() {
+            try {
+                const response = await fetch(`${API_BASE}/api/profiles`);
+                const data = await response.json();
+
+                if (data.profiles && data.profiles.length > 0) {
+                    const profileNames = data.profiles.map(p => p.name).join(', ');
+                    const selected = prompt(`Available profiles: ${profileNames}\n\nEnter profile name to load:`);
+                    
+                    if (selected) {
+                        const applyResponse = await fetch(`${API_BASE}/api/profiles/${selected}/apply`, {
+                            method: 'POST'
+                        });
+                        
+                        if (applyResponse.ok) {
+                            showToast(`Profile '${selected}' applied`, 'success');
+                            loadConfig(); // Reload config to show changes
+                        } else {
+                            showToast('Failed to apply profile', 'error');
+                        }
+                    }
+                } else {
+                    showToast('No profiles available', 'warning');
+                }
+            } catch (error) {
+                console.error('Failed to load profiles:', error);
+                showToast('Failed to load profiles', 'error');
             }
         }
 
         // Agents
         async function loadAgents() {
-            // Would load agent list from API
-            document.getElementById('agentList').innerHTML = '<p>Agent management coming soon...</p>';
+            try {
+                const response = await fetch(`${API_BASE}/api/agents`);
+                const data = await response.json();
+
+                const container = document.getElementById('agentList');
+                if (!container) return;
+
+                if (data.agents && data.agents.length > 0) {
+                    let html = '<div class="agent-list">';
+                    data.agents.forEach(agent => {
+                        const statusClass = agent.status === 'ready' ? 'success' :
+                                          agent.status === 'busy' ? 'warning' : 'error';
+                        html += `
+                            <div class="agent-item">
+                                <span><strong>${agent.name}</strong></span>
+                                <span class="badge badge-${statusClass}">${agent.status}</span>
+                                ${agent.details ? `<span style="font-size: 0.85rem; color: var(--text-secondary);">${agent.details}</span>` : ''}
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<p>No active agents. Start a session from the Dashboard.</p>';
+                }
+            } catch (error) {
+                console.error('Failed to load agents:', error);
+                document.getElementById('agentList').innerHTML = '<p>Failed to load agents</p>';
+            }
         }
 
         // Settings
@@ -1250,6 +1700,129 @@
 
         function saveSettings() {
             showToast('Settings saved', 'success');
+        }
+
+        // Knowledge Base Search
+        async function searchKnowledgeBase() {
+            const query = document.getElementById('kbQuery').value.trim();
+            const topK = document.getElementById('kbTopK').value;
+            const source = document.getElementById('kbSource').value;
+            
+            if (!query) {
+                showToast('Please enter a search query', 'warning');
+                return;
+            }
+            
+            const resultsContent = document.getElementById('kbResultsContent');
+            resultsContent.innerHTML = '<div class="spinner"></div><p style="text-align: center;">Searching...</p>';
+            
+            try {
+                // Build API URL
+                let url = `${API_BASE}/api/kb/search?query=${encodeURIComponent(query)}&top_k=${topK}`;
+                if (source) {
+                    url += `&source=${encodeURIComponent(source)}`;
+                }
+                
+                const response = await fetch(url);
+                const results = await response.json();
+                
+                if (!results || results.length === 0) {
+                    resultsContent.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No results found</p>';
+                    return;
+                }
+                
+                // Display results
+                let html = '<div style="margin-bottom: 1rem;"><strong>Found ' + results.length + ' results</strong></div>';
+                results.forEach((result, index) => {
+                    const scoreClass = result.score > 0.7 ? 'success' : result.score > 0.4 ? 'warning' : 'error';
+                    html += `
+                        <div class="card" style="margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <span style="color: var(--accent-blue); font-weight: bold;">${index + 1}. ${result.doc || 'Unknown'}</span>
+                                <span class="badge badge-${scoreClass}">${(result.score * 100).toFixed(1)}% match</span>
+                            </div>
+                            ${result.section ? `<p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Section: ${result.section}</p>` : ''}
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">${result.excerpt || 'No excerpt available'}</p>
+                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.5rem;">Source: ${result.source || 'unknown'}</p>
+                        </div>
+                    `;
+                });
+                
+                resultsContent.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Search failed:', error);
+                resultsContent.innerHTML = `<p style="text-align: center; color: var(--error);">Search failed: ${error.message}</p>`;
+                showToast('Search failed', 'error');
+            }
+        }
+        
+        async function triggerIndex() {
+            if (!confirm('Re-index all documents? This may take a few minutes.')) {
+                return;
+            }
+            
+            const resultsContent = document.getElementById('kbResultsContent');
+            resultsContent.innerHTML = '<div class="spinner"></div><p style="text-align: center;">Indexing documents...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/kb/index`, { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    resultsContent.innerHTML = `
+                        <div style="text-align: center; padding: 2rem;">
+                            <p class="badge badge-success">Indexing Complete</p>
+                            <p style="margin-top: 1rem;">Files processed: ${result.files_processed || 0}</p>
+                            <p>Chunks created: ${result.chunks_created || 0}</p>
+                            <p>Elapsed: ${result.elapsed_seconds ? result.elapsed_seconds.toFixed(1) + 's' : 'N/A'}</p>
+                        </div>
+                    `;
+                    showToast('Indexing complete', 'success');
+                } else {
+                    resultsContent.innerHTML = `<p style="text-align: center; color: var(--error);">Indexing failed: ${result.error || 'Unknown error'}</p>`;
+                    showToast('Indexing failed', 'error');
+                }
+            } catch (error) {
+                console.error('Indexing failed:', error);
+                resultsContent.innerHTML = `<p style="text-align: center; color: var(--error);">Indexing failed: ${error.message}</p>`;
+                showToast('Indexing failed', 'error');
+            }
+        }
+        
+        async function showKBStats() {
+            try {
+                const response = await fetch(`${API_BASE}/api/kb/stats`);
+                const stats = await response.json();
+                
+                let html = `
+                    <div class="card">
+                        <h3>Knowledge Base Statistics</h3>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1rem;">
+                            <div>
+                                <p style="color: var(--text-secondary); font-size: 0.9rem;">Documents</p>
+                                <p style="font-size: 1.5rem; font-weight: bold; color: var(--accent-blue);">${stats.document_count || 0}</p>
+                            </div>
+                            <div>
+                                <p style="color: var(--text-secondary); font-size: 0.9rem;">Database Size</p>
+                                <p style="font-size: 1.5rem; font-weight: bold; color: var(--accent-green);">${stats.database_size_mb || 0} MB</p>
+                            </div>
+                        </div>
+                        ${stats.cache ? `
+                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                                <p style="color: var(--text-secondary); font-size: 0.9rem;">Cache Hit Rate</p>
+                                <p style="font-size: 1.2rem; font-weight: bold; color: var(--accent-yellow);">${stats.cache.hit_rate_percent || 0}%</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                document.getElementById('kbResultsContent').innerHTML = html;
+                
+            } catch (error) {
+                console.error('Failed to get stats:', error);
+                showToast('Failed to get stats', 'error');
+            }
         }
 
         // Utilities
@@ -1272,9 +1845,17 @@
             return div.innerHTML;
         }
 
-        // Backend API key visibility
+        // Backend API key visibility (Setup Wizard)
         document.getElementById('computeBackend').addEventListener('change', (e) => {
             const apiKeyGroup = document.getElementById('apiKeyGroup');
+            if (apiKeyGroup) {
+                apiKeyGroup.style.display = (e.target.value === 'nvidia' || e.target.value === 'runpod') ? 'block' : 'none';
+            }
+        });
+
+        // Backend API key visibility (Config Page)
+        document.getElementById('cfg-compute-backend').addEventListener('change', (e) => {
+            const apiKeyGroup = document.getElementById('cfg-api-key-group');
             apiKeyGroup.style.display = (e.target.value === 'nvidia' || e.target.value === 'runpod') ? 'block' : 'none';
         });
     </script>

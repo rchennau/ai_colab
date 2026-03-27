@@ -53,6 +53,48 @@ Choose your agents and active modules. Start collaborating in the **Unified Comm
 
 📖 **Full Documentation:** See [`docs/INSTALLATION.md`](docs/INSTALLATION.md) for detailed installation guide.
 
+## 🆕 New: MCP Server & RAG System
+
+ai-colab now includes a **hybrid intelligence layer** for enhanced LLM integration and semantic search:
+
+### **MCP Server (Model Context Protocol)**
+Standardized tool access for LLM-CLIs and IDE integration:
+- **12 MCP Tools**: blackboard, tracks, knowledge, agents, DevOps
+- **Transports**: stdio (LLM-CLI) + SSE (web clients)
+- **IDE Support**: VS Code, Cursor, gemini-cli, qwen-code
+
+```bash
+# Setup LLM-CLI integration
+./scripts/setup-mcp-clients.sh --all
+
+# Start MCP server
+python -m mcp.ai_colab_server
+```
+
+### **RAG System (Semantic Search)**
+Retrieval-Augmented Generation for codebase understanding:
+- **Semantic Search**: Find relevant docs by meaning, not keywords
+- **Auto-Refresh**: File watcher for automatic re-indexing
+- **Query Caching**: Fast repeated searches
+
+```bash
+# Search knowledge base
+./scripts/hcom-kb-search.sh "How does the blackboard work?"
+
+# Launch with auto-indexing
+./launch.sh --rag-watcher
+```
+
+### **Web UI Knowledge Base**
+Browser-based semantic search interface:
+- Search with relevance scores
+- Filter by source (conductor, tracks, docs)
+- Index management and statistics
+
+Access at: http://localhost:8080 → Knowledge Base tab
+
+📖 **Guide:** See [`docs/MCP_RAG_USER_GUIDE.md`](docs/MCP_RAG_USER_GUIDE.md)
+
 ## 🏗️ Core Architecture
 
 ai-colab follows a **'Hub and Spoke'** model to separate orchestration from compute:
@@ -127,7 +169,12 @@ Full support for WSL2 with Windows Terminal optimizations.
 | `./install.sh --wizard` | Interactive CLI installation wizard (5-step guided setup) |
 | `./install.sh --reconfigure` | Modify existing installation without reinstalling |
 | `./launch.sh` | Unified launcher with interactive module and agent selection |
+| `./launch.sh --rag-watcher` | Launch with RAG file watcher for auto-indexing |
 | `./scripts/migrate-project.sh` | Project Detection & Migration Tool (automated AI import) |
+| `./scripts/setup-mcp-clients.sh` | MCP client setup for gemini-cli, qwen-code, claude-code |
+| `./scripts/hcom-kb-search.sh` | Enhanced !kb command with semantic search |
+| `./scripts/run-tests.sh` | Test runner for MCP, RAG, integration, security |
+| `./scripts/verify-integration.sh` | Integration verification script |
 | `scripts/config-manager.sh` | Central configuration management and schema validation |
 | `scripts/install-wizard.sh` | Interactive terminal-based configuration wizard |
 | `scripts/utils.sh` | Shared utilities and 80-column ANSI UI helpers |
@@ -137,9 +184,11 @@ Full support for WSL2 with Windows Terminal optimizations.
 | `scripts/hcom-kb-index.sh` | Generates the semantic project map for `!kb` |
 | `scripts/conductor-dashboard.sh`| Renders the high-density terminal dashboard (v2.4) |
 | `scripts/dashboard-launch.sh` | Enhanced dashboard launcher (v2.4) with pre-flight checks and cross-version tmux compatibility |
-| `webui/app.py` | Flask-based Web UI and API backend (v2.0) |
+| `webui/app.py` | Flask-based Web UI and API backend (v2.1 with KB endpoints) |
 | `tests/test_webui.sh` | Automated Web UI test suite (8 tests) |
 | `scripts/webui-test-watch.sh` | Local file watcher for automated testing |
+| `mcp/ai_colab_server/` | MCP server with 12 tools for LLM-CLI integration |
+| `rag/` | RAG system for semantic search and auto-indexing |
 
 ---
 
@@ -150,6 +199,7 @@ ai-colab includes a comprehensive Web UI for browser-based management:
 ### Features
 - **Setup Wizard**: Interactive 5-step configuration via browser
 - **Dashboard**: Real-time system status with health monitoring
+- **Knowledge Base**: Semantic search with relevance scores (NEW!)
 - **Pre-flight Checks**: System readiness verification
 - **Session Management**: View and recover tmux sessions
 - **Agent Monitoring**: Real-time agent list from hcom
@@ -165,18 +215,29 @@ docker-compose up -d
 http://localhost:8080
 ```
 
-### New API Endpoints (v2.0)
+### New API Endpoints (v2.1)
 - `GET /health` - Enhanced health with tmux/hcom/disk checks
 - `GET /api/preflight` - Pre-flight checks (mirrors CLI)
 - `GET /api/session/status` - tmux session monitoring
 - `POST /api/session/recover` - Session recovery
 - `GET /api/agents` - Real-time agent list
 - `POST /api/dashboard/launch` - Launch dashboard from browser
+- **`GET /api/kb/search`** - Semantic knowledge base search (NEW!)
+- **`POST /api/kb/index`** - Trigger document indexing (NEW!)
+- **`GET /api/kb/stats`** - Get index statistics (NEW!)
+
+### Knowledge Base Page
+Access at: http://localhost:8080 → Knowledge Base tab
+- Search by semantic meaning (not just keywords)
+- Filter by source (conductor, tracks, docs, etc.)
+- View relevance scores and excerpts
+- Trigger re-indexing and view statistics
 
 **Access**: http://localhost:8080 (when running via Docker)
 
-📖 **Guide:** See [`docs/WEBUI_GUIDE.md`](docs/WEBUI_GUIDE.md)  
+📖 **Guide:** See [`docs/WEBUI_GUIDE.md`](docs/WEBUI_GUIDE.md)
 📖 **Testing:** See [`docs/AUTOMATED_WEBUI_TESTING.md`](docs/AUTOMATED_WEBUI_TESTING.md)
+📖 **MCP/RAG:** See [`docs/MCP_RAG_USER_GUIDE.md`](docs/MCP_RAG_USER_GUIDE.md)
 
 ---
 
@@ -207,7 +268,29 @@ http://localhost:8080
 - ✅ Dashboard launch endpoint
 - ✅ Frontend HTML verification
 
-**Status:** 8/8 tests passing ✅
+### MCP & RAG Test Suite (NEW!)
+- **Unit tests** for all 12 MCP tools
+- **Unit tests** for RAG components (chunker, embedder, retriever)
+- **Integration tests** for end-to-end functionality
+- **Security audit** for vulnerabilities
+- **Performance benchmarks** for latency and throughput
+
+### Run MCP & RAG Tests
+```bash
+# Run all tests
+./scripts/run-tests.sh --all
+
+# Run specific test suites
+./scripts/run-tests.sh --unit        # Unit tests
+./scripts/run-tests.sh --integration # Integration tests
+./scripts/run-tests.sh --security    # Security audit
+./scripts/run-tests.sh --benchmarks  # Performance benchmarks
+
+# Verify integration
+./scripts/verify-integration.sh
+```
+
+**Status:** 8/8 Web UI tests passing ✅ | MCP & RAG tests available ✅
 
 ---
 

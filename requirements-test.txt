@@ -1,0 +1,22 @@
+# Test Dependencies for MCP & RAG
+# Install with: pip install -r requirements-test.txt
+
+# Testing Framework
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+
+# HTTP Testing
+requests>=2.31.0
+pytest-httpserver>=1.0.0
+
+# Type Checking
+mypy>=1.5.0
+
+# Linting
+flake8>=6.1.0
+black>=23.0.0
+isort>=5.12.0
+
+# Security
+bandit>=1.7.0

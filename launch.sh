@@ -2,17 +2,53 @@
 # ai-colab Unified Launcher
 # Launches the multi-agent dashboard, conductor, and selected agents.
 # Now with terminal-specific optimizations for iTerm2, WSL, and more.
+#
+# Options:
+#   --rag-watcher    Start RAG file watcher for auto-reindexing
 
 set -e
 
 # 0. Argument Parsing (Pre-launch)
 INTERACTIVE=true
+RAG_WATCHER=false
+SHOW_HELP=false
 for arg in "$@"; do
     if [[ "$arg" == "--no-interactive" || "$arg" == "--auto" ]]; then
         INTERACTIVE=false
         break
+    elif [[ "$arg" == "--rag-watcher" ]]; then
+        RAG_WATCHER=true
+    elif [[ "$arg" == "--help" || "$arg" == "-h" ]]; then
+        SHOW_HELP=true
     fi
 done
+
+# Show help if requested
+if [[ "$SHOW_HELP" == "true" ]]; then
+    cat << EOF
+ai-colab Unified Launcher
+
+Usage: ./launch.sh [options]
+
+Options:
+  --rag-watcher     Start RAG file watcher for auto-reindexing
+  --no-interactive  Non-interactive mode (use saved preferences)
+  --auto            Alias for --no-interactive
+  --help, -h        Show this help message
+
+Examples:
+  ./launch.sh                  # Interactive launch
+  ./launch.sh --rag-watcher    # Launch with RAG auto-indexing
+  ./launch.sh --auto           # Non-interactive launch
+
+Launch Targets (via interactive selection):
+  - Web UI (Flask dashboard on http://localhost:8080)
+  - Unified Dashboard (tmux-based)
+  - Conductor Agent
+
+EOF
+    exit 0
+fi
 
 # Find script directory and source utils
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -360,6 +396,46 @@ fi
 
 # 4. Launching
 ui_title "Finalizing Launch" "${BLUE}"
+
+# Start RAG file watcher if requested
+if [[ "$RAG_WATCHER" == "true" ]]; then
+    ui_status "RAG Watcher" "Starting file watcher for auto-reindexing" "${CYAN}"
+    
+    # Check if watchdog is installed
+    if python3 -c "import watchdog" 2>/dev/null; then
+        # Start watcher in background
+        python3 << 'PYTHON_EOF' &
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from rag.watcher.file_watcher import DocumentWatcher
+from pathlib import Path
+
+project_root = Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+index_path = project_root / ".ai-colab" / "rag" / "index.db"
+
+watcher = DocumentWatcher(str(index_path))
+watcher.start()
+
+print(f"RAG file watcher started (PID: {os.getpid()})")
+print("Watching for document changes...")
+
+try:
+    while True:
+        import time
+        time.sleep(1)
+except KeyboardInterrupt:
+    print("\nStopping RAG watcher...")
+    watcher.stop()
+PYTHON_EOF
+        RAG_WATCHER_PID=$!
+        export RAG_WATCHER_PID
+    else
+        ui_status "RAG Watcher" "watchdog not installed. Install with: pip install watchdog" "${YELLOW}"
+    fi
+fi
+
 if [ "$WEBUI" = true ]; then
     ui_banner "Launching Web UI" "${GREEN}"
     echo ""

@@ -207,7 +207,7 @@ if ! has_command hcom; then
     if [[ $REPLY =~ ^[Yy]$ || -z $REPLY ]]; then
         echo "Installing hcom..."
         curl -fsSL https://raw.githubusercontent.com/aannoo/hcom/main/install.sh | sh
-        
+
         # Source profile to make hcom available in the current script process
         if [ -n "$SHELL_CONFIG" ] && [ -f "$SHELL_CONFIG" ] && [[ "$SHELL_CONFIG" != *".zshrc" ]]; then
             echo -e "Sourcing $SHELL_CONFIG..."
@@ -218,6 +218,30 @@ if ! has_command hcom; then
 else
     echo -e "${GREEN}✓ hcom is already installed.${NC}"
 fi
+
+# 2.1 Python Dependencies (MCP Server & RAG System)
+echo -e "\n${GREEN}Installing Python Dependencies...${NC}"
+echo "  - MCP Server (Model Context Protocol)"
+echo "  - RAG System (Semantic Search)"
+echo "  - Web UI (Flask Dashboard)"
+
+# Check if requirements files exist and install
+if [[ -f "$SCRIPT_DIR/requirements-webui.txt" ]]; then
+    echo -e "\n${BLUE}Installing Web UI dependencies...${NC}"
+    python3 -m pip install -r "$SCRIPT_DIR/requirements-webui.txt" || echo -e "${YELLOW}  Warning: Web UI dependencies had issues${NC}"
+fi
+
+if [[ -f "$SCRIPT_DIR/requirements-mcp.txt" ]]; then
+    echo -e "\n${BLUE}Installing MCP Server dependencies...${NC}"
+    python3 -m pip install -r "$SCRIPT_DIR/requirements-mcp.txt" || echo -e "${YELLOW}  Warning: MCP dependencies had issues${NC}"
+fi
+
+if [[ -f "$SCRIPT_DIR/requirements-rag.txt" ]]; then
+    echo -e "\n${BLUE}Installing RAG System dependencies...${NC}"
+    python3 -m pip install -r "$SCRIPT_DIR/requirements-rag.txt" || echo -e "${YELLOW}  Warning: RAG dependencies had issues${NC}"
+fi
+
+echo -e "${GREEN}✓ Python dependencies installed${NC}"
 
 # 3. LLM Support Selection
 echo -e "\n${GREEN}Which LLMs do you wish to support?${NC}"

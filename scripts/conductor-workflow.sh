@@ -590,6 +590,42 @@ main() {
             run_automated_tests
         fi
 
+        # 2. Fleet Watchdog & Autonomous Recovery
+        log_info "Running Fleet Watchdog..."
+        while IFS='|' read -r key health_json; do
+            if [[ -n "$key" && -n "$health_json" ]]; then
+                local agent_name=${key#fleet_health_}
+                local last_ts=$(parse_json_value "$health_json" "ts")
+                local status=$(parse_json_value "$health_json" "status")
+                
+                # Check for stale heartbeat (> 60 seconds)
+                if (( CURRENT_TIME - last_ts > 60 )); then
+                    log_warn "Agent STALE: $agent_name (last seen: $((CURRENT_TIME - last_ts))s ago)"
+                    
+                    # Attempt Recovery: Broadcast a 'heartbeat_lost' event
+                    # This can be caught by the agent's wrapper if it's still alive,
+                    # or the Conductor can attempt a remote redeploy.
+                    hcom send @all -- "Watchdog: Agent $agent_name is unresponsive. Attempting recovery..."
+                    
+                    # Update status to 'stale' in blackboard to signal other agents
+                    local updated_json="{\"status\":\"stale\",\"latency\":0,\"load\":0,\"ts\":$last_ts}"
+                    blackboard_set "$key" "$updated_json"
+                    
+                    # Implement Basic Failover Routing
+                    # If this is a critical agent, re-assign its tasks
+                    case "$agent_name" in
+                        nemoclaw*)
+                            log_info "Critical Spoke Failed: nemoclaw. Diverting architectural tasks to Claude."
+                            blackboard_set "failover_architect" "claude"
+                            ;;
+                        *)
+                            log_info "No specific failover rule for $agent_name"
+                            ;;
+                    esac
+                fi
+            fi
+        done < <(blackboard_list "fleet_health_")
+
         # Check for periodic module hooks
         if [[ -f "$SCRIPT_DIR/module-manager.sh" ]]; then
             # Get list of all active modules

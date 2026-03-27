@@ -262,6 +262,18 @@ blackboard_get() {
     sqlite3 "$db_path" ".timeout 5000" "SELECT value FROM kv WHERE key = '$key';"
 }
 
+# Usage: blackboard_list "pattern"
+blackboard_list() {
+    local pattern="${1:-%}"
+    local db_path=$(get_hcom_db_path)
+
+    if [[ ! -f "$db_path" ]]; then
+        return 0
+    fi
+
+    sqlite3 "$db_path" ".timeout 5000" "SELECT key, value FROM kv WHERE key LIKE '$pattern';"
+}
+
 # hcom Agent Helpers
 
 register_hcom() {
@@ -280,15 +292,57 @@ register_hcom() {
     return 1
 }
 
+# Report agent health metrics to the Blackboard
+# Usage: report_health "status" "latency_ms" "load"
+report_health() {
+    local status="${1:-ready}"
+    local latency="${2:-0}"
+    local load="${3:-0}"
+    
+    if [ -n "${HCOM_NAME:-}" ]; then
+        local timestamp=$(date +%s)
+        # Construct a simple JSON-like string for the value
+        # Note: We avoid complex JSON tools in utils.sh for maximum portability
+        local health_data="{\"status\":\"$status\",\"latency\":$latency,\"load\":$load,\"ts\":$timestamp}"
+        blackboard_set "fleet_health_${HCOM_NAME}" "$health_data"
+        return 0
+    fi
+    return 1
+}
+
+# Get current timestamp in milliseconds
+get_ms() {
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS date doesn't support %N, use perl or python
+        if command -v perl >/dev/null 2>&1; then
+            perl -MTime::HiRes=time -e 'printf "%.0f\n", time()*1000'
+        else
+            python3 -c "import time; print(int(time.time() * 1000))"
+        fi
+    else
+        date +%s%3N
+    fi
+}
+
 start_heartbeat() {
     local tool_name="${1:-agent}"
     if [ -n "${HCOM_NAME:-}" ]; then
-        # Lightweight heartbeat via 'hcom status' in background.
-        # This updates the 'last seen' timestamp without emitting 'created' events.
-        # We use a 20s interval to ensure status stays fresh without excessive churn.
+        # Health 2.0 Heartbeat
+        # Updates status and reports metrics (latency, load) to the Blackboard.
         (
             while true; do
+                # 1. Update hcom status (presence)
                 hcom status --name "$HCOM_NAME" > /dev/null 2>&1 || true
+                
+                # 2. Measure latency (Blackboard round-trip)
+                local start_time=$(get_ms)
+                blackboard_get "fleet_health_${HCOM_NAME}" > /dev/null 2>&1 || true
+                local end_time=$(get_ms)
+                local latency=$((end_time - start_time))
+                
+                # 3. Report health metrics
+                report_health "ready" "$latency" "0"
+                
                 sleep 20
             done
         ) &

@@ -1,0 +1,14 @@
+# ai-colab MCP Server Requirements
+# Install with: pip install -r requirements-mcp.txt
+
+# MCP Framework
+fastmcp>=0.1.0
+pydantic>=2.0.0
+
+# SSE Transport (HTTP)
+fastapi>=0.109.0
+uvicorn>=0.27.0
+sse-starlette>=2.0.0
+
+# Utilities
+python-dotenv>=1.0.0

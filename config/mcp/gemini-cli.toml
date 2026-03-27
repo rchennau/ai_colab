@@ -1,0 +1,29 @@
+# ai-colab MCP Server Configuration
+# Copy this to your LLM-CLI configuration directory
+
+# For gemini-cli: ~/.gemini-cli/config.toml
+# For qwen-code: ~/.qwen/config.toml
+
+[mcp]
+enabled = true
+
+[mcp.servers.ai-colab]
+name = "ai-colab"
+command = "python"
+args = ["-m", "mcp.ai_colab_server"]
+transport = "stdio"
+working_directory = "{{PROJECT_ROOT}}"
+timeout = 30000
+
+# Optional: Tool-level configuration
+[mcp.servers.ai-colab.tools]
+# All tools enabled by default
+# Set to false to disable specific tools
+blackboard_get = true
+blackboard_set = true
+tracks_read = true
+tracks_update = true
+kb_search = true
+agent_spawn = true
+git_sync = true
+health_check = true

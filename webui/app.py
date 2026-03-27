@@ -1,7 +1,7 @@
 """
-ai-colab Web UI Backend v2.0 (Enhanced)
+ai-colab Web UI Backend v2.1 (Real-time Enhanced)
 Flask-based API and web server for configuration management and monitoring
-Improvements: Health checks, pre-flight API, session management, real-time monitoring
+Improvements: WebSocket support, real-time updates, enhanced dashboard pages
 """
 
 import os
@@ -10,10 +10,13 @@ import subprocess
 import logging
 import shutil
 import socket
+import threading
+import time
 from datetime import datetime
 from pathlib import Path
 from flask import Flask, request, jsonify, send_from_directory, Response
 from flask_cors import CORS
+from flask_socketio import SocketIO, emit
 import toml
 import jsonschema
 
@@ -46,13 +49,33 @@ def create_app():
     # Enable CORS
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
+    # Initialize SocketIO for real-time updates
+    socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+
     # Register routes
-    register_routes(app)
+    register_routes(app, socketio)
+
+    # Start background thread for real-time updates
+    start_realtime_updates(socketio)
 
     return app
 
 
-def register_routes(app):
+def register_routes(app, socketio):
+
+    # WebSocket event handlers
+    @socketio.on('connect')
+    def handle_connect():
+        logger.info('Client connected to WebSocket')
+        emit('connected', {'message': 'Connected to ai-colab Web UI'})
+
+    @socketio.on('disconnect')
+    def handle_disconnect():
+        logger.info('Client disconnected from WebSocket')
+
+    @socketio.on('subscribe_status')
+    def handle_subscribe():
+        logger.info('Client subscribed to status updates')
 
     @app.route('/')
     def index():
@@ -720,6 +743,110 @@ def register_routes(app):
             logger.error(f"Error applying profile: {e}")
             return jsonify({"error": str(e)}), 500
 
+    @app.route('/api/kb/search', methods=['GET'])
+    def kb_search():
+        """Search knowledge base using RAG"""
+        try:
+            query = request.args.get('query', '')
+            top_k = request.args.get('top_k', '5', type=int)
+            source = request.args.get('source', None)
+            
+            if not query:
+                return jsonify({"error": "Query parameter 'query' is required"}), 400
+            
+            # Import RAG client
+            import sys
+            sys.path.insert(0, str(APP_DIR))
+            from rag.client import RAGClient
+            
+            client = RAGClient()
+            
+            # Build filters
+            filters = None
+            if source:
+                filters = {'source': source}
+            
+            # Search
+            results = client.search(query, top_k=top_k, filters=filters)
+            
+            # Format results
+            formatted = []
+            for result in results:
+                formatted.append({
+                    'doc': result.get('doc', 'unknown'),
+                    'section': result.get('section', ''),
+                    'score': result.get('score', 0.0),
+                    'source': result.get('source', ''),
+                    'excerpt': result.get('excerpt', '')[:500]
+                })
+            
+            client.close()
+            
+            return jsonify(formatted)
+            
+        except ImportError as e:
+            logger.error(f"RAG not available: {e}")
+            return jsonify({
+                "error": "RAG system not initialized. Install requirements-rag.txt"
+            }), 503
+        except Exception as e:
+            logger.error(f"KB search error: {e}")
+            return jsonify({"error": str(e)}), 500
+
+    @app.route('/api/kb/index', methods=['POST'])
+    def kb_index():
+        """Trigger knowledge base indexing"""
+        try:
+            import sys
+            sys.path.insert(0, str(APP_DIR))
+            from rag.client import RAGClient
+            
+            client = RAGClient()
+            result = client.index(force=False)
+            client.close()
+            
+            return jsonify(result)
+            
+        except ImportError as e:
+            logger.error(f"RAG not available: {e}")
+            return jsonify({
+                "status": "error",
+                "error": "RAG system not initialized"
+            }), 503
+        except Exception as e:
+            logger.error(f"KB index error: {e}")
+            return jsonify({"error": str(e)}), 500
+
+    @app.route('/api/kb/stats', methods=['GET'])
+    def kb_stats():
+        """Get knowledge base statistics"""
+        try:
+            import sys
+            sys.path.insert(0, str(APP_DIR))
+            from rag.client import RAGClient
+            
+            client = RAGClient()
+            
+            if not client.index_path.exists():
+                return jsonify({
+                    "document_count": 0,
+                    "message": "Index not found. Run indexing first."
+                })
+            
+            stats = client.get_stats()
+            client.close()
+            
+            return jsonify(stats)
+            
+        except ImportError as e:
+            logger.error(f"RAG not available: {e}")
+            return jsonify({
+                "error": "RAG system not initialized"
+            }), 503
+        except Exception as e:
+            logger.error(f"KB stats error: {e}")
+            return jsonify({"error": str(e)}), 500
+
 
 def update_state(key, value):
     """Update state file"""
@@ -729,7 +856,7 @@ def update_state(key, value):
         else:
             with open(STATE_FILE, 'r') as f:
                 state = json.load(f)
-        
+
         # Update key (supports dot notation)
         keys = key.split('.')
         current = state
@@ -738,15 +865,92 @@ def update_state(key, value):
                 current[k] = {}
             current = current[k]
         current[keys[-1]] = value
-        
+
         # Update timestamp
         state["last_modified"] = datetime.now().isoformat()
-        
+
         with open(STATE_FILE, 'w') as f:
             json.dump(state, f, indent=2)
-            
+
     except Exception as e:
         logger.error(f"Error updating state: {e}")
+
+
+def start_realtime_updates(socketio):
+    """Start background thread for real-time status updates via WebSocket"""
+    def broadcast_updates():
+        """Periodically broadcast system status updates"""
+        while True:
+            try:
+                # Gather status data
+                status_data = {
+                    "timestamp": datetime.now().isoformat(),
+                    "system": {},
+                    "agents": [],
+                    "session": {}
+                }
+
+                # Health check
+                try:
+                    tmux_available = shutil.which('tmux') is not None
+                    hcom_available = shutil.which('hcom') is not None
+                    stat = shutil.disk_usage(APP_DIR)
+                    disk_free_mb = stat.free / (1024 * 1024)
+
+                    status_data["system"] = {
+                        "tmux": tmux_available,
+                        "hcom": hcom_available,
+                        "disk_free_mb": round(disk_free_mb, 1),
+                        "healthy": tmux_available and hcom_available and disk_free_mb >= MIN_DISK_SPACE_MB
+                    }
+                except:
+                    pass
+
+                # Agent status
+                try:
+                    result = subprocess.run(
+                        ['hcom', 'list'],
+                        capture_output=True,
+                        text=True,
+                        timeout=5
+                    )
+                    if result.returncode == 0:
+                        lines = result.stdout.strip().split('\n')
+                        for line in lines[1:]:
+                            if line.strip():
+                                parts = line.split()
+                                if len(parts) >= 2:
+                                    status_data["agents"].append({
+                                        "name": parts[0],
+                                        "status": parts[1] if len(parts) > 1 else "unknown"
+                                    })
+                except:
+                    pass
+
+                # Session status
+                try:
+                    result = subprocess.run(
+                        ['tmux', 'has-session', '-t', 'hcom-dashboard'],
+                        capture_output=True,
+                        timeout=2
+                    )
+                    status_data["session"]["active"] = result.returncode == 0
+                except:
+                    status_data["session"]["active"] = False
+
+                # Broadcast to all connected clients
+                socketio.emit('status_update', status_data)
+
+            except Exception as e:
+                logger.error(f"Real-time update error: {e}")
+
+            # Wait 5 seconds before next update
+            time.sleep(5)
+
+    # Start background thread
+    thread = threading.Thread(target=broadcast_updates, daemon=True)
+    thread.start()
+    logger.info("Real-time update thread started")
 
 
 # Create app instance

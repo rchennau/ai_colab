@@ -16,7 +16,11 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 - [x] **Milestone 10: Multi-Backend Compute & CI/CD Automation** (Done ✅)
 - [x] **Milestone 11: Enhanced Installation & Launch Experience** (Done ✅)
 - [x] **Milestone 12: NVIDIA NIM nemoclaw Integration** (Done ✅)
-- [ ] **Milestone 13: Native IDE Integration & Fleet Autonomy** (Planning ⚪)
+- [ ] **Milestone 13: Advanced Fleet Autonomy** (In Progress 🔵)
+  - [ ] **Track: MCP Server & RAG Integration** (In Progress 🔵)
+    *Link: [./tracks/mcp_rag_integration_20260327/](./tracks/mcp_rag_integration_20260327/)*
+  - [ ] Native IDE Integration (Planning ⚪)
+  - [ ] Fleet Autonomy Engine (Planning ⚪)
 
 ---
 
@@ -144,6 +148,30 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
     - [x] Phase 7: Documentation & Deployment
     - [x] **Dashboard v2.4:** tmux compatibility, pre-flight checks, session recovery, and health monitoring.
     - [x] **Bug Fixes:** Resolved tmux -P flag incompatibility and vLLM flag propagation issues.
+
+- [x] **Track: MCP Server & RAG Integration** (Complete ✅)
+  *Link: [./tracks/mcp_rag_integration_20260327/](./tracks/mcp_rag_integration_20260327/)*
+  - **Assigned:** @conductor, @architect
+  - **Description:** Hybrid intelligence layer combining MCP server for tool access and RAG for semantic context retrieval. Parallel implementation of both systems.
+  - [x] Phase 1: Foundation (MCP server structure created, RAG design complete)
+  - [x] Phase 2: Core Implementation (RAG indexer, search, cache; MCP tools complete)
+  - [x] Phase 3: Integration & Client Setup (LLM-CLI configs, Web UI KB page, file watcher)
+  - [x] Phase 4: Testing & Optimization (Unit tests, integration tests, security audit)
+  - [x] Phase 5: Documentation & Deployment (User guide, admin guide, troubleshooting)
+
+- [ ] **Track: Fleet Autonomy & Self-Healing** (In Progress 🏗️)
+  *Link: [./tracks/fleet_autonomy_20260326/](./tracks/fleet_autonomy_20260326/)*
+  - **Assigned:** @conductor
+  - **Description:** Implement advanced heartbeat monitoring and autonomous agent recovery for distributed fleets.
+
+---
+
+## 📋 Backlog
+
+- [ ] **Native IDE Integration**
+  - **Description:** Develop MCP connectors and extensions for native IDE support (VS Code, Cursor).
+  - **Status:** Postponed
+
 ## 🛠️ Infrastructure & Maintenance
 
 - [x] **Project Documentation:** (Done)

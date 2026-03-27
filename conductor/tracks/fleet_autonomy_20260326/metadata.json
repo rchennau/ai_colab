@@ -1,0 +1,8 @@
+{
+  "id": "fleet_autonomy_20260326",
+  "name": "Fleet Autonomy & Self-Healing",
+  "description": "Distributed health monitoring and autonomous agent recovery system.",
+  "status": "in-progress",
+  "milestone": "Milestone 13",
+  "created": "2026-03-26"
+}
