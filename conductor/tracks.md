@@ -16,11 +16,7 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 - [x] **Milestone 10: Multi-Backend Compute & CI/CD Automation** (Done ✅)
 - [x] **Milestone 11: Enhanced Installation & Launch Experience** (Done ✅)
 - [x] **Milestone 12: NVIDIA NIM nemoclaw Integration** (Done ✅)
-- [ ] **Milestone 13: Advanced Fleet Autonomy** (In Progress 🔵)
-  - [ ] **Track: MCP Server & RAG Integration** (In Progress 🔵)
-    *Link: [./tracks/mcp_rag_integration_20260327/](./tracks/mcp_rag_integration_20260327/)*
-  - [ ] Native IDE Integration (Planning ⚪)
-  - [ ] Fleet Autonomy Engine (Planning ⚪)
+- [x] **Milestone 13: Advanced Fleet Autonomy** (Done ✅)
 
 ---
 
@@ -51,7 +47,7 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 - [x] **Track: Technical Debate Framework**
   - **Assigned:** @all
   - [x] Generic debate wrapper (`scripts/debate.sh`)
-  - [x] Automated project context injection (Blackboard/Build)
+  - [x] Automated project context injection (Blackboard)
   - [x] Interactive role assignment (PRO/CON/JUDGE)
 
 - [x] **Track: Google Chat Messenger Bridge**
@@ -74,92 +70,43 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 
 - [x] **Track: Git-Aware Conductor & PR Automation** (Done ✅)
   - **Assigned:** @conductor
-  - **Description:** Automate git branch creation, commits for passing tests, and pseudo-PR management.
   - [x] Branch management in `conductor-workflow.sh`.
   - [x] Automated validation and commits.
   - [x] PR approval workflow (`!approve`).
 
 - [x] **Track: Semantic Knowledge Base (RAG-lite)** (Done ✅)
   - **Assigned:** @conductor
-  - **Description:** Upgrade `!kb` with semantic context-aware search.
   - [x] Project indexing (`hcom-kb-index.sh`).
   - [x] Semantic search in `conductor-workflow.sh`.
   - [x] Knowledge maintenance (periodic indexing).
 
 - [x] **Track: Performance Trending & Dashboard** (Done ✅)
   - **Assigned:** @conductor
-  - **Description:** Implement historical performance tracking and a high-density dashboard for platform-specific metrics.
   - [x] Persistent performance history (SQLite).
   - [x] Historical trending tool.
   - [x] High-density Conductor dashboard (`conductor-dashboard.sh`).
 
 - [x] **Track: Generic Module Plugin System** (Done ✅)
   - **Assigned:** @conductor
-  - **Description:** Implement manifest-based plugin loading for specialized project domains.
+  - [x] Implement manifest-based plugin loading for specialized project domains.
 
 - [x] **Track: Visual Health Web Overlay** (Done ✅)
   - **Assigned:** @all
-  - **Description:** Develop a Flask-based web dashboard for high-resolution performance and task analytics.
+  - [x] Develop a Flask-based web dashboard for task analytics.
 
 - [x] **Track: MCP-First Architecture (Core Dev)** (Done ✅)
   - **Assigned:** @architect
-  - **Description:** Replace system-prompt-based roles with a formalized MCP toolset for handoffs and proposals.
+  - [x] Replace system-prompt-based roles with a formalized MCP toolset.
 
 - [x] **Track: Multi-Backend Compute Selection (Cloud/Edge)** (Done ✅)
   - **Assigned:** @conductor
-  - **Description:** Implement selection logic for running high-power agents via NVIDIA API, RunPod, or Local Server.
+  - [x] Implement selection logic for running high-power agents via Cloud APIs.
 
 - [x] **Track: CI/CD Pipeline for Agent Deployment** (Done ✅)
   - **Assigned:** @architect
-  - **Description:** Develop automation scripts to build agent containers and deploy them to RunPod or NVIDIA infrastructure.
+  - [x] Develop automation scripts to build agent containers and deploy them.
 
-- [x] **Track: Autonomous Project Evolution** (Done ✅)
-  - [x] **Milestone 11: Enhanced Installation & Launch Experience** (Done ✅)
-  - [x] **Milestone 12: NVIDIA NIM nemoclaw Integration** (Done ✅)
-  ---
-
-  ## 🏗️ Core Tracks
-  ...
-  - [x] **Track: nemoclaw NVIDIA NIM Integration** (Done ✅)
-    - **Assigned:** @architect
-    - **Description:** Configure and optimize the `nemoclaw` agent to use NVIDIA's NIM API for high-power architectural reasoning.
-    - [x] Create `scripts/nemoclaw-hcom.sh` and update `agent-wrapper.sh`.
-    - [x] Create `system-prompts/nemoclaw.md`.
-    - [x] Add verification check in `scripts/cicd-deploy-nvidia.sh`.
-
-  - [x] **Track: Specialized NeMo Module** (Done ✅)
-    - **Assigned:** @conductor
-    - **Description:** Create a modular addon for `nemoclaw` with specialized architectural review commands and latency monitoring.
-    - [x] Architectural Review: COMPLETED (March 24, 2026)
-    - [x] Implement `!nemo-status` (latency/health monitoring).
-    - [x] Implement `!nemo-review` (architectural review trigger).
-    - [x] Dashboard TUI integration.
-
-  - [x] **Track: Enhanced Installation & Launch Experience** (Done ✅)
-    *Link: [./tracks/enhanced_install_launch_20260324/](./tracks/enhanced_install_launch_20260324/)*
-    - **Assigned:** @conductor, @all
-    - **Description:** Provide two installation pathways: Rich CLI Wizard and Web UI (Docker-based). Both support initial setup and post-installation reconfiguration.
-    - [x] Phase 1: Configuration Management Foundation
-    - [x] Phase 2: Rich CLI Wizard
-    - [x] Phase 3: Docker Container Setup
-    - [x] Phase 4: Web UI Backend
-    - [x] Phase 5: Web UI Frontend
-    - [x] Phase 6: Integration & Testing
-    - [x] Phase 7: Documentation & Deployment
-    - [x] **Dashboard v2.4:** tmux compatibility, pre-flight checks, session recovery, and health monitoring.
-    - [x] **Bug Fixes:** Resolved tmux -P flag incompatibility and vLLM flag propagation issues.
-
-- [x] **Track: MCP Server & RAG Integration** (Complete ✅)
-  *Link: [./tracks/mcp_rag_integration_20260327/](./tracks/mcp_rag_integration_20260327/)*
-  - **Assigned:** @conductor, @architect
-  - **Description:** Hybrid intelligence layer combining MCP server for tool access and RAG for semantic context retrieval. Parallel implementation of both systems.
-  - [x] Phase 1: Foundation (MCP server structure created, RAG design complete)
-  - [x] Phase 2: Core Implementation (RAG indexer, search, cache; MCP tools complete)
-  - [x] Phase 3: Integration & Client Setup (LLM-CLI configs, Web UI KB page, file watcher)
-  - [x] Phase 4: Testing & Optimization (Unit tests, integration tests, security audit)
-  - [x] Phase 5: Documentation & Deployment (User guide, admin guide, troubleshooting)
-
-- [ ] **Track: Fleet Autonomy & Self-Healing** (In Progress 🏗️)
+- [x] **Track: Fleet Autonomy & Self-Healing** (Done ✅)
   *Link: [./tracks/fleet_autonomy_20260326/](./tracks/fleet_autonomy_20260326/)*
   - **Assigned:** @conductor
   - **Description:** Implement advanced heartbeat monitoring and autonomous agent recovery for distributed fleets.
@@ -179,12 +126,8 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 - [x] **Testing:** (Done)
 - [x] **Track: Docker Core Verification Harness** (Done ✅)
   - **Assigned:** @architect
-  - **Description:** Created `tests/test_docker_core.sh` to verify Hub container builds and service availability.
+  - [x] Created `tests/test_docker_core.sh` to verify Hub container availability.
 
 - [x] **Track: HCOM Telemetry Fix** (Done ✅)
   - **Assigned:** @conductor
-  - **Description:** Fixed agent heartbeat timeout issue causing `exit:timeout` status cycling in hcom TUI.
-  - [x] Identified root cause: Single registration was insufficient for hcom 0.7.5 persistent status.
-  - [x] Implemented continuous 10s background heartbeat loop in `scripts/utils.sh` via `start_heartbeat()`.
-  - [x] Updated `scripts/agent-wrapper.sh` and `scripts/hcom-chat-bridge.sh` to use the new heartbeat with robust cleanup.
-  - [x] Verified that status stays `ready` without intercepting messages from interactive sessions.
+  - [x] Implemented continuous background heartbeat loop via `start_heartbeat()`.

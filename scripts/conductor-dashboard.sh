@@ -59,6 +59,42 @@ render_modular_sections() {
     done
 }
 
+render_fleet_health() {
+    echo -e "\n${BLUE}--- Fleet Health (Spoke Agents) ---${NC}"
+    local health_keys=$(blackboard_list "fleet_health_")
+    
+    if [[ -z "$health_keys" ]]; then
+        echo -e "  ${YELLOW}No active agents detected.${NC}"
+        return
+    fi
+    
+    local current_time=$(date +%s)
+    
+    while IFS='|' read -r key health_json; do
+        if [[ -n "$key" ]]; then
+            local name=${key#fleet_health_}
+            # Truncate long agent names
+            local display_name=$(echo "$name" | cut -c1-20)
+            
+            local status=$(parse_json_value "$health_json" "status")
+            local latency=$(parse_json_value "$health_json" "latency")
+            local last_ts=$(parse_json_value "$health_json" "ts")
+            
+            local status_color="${GREEN}"
+            [[ "$status" == "error" || "$status" == "crashed" || "$status" == "stale" ]] && status_color="${RED}"
+            
+            # Additional staleness check for UI
+            if (( current_time - last_ts > 60 )); then
+                status="stale"
+                status_color="${RED}"
+            fi
+            
+            # Format output
+            printf "  %-20s [%b%-8s%b] %4sms\n" "$display_name" "$status_color" "$status" "${NC}" "$latency"
+        fi
+    done <<< "$health_keys"
+}
+
 render_events() {
     echo -e "\n${BLUE}--- Recent Events ---${NC}"
     hcom events --last 3 --all --type message | while read -r line; do
@@ -78,6 +114,7 @@ render_footer() {
 # Main render loop
 render_header
 render_progress
+render_fleet_health
 render_modular_sections
 render_events
 render_footer

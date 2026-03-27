@@ -2,7 +2,29 @@
 import os
 import sys
 import argparse
+import subprocess
+import time
 from openai import OpenAI
+
+def report_error(error_msg):
+    """Report error status to the Blackboard for Fleet Autonomy."""
+    agent_name = os.environ.get("HCOM_NAME")
+    if not agent_name:
+        return
+    
+    script_dir = os.path.dirname(os.path.realpath(__file__))
+    kv_tool = os.path.join(script_dir, "hcom-kv.sh")
+    
+    if os.path.exists(kv_tool):
+        # Escape quotes for JSON
+        safe_msg = str(error_msg).replace('"', '\\"')
+        timestamp = int(time.time())
+        health_data = f'{{"status":"error","message":"{safe_msg}","ts":{timestamp}}}'
+        try:
+            subprocess.run([kv_tool, "set", f"fleet_health_{agent_name}", health_data], 
+                           capture_output=True, check=False)
+        except Exception:
+            pass
 
 def main():
     parser = argparse.ArgumentParser(description="NVIDIA NeMo CLI Wrapper")
@@ -49,6 +71,7 @@ def main():
                 print(chunk.choices[0].delta.content, end="", flush=True)
         print()
     except Exception as e:
+        report_error(e)
         print(f"\nError: {e}")
         sys.exit(1)
 

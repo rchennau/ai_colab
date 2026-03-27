@@ -238,6 +238,13 @@ while true; do
     
     echo "[$(date '+%H:%M:%S')] $TOOL agent exited with code $EXIT_CODE"
     
+    # Report exit to Blackboard for Fleet Autonomy
+    if [ $EXIT_CODE -ne 0 ]; then
+        report_health "crashed" "0" "$EXIT_CODE"
+    else
+        report_health "exited" "0" "0"
+    fi
+    
     # Check if we should restart
     if [ $RESTART_COUNT -ge $MAX_RESTARTS ]; then
         echo "[$(date '+%H:%M:%S')] Max restarts ($MAX_RESTARTS) reached, exiting"

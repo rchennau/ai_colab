@@ -603,9 +603,10 @@ main() {
                     log_warn "Agent STALE: $agent_name (last seen: $((CURRENT_TIME - last_ts))s ago)"
                     
                     # Attempt Recovery: Broadcast a 'heartbeat_lost' event
-                    # This can be caught by the agent's wrapper if it's still alive,
-                    # or the Conductor can attempt a remote redeploy.
-                    hcom send @all -- "Watchdog: Agent $agent_name is unresponsive. Attempting recovery..."
+                    hcom send -- "Watchdog: Agent $agent_name is unresponsive. Attempting recovery..." > /dev/null 2>&1 || true
+                    
+                    # Log recovery attempt to blackboard for persistence
+                    blackboard_set "recovery_attempt_${agent_name}" "$CURRENT_TIME"
                     
                     # Update status to 'stale' in blackboard to signal other agents
                     local updated_json="{\"status\":\"stale\",\"latency\":0,\"load\":0,\"ts\":$last_ts}"

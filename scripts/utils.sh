@@ -262,9 +262,12 @@ blackboard_get() {
     sqlite3 "$db_path" ".timeout 5000" "SELECT value FROM kv WHERE key = '$key';"
 }
 
-# Usage: blackboard_list "pattern"
+# Usage: blackboard_list "pattern" (e.g. "fleet_health_")
 blackboard_list() {
     local pattern="${1:-%}"
+    # Append wildcard if not present
+    [[ "$pattern" != *"%" ]] && pattern="${pattern}%"
+    
     local db_path=$(get_hcom_db_path)
 
     if [[ ! -f "$db_path" ]]; then
