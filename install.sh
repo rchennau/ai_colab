@@ -525,9 +525,11 @@ echo -e "  ✓ Compute backend set to: ${BLUE}$COMPUTE_BACKEND${NC}"
 # 5. Conductor Agent Setup
 echo -e "\n${GREEN}Setting up Global Conductor Agent...${NC}"
 if [ -f "$SCRIPT_DIR/scripts/conductor/install.sh" ]; then
-    bash "$SCRIPT_DIR/scripts/conductor/install.sh"
+    # Run conductor installer non-interactively
+    bash "$SCRIPT_DIR/scripts/conductor/install.sh" --auto 2>/dev/null || \
+    bash "$SCRIPT_DIR/scripts/conductor/install.sh" 2>&1 | head -20
 else
-    echo -e "${RED}Error: scripts/conductor/install.sh not found.${NC}"
+    echo -e "${YELLOW}○ Conductor install script not found (optional)${NC}"
 fi
 
 # 6. Terminal-Specific Configuration
