@@ -22,6 +22,10 @@ PyYAML==6.0.1  # For config files
 # Async HTTP (for Inference Gateway)
 aiohttp==3.9.0
 
+# Vision/Screenshot Support
+pyautogui==0.9.54  # Screenshot capture
+Pillow==10.0.0     # Image processing
+
 # Utilities
 requests==2.31.0
 python-dotenv==1.0.0

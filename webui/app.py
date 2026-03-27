@@ -1068,6 +1068,174 @@ def register_routes(app, socketio, limiter=None):
             logger.error(f"Federation sync failed: {e}")
             return jsonify({'status': 'error', 'error': str(e)}), 500
 
+    # ========================================================================
+    # Vision/Screenshot API Endpoints
+    # ========================================================================
+    
+    @app.route('/api/vision/screenshot', methods=['POST'])
+    def capture_and_analyze_screenshot():
+        """Capture screenshot and analyze with LLM"""
+        try:
+            import asyncio
+            sys.path.insert(0, str(PROJECT_ROOT / 'scripts'))
+            from vision import get_vision_client
+            
+            data = request.json or {}
+            prompt = data.get('prompt', "What's in this screenshot? Identify any errors or issues.")
+            model = data.get('model', 'gemini')
+            
+            # Get vision client
+            client = get_vision_client(model)
+            
+            # Capture and analyze (run async in executor)
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                result = loop.run_until_complete(
+                    client.analyze_screenshot(prompt)
+                )
+            finally:
+                loop.close()
+            
+            if result.get('success'):
+                return jsonify(result)
+            else:
+                return jsonify({'status': 'error', 'error': result.get('error')}), 500
+            
+        except Exception as e:
+            logger.error(f"Screenshot analysis failed: {e}")
+            return jsonify({'status': 'error', 'error': str(e)}), 500
+    
+    @app.route('/api/vision/analyze', methods=['POST'])
+    def analyze_image():
+        """Analyze uploaded image with LLM"""
+        try:
+            import asyncio
+            sys.path.insert(0, str(PROJECT_ROOT / 'scripts'))
+            from vision import get_vision_client
+            
+            # Check for file upload
+            if 'image' not in request.files:
+                # Try JSON with base64
+                data = request.json
+                if not data or 'image_base64' not in data:
+                    return jsonify({'status': 'error', 'error': 'No image provided'}), 400
+                
+                # Save base64 image to temp file
+                import base64
+                import tempfile
+                
+                image_data = base64.b64decode(data['image_base64'])
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as f:
+                    f.write(image_data)
+                    image_path = f.name
+            else:
+                # Handle file upload
+                file = request.files['image']
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as f:
+                    file.save(f.name)
+                    image_path = f.name
+            
+            try:
+                prompt = request.form.get('prompt', "What's in this image?")
+                model = request.form.get('model', 'gemini')
+                
+                # Get vision client
+                client = get_vision_client(model)
+                
+                # Analyze image (run async in executor)
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    analysis = loop.run_until_complete(
+                        client.analyze_image(image_path, prompt)
+                    )
+                finally:
+                    loop.close()
+                
+                return jsonify({
+                    'status': 'success',
+                    'analysis': analysis,
+                    'model': model
+                })
+                
+            finally:
+                # Cleanup temp file
+                import os
+                os.unlink(image_path)
+            
+        except Exception as e:
+            logger.error(f"Image analysis failed: {e}")
+            return jsonify({'status': 'error', 'error': str(e)}), 500
+    
+    @app.route('/api/vision/images', methods=['GET'])
+    def list_images():
+        """List stored images"""
+        try:
+            sys.path.insert(0, str(PROJECT_ROOT / 'scripts'))
+            from vision import VisionManager
+            
+            vision = VisionManager()
+            image_type = request.args.get('type')
+            limit = request.args.get('limit', 50, type=int)
+            
+            images = vision.list_images(image_type, limit)
+            
+            return jsonify({
+                'images': images,
+                'count': len(images)
+            })
+            
+        except Exception as e:
+            logger.error(f"List images failed: {e}")
+            return jsonify({'status': 'error', 'error': str(e)}), 500
+    
+    @app.route('/api/vision/images/<image_id>', methods=['GET'])
+    def get_image(image_id):
+        """Get image info or download"""
+        try:
+            sys.path.insert(0, str(PROJECT_ROOT / 'scripts'))
+            from vision import VisionManager
+            
+            vision = VisionManager()
+            image_info = vision.get_image(image_id)
+            
+            if not image_info:
+                return jsonify({'status': 'error', 'error': 'Image not found'}), 404
+            
+            # Check if download requested
+            if request.args.get('download'):
+                from flask import send_file
+                return send_file(image_info['path'], as_attachment=True)
+            
+            return jsonify({
+                'status': 'success',
+                'image': image_info
+            })
+            
+        except Exception as e:
+            logger.error(f"Get image failed: {e}")
+            return jsonify({'status': 'error', 'error': str(e)}), 500
+    
+    @app.route('/api/vision/images/<image_id>', methods=['DELETE'])
+    def delete_image(image_id):
+        """Delete an image"""
+        try:
+            sys.path.insert(0, str(PROJECT_ROOT / 'scripts'))
+            from vision import VisionManager
+            
+            vision = VisionManager()
+            success = vision.delete_image(image_id)
+            
+            if success:
+                return jsonify({'status': 'success', 'message': 'Image deleted'})
+            else:
+                return jsonify({'status': 'error', 'error': 'Image not found'}), 404
+            
+        except Exception as e:
+            logger.error(f"Delete image failed: {e}")
+            return jsonify({'status': 'error', 'error': str(e)}), 500
+
     @app.route('/api/preflight', methods=['GET'])
     def preflight_checks():
         """Comprehensive pre-flight checks (mirrors dashboard-launch.sh)"""

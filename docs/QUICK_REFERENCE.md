@@ -79,7 +79,9 @@ These commands can be sent from any agent chat or the **User Command Console**.
 | `!kb-refresh` | Core | Re-index the codebase for semantic search. |
 | `!build` | Core | Run the project build system. |
 | `!git-sync` | Core | Pull latest changes from remote. |
-| `!switch <path>` | Core | Change conductor focus to another project. |
+| !fleet | Core | Show real-time health and latency for all agents. |
+| !switch <path> | Core | Change conductor focus to another project. |
+
 | `!screenshot` | Atari-8bit | Capture current emulator state. |
 | `!memory-map` | Atari-8bit | View visual memory allocation. |
 | `!profile <file>` | Atari-8bit | Analyze 6502 code cycle counts. |
