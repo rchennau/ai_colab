@@ -62,6 +62,11 @@ get_script_dir() {
 }
 
 SCRIPT_DIR="$(get_script_dir)"
+# Ensure SCRIPT_DIR is the project root (launch.sh is in project root)
+# If we're in scripts/ directory, go up one level
+if [[ "$SCRIPT_DIR" == */scripts ]]; then
+    SCRIPT_DIR="$(dirname "$SCRIPT_DIR")"
+fi
 PROJECT_ROOT="$SCRIPT_DIR"
 export PROJECT_ROOT
 
