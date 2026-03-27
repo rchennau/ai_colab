@@ -52,9 +52,10 @@ fi
 
 # Find script directory - resolve ALL symlinks to get actual physical path
 get_script_dir() {
-    local source="${BASH_SOURCE[0]}"
+    # Use $0 if BASH_SOURCE is empty (happens when sourced)
+    local source="${BASH_SOURCE[0]:-$0}"
     
-    # If BASH_SOURCE is relative, make it absolute
+    # If source is relative, make it absolute
     [[ $source != /* ]] && source="$(pwd)/$source"
     
     # Resolve all symlinks
