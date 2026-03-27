@@ -355,6 +355,154 @@ def register_routes(app, socketio, limiter=None):
                 'error': str(e)
             }), 500
 
+    # ========================================================================
+    # Inference Gateway API Endpoints
+    # ========================================================================
+    
+    @app.route('/api/inference/v1/complete', methods=['POST'])
+    async def inference_complete():
+        """Execute inference request"""
+        try:
+            sys.path.insert(0, str(PROJECT_ROOT / 'scripts'))
+            from inference import get_gateway
+            
+            gateway = get_gateway()
+            data = request.json
+            
+            if not data or not data.get('prompt'):
+                return jsonify({
+                    'status': 'error',
+                    'error': 'Prompt is required'
+                }), 400
+            
+            # Execute inference
+            response = await gateway.complete(**data)
+            
+            return jsonify({
+                'request_id': response.request_id,
+                'status': response.status,
+                'response': response.response,
+                'model_used': response.model_used,
+                'tokens_used': response.tokens_used,
+                'latency_ms': response.latency_ms,
+                'cached': response.cached,
+                'cost_usd': response.cost_usd
+            })
+            
+        except Exception as e:
+            logger.error(f"Inference request failed: {e}")
+            return jsonify({
+                'status': 'error',
+                'error': str(e)
+            }), 500
+    
+    @app.route('/api/inference/v1/batch', methods=['POST'])
+    async def inference_batch():
+        """Execute batch inference requests"""
+        try:
+            sys.path.insert(0, str(PROJECT_ROOT / 'scripts'))
+            from inference import get_gateway
+            
+            gateway = get_gateway()
+            data = request.json
+            
+            if not data or not data.get('requests'):
+                return jsonify({
+                    'status': 'error',
+                    'error': 'Requests array is required'
+                }), 400
+            
+            # Execute batch requests in parallel
+            import asyncio
+            tasks = [
+                gateway.complete(**req)
+                for req in data['requests']
+            ]
+            
+            responses = await asyncio.gather(*tasks, return_exceptions=True)
+            
+            results = []
+            for i, response in enumerate(responses):
+                if isinstance(response, Exception):
+                    results.append({
+                        'request_id': data['requests'][i].get('request_id', f'batch_{i}'),
+                        'status': 'error',
+                        'error': str(response)
+                    })
+                else:
+                    results.append({
+                        'request_id': response.request_id,
+                        'status': response.status,
+                        'response': response.response,
+                        'model_used': response.model_used,
+                        'tokens_used': response.tokens_used,
+                        'latency_ms': response.latency_ms
+                    })
+            
+            return jsonify({
+                'batch_id': f"batch_{int(time.time())}",
+                'results': results,
+                'total_requests': len(results),
+                'successful': sum(1 for r in results if r['status'] == 'success')
+            })
+            
+        except Exception as e:
+            logger.error(f"Batch inference failed: {e}")
+            return jsonify({
+                'status': 'error',
+                'error': str(e)
+            }), 500
+    
+    @app.route('/api/inference/v1/metrics', methods=['GET'])
+    def inference_metrics():
+        """Get inference metrics"""
+        try:
+            sys.path.insert(0, str(PROJECT_ROOT / 'scripts'))
+            from inference import get_gateway
+            
+            gateway = get_gateway()
+            metrics = gateway.get_metrics()
+            
+            return jsonify(metrics)
+            
+        except Exception as e:
+            logger.error(f"Metrics request failed: {e}")
+            return jsonify({
+                'status': 'error',
+                'error': str(e)
+            }), 500
+    
+    @app.route('/api/inference/v1/models', methods=['GET'])
+    def inference_models():
+        """Get available models and their status"""
+        try:
+            sys.path.insert(0, str(PROJECT_ROOT / 'scripts'))
+            from inference import get_gateway
+            
+            gateway = get_gateway()
+            models = gateway.get_model_status()
+            
+            return jsonify({
+                'models': [
+                    {
+                        'id': model_id,
+                        'name': info['name'],
+                        'status': info['status'],
+                        'avg_latency_ms': info['avg_latency_ms'],
+                        'request_count': info['request_count'],
+                        'total_tokens': info['total_tokens']
+                    }
+                    for model_id, info in models.items()
+                ]
+            })
+            
+        except Exception as e:
+            logger.error(f"Models request failed: {e}")
+            return jsonify({
+                'status': 'error',
+                'error': str(e)
+            }), 500
+
     @app.route('/api/preflight', methods=['GET'])
     def preflight_checks():
         """Comprehensive pre-flight checks (mirrors dashboard-launch.sh)"""

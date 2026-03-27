@@ -1,0 +1,96 @@
+# Inference Gateway Configuration
+
+gateway:
+  enabled: true
+  port: 8081
+  
+  # Batching configuration
+  batching:
+    enabled: true
+    max_batch_size: 10
+    max_wait_ms: 100
+  
+  # Caching configuration
+  cache:
+    enabled: true
+    backend: memory  # memory or redis
+    redis_host: localhost
+    redis_port: 6379
+    ttl_seconds: 300
+    max_memory_mb: 512
+  
+  # Rate limiting per model
+  rate_limits:
+    gemini:
+      requests_per_minute: 60
+      tokens_per_minute: 100000
+      concurrent_requests: 10
+    
+    qwen:
+      requests_per_minute: 100
+      tokens_per_minute: 150000
+      concurrent_requests: 20
+    
+    claude:
+      requests_per_minute: 50
+      tokens_per_minute: 80000
+      concurrent_requests: 5
+    
+    vllm_local:
+      requests_per_minute: 1000
+      tokens_per_minute: 500000
+      concurrent_requests: 50
+  
+  # Fallback configuration
+  fallback:
+    enabled: true
+    order:
+      - gemini
+      - qwen
+      - claude
+      - vllm_local
+    circuit_breaker_threshold: 5
+    circuit_breaker_timeout_seconds: 60
+  
+  # Analytics configuration
+  analytics:
+    enabled: true
+    export_interval_seconds: 60
+    retention_days: 30
+
+# Model configurations
+models:
+  gemini:
+    provider: google
+    name: Gemini 2.0 Flash
+    api_key_env: GEMINI_API_KEY
+    endpoint: https://generativelanguage.googleapis.com/v1
+    max_tokens: 32768
+    cost_per_1k_input: 0.0005
+    cost_per_1k_output: 0.0015
+  
+  qwen:
+    provider: alibaba
+    name: Qwen3 Next 80B
+    api_key_env: QWEN_API_KEY
+    endpoint: https://dashscope.aliyuncs.com/api/v1
+    max_tokens: 32768
+    cost_per_1k_input: 0.0004
+    cost_per_1k_output: 0.0012
+  
+  claude:
+    provider: anthropic
+    name: Claude 3.5 Sonnet
+    api_key_env: ANTHROPIC_API_KEY
+    endpoint: https://api.anthropic.com/v1
+    max_tokens: 32768
+    cost_per_1k_input: 0.003
+    cost_per_1k_output: 0.015
+  
+  vllm_local:
+    provider: local
+    name: DeepSeek Coder (Local)
+    endpoint: http://localhost:8000/v1
+    max_tokens: 16384
+    cost_per_1k_input: 0
+    cost_per_1k_output: 0

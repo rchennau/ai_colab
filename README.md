@@ -115,9 +115,10 @@ High-power agents and models run **externally** to the Hub:
 - **Fleet Workers**: Specialized agents running on distributed hardware.
 
 ### **Intelligent Orchestration**
+*   **Fleet Autonomy & Self-Healing:** Autonomous watchdog that monitors agent health and recovers from crashes.
 *   **Automated Git Lifecycle:** Isolated branches, auto-commits, and pseudo-PRs.
 *   **Semantic Knowledge Base:** LLM-powered architectural search (`!kb`).
-*   **Unified Dashboard (v3.0):** High-density real-time TUI and optional Web UI.
+*   **Unified Dashboard (v3.0):** High-density real-time TUI featuring **Fleet Health** monitoring.
 *   **80-Column ANSI UI:** Professional CLI graphics and status reporting across all core scripts.
 *   **Project Migration Tool:** Automated detection and import of existing AI integrations.
 
@@ -199,7 +200,8 @@ ai-colab includes a comprehensive Web UI for browser-based management:
 ### Features
 - **Setup Wizard**: Interactive 5-step configuration via browser
 - **Dashboard**: Real-time system status with health monitoring
-- **Knowledge Base**: Semantic search with relevance scores (NEW!)
+- **Fleet Health**: Real-time latency and status for distributed spokes (NEW!)
+- **Knowledge Base**: Semantic search with relevance scores
 - **Pre-flight Checks**: System readiness verification
 - **Session Management**: View and recover tmux sessions
 - **Agent Monitoring**: Real-time agent list from hcom
@@ -266,6 +268,7 @@ Access at: http://localhost:8080 → Knowledge Base tab
 - ✅ Configuration management
 - ✅ System status endpoint
 - ✅ Dashboard launch endpoint
+- ✅ Fleet Autonomy & Recovery (Watchdog)
 - ✅ Frontend HTML verification
 
 ### MCP & RAG Test Suite (NEW!)
