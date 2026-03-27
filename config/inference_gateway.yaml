@@ -1,4 +1,5 @@
 # Inference Gateway Configuration
+# Routes inference requests through existing CLI tools (FREE access)
 
 gateway:
   enabled: true
@@ -19,26 +20,22 @@ gateway:
     ttl_seconds: 300
     max_memory_mb: 512
   
-  # Rate limiting per model
+  # Rate limiting per model (CLI rate limits, not API limits)
   rate_limits:
     gemini:
       requests_per_minute: 60
-      tokens_per_minute: 100000
       concurrent_requests: 10
     
     qwen:
       requests_per_minute: 100
-      tokens_per_minute: 150000
       concurrent_requests: 20
     
     claude:
       requests_per_minute: 50
-      tokens_per_minute: 80000
       concurrent_requests: 5
     
     vllm_local:
       requests_per_minute: 1000
-      tokens_per_minute: 500000
       concurrent_requests: 50
   
   # Fallback configuration
@@ -58,39 +55,44 @@ gateway:
     export_interval_seconds: 60
     retention_days: 30
 
-# Model configurations
+# Model configurations (CLI-based, FREE access)
 models:
   gemini:
     provider: google
     name: Gemini 2.0 Flash
-    api_key_env: GEMINI_API_KEY
-    endpoint: https://generativelanguage.googleapis.com/v1
+    cli_command: gemini
+    cli_args: ["shell"]
+    model_id: gemini-2.0-flash
     max_tokens: 32768
-    cost_per_1k_input: 0.0005
-    cost_per_1k_output: 0.0015
+    cost_per_1k_input: 0  # FREE via CLI
+    cost_per_1k_output: 0
   
   qwen:
     provider: alibaba
     name: Qwen3 Next 80B
-    api_key_env: QWEN_API_KEY
-    endpoint: https://dashscope.aliyuncs.com/api/v1
+    cli_command: qwen
+    cli_args: []
+    model_id: qwen3-next-80b-a3b-instruct
     max_tokens: 32768
-    cost_per_1k_input: 0.0004
-    cost_per_1k_output: 0.0012
+    cost_per_1k_input: 0  # FREE via CLI
+    cost_per_1k_output: 0
   
   claude:
     provider: anthropic
     name: Claude 3.5 Sonnet
-    api_key_env: ANTHROPIC_API_KEY
-    endpoint: https://api.anthropic.com/v1
+    cli_command: claude
+    cli_args: []
+    model_id: claude-3-5-sonnet-20241022
     max_tokens: 32768
-    cost_per_1k_input: 0.003
-    cost_per_1k_output: 0.015
+    cost_per_1k_input: 0  # FREE via CLI (beta)
+    cost_per_1k_output: 0
   
   vllm_local:
     provider: local
     name: DeepSeek Coder (Local)
+    cli_command: null  # Uses HTTP endpoint
     endpoint: http://localhost:8000/v1
+    model_id: deepseek-coder
     max_tokens: 16384
-    cost_per_1k_input: 0
+    cost_per_1k_input: 0  # FREE (local)
     cost_per_1k_output: 0

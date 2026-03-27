@@ -121,162 +121,209 @@ class ModelClient(ABC):
         pass
     
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        """Calculate cost in USD"""
-        input_cost = (input_tokens / 1000) * self.config.cost_per_1k_input
-        output_cost = (output_tokens / 1000) * self.config.cost_per_1k_output
-        return input_cost + output_cost
+        """Calculate cost in USD (0 for CLI-based access)"""
+        # CLI-based access is free
+        return 0.0
 
 
 # ============================================================================
-# Gemini Client
+# Gemini CLI Client (FREE via gemini-cli)
 # ============================================================================
 
 class GeminiClient(ModelClient):
-    """Google Gemini API client"""
+    """Google Gemini via gemini-cli (FREE)"""
     
     def __init__(self, config: ModelConfig):
         super().__init__(config)
-        self.api_key = os.environ.get(config.api_key_env or 'GEMINI_API_KEY')
-        self.base_url = config.endpoint
+        # No API key needed - uses gemini-cli's authenticated session
     
     async def execute(self, request: InferenceRequest) -> InferenceResponse:
-        """Execute request via Gemini API"""
-        import aiohttp
-        
+        """Execute request via gemini-cli"""
         start_time = time.time()
         
         try:
-            url = f"{self.base_url}/models/{self.config.id}:generateContent"
-            headers = {
-                'Content-Type': 'application/json',
-                'x-goog-api-key': self.api_key
-            }
+            # Build gemini-cli command
+            cmd = [
+                'gemini', 'shell',
+                '--prompt', request.prompt,
+                '--model', self.config.id,
+                '--max-tokens', str(request.max_tokens),
+                '--temperature', str(request.temperature)
+            ]
             
-            payload = {
-                'contents': [{
-                    'parts': [{'text': request.prompt}]
-                }],
-                'generationConfig': {
-                    'maxOutputTokens': request.max_tokens,
-                    'temperature': request.temperature,
-                    'topP': request.top_p
-                }
-            }
+            # Execute via subprocess
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                cwd=str(PROJECT_ROOT)
+            )
             
-            async with aiohttp.ClientSession() as session:
-                async with session.post(url, headers=headers, json=payload,
-                                       timeout=aiohttp.ClientTimeout(total=request.timeout_ms/1000)) as resp:
-                    
-                    if resp.status != 200:
-                        error_text = await resp.text()
-                        raise Exception(f"Gemini API error: {resp.status} - {error_text}")
-                    
-                    result = await resp.json()
-                    
-                    # Parse response
-                    response_text = result['candidates'][0]['content']['parts'][0]['text']
-                    
-                    # Estimate tokens (rough approximation)
-                    input_tokens = len(request.prompt) // 4
-                    output_tokens = len(response_text) // 4
-                    
-                    latency_ms = (time.time() - start_time) * 1000
-                    cost = self.calculate_cost(input_tokens, output_tokens)
-                    
-                    self.request_count += 1
-                    self.total_tokens += input_tokens + output_tokens
-                    
-                    return InferenceResponse(
-                        request_id=request.request_id,
-                        response=response_text,
-                        model_used=self.config.id,
-                        tokens_used={'input': input_tokens, 'output': output_tokens},
-                        latency_ms=latency_ms,
-                        cached=False,
-                        cost_usd=cost
-                    )
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(),
+                timeout=request.timeout_ms / 1000
+            )
+            
+            if process.returncode != 0:
+                raise Exception(f"gemini-cli error: {stderr.decode()}")
+            
+            response_text = stdout.decode().strip()
+            
+            # Estimate tokens
+            input_tokens = len(request.prompt) // 4
+            output_tokens = len(response_text) // 4
+            
+            latency_ms = (time.time() - start_time) * 1000
+            
+            self.request_count += 1
+            self.total_tokens += input_tokens + output_tokens
+            
+            return InferenceResponse(
+                request_id=request.request_id,
+                response=response_text,
+                model_used=self.config.id,
+                tokens_used={'input': input_tokens, 'output': output_tokens},
+                latency_ms=latency_ms,
+                cached=False,
+                cost_usd=0.0  # FREE via CLI
+            )
         
         except Exception as e:
             latency_ms = (time.time() - start_time) * 1000
-            raise Exception(f"Gemini request failed: {e}")
+            raise Exception(f"gemini-cli request failed: {e}")
 
 
 # ============================================================================
-# Qwen Client
+# Qwen CLI Client (FREE via qwen-code)
 # ============================================================================
 
 class QwenClient(ModelClient):
-    """Alibaba Qwen (DashScope) API client"""
+    """Alibaba Qwen via qwen-code CLI (FREE)"""
     
     def __init__(self, config: ModelConfig):
         super().__init__(config)
-        self.api_key = os.environ.get(config.api_key_env or 'QWEN_API_KEY')
-        self.base_url = config.endpoint
+        # No API key needed - uses qwen-code's authenticated session
     
     async def execute(self, request: InferenceRequest) -> InferenceResponse:
-        """Execute request via Qwen API"""
-        import aiohttp
-        
+        """Execute request via qwen-code"""
         start_time = time.time()
         
         try:
-            url = f"{self.base_url}/services/aigc/text-generation/generation"
-            headers = {
-                'Content-Type': 'application/json',
-                'Authorization': f'Bearer {self.api_key}'
-            }
+            # Build qwen-code command
+            cmd = [
+                'qwen',
+                '--prompt', request.prompt,
+                '--model', self.config.id,
+                '--max-tokens', str(request.max_tokens),
+                '--temperature', str(request.temperature)
+            ]
             
-            payload = {
-                'model': self.config.id,
-                'input': {
-                    'messages': [{
-                        'role': 'user',
-                        'content': request.prompt
-                    }]
-                },
-                'parameters': {
-                    'max_tokens': request.max_tokens,
-                    'temperature': request.temperature,
-                    'top_p': request.top_p
-                }
-            }
+            # Execute via subprocess
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                cwd=str(PROJECT_ROOT)
+            )
             
-            async with aiohttp.ClientSession() as session:
-                async with session.post(url, headers=headers, json=payload,
-                                       timeout=aiohttp.ClientTimeout(total=request.timeout_ms/1000)) as resp:
-                    
-                    if resp.status != 200:
-                        error_text = await resp.text()
-                        raise Exception(f"Qwen API error: {resp.status} - {error_text}")
-                    
-                    result = await resp.json()
-                    
-                    # Parse response
-                    response_text = result['output']['choices'][0]['message']['content']
-                    
-                    # Estimate tokens
-                    input_tokens = len(request.prompt) // 4
-                    output_tokens = len(response_text) // 4
-                    
-                    latency_ms = (time.time() - start_time) * 1000
-                    cost = self.calculate_cost(input_tokens, output_tokens)
-                    
-                    self.request_count += 1
-                    self.total_tokens += input_tokens + output_tokens
-                    
-                    return InferenceResponse(
-                        request_id=request.request_id,
-                        response=response_text,
-                        model_used=self.config.id,
-                        tokens_used={'input': input_tokens, 'output': output_tokens},
-                        latency_ms=latency_ms,
-                        cached=False,
-                        cost_usd=cost
-                    )
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(),
+                timeout=request.timeout_ms / 1000
+            )
+            
+            if process.returncode != 0:
+                raise Exception(f"qwen-code error: {stderr.decode()}")
+            
+            response_text = stdout.decode().strip()
+            
+            # Estimate tokens
+            input_tokens = len(request.prompt) // 4
+            output_tokens = len(response_text) // 4
+            
+            latency_ms = (time.time() - start_time) * 1000
+            
+            self.request_count += 1
+            self.total_tokens += input_tokens + output_tokens
+            
+            return InferenceResponse(
+                request_id=request.request_id,
+                response=response_text,
+                model_used=self.config.id,
+                tokens_used={'input': input_tokens, 'output': output_tokens},
+                latency_ms=latency_ms,
+                cached=False,
+                cost_usd=0.0  # FREE via CLI
+            )
         
         except Exception as e:
             latency_ms = (time.time() - start_time) * 1000
-            raise Exception(f"Qwen request failed: {e}")
+            raise Exception(f"qwen-code request failed: {e}")
+
+
+# ============================================================================
+# Claude CLI Client (FREE via claude-code)
+# ============================================================================
+
+class ClaudeClient(ModelClient):
+    """Anthropic Claude via claude-code CLI (FREE during beta)"""
+    
+    def __init__(self, config: ModelConfig):
+        super().__init__(config)
+        # No API key needed - uses claude-code's authenticated session
+    
+    async def execute(self, request: InferenceRequest) -> InferenceResponse:
+        """Execute request via claude-code"""
+        start_time = time.time()
+        
+        try:
+            # Build claude-code command
+            cmd = [
+                'claude',
+                '--prompt', request.prompt,
+                '--model', self.config.id,
+                '--max-tokens', str(request.max_tokens)
+            ]
+            
+            # Execute via subprocess
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                cwd=str(PROJECT_ROOT)
+            )
+            
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(),
+                timeout=request.timeout_ms / 1000
+            )
+            
+            if process.returncode != 0:
+                raise Exception(f"claude-code error: {stderr.decode()}")
+            
+            response_text = stdout.decode().strip()
+            
+            # Estimate tokens
+            input_tokens = len(request.prompt) // 4
+            output_tokens = len(response_text) // 4
+            
+            latency_ms = (time.time() - start_time) * 1000
+            
+            self.request_count += 1
+            self.total_tokens += input_tokens + output_tokens
+            
+            return InferenceResponse(
+                request_id=request.request_id,
+                response=response_text,
+                model_used=self.config.id,
+                tokens_used={'input': input_tokens, 'output': output_tokens},
+                latency_ms=latency_ms,
+                cached=False,
+                cost_usd=0.0  # FREE via CLI
+            )
+        
+        except Exception as e:
+            latency_ms = (time.time() - start_time) * 1000
+            raise Exception(f"claude-code request failed: {e}")
 
 
 # ============================================================================
