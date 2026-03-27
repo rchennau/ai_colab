@@ -156,17 +156,30 @@ fi
 # If critical deps missing, offer to install
 if [[ "$PYTHON_DEPS_OK" == "false" ]]; then
     echo -e "\n${YELLOW}Some Python dependencies are missing.${NC}"
-    read -p "Install now? [Y/n] " -n 1 -r
-    echo ""
-    if [[ $REPLY =~ ^[Yy]$ || -z $REPLY ]]; then
-        echo -e "\n${BLUE}Installing dependencies...${NC}"
-        # Find install.sh - it's in the same directory as launch.sh
+    
+    # Auto-mode: install automatically
+    if [[ "$INTERACTIVE" == "false" ]]; then
+        echo -e "${BLUE}Auto mode: Installing dependencies...${NC}"
         INSTALL_SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/install.sh"
         if [[ -f "$INSTALL_SCRIPT" ]]; then
             bash "$INSTALL_SCRIPT" --auto
         else
-            print_error "Could not find install.sh at $INSTALL_SCRIPT"
+            print_error "Could not find install.sh"
             echo -e "${YELLOW}Please run: pip3 install -r requirements-webui.txt${NC}"
+        fi
+    else
+        # Interactive mode: ask
+        read -p "Install now? [Y/n] " -n 1 -r
+        echo ""
+        if [[ $REPLY =~ ^[Yy]$ || -z $REPLY ]]; then
+            echo -e "\n${BLUE}Installing dependencies...${NC}"
+            INSTALL_SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/install.sh"
+            if [[ -f "$INSTALL_SCRIPT" ]]; then
+                bash "$INSTALL_SCRIPT" --auto
+            else
+                print_error "Could not find install.sh at $INSTALL_SCRIPT"
+                echo -e "${YELLOW}Please run: pip3 install -r requirements-webui.txt${NC}"
+            fi
         fi
     fi
 fi
