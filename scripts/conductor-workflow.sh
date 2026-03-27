@@ -18,9 +18,7 @@ PROJECT_ROOT=$(detect_project_root 2>/dev/null || dirname "$SCRIPT_DIR")
 TRACKS_FILE="$PROJECT_ROOT/conductor/tracks.md"
 INTERVAL=${CONDUCTOR_INTERVAL:-60} # Default to 60 seconds
 TEST_INTERVAL=900 # 15 minutes
-SCREENSHOT_INTERVAL=300 # 5 minutes
 LAST_TEST_RUN=0
-LAST_SCREENSHOT_TIME=0
 # Tracking variables for status broadcasts to avoid noise
 LAST_BROADCAST_PCT=""
 LAST_BROADCAST_TRACK=""
@@ -592,16 +590,27 @@ main() {
             run_automated_tests
         fi
 
-        # Check for periodic module hooks (e.g., screenshots from Atari 8-Bit)
-        # This is now handled dynamically via module system
+        # Check for periodic module hooks
         if [[ -f "$SCRIPT_DIR/module-manager.sh" ]]; then
-            # Execute periodic hooks from modules (if defined in future module.toml extensions)
-            # For now, check for Atari 8-Bit screenshot hook specifically for backward compatibility
-            if is_module_active "atari-8bit" && (( CURRENT_TIME - LAST_SCREENSHOT_TIME > SCREENSHOT_INTERVAL )); then
-                log_info "Capturing scheduled screenshot (Atari 8-Bit module)..."
-                bash "$PROJECT_ROOT/modules/atari-8bit/scripts/hcom-atari-screen.sh" > /dev/null 2>&1 || true
-                LAST_SCREENSHOT_TIME=$CURRENT_TIME
-            fi
+            # Get list of all active modules
+            while IFS= read -r module_id; do
+                if [[ -n "$module_id" ]]; then
+                    # Parse periodic hooks for this module: name|script|interval
+                    while IFS='|' read -r hook_name script interval; do
+                        if [[ -n "$hook_name" && -n "$script" ]]; then
+                            local bb_key="hook_last_run_${module_id}_${hook_name}"
+                            local last_run=$(blackboard_get "$bb_key" || echo 0)
+                            
+                            if (( CURRENT_TIME - last_run > interval )); then
+                                log_info "Executing periodic hook: $hook_name ($module_id)..."
+                                # Execute relative to project root
+                                bash "$PROJECT_ROOT/$script" > /dev/null 2>&1 || true
+                                blackboard_set "$bb_key" "$CURRENT_TIME"
+                            fi
+                        fi
+                    done < <(bash "$SCRIPT_DIR/module-manager.sh" periodic "$module_id" 2>/dev/null)
+                fi
+            done < <(bash "$SCRIPT_DIR/module-manager.sh" active 2>/dev/null)
         fi
 
         # Check for periodic KB indexing (once every 12 hours)

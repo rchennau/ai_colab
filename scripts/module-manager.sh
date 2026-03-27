@@ -61,12 +61,18 @@ parse_toml_inline_tables() {
 }
 
 # Get value from inline table
-# Usage: get_inline_table_value "{trigger=\"!screenshot\", script=\"test.sh\"}" "trigger"
+# Usage: get_inline_table_value "{trigger=\"!screenshot\", interval=600}" "trigger"
 get_inline_table_value() {
     local table="$1"
     local key="$2"
     
-    echo "$table" | sed -n "s/.*${key}[[:space:]]*=[[:space:]]*\"\([^\"]*\)\".*/\1/p"
+    # Try quoted value first
+    local val=$(echo "$table" | sed -n "s/.*${key}[[:space:]]*=[[:space:]]*\"\([^\"]*\)\".*/\1/p")
+    if [[ -z "$val" ]]; then
+        # Try unquoted value (numbers/booleans)
+        val=$(echo "$table" | sed -n "s/.*${key}[[:space:]]*=[[:space:]]*\([^, ]*\).*/\1/p")
+    fi
+    echo "$val"
 }
 
 # ============================================
@@ -312,6 +318,70 @@ parse_all_conductor_commands() {
 }
 
 # ============================================
+# Periodic Hooks
+# ============================================
+
+# Parse periodic hooks from module manifest
+# Usage: parse_periodic_hooks "module-id"
+# Output: name|script|interval triples, one per line
+parse_periodic_hooks() {
+    local module_id="$1"
+    local manifest=$(get_module_manifest "$module_id")
+    
+    if [[ ! -f "$manifest" ]]; then
+        return 1
+    fi
+    
+    local in_hooks=false
+    local bracket_count=0
+    
+    while IFS= read -r line; do
+        # Look for periodic_hooks start
+        if [[ "$line" =~ periodic_hooks[[:space:]]*= ]]; then
+            in_hooks=true
+            bracket_count=1
+            
+            # Check if it's a single-line array
+            if [[ "$line" =~ \] ]]; then
+                parse_toml_inline_tables "$line" "periodic_hooks" | while read -r table; do
+                    local name=$(get_inline_table_value "$table" "name")
+                    local script=$(get_inline_table_value "$table" "script")
+                    local interval=$(get_inline_table_value "$table" "interval")
+                    if [[ -n "$name" && -n "$script" && -n "$interval" ]]; then
+                        echo "${name}|${script}|${interval}"
+                    fi
+                done
+                in_hooks=false
+            fi
+            continue
+        fi
+        
+        # Multi-line array parsing
+        if [[ "$in_hooks" == true ]]; then
+            # Count brackets
+            local open_brackets=$(echo "$line" | tr -cd '[' | wc -c)
+            local close_brackets=$(echo "$line" | tr -cd ']' | wc -c)
+            bracket_count=$((bracket_count + open_brackets - close_brackets))
+            
+            # Extract inline tables from this line
+            echo "$line" | grep -o '{[^}]*}' | while read -r table; do
+                local name=$(get_inline_table_value "$table" "name")
+                local script=$(get_inline_table_value "$table" "script")
+                local interval=$(get_inline_table_value "$table" "interval")
+                if [[ -n "$name" && -n "$script" && -n "$interval" ]]; then
+                    echo "${name}|${script}|${interval}"
+                fi
+            done
+            
+            # End of array
+            if [[ $bracket_count -le 0 ]]; then
+                in_hooks=false
+            fi
+        fi
+    done < "$manifest"
+}
+
+# ============================================
 # Dashboard Sections
 # ============================================
 
@@ -534,6 +604,13 @@ main() {
                 exit 1
             fi
             get_init_script "$1"
+            ;;
+        periodic)
+            if [[ -z "$1" ]]; then
+                echo -e "${RED}Error: Module ID required${NC}"
+                exit 1
+            fi
+            parse_periodic_hooks "$1"
             ;;
         load)
             load_all_modules

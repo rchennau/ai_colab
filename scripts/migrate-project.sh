@@ -52,16 +52,10 @@ detect_mcp_configs() {
     fi
     
     # Check for MCP server implementations (Python)
-    if [[ -f "$project_root/atari_agent/server.py" ]]; then
-        MCP_CONFIGS+=("atari_agent/server.py (Python MCP Server)")
-        FOUND_ARTIFACTS+=("MCP server implementation (atari-dev-agent)")
-    fi
-    
-    # Check for other Python MCP servers
     if find "$project_root" -maxdepth 3 -name "server.py" -type f 2>/dev/null | grep -q .; then
         local mcp_servers=$(find "$project_root" -maxdepth 3 -name "server.py" -type f 2>/dev/null)
         if echo "$mcp_servers" | grep -q "mcp\|agent"; then
-            FOUND_ARTIFACTS+=("Python MCP server implementations")
+            FOUND_ARTIFACTS+=("Python MCP server implementation")
         fi
     fi
     

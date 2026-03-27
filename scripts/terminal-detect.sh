@@ -95,7 +95,7 @@ detect_terminal_app() {
 
 # Detect VS Code integrated terminal
 detect_vscode_terminal() {
-    if [[ "$TERM_PROGRAM" == "vscode" ]] || [[ -n "$VSCODE_INJECTION" ]]; then
+    if [[ "$TERM_PROGRAM" == "vscode" ]] || [[ -n "${VSCODE_GIT_ASKPASS_NODE:-}" ]] || [[ -n "$VSCODE_INJECTION" ]]; then
         echo "vscode"
         return 0
     fi
@@ -107,8 +107,12 @@ detect_terminal() {
     local terminal=""
     local environment=""
     
-    # First detect environment
-    if detect_wsl > /dev/null 2>&1; then
+    # First detect VS Code (can be on any platform)
+    if detect_vscode_terminal > /dev/null 2>&1; then
+        terminal="vscode"
+        if [[ "$OSTYPE" == "darwin"* ]]; then environment="macos"; else environment="linux"; fi
+    # Then detect environment
+    elif detect_wsl > /dev/null 2>&1; then
         environment="wsl"
         
         # Then detect terminal within WSL
