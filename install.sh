@@ -336,7 +336,14 @@ echo "7) ELC      (via easy-llm-cli for vLLM support)"
 echo "a) All of the above"
 echo "n) None (skip to Conductor setup)"
 echo ""
-read -p "Enter your choices (e.g., 1,2,4 or 'a'): " LLM_CHOICE
+
+# Auto-mode: skip LLM selection, install common ones
+if [[ "$INSTALL_MODE" == "auto" ]]; then
+    LLM_CHOICE="1,3"  # Default: Gemini + Qwen
+    echo -e "${BLUE}Auto mode: Selecting Gemini + Qwen${NC}"
+else
+    read -p "Enter your choices (e.g., 1,2,4 or 'a'): " LLM_CHOICE
+fi
 
 # Process choices
 LLMS_TO_INSTALL=""
@@ -500,7 +507,14 @@ echo "2) RunPod Serverless/Pods"
 echo "3) Local Server (vLLM / Ollama)"
 echo "n) None (skip configuration)"
 echo ""
-read -p "Select backend [1-3, default 3]: " BACKEND_CHOICE
+
+# Auto-mode: default to local
+if [[ "$INSTALL_MODE" == "auto" ]]; then
+    BACKEND_CHOICE="3"
+    echo -e "${BLUE}Auto mode: Selecting Local backend${NC}"
+else
+    read -p "Select backend [1-3, default 3]: " BACKEND_CHOICE
+fi
 BACKEND_CHOICE=${BACKEND_CHOICE:-3}
 
 COMPUTE_BACKEND="local"
