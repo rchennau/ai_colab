@@ -102,6 +102,47 @@ if ! has_command tmux; then
     exit 1
 fi
 
+# Check Python dependencies
+echo -e "\n${BLUE}Checking Python Dependencies...${NC}"
+PYTHON_DEPS_OK=true
+
+# Check critical Python packages
+for pkg in flask flask_cors flask_limiter redis aiohttp; do
+    if ! python3 -c "import ${pkg}" 2>/dev/null; then
+        echo -e "  ${YELLOW}⚠ Missing: ${pkg}${NC}"
+        PYTHON_DEPS_OK=false
+    fi
+done
+
+# Check vision packages (optional)
+VISION_AVAILABLE=false
+if python3 -c "import pyautogui" 2>/dev/null && python3 -c "import PIL" 2>/dev/null; then
+    echo -e "  ${GREEN}✓ Vision support available${NC}"
+    VISION_AVAILABLE=true
+else
+    echo -e "  ${CYAN}○ Vision support not installed (optional)${NC}"
+fi
+
+# Check RAG packages (optional)
+RAG_AVAILABLE=false
+if python3 -c "import sentence_transformers" 2>/dev/null; then
+    echo -e "  ${GREEN}✓ RAG system available${NC}"
+    RAG_AVAILABLE=true
+else
+    echo -e "  ${CYAN}○ RAG system not installed (optional)${NC}"
+fi
+
+# If critical deps missing, offer to install
+if [[ "$PYTHON_DEPS_OK" == "false" ]]; then
+    echo -e "\n${YELLOW}Some Python dependencies are missing.${NC}"
+    read -p "Install now? [Y/n] " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Yy]$ || -z $REPLY ]]; then
+        echo -e "\n${BLUE}Installing dependencies...${NC}"
+        bash "$SCRIPT_DIR/install.sh" --auto
+    fi
+fi
+
 # 1. Project Detection
 PROJECT_ROOT=$(detect_project_root 2>/dev/null || echo "$SCRIPT_DIR")
 export PROJECT_ROOT

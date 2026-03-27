@@ -244,21 +244,61 @@ echo -e "\n${GREEN}Installing Python Dependencies...${NC}"
 echo "  - MCP Server (Model Context Protocol)"
 echo "  - RAG System (Semantic Search)"
 echo "  - Web UI (Flask Dashboard)"
+echo "  - Vision/Screenshot Support"
 
-# Check if requirements files exist and install
-if [[ -f "$SCRIPT_DIR/requirements-webui.txt" ]]; then
-    echo -e "\n${BLUE}Installing Web UI dependencies...${NC}"
-    python3 -m pip install -r "$SCRIPT_DIR/requirements-webui.txt" || echo -e "${YELLOW}  Warning: Web UI dependencies had issues${NC}"
+# Function to check and install missing dependencies
+install_python_deps() {
+    local req_file="$1"
+    local description="$2"
+    
+    if [[ -f "$req_file" ]]; then
+        echo -e "\n${BLUE}Installing $description...${NC}"
+        
+        # Check which packages are missing
+        local missing=()
+        while IFS= read -r package; do
+            # Skip comments and empty lines
+            [[ -z "$package" || "$package" =~ ^# ]] && continue
+            
+            # Extract package name (before ==)
+            local pkg_name=$(echo "$package" | cut -d'=' -f1)
+            
+            # Check if installed
+            if ! python3 -c "import ${pkg_name//-/_}" 2>/dev/null; then
+                missing+=("$package")
+            fi
+        done < "$req_file"
+        
+        if [[ ${#missing[@]} -gt 0 ]]; then
+            echo "  Installing missing packages: ${missing[*]}"
+            python3 -m pip install -r "$req_file" || echo -e "${YELLOW}  Warning: $description had issues${NC}"
+        else
+            echo -e "  ${GREEN}✓ All $description already installed${NC}"
+        fi
+    fi
+}
+
+# Install Web UI dependencies (includes vision support)
+install_python_deps "$SCRIPT_DIR/requirements-webui.txt" "Web UI dependencies"
+
+# Install MCP Server dependencies
+install_python_deps "$SCRIPT_DIR/requirements-mcp.txt" "MCP Server dependencies"
+
+# Install RAG System dependencies
+install_python_deps "$SCRIPT_DIR/requirements-rag.txt" "RAG System dependencies"
+
+# Install test dependencies if running tests
+if [[ -f "$SCRIPT_DIR/requirements-test.txt" ]]; then
+    install_python_deps "$SCRIPT_DIR/requirements-test.txt" "Test dependencies"
 fi
 
-if [[ -f "$SCRIPT_DIR/requirements-mcp.txt" ]]; then
-    echo -e "\n${BLUE}Installing MCP Server dependencies...${NC}"
-    python3 -m pip install -r "$SCRIPT_DIR/requirements-mcp.txt" || echo -e "${YELLOW}  Warning: MCP dependencies had issues${NC}"
-fi
-
-if [[ -f "$SCRIPT_DIR/requirements-rag.txt" ]]; then
-    echo -e "\n${BLUE}Installing RAG System dependencies...${NC}"
-    python3 -m pip install -r "$SCRIPT_DIR/requirements-rag.txt" || echo -e "${YELLOW}  Warning: RAG dependencies had issues${NC}"
+# Check for optional vision dependencies
+echo -e "\n${BLUE}Checking Vision/Screenshot Support...${NC}"
+if python3 -c "import pyautogui" 2>/dev/null && python3 -c "import PIL" 2>/dev/null; then
+    echo -e "  ${GREEN}✓ Vision support ready (pyautogui, Pillow)${NC}"
+else
+    echo -e "  ${YELLOW}⚠ Vision dependencies missing. Installing...${NC}"
+    python3 -m pip install pyautogui Pillow || echo -e "${YELLOW}  Warning: Vision support installation failed${NC}"
 fi
 
 echo -e "${GREEN}✓ Python dependencies installed${NC}"
