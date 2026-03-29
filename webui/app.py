@@ -47,9 +47,6 @@ except ImportError:
     logger.warning("flask-limiter not installed. Install with: pip install flask-limiter")
 
 # Configure logging
-# Ensure logs directory exists
-LOGS_DIR.mkdir(parents=True, exist_ok=True)
-
 if LOGGING_AVAILABLE:
     logger = get_logger('ai_colab.webui')
     security_logger = get_security_logger()
@@ -78,6 +75,9 @@ STATE_FILE = APP_DIR / ".ai-colab-state.json"
 SCRIPTS_DIR = APP_DIR / "scripts"
 LOGS_DIR = APP_DIR / "logs"
 PROJECT_ROOT = APP_DIR  # Alias for compatibility
+
+# Ensure logs directory exists
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Configuration constants
 MIN_DISK_SPACE_MB = 100
