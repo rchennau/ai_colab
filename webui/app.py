@@ -2484,17 +2484,11 @@ def register_routes(app, socketio, limiter=None):
     def get_modules():
         """Get all modules with their enabled status"""
         try:
-            # Get module list from module-manager
-            result = subprocess.run(
-                ["bash", str(SCRIPTS_DIR / "module-manager.sh"), "list"],
-                capture_output=True,
-                text=True,
-                cwd=str(APP_DIR)
-            )
-
-            if result.returncode == 0:
-                modules_raw = json.loads(result.stdout)
-                
+            # Scan modules directory directly
+            modules_dir = APP_DIR / "modules"
+            modules = []
+            
+            if modules_dir.exists():
                 # Get enabled modules from prefs
                 prefs_file = APP_DIR / ".ai-colab-prefs"
                 enabled_ids = []
@@ -2506,21 +2500,35 @@ def register_routes(app, socketio, limiter=None):
                                 if v == "true":
                                     enabled_ids.append(k.replace("MODULE_", "").lower().replace("_", "-"))
                 
-                # Combine module info with enabled status
-                modules = []
-                for mod in modules_raw:
-                    modules.append({
-                        'id': mod.get('id', ''),
-                        'name': mod.get('name', ''),
-                        'description': mod.get('description', ''),
-                        'version': mod.get('version', ''),
-                        'enabled': mod.get('id', '') in enabled_ids
-                    })
-                
-                return jsonify({"modules": modules})
-            else:
-                return jsonify({"error": "Failed to get modules"}), 500
-
+                # Scan module directories
+                for mod_dir in modules_dir.iterdir():
+                    if mod_dir.is_dir():
+                        manifest = mod_dir / "module.toml"
+                        mod_info = {
+                            'id': mod_dir.name,
+                            'name': mod_dir.name.replace('-', ' ').title(),
+                            'description': '',
+                            'version': '1.0.0',
+                            'enabled': mod_dir.name in enabled_ids
+                        }
+                        
+                        # Try to read manifest
+                        if manifest.exists():
+                            try:
+                                import toml
+                                with open(manifest, 'r') as f:
+                                    manifest_data = toml.load(f)
+                                    if 'module' in manifest_data:
+                                        mod_info['name'] = manifest_data['module'].get('name', mod_dir.name)
+                                        mod_info['description'] = manifest_data['module'].get('description', '')
+                                        mod_info['version'] = manifest_data['module'].get('version', '1.0.0')
+                            except:
+                                pass
+                        
+                        modules.append(mod_info)
+            
+            return jsonify({"modules": modules})
+            
         except Exception as e:
             logger.error(f"Error getting modules: {e}")
             return jsonify({"error": str(e)}), 500
@@ -2529,18 +2537,28 @@ def register_routes(app, socketio, limiter=None):
     def enable_module(module_id):
         """Enable a module"""
         try:
-            result = subprocess.run(
-                ["bash", str(SCRIPTS_DIR / "module-manager.sh"), "enable", module_id],
-                capture_output=True,
-                text=True,
-                cwd=str(APP_DIR)
-            )
-
-            if result.returncode == 0:
-                return jsonify({"status": "success", "module": module_id, "enabled": True})
-            else:
-                return jsonify({"error": "Failed to enable module"}), 500
-
+            prefs_file = APP_DIR / ".ai-colab-prefs"
+            pref_key = "MODULE_" + module_id.upper().replace("-", "_")
+            
+            # Read existing prefs
+            prefs = {}
+            if prefs_file.exists():
+                with open(prefs_file, 'r') as f:
+                    for line in f:
+                        if '=' in line:
+                            k, v = line.strip().split('=', 1)
+                            prefs[k] = v
+            
+            # Update module pref
+            prefs[pref_key] = "true"
+            
+            # Write back
+            with open(prefs_file, 'w') as f:
+                for k, v in prefs.items():
+                    f.write(f"{k}={v}\n")
+            
+            return jsonify({"status": "success", "module": module_id, "enabled": True})
+            
         except Exception as e:
             logger.error(f"Error enabling module: {e}")
             return jsonify({"error": str(e)}), 500
@@ -2549,18 +2567,28 @@ def register_routes(app, socketio, limiter=None):
     def disable_module(module_id):
         """Disable a module"""
         try:
-            result = subprocess.run(
-                ["bash", str(SCRIPTS_DIR / "module-manager.sh"), "disable", module_id],
-                capture_output=True,
-                text=True,
-                cwd=str(APP_DIR)
-            )
-
-            if result.returncode == 0:
-                return jsonify({"status": "success", "module": module_id, "enabled": False})
-            else:
-                return jsonify({"error": "Failed to disable module"}), 500
-
+            prefs_file = APP_DIR / ".ai-colab-prefs"
+            pref_key = "MODULE_" + module_id.upper().replace("-", "_")
+            
+            # Read existing prefs
+            prefs = {}
+            if prefs_file.exists():
+                with open(prefs_file, 'r') as f:
+                    for line in f:
+                        if '=' in line:
+                            k, v = line.strip().split('=', 1)
+                            prefs[k] = v
+            
+            # Update module pref
+            prefs[pref_key] = "false"
+            
+            # Write back
+            with open(prefs_file, 'w') as f:
+                for k, v in prefs.items():
+                    f.write(f"{k}={v}\n")
+            
+            return jsonify({"status": "success", "module": module_id, "enabled": False})
+            
         except Exception as e:
             logger.error(f"Error disabling module: {e}")
             return jsonify({"error": str(e)}), 500
