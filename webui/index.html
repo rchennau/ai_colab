@@ -2081,12 +2081,28 @@
             }).then(r => r.json()).then(data => {
                 if (data.error) {
                     term.write(`\r\n\x1b[31mError: ${data.error}\x1b[0m\r\n`);
+                } else {
+                    // Send initial resize to set proper terminal size
+                    const dimensions = term.rows && term.cols ? { rows: term.rows, cols: term.cols } : { rows: 24, cols: 80 };
+                    socket.emit('terminal_resize', { id: terminalId, ...dimensions });
+                    term.write(`\r\n\x1b[32mTerminal spawned (PID: ${data.pid})\x1b[0m\r\n`);
+                    term.write(`\x1b[32mSession will stay alive while tab is open\x1b[0m\r\n\r\n`);
                 }
             }).catch(e => {
                 term.write(`\r\n\x1b[31mFailed to spawn: ${e.message}\x1b[0m\r\n`);
             });
 
-            // Resize handler
+            // Resize handler - send resize events to backend
+            term.onResize((size) => {
+                if (socket) {
+                    socket.emit('terminal_resize', { 
+                        id: terminalId, 
+                        rows: size.rows, 
+                        cols: size.cols 
+                    });
+                }
+            });
+
             window.addEventListener('resize', () => {
                 if (terminals[terminalId]) {
                     terminals[terminalId].fitAddon.fit();
