@@ -47,14 +47,23 @@ except ImportError:
     logger.warning("flask-limiter not installed. Install with: pip install flask-limiter")
 
 # Configure logging
+# Ensure logs directory exists
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
+
 if LOGGING_AVAILABLE:
     logger = get_logger('ai_colab.webui')
     security_logger = get_security_logger()
     api_logger = get_api_logger()
 else:
+    # Fallback to file-based logging
+    log_file = LOGS_DIR / "webui.log"
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(log_file),
+            logging.StreamHandler()
+        ]
     )
     logger = logging.getLogger(__name__)
     security_logger = logger

@@ -528,12 +528,19 @@ if [ "$WEBUI" = true ]; then
     ui_banner "Launching Web UI" "${GREEN}"
     echo ""
     echo -e "  Starting Flask server on http://localhost:8080..."
+    echo -e "  Logs: $PROJECT_ROOT/logs/webui.log"
     echo -e "  (Press Ctrl+C to stop)"
     echo ""
+
+    # Ensure logs directory exists
+    mkdir -p "$PROJECT_ROOT/logs"
+
     if [ -d "$SCRIPT_DIR/webui-venv" ]; then
         source "$SCRIPT_DIR/webui-venv/bin/activate"
     fi
-    exec python3 "$SCRIPT_DIR/../webui/app.py"
+
+    # Run WebUI with output redirected to log file
+    python3 "$SCRIPT_DIR/../webui/app.py" >> "$PROJECT_ROOT/logs/webui.log" 2>&1
 elif [ "$DASHBOARD" = true ]; then
     echo -e "  Launching Unified Dashboard..."
     # Change to project root to ensure dashboard detects it
