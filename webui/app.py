@@ -1721,30 +1721,204 @@ def register_routes(app, socketio, limiter=None):
         except Exception as e:
             logger.error(f"Error triggering launch: {e}")
             return jsonify({"error": str(e)}), 500
-    
+
+    @app.route('/api/shutdown', methods=['POST'])
+    def trigger_shutdown():
+        """Shutdown tmux sessions and stop agents"""
+        try:
+            config = request.json or {}
+            session_name = config.get("session", "hcom-dashboard")
+
+            # Kill tmux session if running
+            tmux_killed = False
+            try:
+                result = subprocess.run(
+                    ["tmux", "kill-session", "-t", session_name],
+                    capture_output=True,
+                    text=True,
+                    timeout=10
+                )
+                if result.returncode == 0:
+                    tmux_killed = True
+                    logger.info(f"Tmux session '{session_name}' killed")
+            except subprocess.TimeoutExpired:
+                logger.warning(f"Timeout killing tmux session '{session_name}'")
+            except Exception as e:
+                logger.warning(f"Could not kill tmux session: {e}")
+
+            # Kill any orphaned agent processes
+            processes_killed = 0
+            for pattern in ["agent-wrapper.sh", "conductor-workflow.sh", "hcom send"]:
+                try:
+                    result = subprocess.run(
+                        ["pkill", "-f", pattern],
+                        capture_output=True,
+                        timeout=5
+                    )
+                    processes_killed += 1
+                except:
+                    pass
+
+            logger.info(f"Shutdown complete. Tmux killed: {tmux_killed}, Process patterns: {processes_killed}")
+
+            return jsonify({
+                "status": "success",
+                "message": "Shutdown complete",
+                "details": {
+                    "tmux_session_killed": tmux_killed,
+                    "process_patterns_killed": processes_killed
+                }
+            })
+
+        except Exception as e:
+            logger.error(f"Error during shutdown: {e}")
+            return jsonify({"error": str(e)}), 500
+
     @app.route('/api/logs', methods=['GET'])
     def get_logs():
-        """Get recent logs"""
+        """Get recent logs from file and tmux sessions"""
         try:
             lines = request.args.get('lines', '100', type=int)
             log_file = APP_DIR / "logs" / "ai-colab.log"
-            
-            if not log_file.exists():
-                return jsonify({"logs": [], "message": "No logs available"})
-            
-            # Read last N lines
-            with open(log_file, 'r') as f:
-                all_lines = f.readlines()
-                recent_lines = all_lines[-lines:]
-            
+
+            all_logs = []
+
+            # Read application log file if exists
+            if log_file.exists():
+                with open(log_file, 'r') as f:
+                    file_lines = f.readlines()
+                    all_logs.extend([line.strip() for line in file_lines[-lines:]])
+
+            # Capture hcom dashboard tmux logs if session exists
+            try:
+                result = subprocess.run(
+                    ["tmux", "capture-pane", "-p", "-t", "hcom-dashboard", "-S", "-200"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5
+                )
+                if result.returncode == 0 and result.stdout:
+                    tmux_lines = result.stdout.strip().split('\n')
+                    for line in tmux_lines[-50:]:  # Last 50 lines from tmux
+                        if line.strip():
+                            all_logs.append(f"[hcom-dashboard] {line}")
+            except:
+                pass  # Tmux session may not exist
+
+            # Sort by timestamp if possible, otherwise keep order
+            all_logs = all_logs[-lines:]  # Ensure we don't exceed requested lines
+
             return jsonify({
-                "logs": [line.strip() for line in recent_lines]
+                "logs": all_logs if all_logs else [],
+                "message": "Logs retrieved" if all_logs else "No logs available"
             })
-            
+
         except Exception as e:
             logger.error(f"Error getting logs: {e}")
             return jsonify({"error": str(e)}), 500
-    
+
+    @app.route('/api/conductor/status', methods=['GET'])
+    def get_conductor_status():
+        """Get read-only conductor status"""
+        try:
+            status = {
+                "available": False,
+                "project_root": str(APP_DIR),
+                "tracks": [],
+                "current_task": None,
+                "last_status": None
+            }
+
+            # Check if conductor track files exist
+            conductor_dir = APP_DIR / "conductor"
+            if conductor_dir.exists():
+                status["available"] = True
+
+                # Read product.md if exists
+                product_file = conductor_dir / "product.md"
+                if product_file.exists():
+                    with open(product_file, 'r') as f:
+                        content = f.read()
+                        # Extract key info
+                        if "# " in content:
+                            status["product_name"] = content.split("# ")[1].split("\n")[0].strip()
+
+                # Read tracks registry
+                tracks_file = conductor_dir / "tracks.md"
+                if tracks_file.exists():
+                    with open(tracks_file, 'r') as f:
+                        content = f.read()
+                        # Parse track entries
+                        for line in content.split('\n'):
+                            if line.startswith('- [') or line.startswith('* ['):
+                                status["tracks"].append(line.strip())
+
+                # Try to get live status from tmux conductor pane
+                try:
+                    result = subprocess.run(
+                        ["tmux", "capture-pane", "-p", "-t", "hcom-dashboard.1", "-S", "-50"],
+                        capture_output=True,
+                        text=True,
+                        timeout=3
+                    )
+                    if result.returncode == 0 and result.stdout:
+                        status["conductor_output"] = result.stdout.strip()
+                except:
+                    pass
+
+            return jsonify(status)
+
+        except Exception as e:
+            logger.error(f"Error getting conductor status: {e}")
+            return jsonify({"error": str(e), "available": False}), 500
+
+    @app.route('/api/console/send', methods=['POST'])
+    def send_console_command():
+        """Send a command to the conductor console via tmux"""
+        try:
+            data = request.json or {}
+            command = data.get("command", "")
+            target = data.get("target", "conductor")
+
+            if not command:
+                return jsonify({"error": "No command provided"}), 400
+
+            # Find the conductor pane in the tmux session
+            # Typically pane 1 in hcom-dashboard session
+            pane = "hcom-dashboard.1"
+
+            # Escape the command for tmux send-keys
+            escaped_command = command.replace('"', '\\"')
+
+            # Send the command to the conductor pane
+            result = subprocess.run(
+                ["tmux", "send-keys", "-t", pane, f"{command}", "C-m"],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+
+            if result.returncode == 0:
+                logger.info(f"Console command sent to {target}: {command}")
+                return jsonify({
+                    "status": "success",
+                    "message": f"Command sent to {target}",
+                    "command": command
+                })
+            else:
+                logger.warning(f"Failed to send command: {result.stderr}")
+                return jsonify({
+                    "error": "Failed to send command. Is tmux session running?",
+                    "details": result.stderr
+                }), 500
+
+        except subprocess.TimeoutExpired:
+            logger.error("Timeout sending console command")
+            return jsonify({"error": "Timeout sending command"}), 500
+        except Exception as e:
+            logger.error(f"Error sending console command: {e}")
+            return jsonify({"error": str(e)}), 500
+
     @app.route('/api/profiles', methods=['GET'])
     def get_profiles():
         """Get available configuration profiles"""

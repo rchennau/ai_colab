@@ -504,6 +504,7 @@
                     <button class="btn btn-success" onclick="runStatusCheck()">Run Status Check</button>
                     <button class="btn btn-warning" onclick="runPreflightCheck()">Pre-flight Checks</button>
                     <button class="btn btn-info" onclick="recoverSession()">Recover Session</button>
+                    <button class="btn btn-danger" onclick="shutdownSystem()">Shutdown</button>
                 </div>
             </div>
 
@@ -511,6 +512,31 @@
                 <h2>📈 Recent Activity</h2>
                 <div id="recentActivity" class="log-viewer">
                     <p>Loading activity log...</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🎛️ Conductor Status</h2>
+                <div id="conductorStatus">
+                    <p>Loading conductor status...</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>💻 Web Console</h2>
+                <p style="margin-bottom: 1rem;">Send commands to the conductor directly from the web UI:</p>
+                <div class="form-group">
+                    <input type="text" id="consoleCommand" placeholder="Enter command (e.g., !status, !test, !build)" 
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-secondary); color: var(--text-primary);">
+                </div>
+                <div class="btn-group" style="margin-top: 1rem;">
+                    <button class="btn btn-primary" onclick="sendConsoleCommand('!status')">!status</button>
+                    <button class="btn btn-primary" onclick="sendConsoleCommand('!test')">!test</button>
+                    <button class="btn btn-primary" onclick="sendConsoleCommand('!build')">!build</button>
+                    <button class="btn btn-secondary" onclick="sendCustomCommand()">Send</button>
+                </div>
+                <div id="consoleOutput" class="log-viewer" style="margin-top: 1rem; max-height: 300px;">
+                    <p>Command output will appear here...</p>
                 </div>
             </div>
         </div>
@@ -1093,6 +1119,9 @@
                     statusDot.style.background = 'var(--warning)';
                     statusText.textContent = 'Setup Required';
                 }
+
+                // Also refresh conductor status
+                refreshConductorStatus();
             } catch (error) {
                 console.error('Status refresh failed:', error);
                 showToast('Failed to refresh status', 'error');
@@ -1493,6 +1522,36 @@
             showToast('Status check complete', 'success');
         }
 
+        async function shutdownSystem() {
+            if (!confirm('Are you sure you want to shutdown? This will kill all tmux sessions and stop agent processes.')) {
+                return;
+            }
+
+            try {
+                showToast('Shutting down...', 'info');
+                const response = await fetch(`${API_BASE}/api/shutdown`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session: 'hcom-dashboard' })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showToast('Shutdown complete: ' + data.message, 'success');
+                    // Refresh status
+                    setTimeout(() => {
+                        checkSession();
+                        loadAgents();
+                    }, 2000);
+                } else {
+                    throw new Error('Shutdown failed');
+                }
+            } catch (error) {
+                console.error('Shutdown failed:', error);
+                showToast('Shutdown failed: ' + error.message, 'error');
+            }
+        }
+
         async function runTests() {
             showToast('Tests are running in the background...', 'info');
             // Would trigger test runner via API
@@ -1572,6 +1631,90 @@
                 if (data.logs && data.logs.length > 0) {
                     logViewer.innerHTML = data.logs.map(log =>
                         `<div class="log-entry ${getLogLevelClass(log)}">${escapeHtml(log)}</div>`
+                    ).join('');
+                    // Auto-scroll to bottom
+                    logViewer.scrollTop = logViewer.scrollHeight;
+                } else {
+                    logViewer.innerHTML = '<p>No logs available</p>';
+                }
+            } catch (error) {
+                console.error('Failed to refresh logs:', error);
+            }
+        }
+
+        // Conductor Status
+        async function refreshConductorStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/api/conductor/status`);
+                const data = await response.json();
+
+                const container = document.getElementById('conductorStatus');
+                if (!data.available) {
+                    container.innerHTML = '<p>Conductor not configured. Run setup wizard to enable.</p>';
+                    return;
+                }
+
+                let html = '';
+                if (data.product_name) {
+                    html += `<p><strong>Project:</strong> ${escapeHtml(data.product_name)}</p>`;
+                }
+                if (data.project_root) {
+                    html += `<p><strong>Root:</strong> ${escapeHtml(data.project_root)}</p>`;
+                }
+                if (data.tracks && data.tracks.length > 0) {
+                    html += '<p><strong>Tracks:</strong></p><ul style="margin: 0.5rem 0 0 1.5rem;">';
+                    data.tracks.forEach(track => {
+                        html += `<li>${escapeHtml(track)}</li>`;
+                    });
+                    html += '</ul>';
+                }
+                if (data.conductor_output) {
+                    html += `<div class="log-viewer" style="margin-top: 1rem; max-height: 200px;">`;
+                    html += `<p><strong>Live Output:</strong></p>`;
+                    html += `<pre style="white-space: pre-wrap; word-wrap: break-word; margin: 0.5rem 0;">${escapeHtml(data.conductor_output)}</pre>`;
+                    html += `</div>`;
+                }
+
+                container.innerHTML = html || '<p>Conductor is available but no active tasks.</p>';
+            } catch (error) {
+                console.error('Failed to refresh conductor status:', error);
+                document.getElementById('conductorStatus').innerHTML = '<p>Unable to load conductor status.</p>';
+            }
+        }
+
+        // Web Console
+        async function sendConsoleCommand(command) {
+            const outputDiv = document.getElementById('consoleOutput');
+            outputDiv.innerHTML = `<p>Sending: ${escapeHtml(command)}...</p>`;
+
+            try {
+                // Send command via tmux send-keys to conductor pane
+                const response = await fetch(`${API_BASE}/api/console/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: command, target: 'conductor' })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    outputDiv.innerHTML = `<p>Command sent: ${escapeHtml(command)}</p><p>Check conductor pane or logs for output.</p>`;
+                } else {
+                    outputDiv.innerHTML = `<p>Error: ${escapeHtml(data.error || 'Failed to send command')}</p>`;
+                }
+            } catch (error) {
+                console.error('Command failed:', error);
+                outputDiv.innerHTML = `<p>Error: ${escapeHtml(error.message)}</p>`;
+            }
+        }
+
+        function sendCustomCommand() {
+            const input = document.getElementById('consoleCommand');
+            const command = input.value.trim();
+            if (command) {
+                sendConsoleCommand(command);
+                input.value = '';
+            }
+        }
                     ).join('');
                 } else {
                     logViewer.innerHTML = '<p>No logs available</p>';

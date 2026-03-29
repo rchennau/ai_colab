@@ -407,7 +407,7 @@ create_dashboard() {
 
         case $component in
             conductor)
-                cmd="bash $SCRIPT_DIR/conductor-workflow.sh"
+                cmd="bash $SCRIPT_DIR/conductor-workflow.sh; echo ''; echo '=== Conductor Status Display (Read-Only) ==='; echo 'Press Ctrl+B to navigate away.'; echo 'Waiting for conductor restart...'; while true; do sleep 60; done"
                 agent_name="conductor_dev"
                 title="Conductor"
                 ;;
