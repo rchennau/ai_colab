@@ -2298,6 +2298,67 @@ def register_routes(app, socketio, limiter=None):
             logger.error(f"Error deleting profile: {e}")
             return jsonify({"error": str(e)}), 500
 
+    @app.route('/api/modules', methods=['GET'])
+    def get_modules():
+        """Get all modules with their enabled status"""
+        try:
+            result = subprocess.run(
+                ["bash", str(SCRIPT_DIR / "module-manager.sh"), "status"],
+                capture_output=True,
+                text=True,
+                cwd=str(APP_DIR)
+            )
+            
+            if result.returncode == 0:
+                modules = json.loads(result.stdout)
+                return jsonify({"modules": modules})
+            else:
+                return jsonify({"error": "Failed to get modules"}), 500
+                
+        except Exception as e:
+            logger.error(f"Error getting modules: {e}")
+            return jsonify({"error": str(e)}), 500
+
+    @app.route('/api/modules/<module_id>/enable', methods=['POST'])
+    def enable_module(module_id):
+        """Enable a module"""
+        try:
+            result = subprocess.run(
+                ["bash", str(SCRIPT_DIR / "module-manager.sh"), "enable", module_id],
+                capture_output=True,
+                text=True,
+                cwd=str(APP_DIR)
+            )
+            
+            if result.returncode == 0:
+                return jsonify({"status": "success", "module": module_id, "enabled": True})
+            else:
+                return jsonify({"error": "Failed to enable module"}), 500
+                
+        except Exception as e:
+            logger.error(f"Error enabling module: {e}")
+            return jsonify({"error": str(e)}), 500
+
+    @app.route('/api/modules/<module_id>/disable', methods=['POST'])
+    def disable_module(module_id):
+        """Disable a module"""
+        try:
+            result = subprocess.run(
+                ["bash", str(SCRIPT_DIR / "module-manager.sh"), "disable", module_id],
+                capture_output=True,
+                text=True,
+                cwd=str(APP_DIR)
+            )
+            
+            if result.returncode == 0:
+                return jsonify({"status": "success", "module": module_id, "enabled": False})
+            else:
+                return jsonify({"error": "Failed to disable module"}), 500
+                
+        except Exception as e:
+            logger.error(f"Error disabling module: {e}")
+            return jsonify({"error": str(e)}), 500
+
     # SECURITY: Rate-limited KB endpoints
     if limiter:
         @app.route('/api/kb/search', methods=['GET'])

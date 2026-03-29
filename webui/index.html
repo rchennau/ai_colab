@@ -779,10 +779,12 @@
                 <!-- Modules Configuration -->
                 <div class="form-group">
                     <h3 style="color: var(--accent-blue); margin-bottom: 0.5rem;">Modules</h3>
-                    <div id="modulesConfig">
-                        <div class="checkbox-group" style="margin-bottom: 0.5rem;">
-                            <input type="checkbox" id="cfg-mod-atari">
-                            <label for="cfg-mod-atari">Atari 8-Bit Development</label>
+                    <div id="modulesConfig" style="padding: 1rem; background: var(--bg-tertiary); border-radius: 4px;">
+                        <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                            Enable or disable module addons. Changes take effect on next launch.
+                        </p>
+                        <div id="moduleList" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <p style="color: var(--text-secondary);">Loading modules...</p>
                         </div>
                     </div>
                 </div>
@@ -2020,22 +2022,17 @@
                 // Update LLM checkboxes
                 const llms = config.llms || [];
                 const llmNames = llms.map(llm => llm.name.toLowerCase());
-                
+
                 document.getElementById('cfg-llm-gemini').checked = llmNames.includes('gemini');
                 document.getElementById('cfg-llm-qwen').checked = llmNames.includes('qwen');
                 document.getElementById('cfg-llm-vllm').checked = llmNames.includes('vllm');
                 document.getElementById('cfg-llm-claude').checked = llmNames.includes('claude');
                 document.getElementById('cfg-llm-deepseek').checked = llmNames.includes('deepseek');
 
-                // Update modules
-                const modules = config.modules || [];
-                const moduleIds = modules.map(m => m.id);
-                document.getElementById('cfg-mod-atari').checked = moduleIds.includes('atari-8bit');
-
                 // Update compute backend
                 const backend = config.compute?.backend || 'local';
                 document.getElementById('cfg-compute-backend').value = backend;
-                
+
                 // Show/hide API key field
                 const apiKeyGroup = document.getElementById('cfg-api-key-group');
                 apiKeyGroup.style.display = (backend === 'nvidia' || backend === 'runpod') ? 'block' : 'none';
@@ -2043,10 +2040,80 @@
                 // Update JSON editor
                 document.getElementById('configJsonEditor').value = JSON.stringify(config, null, 2);
 
+                // Load modules separately
+                loadModules();
+
                 showToast('Configuration loaded', 'success');
             } catch (error) {
                 console.error('Failed to load config:', error);
                 showToast('Failed to load configuration', 'error');
+            }
+        }
+
+        async function loadModules() {
+            const container = document.getElementById('moduleList');
+            if (!container) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/modules`);
+                const data = await response.json();
+
+                if (data.modules && data.modules.length > 0) {
+                    let html = '';
+                    data.modules.forEach(mod => {
+                        const statusClass = mod.enabled ? 'success' : 'warning';
+                        const statusText = mod.enabled ? 'Loaded' : 'Available';
+                        const checked = mod.enabled ? 'checked' : '';
+                        
+                        html += `
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem; background: var(--bg-secondary); border-radius: 4px;">
+                                <div style="flex: 1;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <span class="badge badge-${statusClass}" style="font-size: 0.75rem;">${statusText}</span>
+                                        <strong style="color: var(--accent-blue);">${mod.name}</strong>
+                                        <span style="color: var(--text-secondary); font-size: 0.875rem;">(${mod.id})</span>
+                                    </div>
+                                    <p style="color: var(--text-secondary); font-size: 0.875rem; margin: 0.25rem 0 0 0;">${mod.description || ''}</p>
+                                </div>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" 
+                                           onchange="toggleModule('${mod.id}', this.checked)" 
+                                           ${checked}
+                                           style="width: auto;">
+                                    <span>Enable</span>
+                                </label>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<p style="color: var(--text-secondary);">No modules found</p>';
+                }
+            } catch (error) {
+                console.error('Failed to load modules:', error);
+                container.innerHTML = '<p style="color: var(--text-secondary);">Error loading modules</p>';
+            }
+        }
+
+        async function toggleModule(moduleId, enabled) {
+            try {
+                const endpoint = enabled ? 'enable' : 'disable';
+                const response = await fetch(`${API_BASE}/api/modules/${moduleId}/${endpoint}`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    const status = enabled ? 'enabled' : 'disabled';
+                    showToast(`Module ${moduleId} ${status}`, 'success');
+                    // Reload to update status badges
+                    loadModules();
+                } else {
+                    const error = await response.json();
+                    showToast('Failed: ' + error.error, 'error');
+                }
+            } catch (error) {
+                console.error('Failed to toggle module:', error);
+                showToast('Failed to toggle module', 'error');
             }
         }
 
