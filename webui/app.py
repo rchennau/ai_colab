@@ -12,6 +12,11 @@ import shutil
 import socket
 import threading
 import time
+import pty
+import select
+import struct
+import fcntl
+import termios
 from datetime import datetime
 from pathlib import Path
 from flask import Flask, request, jsonify, send_from_directory, Response
@@ -108,6 +113,11 @@ def create_app():
     # Initialize SocketIO for real-time updates
     socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
+    # Initialize PTY manager for web terminals
+    global pty_manager
+    pty_manager = PTYManager(socketio)
+    logger.info("PTY manager initialized for web terminals")
+
     # Add request logging middleware
     @app.before_request
     def log_request():
@@ -172,6 +182,149 @@ def create_app():
     return app
 
 
+# ============================================
+# PTY Terminal Manager
+# ============================================
+
+class PTYManager:
+    """Manages pseudo-terminal sessions for web terminals"""
+
+    def __init__(self, socketio):
+        self.socketio = socketio
+        self.terminals = {}  # id -> { 'fd': int, 'pid': int, 'type': str, 'thread': Thread }
+
+    def spawn(self, terminal_id, terminal_type):
+        """Spawn a new PTY session"""
+        try:
+            # Determine command based on terminal type
+            commands = {
+                'conductor': ['bash', '-c', 'echo "=== ai-colab Conductor ===" && echo "Type !status, !test, !build" && bash'],
+                'qwen': ['qwen-code'],
+                'gemini': ['gemini-cli'],
+                'claude': ['claude-code'],
+                'debug': ['bash', '-c', 'echo "=== Debug Shell ===" && echo "KB: /conductor/knowledge_base_map.md" && bash']
+            }
+
+            cmd = commands.get(terminal_type, ['bash'])
+
+            # Create PTY
+            pid, fd = pty.fork()
+
+            if pid == 0:
+                # Child process
+                os.execvp(cmd[0], cmd)
+            else:
+                # Parent process
+                # Set non-blocking
+                flags = fcntl.fcntl(fd, fcntl.F_GETFL)
+                fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+
+                # Store terminal info
+                self.terminals[terminal_id] = {
+                    'fd': fd,
+                    'pid': pid,
+                    'type': terminal_type,
+                    'running': True
+                }
+
+                # Start read thread
+                thread = threading.Thread(
+                    target=self._read_loop,
+                    args=(terminal_id, fd),
+                    daemon=True
+                )
+                thread.start()
+                self.terminals[terminal_id]['thread'] = thread
+
+                logger.info(f"Spawned terminal {terminal_id} ({terminal_type}) with PID {pid}")
+                return {'success': True, 'pid': pid}
+
+        except Exception as e:
+            logger.error(f"Failed to spawn terminal: {e}")
+            return {'success': False, 'error': str(e)}
+
+    def _read_loop(self, terminal_id, fd):
+        """Read from PTY and emit to WebSocket"""
+        try:
+            while self.terminals.get(terminal_id, {}).get('running', False):
+                try:
+                    r, _, _ = select.select([fd], [], [], 0.1)
+                    if r:
+                        output = os.read(fd, 4096)
+                        if output:
+                            self.socketio.emit('terminal_output', {
+                                'id': terminal_id,
+                                'data': output.decode('utf-8', errors='replace')
+                            })
+                        else:
+                            break
+                except OSError:
+                    break
+        except Exception as e:
+            logger.error(f"Read loop error for terminal {terminal_id}: {e}")
+        finally:
+            self.close(terminal_id)
+
+    def write(self, terminal_id, data):
+        """Write to PTY"""
+        if terminal_id in self.terminals:
+            try:
+                fd = self.terminals[terminal_id]['fd']
+                os.write(fd, data.encode('utf-8'))
+                return True
+            except Exception as e:
+                logger.error(f"Write error: {e}")
+                return False
+        return False
+
+    def close(self, terminal_id):
+        """Close PTY session"""
+        if terminal_id in self.terminals:
+            try:
+                term = self.terminals[terminal_id]
+                term['running'] = False
+
+                # Close FD
+                if 'fd' in term:
+                    try:
+                        os.close(term['fd'])
+                    except:
+                        pass
+
+                # Kill process
+                if 'pid' in term:
+                    try:
+                        os.kill(term['pid'], 9)
+                    except:
+                        pass
+
+                # Notify client
+                self.socketio.emit('terminal_closed', {'id': terminal_id})
+
+                del self.terminals[terminal_id]
+                logger.info(f"Closed terminal {terminal_id}")
+
+            except Exception as e:
+                logger.error(f"Close error: {e}")
+
+    def resize(self, terminal_id, rows, cols):
+        """Resize PTY"""
+        if terminal_id in self.terminals:
+            try:
+                fd = self.terminals[terminal_id]['fd']
+                winsize = struct.pack('HHHH', rows, cols, 0, 0)
+                fcntl.ioctl(fd, termios.TIOCSWINSZ, winsize)
+                return True
+            except Exception as e:
+                logger.error(f"Resize error: {e}")
+                return False
+        return False
+
+
+# Global PTY manager
+pty_manager = None
+
+
 def register_routes(app, socketio, limiter=None):
 
     # WebSocket event handlers
@@ -187,6 +340,26 @@ def register_routes(app, socketio, limiter=None):
     @socketio.on('subscribe_status')
     def handle_subscribe():
         logger.info('Client subscribed to status updates')
+
+    # Terminal WebSocket handlers
+    @socketio.on('terminal_input')
+    def handle_terminal_input(data):
+        """Handle terminal input from client"""
+        terminal_id = data.get('id')
+        input_data = data.get('data', '')
+
+        if pty_manager and terminal_id:
+            pty_manager.write(terminal_id, input_data)
+
+    @socketio.on('terminal_resize')
+    def handle_terminal_resize(data):
+        """Handle terminal resize from client"""
+        terminal_id = data.get('id')
+        rows = data.get('rows', 24)
+        cols = data.get('cols', 80)
+
+        if pty_manager and terminal_id:
+            pty_manager.resize(terminal_id, rows, cols)
 
     @app.route('/')
     def index():
@@ -1944,6 +2117,51 @@ def register_routes(app, socketio, limiter=None):
         except Exception as e:
             logger.error(f"Error sending console command: {e}")
             return jsonify({"error": str(e)}), 500
+
+    @app.route('/api/terminal/spawn', methods=['POST'])
+    def spawn_terminal():
+        """Spawn a new web terminal"""
+        try:
+            data = request.json or {}
+            terminal_id = data.get('id')
+            terminal_type = data.get('type', 'bash')
+
+            if not terminal_id:
+                return jsonify({'error': 'Terminal ID required'}), 400
+
+            if not pty_manager:
+                return jsonify({'error': 'PTY manager not initialized'}), 500
+
+            result = pty_manager.spawn(terminal_id, terminal_type)
+
+            if result.get('success'):
+                return jsonify({'status': 'success', 'pid': result.get('pid')})
+            else:
+                return jsonify({'error': result.get('error', 'Unknown error')}), 500
+
+        except Exception as e:
+            logger.error(f"Error spawning terminal: {e}")
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/terminal/close', methods=['POST'])
+    def close_terminal():
+        """Close a web terminal"""
+        try:
+            data = request.json or {}
+            terminal_id = data.get('id')
+
+            if not terminal_id:
+                return jsonify({'error': 'Terminal ID required'}), 400
+
+            if not pty_manager:
+                return jsonify({'error': 'PTY manager not initialized'}), 500
+
+            pty_manager.close(terminal_id)
+            return jsonify({'status': 'closed'})
+
+        except Exception as e:
+            logger.error(f"Error closing terminal: {e}")
+            return jsonify({'error': str(e)}), 500
 
     @app.route('/api/profiles', methods=['GET'])
     def get_profiles():

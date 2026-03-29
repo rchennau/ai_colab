@@ -246,14 +246,17 @@ save_pref() {
 LAST_LAUNCH_CHOICE=$(bash "$CONFIG_MGR" state last_launch_choice 3)
 
 if [ "$INTERACTIVE" = true ]; then
-    ui_title "Component Configuration" "${BLUE}"
-    echo -e "Select components to launch:"
-    echo -e "  ${CYAN}1)${NC} Dashboard (hcom TUI + Agents)"
-    echo -e "  ${CYAN}2)${NC} Conductor (Project Manager)"
-    echo -e "  ${CYAN}3)${NC} Both (Recommended)"
-    echo -e "  ${CYAN}4)${NC} Web UI (Browser-based management)"
+    ui_banner "Launch Mode Selection" "${BLUE}"
     echo ""
-    read -p "  Choice [1-4, default $LAST_LAUNCH_CHOICE]: " LAUNCH_CHOICE
+    echo -e "Select launch mode:"
+    echo -e "  ${CYAN}1)${NC} Dashboard (tmux-based)"
+    echo -e "      hcom TUI + Agents + Conductor in terminal panes"
+    echo -e "  ${CYAN}2)${NC} WebUI (Browser-based)"
+    echo -e "      Web interface with embedded terminal panels"
+    echo -e "  ${CYAN}3)${NC} Debug Mode (Single Agent)"
+    echo -e "      Dedicated LLM CLI with KB/RAG for troubleshooting"
+    echo ""
+    read -p "  Choice [1-3, default $LAST_LAUNCH_CHOICE]: " LAUNCH_CHOICE
     LAUNCH_CHOICE=${LAUNCH_CHOICE:-$LAST_LAUNCH_CHOICE}
 else
     LAUNCH_CHOICE=$LAST_LAUNCH_CHOICE
@@ -263,12 +266,12 @@ bash "$CONFIG_MGR" state-set last_launch_choice "$LAUNCH_CHOICE"
 DASHBOARD=false
 CONDUCTOR=false
 WEBUI=false
+DEBUG=false
 
 case "$LAUNCH_CHOICE" in
-    1) DASHBOARD=true ;;
-    2) CONDUCTOR=true ;;
-    3) DASHBOARD=true; CONDUCTOR=true ;;
-    4) WEBUI=true ;;
+    1) DASHBOARD=true; CONDUCTOR=true ;;
+    2) WEBUI=true ;;
+    3) DEBUG=true ;;
     *) echo "Invalid choice"; exit 1 ;;
 esac
 
@@ -559,6 +562,34 @@ if [ "$WEBUI" = true ]; then
         echo -e "${RED}✗${NC} Web UI failed to start. Check logs: $PROJECT_ROOT/logs/webui.log"
         exit 1
     fi
+elif [ "$DEBUG" = true ]; then
+    # Debug Mode - Single Agent with KB/RAG
+    ui_banner "Debug Mode - AI Assistant" "${YELLOW}"
+    echo ""
+    echo -e "Select AI agent for debugging:"
+    echo -e "  ${CYAN}1)${NC} Qwen (qwen-code)"
+    echo -e "  ${CYAN}2)${NC} Gemini (gemini-cli)"
+    echo -e "  ${CYAN}3)${NC} Claude (claude-code)"
+    echo -e "  ${CYAN}4)${NC} DeepSeek (deepseek-cli)"
+    echo ""
+    read -p "  Choice [1-4]: " DEBUG_CHOICE
+
+    AGENT=""
+    case "$DEBUG_CHOICE" in
+        1) AGENT="qwen" ;;
+        2) AGENT="gemini" ;;
+        3) AGENT="claude" ;;
+        4) AGENT="deepseek" ;;
+        *) echo "Invalid choice"; exit 1 ;;
+    esac
+
+    echo ""
+    echo -e "${GREEN}Starting debug mode with $AGENT...${NC}"
+    echo ""
+
+    cd "$PROJECT_ROOT"
+    exec bash "$SCRIPT_DIR/scripts/debug-mode.sh" "$AGENT"
+
 elif [ "$DASHBOARD" = true ]; then
     echo -e "  Launching Unified Dashboard..."
     # Change to project root to ensure dashboard detects it

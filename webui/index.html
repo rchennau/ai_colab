@@ -452,6 +452,7 @@
     <!-- Navigation -->
     <nav>
         <button class="nav-btn active" data-page="dashboard">Dashboard</button>
+        <button class="nav-btn" data-page="terminal">Web Terminal</button>
         <button class="nav-btn" data-page="setup">Setup Wizard</button>
         <button class="nav-btn" data-page="agents">Agents</button>
         <button class="nav-btn" data-page="config">Configuration</button>
@@ -537,6 +538,33 @@
                 </div>
                 <div id="consoleOutput" class="log-viewer" style="margin-top: 1rem; max-height: 300px;">
                     <p>Command output will appear here...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Web Terminal Page -->
+        <div class="page" id="terminal-page">
+            <div class="card">
+                <h2>💻 Web Terminal</h2>
+                <p style="margin-bottom: 1rem;">Run LLM agents and commands directly in your browser</p>
+
+                <div class="btn-group" style="margin-bottom: 1rem;">
+                    <button class="btn btn-primary" onclick="spawnTerminal('conductor')">+ Conductor</button>
+                    <button class="btn btn-primary" onclick="spawnTerminal('qwen')">+ Qwen</button>
+                    <button class="btn btn-primary" onclick="spawnTerminal('gemini')">+ Gemini</button>
+                    <button class="btn btn-primary" onclick="spawnTerminal('claude')">+ Claude</button>
+                    <button class="btn btn-primary" onclick="spawnTerminal('debug')">+ Debug Shell</button>
+                    <button class="btn btn-danger" onclick="closeAllTerminals()">Close All</button>
+                </div>
+
+                <div id="terminalTabs" style="margin-bottom: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <!-- Terminal tabs will be added here -->
+                </div>
+
+                <div id="terminalContainer" style="height: 600px; background: #1a1a1a; border-radius: 4px; overflow: hidden;">
+                    <div id="noTerminalMessage" style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666;">
+                        <p>No terminal active. Click a button above to spawn a terminal.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -919,7 +947,13 @@
 
     <!-- Socket.IO Client Library -->
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-    
+
+    <!-- xterm.js - Terminal Emulator -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.mincss">
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-web-links@0.9.0/lib/xterm-addon-web-links.min.js"></script>
+
     <script>
         // Global state
         let currentWizardStep = 1;
@@ -954,6 +988,19 @@
                     updateRealtimeIndicator(true);
                     showToast('Connected to real-time updates', 'success');
                     socket.emit('subscribe_status');
+                });
+
+                // Terminal events
+                socket.on('terminal_output', (data) => {
+                    if (terminals && terminals[data.id]) {
+                        terminals[data.id].terminal.write(data.data);
+                    }
+                });
+
+                socket.on('terminal_closed', (data) => {
+                    if (terminals && terminals[data.id]) {
+                        terminals[data.id].terminal.write('\r\n\x1b[31m[Terminal closed]\x1b[0m\r\n');
+                    }
                 });
 
                 socket.on('disconnect', () => {
@@ -1714,6 +1761,152 @@
                 sendConsoleCommand(command);
                 input.value = '';
             }
+        }
+
+        // Web Terminal Management
+        let terminals = {};
+        let activeTerminalId = null;
+        let terminalIdCounter = 0;
+
+        function spawnTerminal(type) {
+            const terminalId = ++terminalIdCounter;
+            const container = document.getElementById('terminalContainer');
+            const tabsContainer = document.getElementById('terminalTabs');
+
+            // Hide "no terminal" message
+            document.getElementById('noTerminalMessage').style.display = 'none';
+
+            // Create terminal div
+            const terminalDiv = document.createElement('div');
+            terminalDiv.id = `terminal-${terminalId}`;
+            terminalDiv.style.display = 'none';
+            terminalDiv.style.height = '100%';
+            container.appendChild(terminalDiv);
+
+            // Create tab
+            const tab = document.createElement('div');
+            tab.id = `tab-${terminalId}`;
+            tab.className = 'btn btn-secondary';
+            tab.style.padding = '0.25rem 0.75rem';
+            tab.style.fontSize = '0.875rem';
+            tab.style.cursor = 'pointer';
+            tab.innerHTML = `${type} <span onclick="closeTerminal(${terminalId}); event.stopPropagation();" style="margin-left: 0.5rem; color: #e74c3c;">&times;</span>`;
+            tab.onclick = () => switchTerminal(terminalId);
+            tabsContainer.appendChild(tab);
+
+            // Initialize xterm.js
+            const term = new Terminal({
+                cursorBlink: true,
+                fontSize: 14,
+                fontFamily: '"Cascadia Code", "Fira Code", Consolas, monospace',
+                theme: {
+                    background: '#1a1a1a',
+                    foreground: '#ffffff',
+                    cursor: '#4cc9f0',
+                    selection: 'rgba(76, 201, 240, 0.3)'
+                },
+                rows: 24,
+                cols: 80
+            });
+
+            // Load fit addon
+            const fitAddon = new FitAddon.FitAddon();
+            term.loadAddon(fitAddon);
+            term.open(terminalDiv);
+            fitAddon.fit();
+
+            // Store terminal info
+            terminals[terminalId] = {
+                terminal: term,
+                type: type,
+                div: terminalDiv,
+                tab: tab,
+                fitAddon: fitAddon
+            };
+
+            // Handle terminal input
+            term.onData((data) => {
+                if (socket) {
+                    socket.emit('terminal_input', { id: terminalId, data: data });
+                }
+            });
+
+            // Switch to new terminal
+            switchTerminal(terminalId);
+
+            // Spawn backend process
+            fetch(`${API_BASE}/api/terminal/spawn`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: terminalId, type: type })
+            }).then(r => r.json()).then(data => {
+                if (data.error) {
+                    term.write(`\r\n\x1b[31mError: ${data.error}\x1b[0m\r\n`);
+                }
+            }).catch(e => {
+                term.write(`\r\n\x1b[31mFailed to spawn: ${e.message}\x1b[0m\r\n`);
+            });
+
+            // Resize handler
+            window.addEventListener('resize', () => {
+                if (terminals[terminalId]) {
+                    terminals[terminalId].fitAddon.fit();
+                }
+            });
+        }
+
+        function switchTerminal(terminalId) {
+            // Hide all terminals
+            Object.values(terminals).forEach(t => {
+                t.div.style.display = 'none';
+                t.tab.style.background = '';
+                t.tab.style.color = '';
+            });
+
+            // Show selected terminal
+            if (terminals[terminalId]) {
+                terminals[terminalId].div.style.display = 'block';
+                terminals[terminalId].tab.style.background = 'var(--accent-blue)';
+                terminals[terminalId].tab.style.color = '#fff';
+                terminals[terminalId].fitAddon.fit();
+                terminals[terminalId].terminal.focus();
+                activeTerminalId = terminalId;
+            }
+        }
+
+        function closeTerminal(terminalId) {
+            if (terminals[terminalId]) {
+                // Close backend
+                fetch(`${API_BASE}/api/terminal/close`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: terminalId })
+                });
+
+                // Remove tab
+                terminals[terminalId].tab.remove();
+
+                // Dispose terminal
+                terminals[terminalId].terminal.dispose();
+                terminals[terminalId].div.remove();
+
+                delete terminals[terminalId];
+
+                // Switch to another terminal or show "no terminal" message
+                const remaining = Object.keys(terminals);
+                if (remaining.length > 0) {
+                    switchTerminal(parseInt(remaining[0]));
+                } else {
+                    document.getElementById('noTerminalMessage').style.display = 'flex';
+                    activeTerminalId = null;
+                }
+            }
+        }
+
+        function closeAllTerminals() {
+            Object.keys(terminals).forEach(id => {
+                closeTerminal(parseInt(id));
+            });
         }
 
         function getLogLevelClass(log) {
