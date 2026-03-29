@@ -194,14 +194,21 @@ class PTYManager:
         self.terminals = {}  # id -> { 'fd': int, 'pid': int, 'type': str, 'thread': Thread }
 
     def spawn(self, terminal_id, terminal_type):
-        """Spawn a new PTY session"""
+        """Spawn a new PTY session or reconnect to existing one"""
         try:
+            # Check if we already have a terminal of this type running
+            for existing_id, existing_term in self.terminals.items():
+                if existing_term.get('type') == terminal_type and existing_term.get('running', False):
+                    # Reuse existing terminal
+                    logger.info(f"Reusing existing terminal {existing_id} ({terminal_type})")
+                    return {'success': True, 'pid': existing_term['pid'], 'reused': True, 'id': existing_id}
+
             # Determine command based on terminal type
             # Use login shell (-l) to load full environment including nvm
             # Also explicitly source nvm and set PATH
             # Use -i for interactive shell to keep session alive
             nvm_setup = 'export NVM_DIR="$HOME/.nvm"; [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"; export PATH="$HOME/.nvm/versions/node/$(node --version)/bin:$PATH";'
-            
+
             commands = {
                 'conductor': ['bash', '-lic', f'{nvm_setup} cd /home/rchennau/ai_colab && echo "=== ai-colab Conductor Agent ===" && echo "Commands: !status, !test, !build, !kb <query>" && echo "" && hcom start --name conductor_webui 2>/dev/null; exec bash'],
                 'qwen': ['bash', '-lic', f'{nvm_setup} echo "=== Qwen Agent ===" && echo "Starting qwen (interactive mode)..." && exec qwen'],
@@ -232,7 +239,8 @@ class PTYManager:
                     'fd': fd,
                     'pid': pid,
                     'type': terminal_type,
-                    'running': True
+                    'running': True,
+                    'created_at': time.time()
                 }
 
                 # Start read thread
@@ -245,11 +253,25 @@ class PTYManager:
                 self.terminals[terminal_id]['thread'] = thread
 
                 logger.info(f"Spawned terminal {terminal_id} ({terminal_type}) with PID {pid}")
-                return {'success': True, 'pid': pid}
+                return {'success': True, 'pid': pid, 'reused': False, 'id': terminal_id}
 
         except Exception as e:
             logger.error(f"Failed to spawn terminal: {e}")
             return {'success': False, 'error': str(e)}
+
+    def list_terminals(self):
+        """List all active terminals"""
+        result = []
+        for terminal_id, term in self.terminals.items():
+            if term.get('running', False):
+                result.append({
+                    'id': terminal_id,
+                    'type': term.get('type'),
+                    'pid': term.get('pid'),
+                    'running': term.get('running'),
+                    'created_at': term.get('created_at')
+                })
+        return result
 
     def _read_loop(self, terminal_id, fd):
         """Read from PTY and emit to WebSocket"""
@@ -2143,12 +2165,26 @@ def register_routes(app, socketio, limiter=None):
             result = pty_manager.spawn(terminal_id, terminal_type)
 
             if result.get('success'):
-                return jsonify({'status': 'success', 'pid': result.get('pid')})
+                return jsonify({'status': 'success', 'pid': result.get('pid'), 'reused': result.get('reused', False), 'id': result.get('id')})
             else:
                 return jsonify({'error': result.get('error', 'Unknown error')}), 500
 
         except Exception as e:
             logger.error(f"Error spawning terminal: {e}")
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/terminal/list', methods=['GET'])
+    def list_terminals():
+        """List all active terminals"""
+        try:
+            if not pty_manager:
+                return jsonify({'error': 'PTY manager not initialized'}), 500
+
+            terminals = pty_manager.list_terminals()
+            return jsonify({'terminals': terminals})
+
+        except Exception as e:
+            logger.error(f"Error listing terminals: {e}")
             return jsonify({'error': str(e)}), 500
 
     @app.route('/api/terminal/close', methods=['POST'])

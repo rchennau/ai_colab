@@ -1329,12 +1329,13 @@
             if (!container) return;
 
             try {
+                // First check for existing terminals
+                const listResponse = await fetch(`${API_BASE}/api/terminal/list`);
+                const listData = await listResponse.json();
+                
                 // Always show Conductor and User Console
-                let html = `
-                    <button class="btn btn-primary" onclick="spawnTerminal('conductor')">+ Conductor</button>
-                    <button class="btn btn-primary" onclick="spawnTerminal('user-console')">+ User Console</button>
-                `;
-
+                let html = '';
+                
                 // Load config to check enabled LLMs
                 const response = await fetch(`${API_BASE}/api/config`);
                 const config = await response.json();
@@ -1354,7 +1355,12 @@
 
                 for (const llm of llmButtons) {
                     if (enabledLlms.includes(llm.name)) {
-                        html += `<button class="btn btn-primary" onclick="spawnTerminal('${llm.name}')">+ ${llm.label}</button>`;
+                        // Check if this terminal type is already running
+                        const existingTerminal = listData.terminals?.find(t => t.type === llm.name);
+                        const statusBadge = existingTerminal 
+                            ? `<span class="badge badge-success" style="font-size: 0.7rem; margin-left: 0.5rem;">Running</span>` 
+                            : '';
+                        html += `<button class="btn btn-primary" onclick="spawnOrReconnectTerminal('${llm.name}')">+ ${llm.label}${statusBadge}</button>`;
                     }
                 }
 
@@ -1365,10 +1371,133 @@
             } catch (error) {
                 console.error('Failed to load terminal buttons:', error);
                 container.innerHTML = '<p style="color: var(--text-secondary);">Error loading agents. Using defaults.</p>' +
-                    '<button class="btn btn-primary" onclick="spawnTerminal(\'conductor\')">+ Conductor</button>' +
-                    '<button class="btn btn-primary" onclick="spawnTerminal(\'user-console\')">+ User Console</button>' +
+                    '<button class="btn btn-primary" onclick="spawnOrReconnectTerminal(\'conductor\')">+ Conductor</button>' +
+                    '<button class="btn btn-primary" onclick="spawnOrReconnectTerminal(\'user-console\')">+ User Console</button>' +
                     '<button class="btn btn-danger" onclick="closeAllTerminals()">Close All</button>';
             }
+        }
+
+        // Spawn new terminal or reconnect to existing one
+        async function spawnOrReconnectTerminal(type) {
+            const container = document.getElementById('terminalContainer');
+            const tabsContainer = document.getElementById('terminalTabs');
+
+            // Check for existing terminal of this type
+            try {
+                const listResponse = await fetch(`${API_BASE}/api/terminal/list`);
+                const listData = await listResponse.json();
+                const existingTerminal = listData.terminals?.find(t => t.type === type);
+
+                if (existingTerminal) {
+                    // Reconnect to existing terminal
+                    const terminalId = existingTerminal.id;
+                    
+                    // Check if we already have this terminal in UI
+                    if (terminals[terminalId]) {
+                        switchTerminal(terminalId);
+                        showToast(`Reconnected to existing ${type} terminal`, 'success');
+                        return;
+                    }
+
+                    // Create new UI tab for existing terminal
+                    await reconnectToTerminal(terminalId, type);
+                    showToast(`Reconnected to existing ${type} session (PID: ${existingTerminal.pid})`, 'success');
+                    return;
+                }
+            } catch (error) {
+                console.error('Error checking existing terminals:', error);
+            }
+
+            // No existing terminal, spawn new one
+            spawnTerminal(type);
+        }
+
+        // Reconnect to existing terminal
+        async function reconnectToTerminal(terminalId, type) {
+            const container = document.getElementById('terminalContainer');
+            const tabsContainer = document.getElementById('terminalTabs');
+            
+            // Hide "no terminal" message
+            document.getElementById('noTerminalMessage').style.display = 'none';
+
+            // Create terminal div
+            const terminalDiv = document.createElement('div');
+            terminalDiv.id = `terminal-${terminalId}`;
+            terminalDiv.style.display = 'none';
+            terminalDiv.style.height = '100%';
+            container.appendChild(terminalDiv);
+
+            // Create tab
+            const tab = document.createElement('div');
+            tab.id = `tab-${terminalId}`;
+            tab.className = 'btn btn-secondary';
+            tab.style.padding = '0.25rem 0.75rem';
+            tab.style.fontSize = '0.875rem';
+            tab.style.cursor = 'pointer';
+            tab.innerHTML = `${type} <span onclick="closeTerminal(${terminalId}); event.stopPropagation();" style="margin-left: 0.5rem; color: #e74c3c;">&times;</span>`;
+            tab.onclick = () => switchTerminal(terminalId);
+            tabsContainer.appendChild(tab);
+
+            // Initialize xterm.js
+            const term = new Terminal({
+                cursorBlink: true,
+                fontSize: 14,
+                fontFamily: '"Cascadia Code", "Fira Code", Consolas, monospace',
+                theme: {
+                    background: '#1a1a1a',
+                    foreground: '#ffffff',
+                    cursor: '#4cc9f0',
+                    selection: 'rgba(76, 201, 240, 0.3)'
+                },
+                rows: 24,
+                cols: 80
+            });
+
+            // Load fit addon
+            const fitAddon = new FitAddon.FitAddon();
+            term.loadAddon(fitAddon);
+            term.open(terminalDiv);
+            fitAddon.fit();
+
+            // Store terminal info
+            terminals[terminalId] = {
+                terminal: term,
+                type: type,
+                div: terminalDiv,
+                tab: tab,
+                fitAddon: fitAddon,
+                existing: true  // Mark as reconnected
+            };
+
+            // Handle terminal input
+            term.onData((data) => {
+                if (socket) {
+                    socket.emit('terminal_input', { id: terminalId, data: data });
+                }
+            });
+
+            // Switch to reconnected terminal
+            switchTerminal(terminalId);
+
+            // Write reconnection message
+            term.write(`\r\n\x1b[32m=== Reconnected to existing ${type} session ===\x1b[0m\r\n\r\n`);
+
+            // Resize handler
+            term.onResize((size) => {
+                if (socket) {
+                    socket.emit('terminal_resize', { 
+                        id: terminalId, 
+                        rows: size.rows, 
+                        cols: size.cols 
+                    });
+                }
+            });
+
+            window.addEventListener('resize', () => {
+                if (terminals[terminalId]) {
+                    terminals[terminalId].fitAddon.fit();
+                }
+            });
         }
 
         // Status refresh
