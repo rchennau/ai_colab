@@ -2485,18 +2485,18 @@ def register_routes(app, socketio, limiter=None):
         """Get all modules with their enabled status"""
         try:
             result = subprocess.run(
-                ["bash", str(SCRIPT_DIR / "module-manager.sh"), "status"],
+                ["bash", str(SCRIPTS_DIR / "module-manager.sh"), "status"],
                 capture_output=True,
                 text=True,
                 cwd=str(APP_DIR)
             )
-            
+
             if result.returncode == 0:
                 modules = json.loads(result.stdout)
                 return jsonify({"modules": modules})
             else:
                 return jsonify({"error": "Failed to get modules"}), 500
-                
+
         except Exception as e:
             logger.error(f"Error getting modules: {e}")
             return jsonify({"error": str(e)}), 500
@@ -2506,17 +2506,17 @@ def register_routes(app, socketio, limiter=None):
         """Enable a module"""
         try:
             result = subprocess.run(
-                ["bash", str(SCRIPT_DIR / "module-manager.sh"), "enable", module_id],
+                ["bash", str(SCRIPTS_DIR / "module-manager.sh"), "enable", module_id],
                 capture_output=True,
                 text=True,
                 cwd=str(APP_DIR)
             )
-            
+
             if result.returncode == 0:
                 return jsonify({"status": "success", "module": module_id, "enabled": True})
             else:
                 return jsonify({"error": "Failed to enable module"}), 500
-                
+
         except Exception as e:
             logger.error(f"Error enabling module: {e}")
             return jsonify({"error": str(e)}), 500
@@ -2526,17 +2526,17 @@ def register_routes(app, socketio, limiter=None):
         """Disable a module"""
         try:
             result = subprocess.run(
-                ["bash", str(SCRIPT_DIR / "module-manager.sh"), "disable", module_id],
+                ["bash", str(SCRIPTS_DIR / "module-manager.sh"), "disable", module_id],
                 capture_output=True,
                 text=True,
                 cwd=str(APP_DIR)
             )
-            
+
             if result.returncode == 0:
                 return jsonify({"status": "success", "module": module_id, "enabled": False})
             else:
                 return jsonify({"error": "Failed to disable module"}), 500
-                
+
         except Exception as e:
             logger.error(f"Error disabling module: {e}")
             return jsonify({"error": str(e)}), 500
