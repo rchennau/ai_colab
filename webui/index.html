@@ -549,13 +549,12 @@
                     <button class="btn btn-secondary" onclick="showConfigSection('settings')">Settings</button>
                 </div>
             </div>
-        </div>
 
             <div class="card">
                 <h2>💻 Web Console</h2>
                 <p style="margin-bottom: 1rem;">Send commands to the conductor directly from the web UI:</p>
                 <div class="form-group">
-                    <input type="text" id="consoleCommand" placeholder="Enter command (e.g., !status, !test, !build)" 
+                    <input type="text" id="consoleCommand" placeholder="Enter command (e.g., !status, !test, !build)"
                            style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-secondary); color: var(--text-primary);">
                 </div>
                 <div class="btn-group" style="margin-top: 1rem;">
@@ -574,7 +573,9 @@
         <div class="page" id="terminal-page">
             <div class="card">
                 <h2>💻 Agent Terminal</h2>
-                <p style="margin-bottom: 1rem;">Run LLM agents and commands directly in your browser</p>
+                <p style="margin-bottom: 1rem; color: var(--text-secondary);">
+                    <strong>Launch LLM agents in embedded terminals.</strong> Click a button below to spawn an agent.
+                </p>
 
                 <div class="btn-group" style="margin-bottom: 1rem;">
                     <button class="btn btn-primary" onclick="spawnTerminal('conductor')">+ Conductor</button>
@@ -592,7 +593,10 @@
 
                 <div id="terminalContainer" style="height: 600px; background: #1a1a1a; border-radius: 4px; overflow: hidden;">
                     <div id="noTerminalMessage" style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666;">
-                        <p>No terminal active. Click a button above to spawn a terminal.</p>
+                        <div style="text-align: center;">
+                            <p style="font-size: 1.2rem; margin-bottom: 1rem;">No terminal active</p>
+                            <p style="color: var(--text-secondary);">Click a button above to spawn an agent terminal</p>
+                        </div>
                     </div>
                 </div>
             </div>
