@@ -578,25 +578,49 @@
                 </div>
             </div>
 
-            <!-- Agent Terminal Sub-page (hidden by default) -->
+            <!-- Agent Terminal Sub-page with new layout -->
             <div id="ai-terminal-subpage" style="display: none;">
                 <div class="card">
                     <h2>💻 Agent Terminal</h2>
-                    <p style="margin-bottom: 1rem; color: var(--text-secondary);">
-                        <strong>Launch LLM agents in embedded terminals.</strong> Click a button below to spawn an agent.
+                    <p style="margin-bottom: 0.5rem; color: var(--text-secondary);">
+                        <strong>Conductor and User Console auto-load.</strong> Click buttons below to spawn LLM agents.
                     </p>
-                    <div id="terminalButtons" class="btn-group" style="margin-bottom: 1rem;">
-                        <!-- Buttons populated dynamically based on configuration -->
-                        <p style="color: var(--text-secondary);">Loading available agents...</p>
+
+                    <!-- Top Row: Conductor Status (6 lines high) -->
+                    <div id="conductorTerminalContainer" style="height: 150px; background: #1a1a1a; border-radius: 4px; overflow: hidden; margin-bottom: 0.5rem;">
+                        <div id="conductorTerminal"></div>
                     </div>
-                    <div id="terminalTabs" style="margin-bottom: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                        <!-- Terminal tabs will be added here -->
-                    </div>
-                    <div id="terminalContainer" style="height: 600px; background: #1a1a1a; border-radius: 4px; overflow: hidden;">
-                        <div id="noTerminalMessage" style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666;">
-                            <div style="text-align: center;">
-                                <p style="font-size: 1.2rem; margin-bottom: 1rem;">No terminal active</p>
-                                <p style="color: var(--text-secondary);">Click a button above to spawn an agent terminal</p>
+
+                    <!-- Bottom Row: Two columns -->
+                    <div style="display: flex; gap: 0.5rem; height: 500px;">
+                        <!-- Left Column: User Console (33% width) -->
+                        <div style="flex: 1; min-width: 0;">
+                            <div id="userConsoleTerminalContainer" style="height: 100%; background: #1a1a1a; border-radius: 4px; overflow: hidden;">
+                                <div id="userConsoleTerminal"></div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: LLM Agent Terminal (67% width) -->
+                        <div style="flex: 2; min-width: 0; display: flex; flex-direction: column;">
+                            <!-- LLM Agent Buttons -->
+                            <div id="terminalButtons" class="btn-group" style="margin-bottom: 0.5rem;">
+                                <!-- Buttons populated dynamically based on configuration -->
+                                <p style="color: var(--text-secondary);">Loading available agents...</p>
+                            </div>
+
+                            <!-- Terminal Tabs -->
+                            <div id="terminalTabs" style="margin-bottom: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap; min-height: 36px;">
+                                <!-- Terminal tabs will be added here -->
+                            </div>
+
+                            <!-- LLM Terminal Container -->
+                            <div id="terminalContainer" style="flex: 1; background: #1a1a1a; border-radius: 4px; overflow: hidden;">
+                                <div id="noTerminalMessage" style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666;">
+                                    <div style="text-align: center;">
+                                        <p style="font-size: 1.2rem; margin-bottom: 1rem;">No LLM agent active</p>
+                                        <p style="color: var(--text-secondary);">Click a button above to spawn an agent terminal</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -2657,12 +2681,12 @@
             document.getElementById('ai-console-subpage').style.display = 'none';
             document.getElementById('ai-status-subpage').style.display = 'none';
             document.getElementById('ai-terminal-subpage').style.display = 'none';
-            
+
             // Reset tab styles
             document.getElementById('aiConsoleTab').className = 'btn btn-secondary';
             document.getElementById('aiStatusTab').className = 'btn btn-secondary';
             document.getElementById('aiTerminalTab').className = 'btn btn-secondary';
-            
+
             // Show selected subpage
             if (submenu === 'console') {
                 document.getElementById('ai-console-subpage').style.display = 'block';
@@ -2676,6 +2700,109 @@
                 document.getElementById('ai-terminal-subpage').style.display = 'block';
                 document.getElementById('aiTerminalTab').className = 'btn btn-primary';
                 loadTerminalButtons();
+                // Auto-load conductor and user console terminals
+                setTimeout(() => {
+                    if (!conductorTerminal) {
+                        spawnFixedTerminal('conductor', 'conductorTerminal', 6);
+                    }
+                    if (!userConsoleTerminal) {
+                        spawnFixedTerminal('user-console', 'userConsoleTerminal', 24);
+                    }
+                }, 100);
+            }
+        }
+
+        // Fixed terminal instances for conductor and user console
+        let conductorTerminal = null;
+        let userConsoleTerminal = null;
+        let fixedTerminalIds = {};
+
+        // Spawn a fixed terminal in a specific container
+        async function spawnFixedTerminal(type, containerId, rows) {
+            try {
+                // Check for existing terminal of this type
+                const listResponse = await fetch(`${API_BASE}/api/terminal/list`);
+                const listData = await listResponse.json();
+                const existingTerminal = listData.terminals?.find(t => t.type === type);
+
+                let terminalId = `fixed-${type}`;
+                let reused = false;
+
+                if (existingTerminal) {
+                    terminalId = existingTerminal.id;
+                    reused = true;
+                    fixedTerminalIds[type] = terminalId;
+                } else {
+                    // Spawn new terminal
+                    const spawnResponse = await fetch(`${API_BASE}/api/terminal/spawn`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: terminalId, type: type })
+                    });
+                    const spawnData = await spawnResponse.json();
+                    
+                    if (spawnData.reused) {
+                        terminalId = spawnData.id;
+                    }
+                    fixedTerminalIds[type] = terminalId;
+                }
+
+                // Create xterm.js instance
+                const container = document.getElementById(containerId);
+                if (!container) return;
+
+                const term = new Terminal({
+                    cursorBlink: true,
+                    fontSize: 12,
+                    fontFamily: '"Cascadia Code", "Fira Code", Consolas, monospace',
+                    theme: {
+                        background: '#1a1a1a',
+                        foreground: '#ffffff',
+                        cursor: '#4cc9f0',
+                        selection: 'rgba(76, 201, 240, 0.3)'
+                    },
+                    rows: rows,
+                    cols: 80,
+                    scrollback: 1000
+                });
+
+                const fitAddon = new FitAddon.FitAddon();
+                term.loadAddon(fitAddon);
+                term.open(container);
+                
+                // Set fixed size for conductor (6 lines)
+                if (type === 'conductor') {
+                    term.resize(80, 6);
+                }
+
+                // Store terminal reference
+                if (type === 'conductor') {
+                    conductorTerminal = { term, fitAddon, type };
+                } else if (type === 'user-console') {
+                    userConsoleTerminal = { term, fitAddon, type };
+                }
+
+                // Handle input
+                term.onData((data) => {
+                    if (socket) {
+                        socket.emit('terminal_input', { id: terminalId, data: data });
+                    }
+                });
+
+                // Handle resize
+                term.onResize((size) => {
+                    if (socket) {
+                        socket.emit('terminal_resize', { id: terminalId, rows: size.rows, cols: size.cols });
+                    }
+                });
+
+                // Write welcome message
+                if (!reused) {
+                    term.write(`\r\n\x1b[32m=== ${type === 'conductor' ? 'Conductor Status' : 'User Console'} ===\x1b[0m\r\n\r\n`);
+                }
+
+            } catch (error) {
+                console.error(`Failed to spawn fixed terminal (${type}):`, error);
             }
         }
 
