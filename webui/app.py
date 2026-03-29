@@ -197,16 +197,19 @@ class PTYManager:
         """Spawn a new PTY session"""
         try:
             # Determine command based on terminal type
-            # Source bashrc to get nvm and other environment
+            # Use login shell (-l) to load full environment including nvm
+            # Also explicitly source nvm and set PATH
+            nvm_setup = 'export NVM_DIR="$HOME/.nvm"; [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"; export PATH="$HOME/.nvm/versions/node/$(node --version)/bin:$PATH";'
+            
             commands = {
-                'conductor': ['bash', '-c', 'source ~/.bashrc 2>/dev/null; cd /home/rchennau/ai_colab && echo "=== ai-colab Conductor Agent ===" && echo "Commands: !status, !test, !build, !kb <query>" && echo "" && hcom start --name conductor_webui 2>/dev/null; bash'],
-                'qwen': ['bash', '-c', 'source ~/.bashrc 2>/dev/null; echo "=== Qwen Agent ===" && echo "Starting qwen-code..." && qwen-code'],
-                'gemini': ['bash', '-c', 'source ~/.bashrc 2>/dev/null; echo "=== Gemini Agent ===" && echo "Starting gemini-cli..." && gemini-cli'],
-                'claude': ['bash', '-c', 'source ~/.bashrc 2>/dev/null; echo "=== Claude Agent ===" && echo "Starting claude-code..." && claude'],
-                'deepseek': ['bash', '-c', 'source ~/.bashrc 2>/dev/null; echo "=== DeepSeek Agent ===" && echo "Starting deepseek-cli..." && deepseek-cli'],
-                'vllm': ['bash', '-c', 'source ~/.bashrc 2>/dev/null; echo "=== vLLM Agent ===" && echo "Starting vLLM CLI..." && vllm-hcom.sh'],
-                'user-console': ['bash', '-c', 'source ~/.bashrc 2>/dev/null; cd /home/rchennau/ai_colab && echo "=== User Console ===" && echo "Send commands to conductor via hcom" && echo "Example: hcom send @conductor -- \"!status\"" && echo "" && hcom start --name user_console 2>/dev/null; bash'],
-                'debug': ['bash', '-c', 'source ~/.bashrc 2>/dev/null; echo "=== Debug Shell ===" && echo "KB: /conductor/knowledge_base_map.md" && bash']
+                'conductor': ['bash', '-lc', f'{nvm_setup} cd /home/rchennau/ai_colab && echo "=== ai-colab Conductor Agent ===" && echo "Commands: !status, !test, !build, !kb <query>" && echo "" && hcom start --name conductor_webui 2>/dev/null; bash'],
+                'qwen': ['bash', '-lc', f'{nvm_setup} echo "=== Qwen Agent ===" && echo "Starting qwen-code..." && qwen-code'],
+                'gemini': ['bash', '-lc', f'{nvm_setup} echo "=== Gemini Agent ===" && echo "Starting gemini-cli..." && gemini-cli'],
+                'claude': ['bash', '-lc', f'{nvm_setup} echo "=== Claude Agent ===" && echo "Starting claude..." && claude'],
+                'deepseek': ['bash', '-lc', f'{nvm_setup} echo "=== DeepSeek Agent ===" && echo "Starting deepseek-cli..." && deepseek-cli'],
+                'vllm': ['bash', '-lc', f'{nvm_setup} echo "=== vLLM Agent ===" && echo "Starting vLLM CLI..." && bash -c "source ~/.bashrc 2>/dev/null; vllm-hcom.sh"'],
+                'user-console': ['bash', '-lc', f'{nvm_setup} cd /home/rchennau/ai_colab && echo "=== User Console ===" && echo "Send commands to conductor via hcom" && echo "Example: hcom send @conductor -- !status" && echo "" && hcom start --name user_console 2>/dev/null; bash'],
+                'debug': ['bash', '-lc', f'{nvm_setup} echo "=== Debug Shell ===" && echo "KB: /conductor/knowledge_base_map.md" && bash']
             }
 
             cmd = commands.get(terminal_type, ['bash'])
