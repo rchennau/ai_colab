@@ -76,9 +76,9 @@ render_fleet_health() {
             # Truncate long agent names
             local display_name=$(echo "$name" | cut -c1-20)
             
-            local status=$(parse_json_value "$health_json" "status")
-            local latency=$(parse_json_value "$health_json" "latency")
-            local last_ts=$(parse_json_value "$health_json" "ts")
+            local status=$(extract_json_value "$health_json" "status")
+            local latency=$(extract_json_value "$health_json" "latency")
+            local last_ts=$(extract_json_value "$health_json" "ts")
             
             local status_color="${GREEN}"
             [[ "$status" == "error" || "$status" == "crashed" || "$status" == "stale" ]] && status_color="${RED}"
