@@ -527,9 +527,7 @@ fi
 if [ "$WEBUI" = true ]; then
     ui_banner "Launching Web UI" "${GREEN}"
     echo ""
-    echo -e "  Starting Flask server on http://localhost:8080..."
-    echo -e "  Logs: $PROJECT_ROOT/logs/webui.log"
-    echo -e "  (Press Ctrl+C to stop)"
+    echo -e "  Starting Flask server..."
     echo ""
 
     # Ensure logs directory exists
@@ -539,8 +537,28 @@ if [ "$WEBUI" = true ]; then
         source "$SCRIPT_DIR/webui-venv/bin/activate"
     fi
 
-    # Run WebUI with output redirected to log file
-    python3 "$SCRIPT_DIR/../webui/app.py" >> "$PROJECT_ROOT/logs/webui.log" 2>&1
+    # Start WebUI in background with output redirected to log file
+    python3 "$SCRIPT_DIR/../webui/app.py" >> "$PROJECT_ROOT/logs/webui.log" 2>&1 &
+    WEBUI_PID=$!
+
+    # Wait for server to start
+    sleep 3
+
+    # Check if server is running
+    if kill -0 $WEBUI_PID 2>/dev/null; then
+        echo -e "${GREEN}✓${NC} Web UI started successfully!"
+        echo -e "${BLUE}➜${NC} Open in browser: ${CYAN}http://localhost:8080${NC}"
+        echo -e "${BLUE}➜${NC} Logs: $PROJECT_ROOT/logs/webui.log"
+        echo ""
+        echo -e "${YELLOW}Note: Press Ctrl+C to stop the Web UI server${NC}"
+        echo ""
+
+        # Keep script running to maintain the WebUI process
+        wait $WEBUI_PID
+    else
+        echo -e "${RED}✗${NC} Web UI failed to start. Check logs: $PROJECT_ROOT/logs/webui.log"
+        exit 1
+    fi
 elif [ "$DASHBOARD" = true ]; then
     echo -e "  Launching Unified Dashboard..."
     # Change to project root to ensure dashboard detects it
