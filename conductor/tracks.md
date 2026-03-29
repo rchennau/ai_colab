@@ -17,6 +17,7 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 - [x] **Milestone 11: Enhanced Installation & Launch Experience** (Done ✅)
 - [x] **Milestone 12: NVIDIA NIM nemoclaw Integration** (Done ✅)
 - [x] **Milestone 13: Advanced Fleet Autonomy** (Done ✅)
+- [x] **Milestone 14: Web Terminal & Browser-Based Workflow** (Done ✅)
 
 ---
 

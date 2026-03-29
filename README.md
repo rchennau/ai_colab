@@ -49,7 +49,11 @@ After installation:
 ./launch.sh
 ```
 
-Choose your agents and active modules. Start collaborating in the **Unified Command Center**—a high-density tmux dashboard featuring real-time hcom monitoring, automated conductor logs, and a dedicated user console.
+**Choose your launch mode:**
+
+1. **Dashboard (tmux-based)** - Traditional terminal layout with hcom TUI, agents, and conductor in separate panes
+2. **WebUI (Browser-based)** - Web interface with embedded xterm.js terminals for browser-only workflow
+3. **Debug Mode** - Single LLM CLI session with KB/RAG integration for troubleshooting
 
 📖 **Full Documentation:** See [`docs/INSTALLATION.md`](docs/INSTALLATION.md) for detailed installation guide.
 

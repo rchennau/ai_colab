@@ -1,8 +1,8 @@
 # ai-colab Project Map (Semantic Knowledge Base)
-Last Updated: 2026-03-26 (Fleet Autonomy & Self-Healing Update)
+Last Updated: 2026-03-28 (Web Terminal & Debug Mode)
 
 ## Orchestration Core (Hub)
-- `launch.sh`: Unified launcher for the Dashboard, Conductor, and Web UI. Refactored to use central `config-manager.sh` and dynamic terminal detection.
+- `launch.sh`: Unified launcher with **three launch modes**: Dashboard (tmux), WebUI (browser terminals), Debug Mode (KB/RAG troubleshooting).
 - `install.sh`: Master installer for project dependencies. Supports `--wizard`, `--reconfigure`, and `--auto` modes.
 - `scripts/install-wizard.sh`: Interactive terminal-based configuration wizard (5-step guided setup). Enhanced with 80-column ANSI UI.
 - `scripts/migrate-project.sh`: Project Detection & Migration Tool. Automatically imports existing AI integrations.
@@ -11,8 +11,9 @@ Last Updated: 2026-03-26 (Fleet Autonomy & Self-Healing Update)
 - `scripts/conductor-workflow.sh`: The heart of the orchestration logic. Now includes an **Autonomous Fleet Watchdog** for stale agent detection and recovery.
 - `scripts/conductor-dashboard.sh`: High-density TUI for real-time project monitoring. Features a new **Fleet Health** section for spoke monitoring.
 - `scripts/dashboard-launch.sh`: Enhanced dashboard launcher (v2.4) with pre-flight checks, session recovery, and dynamic module initialization.
-- `webui/app.py`: Flask-based API and web server (v2.0) with enhanced health checks, session management, and agent monitoring.
-- `webui/index.html`: Single-page application for the Web UI, featuring setup wizards, real-time monitoring, and pre-flight checks.
+- `scripts/debug-mode.sh`: **NEW** - Debug mode wrapper that loads project context (product.md, tech-stack.md, KB) for focused LLM troubleshooting sessions with KB/RAG integration.
+- `webui/app.py`: Flask-based API and web server (v2.3) with **PTY Manager** for web terminals, WebSocket streaming, and enhanced health checks.
+- `webui/index.html`: Single-page application featuring **xterm.js web terminals**, setup wizards, real-time monitoring, and tabbed terminal interface.
 - `scripts/module-manager.py`: Logic for discovering and registering manifest-based modular addons.
 - `Dockerfile`: Containerizes the Orchestration Hub and Web UI with optimized dependencies.
 - `docker-compose.yml`: Multi-service orchestration for the Hub, Web UI, and optional local LLM backends (vLLM).
