@@ -1,0 +1,67 @@
+[0;32m✓ PASS:[0m Clear logs endpoint (HTTP 200)
+
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;34m  Status Endpoint Tests[0m
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;32m✓ PASS:[0m Get system status (HTTP 200)
+[0;32m✓ PASS:[0m Status response contains installation field
+
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;34m  Terminal Endpoint Tests[0m
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;32m✓ PASS:[0m List active terminals (HTTP 200)
+[0;32m✓ PASS:[0m Spawn bash terminal (HTTP 200)
+[0;32m✓ PASS:[0m Close terminal (HTTP 200)
+[0;32m✓ PASS:[0m Terminal list response contains terminals field
+
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;34m  Conductor Endpoint Tests[0m
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;32m✓ PASS:[0m Get conductor status (HTTP 200)
+[0;32m✓ PASS:[0m Conductor status contains available field
+[0;32m✓ PASS:[0m Conductor status contains project_root field
+
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;34m  Configuration Endpoint Tests[0m
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;32m✓ PASS:[0m Get configuration (HTTP 200)
+[0;32m✓ PASS:[0m Update configuration (HTTP 200)
+[0;32m✓ PASS:[0m Validate configuration (HTTP 200)
+
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;34m  Profiles Endpoint Tests[0m
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;32m✓ PASS:[0m List profiles (HTTP 200)
+[0;32m✓ PASS:[0m Save profile (HTTP 200)
+[0;32m✓ PASS:[0m Delete profile (HTTP 200)
+
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;34m  Modules Endpoint Tests[0m
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;31m✗ FAIL:[0m List modules (Expected HTTP 200, got 500)
+  Response: {"error":"Failed to get modules"}
+[0;31m✗ FAIL:[0m Enable module (Expected HTTP 200, got 500)
+  Response: {"error":"Failed to enable module"}
+[0;31m✗ FAIL:[0m Disable module (Expected HTTP 200, got 500)
+  Response: {"error":"Failed to disable module"}
+
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;34m  Knowledge Base Endpoint Tests[0m
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;31m✗ FAIL:[0m Search knowledge base (Expected HTTP 200, got 500)
+  Response: {"error":"'<' not supported between instances of 'str' and 'int'"}
+[0;31m✗ FAIL:[0m Get KB index (Expected HTTP 200, got 404)
+  Response: <!doctype html>
+<html lang=en>
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>
+
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;34m  Shutdown Endpoint Tests[0m
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;32m✓ PASS:[0m Shutdown system (HTTP 200)
+
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;34m  Test Summary[0m
+[0;34m═══════════════════════════════════════════════════════════[0m

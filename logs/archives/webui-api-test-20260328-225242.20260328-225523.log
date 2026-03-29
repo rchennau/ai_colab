@@ -1,0 +1,107 @@
+
+[0;32m╔══════════════════════════════════════════════════════════╗[0m
+[0;32m║     ai-colab WebUI API Test Suite v1.0                   ║[0m
+[0;32m╚══════════════════════════════════════════════════════════╝[0m
+
+Test Log: /home/rchennau/ai_colab/logs/webui-api-test-20260328-225242.log
+API Base: http://localhost:8080
+
+[0;32m✓ WebUI is running[0m
+
+
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;34m  Health Endpoint Tests[0m
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;31m✗ FAIL:[0m Health check endpoint (Expected HTTP 200, got 503)
+  Response: {"components":{"hcom":{"details":{"agent_count":3,"agents":[{"name":"○","status":"conductor_webui"},{"name":"○","status":"user_console"},{"name":"○","status":"webui"}],"installed":true,"path":"/home/rchennau/.local/bin/hcom","version":"hcom 0.7.5"},"message":"hcom available with 3 agent(s)","status":"healthy"},"system":{"details":{"disk_free_mb":674587.31,"disk_total_mb":1031018.43,"disk_used_percent":34.57,"load_average":{"15min":1.35,"1min":1.54,"5min":1.8},"memory_available_mb":10083.64,"memory_used_percent":43.9},"message":"All system resources within normal limits","status":"healthy"},"tmux":{"details":{"active_sessions":[],"installed":true,"path":"/usr/bin/tmux","session_count":0,"version":"tmux 3.4"},"message":"tmux available with 0 active session(s)","status":"healthy"},"vllm":{"details":{"error":"Connection timeout","host":"192.168.0.193","port":"8000"},"message":"vLLM connection timeout","status":"unhealthy"},"webui":{"details":{"listening":true,"port":8080},"message":"Web UI is running on port 8080","status":"healthy"}},"status":"unhealthy","timestamp":"2026-03-28T22:52:53.155577","uptime_seconds":10.26,"version":"2.2.0"}
+[0;32m✓ PASS:[0m Detailed health check endpoint (HTTP 200)
+[0;32m✓ PASS:[0m Health logs endpoint (HTTP 200)
+[0;32m✓ PASS:[0m Health response contains status field
+[0;32m✓ PASS:[0m Health response contains components field
+
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;34m  Logs Endpoint Tests[0m
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;31m✗ FAIL:[0m Get logs (default 10 lines) (Expected HTTP 200, got 500)
+  Response: {"error":"bad operand type for unary -: 'str'"}
+[0;32m✓ PASS:[0m Get logs (50 lines) (HTTP 200)
+[0;31m✗ FAIL:[0m Logs response missing logs field
+[0;31m✗ FAIL:[0m Logs response missing count field
+[0;31m✗ FAIL:[0m Rotate logs endpoint (Expected HTTP 200, got 405)
+  Response: <!doctype html>
+<html lang=en>
+<title>405 Method Not Allowed</title>
+<h1>Method Not Allowed</h1>
+<p>The method is not allowed for the requested URL.</p>
+[0;31m✗ FAIL:[0m Clear logs endpoint (Expected HTTP 200, got 405)
+  Response: <!doctype html>
+<html lang=en>
+<title>405 Method Not Allowed</title>
+<h1>Method Not Allowed</h1>
+<p>The method is not allowed for the requested URL.</p>
+
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;34m  Status Endpoint Tests[0m
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;32m✓ PASS:[0m Get system status (HTTP 200)
+[0;32m✓ PASS:[0m Status response contains installation field
+
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;34m  Terminal Endpoint Tests[0m
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;32m✓ PASS:[0m List active terminals (HTTP 200)
+[0;32m✓ PASS:[0m Spawn bash terminal (HTTP 200)
+[0;32m✓ PASS:[0m Close terminal (HTTP 200)
+[0;32m✓ PASS:[0m Terminal list response contains terminals field
+
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;34m  Conductor Endpoint Tests[0m
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;32m✓ PASS:[0m Get conductor status (HTTP 200)
+[0;32m✓ PASS:[0m Conductor status contains available field
+[0;32m✓ PASS:[0m Conductor status contains project_root field
+
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;34m  Configuration Endpoint Tests[0m
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;32m✓ PASS:[0m Get configuration (HTTP 200)
+[0;32m✓ PASS:[0m Update configuration (HTTP 200)
+[0;32m✓ PASS:[0m Validate configuration (HTTP 200)
+
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;34m  Profiles Endpoint Tests[0m
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;32m✓ PASS:[0m List profiles (HTTP 200)
+[0;32m✓ PASS:[0m Save profile (HTTP 200)
+[0;32m✓ PASS:[0m Delete profile (HTTP 200)
+
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;34m  Modules Endpoint Tests[0m
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;31m✗ FAIL:[0m List modules (Expected HTTP 200, got 500)
+  Response: {"error":"name 'SCRIPT_DIR' is not defined"}
+[0;31m✗ FAIL:[0m Enable module (Expected HTTP 200, got 500)
+  Response: {"error":"name 'SCRIPT_DIR' is not defined"}
+[0;31m✗ FAIL:[0m Disable module (Expected HTTP 200, got 500)
+  Response: {"error":"name 'SCRIPT_DIR' is not defined"}
+
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;34m  Knowledge Base Endpoint Tests[0m
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;31m✗ FAIL:[0m Search knowledge base (Expected HTTP 200, got 500)
+  Response: {"error":"'<' not supported between instances of 'str' and 'int'"}
+[0;31m✗ FAIL:[0m Get KB index (Expected HTTP 200, got 404)
+  Response: <!doctype html>
+<html lang=en>
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>
+
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;34m  Shutdown Endpoint Tests[0m
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;32m✓ PASS:[0m Shutdown system (HTTP 200)
+
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;34m  Test Summary[0m
+[0;34m═══════════════════════════════════════════════════════════[0m

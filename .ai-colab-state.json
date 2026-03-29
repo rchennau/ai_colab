@@ -45,9 +45,25 @@
     {
       "timestamp": "2026-03-24T14:27:44.845206",
       "description": "Loaded profile: full"
+    },
+    {
+      "timestamp": "2026-03-28T22:20:56.729935",
+      "description": "Loaded profile: default"
+    },
+    {
+      "timestamp": "2026-03-28T22:36:56.507023",
+      "description": "Loaded profile: default"
+    },
+    {
+      "timestamp": "2026-03-28T22:36:58.505646",
+      "description": "Loaded profile: default"
+    },
+    {
+      "timestamp": "2026-03-28T22:37:13.876245",
+      "description": "Loaded profile: minimal"
     }
   ],
-  "last_modified": "2026-03-25T19:15:22.355814",
-  "config_changed": "2026-03-24T21:25:22-07:00",
-  "last_launch_choice": "3"
+  "last_modified": "2026-03-28T22:55:24.264530",
+  "config_changed": "2026-03-28T22:55:24.264321",
+  "last_launch_choice": "2"
 }

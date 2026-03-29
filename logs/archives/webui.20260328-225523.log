@@ -1,0 +1,1445 @@
+[0;32m[2026-03-28T20:08:41-0700] [INFO] [ai_colab] [18263] Logging initialized (level: INFO, dir: /home/rchennau/.ai-colab/logs)[0m
+[0;32m[2026-03-28T20:08:41-0700] [INFO] [ai_colab.webui] [18263] Rate limiting enabled: 100 req/min, 1000 req/hour[0m
+[0;32m[2026-03-28T20:08:41-0700] [INFO] [ai_colab.webui] [18263] Rate limiting enabled: 100 req/min, 1000 req/hour[0m
+[0;32m[2026-03-28T20:08:41-0700] [INFO] [ai_colab.webui] [18263] Real-time update thread started[0m
+[0;32m[2026-03-28T20:08:41-0700] [INFO] [ai_colab.webui] [18263] Real-time update thread started[0m
+[0;32m[2026-03-28T20:08:41-0700] [INFO] [ai_colab.webui] [18263] Starting ai-colab Web UI server...[0m
+[0;32m[2026-03-28T20:08:41-0700] [INFO] [ai_colab.webui] [18263] Starting ai-colab Web UI server...[0m
+ * Serving Flask app 'app'
+ * Debug mode: off
+Address already in use
+Port 8080 is in use by another program. Either identify and stop that program, or start the server with a different port.
+[0;32m[2026-03-28T20:34:07-0700] [INFO] [ai_colab] [22866] Logging initialized (level: INFO, dir: /home/rchennau/.ai-colab/logs)[0m
+[0;32m[2026-03-28T20:34:07-0700] [INFO] [ai_colab.webui] [22866] Rate limiting enabled: 100 req/min, 1000 req/hour[0m
+[0;32m[2026-03-28T20:34:07-0700] [INFO] [ai_colab.webui] [22866] Rate limiting enabled: 100 req/min, 1000 req/hour[0m
+[0;32m[2026-03-28T20:34:07-0700] [INFO] [ai_colab.webui] [22866] PTY manager initialized for web terminals[0m
+[0;32m[2026-03-28T20:34:07-0700] [INFO] [ai_colab.webui] [22866] PTY manager initialized for web terminals[0m
+[0;32m[2026-03-28T20:34:07-0700] [INFO] [ai_colab.webui] [22866] Real-time update thread started[0m
+[0;32m[2026-03-28T20:34:07-0700] [INFO] [ai_colab.webui] [22866] Real-time update thread started[0m
+[0;32m[2026-03-28T20:34:07-0700] [INFO] [ai_colab.webui] [22866] Starting ai-colab Web UI server...[0m
+[0;32m[2026-03-28T20:34:07-0700] [INFO] [ai_colab.webui] [22866] Starting ai-colab Web UI server...[0m
+ * Serving Flask app 'app'
+ * Debug mode: off
+Address already in use
+Port 8080 is in use by another program. Either identify and stop that program, or start the server with a different port.
+[0;32m[2026-03-28T20:46:10-0700] [INFO] [ai_colab] [24926] Logging initialized (level: INFO, dir: /home/rchennau/.ai-colab/logs)[0m
+[0;32m[2026-03-28T20:46:10-0700] [INFO] [ai_colab.webui] [24926] Rate limiting enabled: 100 req/min, 1000 req/hour[0m
+[0;32m[2026-03-28T20:46:10-0700] [INFO] [ai_colab.webui] [24926] Rate limiting enabled: 100 req/min, 1000 req/hour[0m
+[0;32m[2026-03-28T20:46:10-0700] [INFO] [ai_colab.webui] [24926] PTY manager initialized for web terminals[0m
+[0;32m[2026-03-28T20:46:10-0700] [INFO] [ai_colab.webui] [24926] PTY manager initialized for web terminals[0m
+[0;32m[2026-03-28T20:46:10-0700] [INFO] [ai_colab.webui] [24926] Real-time update thread started[0m
+[0;32m[2026-03-28T20:46:10-0700] [INFO] [ai_colab.webui] [24926] Real-time update thread started[0m
+[0;32m[2026-03-28T20:46:10-0700] [INFO] [ai_colab.webui] [24926] Starting ai-colab Web UI server...[0m
+[0;32m[2026-03-28T20:46:10-0700] [INFO] [ai_colab.webui] [24926] Starting ai-colab Web UI server...[0m
+ * Serving Flask app 'app'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8080
+ * Running on http://192.168.164.116:8080
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [28/Mar/2026 20:46:19] "GET / HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:46:20-0700] [INFO] [ai_colab.api] [24926] API GET /api/status -> 200 (19.15ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:46:20] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:46:20-0700] [INFO] [ai_colab.api] [24926] API GET /api/conductor/status -> 200 (15.04ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:46:20] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:46:21-0700] [INFO] [ai_colab.webui] [24926] Client connected to WebSocket[0m
+[0;32m[2026-03-28T20:46:21-0700] [INFO] [ai_colab.webui] [24926] Client connected to WebSocket[0m
+[0;32m[2026-03-28T20:46:21-0700] [INFO] [ai_colab.webui] [24926] Client subscribed to status updates[0m
+[0;32m[2026-03-28T20:46:21-0700] [INFO] [ai_colab.webui] [24926] Client subscribed to status updates[0m
+[0;32m[2026-03-28T20:46:51-0700] [INFO] [ai_colab.api] [24926] API GET /api/status -> 200 (14.55ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:46:51] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:46:51-0700] [INFO] [ai_colab.api] [24926] API GET /api/conductor/status -> 200 (14.04ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:46:51] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:47:15-0700] [INFO] [ai_colab.webui] [24926] Backup created: /home/rchennau/ai_colab/scripts/../config/backups/config.20260328-204715.toml[0m
+[0;32m[2026-03-28T20:47:15-0700] [INFO] [ai_colab.webui] [24926] Backup created: /home/rchennau/ai_colab/scripts/../config/backups/config.20260328-204715.toml[0m
+[0;32m[2026-03-28T20:47:15-0700] [INFO] [ai_colab.webui] [24926] Configuration updated successfully[0m
+[0;32m[2026-03-28T20:47:15-0700] [INFO] [ai_colab.webui] [24926] Configuration updated successfully[0m
+[0;32m[2026-03-28T20:47:15-0700] [INFO] [ai_colab.api] [24926] API PUT /api/config -> 200 (16.11ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:47:15] "PUT /api/config HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:47:16-0700] [INFO] [ai_colab.api] [24926] API POST /api/install -> 404 (0.38ms) from 127.0.0.1[0m
+[1;33m[2026-03-28T20:47:16-0700] [WARNING] [ai_colab.webui] [24926] Client error: POST /api/install -> 404[0m
+[1;33m[2026-03-28T20:47:16-0700] [WARNING] [ai_colab.webui] [24926] Client error: POST /api/install -> 404[0m
+127.0.0.1 - - [28/Mar/2026 20:47:16] "[33mPOST /api/install HTTP/1.1[0m" 404 -
+[0;32m[2026-03-28T20:47:18-0700] [INFO] [ai_colab.api] [24926] API GET /api/status -> 200 (7.88ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:47:18] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:47:18-0700] [INFO] [ai_colab.api] [24926] API GET /api/status -> 200 (10.43ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:47:18] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:47:18-0700] [INFO] [ai_colab.api] [24926] API GET /api/conductor/status -> 200 (9.78ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:47:18] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:47:18-0700] [INFO] [ai_colab.api] [24926] API GET /api/conductor/status -> 200 (16.76ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:47:18] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:47:21-0700] [INFO] [ai_colab.api] [24926] API GET /api/status -> 200 (16.97ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:47:21] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:47:21-0700] [INFO] [ai_colab.api] [24926] API GET /api/conductor/status -> 200 (13.03ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:47:21] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:47:51-0700] [INFO] [ai_colab.api] [24926] API GET /api/status -> 200 (8.76ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:47:51] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:47:51-0700] [INFO] [ai_colab.api] [24926] API GET /api/conductor/status -> 200 (8.92ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:47:51] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:48:21-0700] [INFO] [ai_colab.api] [24926] API GET /api/status -> 200 (10.16ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:48:21] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:48:21-0700] [INFO] [ai_colab.api] [24926] API GET /api/conductor/status -> 200 (11.30ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:48:21] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:48:25-0700] [INFO] [ai_colab.webui] [24926] Console command sent: !status to @conductor_alienware_14791[0m
+[0;32m[2026-03-28T20:48:25-0700] [INFO] [ai_colab.webui] [24926] Console command sent: !status to @conductor_alienware_14791[0m
+[0;32m[2026-03-28T20:48:25-0700] [INFO] [ai_colab.api] [24926] API POST /api/console/send -> 200 (246.21ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:48:25] "POST /api/console/send HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:48:33-0700] [INFO] [ai_colab.api] [24926] API POST /api/dashboard/launch -> 200 (5.30ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:48:33] "POST /api/dashboard/launch HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:48:37-0700] [INFO] [ai_colab.api] [24926] API GET /api/session/status -> 200 (28.50ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:48:37] "GET /api/session/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:48:42-0700] [INFO] [ai_colab.webui] [24926] Console command sent: !status to @conductor_alienware_14791[0m
+[0;32m[2026-03-28T20:48:42-0700] [INFO] [ai_colab.webui] [24926] Console command sent: !status to @conductor_alienware_14791[0m
+[0;32m[2026-03-28T20:48:42-0700] [INFO] [ai_colab.api] [24926] API POST /api/console/send -> 200 (247.65ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:48:42] "POST /api/console/send HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:48:46-0700] [INFO] [ai_colab.agent_coordination] [24926] AgentCoordination initialized: /home/rchennau/.ai-colab/agent_coordination.db[0m
+[0;32m[2026-03-28T20:48:46-0700] [INFO] [ai_colab.agent_coordination] [24926] FederatedLearning initialized: /home/rchennau/.ai-colab/federated_learning.db[0m
+[0;32m[2026-03-28T20:48:46-0700] [INFO] [ai_colab.agent_coordination] [24926] AgentFederation initialized[0m
+[0;32m[2026-03-28T20:48:46-0700] [INFO] [ai_colab.api] [24926] API GET /api/agents -> 200 (20.97ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:48:46] "GET /api/agents HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:48:48-0700] [INFO] [ai_colab.api] [24926] API GET /api/config -> 200 (1.66ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:48:48] "GET /api/config HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:48:51-0700] [INFO] [ai_colab.api] [24926] API GET /api/status -> 200 (15.65ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:48:51] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:48:52-0700] [INFO] [ai_colab.api] [24926] API GET /api/conductor/status -> 200 (13.30ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:48:52] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:48:53-0700] [INFO] [ai_colab.api] [24926] API POST /api/config/validate -> 200 (17.17ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:48:53] "POST /api/config/validate HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:48:54-0700] [INFO] [ai_colab.webui] [24926] Backup created: /home/rchennau/ai_colab/scripts/../config/backups/config.20260328-204854.toml[0m
+[0;32m[2026-03-28T20:48:54-0700] [INFO] [ai_colab.webui] [24926] Backup created: /home/rchennau/ai_colab/scripts/../config/backups/config.20260328-204854.toml[0m
+[0;32m[2026-03-28T20:48:54-0700] [INFO] [ai_colab.webui] [24926] Configuration updated successfully[0m
+[0;32m[2026-03-28T20:48:54-0700] [INFO] [ai_colab.webui] [24926] Configuration updated successfully[0m
+[0;32m[2026-03-28T20:48:54-0700] [INFO] [ai_colab.api] [24926] API PUT /api/config -> 200 (27.51ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:48:54] "PUT /api/config HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:49:04-0700] [INFO] [ai_colab.api] [24926] API GET /api/logs -> 200 (33.64ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:49:04] "GET /api/logs?lines=100 HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:49:14-0700] [INFO] [ai_colab.api] [24926] API GET /api/status -> 200 (13.34ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:49:14] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:49:14-0700] [INFO] [ai_colab.api] [24926] API GET /api/conductor/status -> 200 (13.12ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:49:14] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:49:19-0700] [INFO] [ai_colab.api] [24926] API GET /api/status -> 200 (11.30ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:49:19] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:49:19-0700] [INFO] [ai_colab.api] [24926] API GET /api/conductor/status -> 200 (11.41ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:49:19] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:49:50-0700] [INFO] [ai_colab.api] [24926] API GET /api/status -> 200 (28.83ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:49:50] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:49:50-0700] [INFO] [ai_colab.api] [24926] API GET /api/conductor/status -> 200 (38.94ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:49:50] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:50:20-0700] [INFO] [ai_colab.api] [24926] API GET /api/status -> 200 (14.88ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:50:20] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:50:20-0700] [INFO] [ai_colab.api] [24926] API GET /api/conductor/status -> 200 (20.41ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:50:20] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:50:50-0700] [INFO] [ai_colab.api] [24926] API GET /api/status -> 200 (30.51ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:50:50] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:50:50-0700] [INFO] [ai_colab.api] [24926] API GET /api/conductor/status -> 200 (10.79ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:50:50] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:51:20-0700] [INFO] [ai_colab.api] [24926] API GET /api/status -> 200 (8.82ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:51:20] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:51:20-0700] [INFO] [ai_colab.api] [24926] API GET /api/conductor/status -> 200 (8.41ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:51:20] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:51:50-0700] [INFO] [ai_colab.api] [24926] API GET /api/status -> 200 (12.12ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:51:50] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:51:50-0700] [INFO] [ai_colab.api] [24926] API GET /api/conductor/status -> 200 (17.27ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:51:50] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:52:20-0700] [INFO] [ai_colab.api] [24926] API GET /api/status -> 200 (10.71ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:52:20] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:52:21-0700] [INFO] [ai_colab.api] [24926] API GET /api/conductor/status -> 200 (20.19ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:52:21] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:52:50-0700] [INFO] [ai_colab.api] [24926] API GET /api/status -> 200 (12.65ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:52:50] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:52:51-0700] [INFO] [ai_colab.api] [24926] API GET /api/conductor/status -> 200 (9.95ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:52:51] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:53:21-0700] [INFO] [ai_colab.api] [24926] API GET /api/status -> 200 (10.26ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:53:21] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:53:21-0700] [INFO] [ai_colab.api] [24926] API GET /api/conductor/status -> 200 (8.58ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:53:21] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:53:45-0700] [INFO] [ai_colab.webui] [24926] Spawned terminal 1 (conductor) with PID 25535[0m
+[0;32m[2026-03-28T20:53:45-0700] [INFO] [ai_colab.webui] [24926] Spawned terminal 1 (conductor) with PID 25535[0m
+[0;32m[2026-03-28T20:53:45-0700] [INFO] [ai_colab.api] [24926] API POST /api/terminal/spawn -> 200 (31.95ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:53:45] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:53:51-0700] [INFO] [ai_colab.api] [24926] API GET /api/status -> 200 (18.82ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:53:51] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:53:51-0700] [INFO] [ai_colab.api] [24926] API GET /api/conductor/status -> 200 (16.46ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:53:51] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:54:21-0700] [INFO] [ai_colab.api] [24926] API GET /api/status -> 200 (8.74ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:54:21] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:54:21-0700] [INFO] [ai_colab.api] [24926] API GET /api/conductor/status -> 200 (12.13ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:54:21] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:54:51-0700] [INFO] [ai_colab.api] [24926] API GET /api/status -> 200 (26.06ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:54:51] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:54:52-0700] [INFO] [ai_colab.api] [24926] API GET /api/conductor/status -> 200 (20.35ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:54:52] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:55:19-0700] [INFO] [ai_colab.api] [24926] API GET /api/status -> 200 (17.13ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:55:19] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:55:19-0700] [INFO] [ai_colab.api] [24926] API GET /api/conductor/status -> 200 (15.38ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:55:19] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:55:21-0700] [INFO] [ai_colab.api] [24926] API GET /api/agents -> 200 (0.64ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:55:21] "GET /api/agents HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:55:50-0700] [INFO] [ai_colab.api] [24926] API GET /api/status -> 200 (13.30ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:55:50] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:55:50-0700] [INFO] [ai_colab.api] [24926] API GET /api/conductor/status -> 200 (20.11ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:55:50] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:55:55-0700] [INFO] [ai_colab.webui] [24926] Spawned terminal 2 (qwen) with PID 25813[0m
+[0;32m[2026-03-28T20:55:55-0700] [INFO] [ai_colab.webui] [24926] Spawned terminal 2 (qwen) with PID 25813[0m
+[0;32m[2026-03-28T20:55:55-0700] [INFO] [ai_colab.api] [24926] API POST /api/terminal/spawn -> 200 (17.74ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:55:55] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:55:56-0700] [INFO] [ai_colab.webui] [24926] Closed terminal 2[0m
+[0;32m[2026-03-28T20:55:56-0700] [INFO] [ai_colab.webui] [24926] Closed terminal 2[0m
+[0;32m[2026-03-28T20:56:20-0700] [INFO] [ai_colab.api] [24926] API GET /api/status -> 200 (9.14ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:56:20] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:56:20-0700] [INFO] [ai_colab.api] [24926] API GET /api/conductor/status -> 200 (8.75ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:56:20] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:56:50-0700] [INFO] [ai_colab.api] [24926] API GET /api/status -> 200 (8.52ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:56:50] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:56:50-0700] [INFO] [ai_colab.api] [24926] API GET /api/conductor/status -> 200 (11.64ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:56:50] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:56:57-0700] [INFO] [ai_colab.webui] [24926] Spawned terminal 3 (gemini) with PID 25870[0m
+[0;32m[2026-03-28T20:56:57-0700] [INFO] [ai_colab.webui] [24926] Spawned terminal 3 (gemini) with PID 25870[0m
+[0;32m[2026-03-28T20:56:57-0700] [INFO] [ai_colab.api] [24926] API POST /api/terminal/spawn -> 200 (29.52ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:56:57] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:56:57-0700] [INFO] [ai_colab.webui] [24926] Closed terminal 3[0m
+[0;32m[2026-03-28T20:56:57-0700] [INFO] [ai_colab.webui] [24926] Closed terminal 3[0m
+[0;32m[2026-03-28T20:57:01-0700] [INFO] [ai_colab.webui] [24926] Spawned terminal 4 (debug) with PID 25879[0m
+[0;32m[2026-03-28T20:57:01-0700] [INFO] [ai_colab.webui] [24926] Spawned terminal 4 (debug) with PID 25879[0m
+[0;32m[2026-03-28T20:57:01-0700] [INFO] [ai_colab.api] [24926] API POST /api/terminal/spawn -> 200 (12.30ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:57:01] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:57:20-0700] [INFO] [ai_colab.api] [24926] API GET /api/status -> 200 (9.58ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:57:20] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:57:20-0700] [INFO] [ai_colab.api] [24926] API GET /api/conductor/status -> 200 (10.32ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:57:20] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:57:50-0700] [INFO] [ai_colab.api] [24926] API GET /api/status -> 200 (8.61ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:57:50] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:57:50-0700] [INFO] [ai_colab.api] [24926] API GET /api/conductor/status -> 200 (10.23ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:57:50] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:57:55-0700] [INFO] [ai_colab.webui] [24926] Closed terminal 1[0m
+[0;32m[2026-03-28T20:57:55-0700] [INFO] [ai_colab.webui] [24926] Closed terminal 1[0m
+[0;32m[2026-03-28T20:57:55-0700] [INFO] [ai_colab.api] [24926] API POST /api/terminal/close -> 200 (3.53ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:57:55] "POST /api/terminal/close HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:57:55-0700] [INFO] [ai_colab.api] [24926] API POST /api/terminal/close -> 200 (0.39ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:57:55] "POST /api/terminal/close HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:57:55-0700] [INFO] [ai_colab.api] [24926] API POST /api/terminal/close -> 200 (0.63ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:57:55] "POST /api/terminal/close HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:57:55-0700] [INFO] [ai_colab.webui] [24926] Closed terminal 4[0m
+[0;32m[2026-03-28T20:57:55-0700] [INFO] [ai_colab.webui] [24926] Closed terminal 4[0m
+[0;32m[2026-03-28T20:57:55-0700] [INFO] [ai_colab.api] [24926] API POST /api/terminal/close -> 200 (2.01ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:57:55] "POST /api/terminal/close HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:58:04-0700] [INFO] [ai_colab.api] [24926] API GET /api/status -> 200 (13.50ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:58:04] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:58:05-0700] [INFO] [ai_colab.api] [24926] API GET /api/conductor/status -> 200 (24.75ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:58:05] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:58:04-0700] [INFO] [ai_colab.webui] [24926] Tmux session 'hcom-dashboard' killed[0m
+[0;32m[2026-03-28T20:58:04-0700] [INFO] [ai_colab.webui] [24926] Tmux session 'hcom-dashboard' killed[0m
+[0;32m[2026-03-28T20:58:05-0700] [INFO] [ai_colab.webui] [24926] Shutdown complete. Tmux killed: True, Process patterns: 3[0m
+[0;32m[2026-03-28T20:58:05-0700] [INFO] [ai_colab.webui] [24926] Shutdown complete. Tmux killed: True, Process patterns: 3[0m
+[0;32m[2026-03-28T20:58:05-0700] [INFO] [ai_colab.api] [24926] API POST /api/shutdown -> 200 (161.64ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:58:05] "POST /api/shutdown HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:58:07-0700] [INFO] [ai_colab.api] [24926] API GET /api/agents -> 200 (0.32ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:58:07] "GET /api/agents HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:58:07-0700] [INFO] [ai_colab.api] [24926] API GET /api/session/status -> 200 (8.35ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:58:07] "GET /api/session/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:58:09-0700] [INFO] [ai_colab.webui] [24926] Client disconnected from WebSocket[0m
+[0;32m[2026-03-28T20:58:09-0700] [INFO] [ai_colab.webui] [24926] Client disconnected from WebSocket[0m
+127.0.0.1 - - [28/Mar/2026 20:58:09] "[35m[1mGET /socket.io/?EIO=4&transport=websocket HTTP/1.1[0m" 500 -
+Error on request:
+Traceback (most recent call last):
+  File "/home/rchennau/miniconda3/envs/ai_agents/lib/python3.10/site-packages/werkzeug/serving.py", line 371, in run_wsgi
+    execute(self.server.app)
+  File "/home/rchennau/miniconda3/envs/ai_agents/lib/python3.10/site-packages/werkzeug/serving.py", line 337, in execute
+    write(b"")
+  File "/home/rchennau/miniconda3/envs/ai_agents/lib/python3.10/site-packages/werkzeug/serving.py", line 262, in write
+    assert status_set is not None, "write() before start_response"
+AssertionError: write() before start_response
+[0;32m[2026-03-28T21:05:54-0700] [INFO] [ai_colab] [26690] Logging initialized (level: INFO, dir: /home/rchennau/.ai-colab/logs)[0m
+[0;32m[2026-03-28T21:05:54-0700] [INFO] [ai_colab.webui] [26690] Rate limiting enabled: 100 req/min, 1000 req/hour[0m
+[0;32m[2026-03-28T21:05:54-0700] [INFO] [ai_colab.webui] [26690] Rate limiting enabled: 100 req/min, 1000 req/hour[0m
+[0;32m[2026-03-28T21:05:54-0700] [INFO] [ai_colab.webui] [26690] PTY manager initialized for web terminals[0m
+[0;32m[2026-03-28T21:05:54-0700] [INFO] [ai_colab.webui] [26690] PTY manager initialized for web terminals[0m
+[0;32m[2026-03-28T21:05:54-0700] [INFO] [ai_colab.webui] [26690] Real-time update thread started[0m
+[0;32m[2026-03-28T21:05:54-0700] [INFO] [ai_colab.webui] [26690] Real-time update thread started[0m
+[0;32m[2026-03-28T21:05:54-0700] [INFO] [ai_colab.webui] [26690] Starting ai-colab Web UI server...[0m
+[0;32m[2026-03-28T21:05:54-0700] [INFO] [ai_colab.webui] [26690] Starting ai-colab Web UI server...[0m
+ * Serving Flask app 'app'
+ * Debug mode: off
+Address already in use
+Port 8080 is in use by another program. Either identify and stop that program, or start the server with a different port.
+[0;32m[2026-03-28T21:12:46-0700] [INFO] [ai_colab] [26931] Logging initialized (level: INFO, dir: /home/rchennau/.ai-colab/logs)[0m
+[0;32m[2026-03-28T21:12:46-0700] [INFO] [ai_colab.webui] [26931] Rate limiting enabled: 100 req/min, 1000 req/hour[0m
+[0;32m[2026-03-28T21:12:46-0700] [INFO] [ai_colab.webui] [26931] Rate limiting enabled: 100 req/min, 1000 req/hour[0m
+[0;32m[2026-03-28T21:12:47-0700] [INFO] [ai_colab.webui] [26931] PTY manager initialized for web terminals[0m
+[0;32m[2026-03-28T21:12:47-0700] [INFO] [ai_colab.webui] [26931] PTY manager initialized for web terminals[0m
+[0;32m[2026-03-28T21:12:47-0700] [INFO] [ai_colab.webui] [26931] Real-time update thread started[0m
+[0;32m[2026-03-28T21:12:47-0700] [INFO] [ai_colab.webui] [26931] Real-time update thread started[0m
+[0;32m[2026-03-28T21:12:47-0700] [INFO] [ai_colab.webui] [26931] Starting ai-colab Web UI server...[0m
+[0;32m[2026-03-28T21:12:47-0700] [INFO] [ai_colab.webui] [26931] Starting ai-colab Web UI server...[0m
+ * Serving Flask app 'app'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8080
+ * Running on http://192.168.164.116:8080
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [28/Mar/2026 21:12:54] "GET / HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:12:55-0700] [INFO] [ai_colab.api] [26931] API GET /api/status -> 200 (18.55ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:12:55] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:12:55-0700] [INFO] [ai_colab.webui] [26931] Client connected to WebSocket[0m
+[0;32m[2026-03-28T21:12:55-0700] [INFO] [ai_colab.webui] [26931] Client connected to WebSocket[0m
+[0;32m[2026-03-28T21:12:55-0700] [INFO] [ai_colab.webui] [26931] Client subscribed to status updates[0m
+[0;32m[2026-03-28T21:12:55-0700] [INFO] [ai_colab.webui] [26931] Client subscribed to status updates[0m
+[0;32m[2026-03-28T21:13:07-0700] [INFO] [ai_colab.agent_coordination] [26931] AgentCoordination initialized: /home/rchennau/.ai-colab/agent_coordination.db[0m
+[0;32m[2026-03-28T21:13:07-0700] [INFO] [ai_colab.agent_coordination] [26931] FederatedLearning initialized: /home/rchennau/.ai-colab/federated_learning.db[0m
+[0;32m[2026-03-28T21:13:07-0700] [INFO] [ai_colab.agent_coordination] [26931] AgentFederation initialized[0m
+[0;32m[2026-03-28T21:13:07-0700] [INFO] [ai_colab.api] [26931] API GET /api/agents -> 200 (22.54ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:13:07] "GET /api/agents HTTP/1.1" 200 -
+[1;33m[2026-03-28T21:13:12-0700] [WARNING] [ai_colab.webui] [26931] Failed to send command: → Update available: hcom v0.7.7 (curl -fsSL https://raw.githubusercontent.com/aannoo/hcom/main/install.sh | sh)
+Error: @mentions to non-existent or stopped agents (or you used '@' char for stuff that wasn't agent name): @conductor
+Available: webui, bigboss[0m
+[1;33m[2026-03-28T21:13:12-0700] [WARNING] [ai_colab.webui] [26931] Failed to send command: → Update available: hcom v0.7.7 (curl -fsSL https://raw.githubusercontent.com/aannoo/hcom/main/install.sh | sh)
+Error: @mentions to non-existent or stopped agents (or you used '@' char for stuff that wasn't agent name): @conductor
+Available: webui, bigboss[0m
+[0;32m[2026-03-28T21:13:12-0700] [INFO] [ai_colab.api] [26931] API POST /api/console/send -> 500 (155.66ms) from 127.0.0.1[0m
+[0;31m[2026-03-28T21:13:12-0700] [ERROR] [ai_colab.webui] [26931] Server error: POST /api/console/send -> 500[0m
+[0;31m[2026-03-28T21:13:12-0700] [ERROR] [ai_colab.webui] [26931] Server error: POST /api/console/send -> 500[0m
+127.0.0.1 - - [28/Mar/2026 21:13:12] "[35m[1mPOST /api/console/send HTTP/1.1[0m" 500 -
+[0;32m[2026-03-28T21:13:18-0700] [INFO] [ai_colab.webui] [26931] Spawned terminal 1 (conductor) with PID 26977[0m
+[0;32m[2026-03-28T21:13:18-0700] [INFO] [ai_colab.webui] [26931] Spawned terminal 1 (conductor) with PID 26977[0m
+[0;32m[2026-03-28T21:13:18-0700] [INFO] [ai_colab.api] [26931] API POST /api/terminal/spawn -> 200 (13.92ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:13:18] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:13:20-0700] [INFO] [ai_colab.webui] [26931] Spawned terminal 2 (qwen) with PID 27134[0m
+[0;32m[2026-03-28T21:13:20-0700] [INFO] [ai_colab.webui] [26931] Spawned terminal 2 (qwen) with PID 27134[0m
+[0;32m[2026-03-28T21:13:20-0700] [INFO] [ai_colab.api] [26931] API POST /api/terminal/spawn -> 200 (19.79ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:13:20] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:13:20-0700] [INFO] [ai_colab.webui] [26931] Closed terminal 2[0m
+[0;32m[2026-03-28T21:13:20-0700] [INFO] [ai_colab.webui] [26931] Closed terminal 2[0m
+[0;32m[2026-03-28T21:13:25-0700] [INFO] [ai_colab.api] [26931] API GET /api/status -> 200 (8.42ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:13:25] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:13:41-0700] [INFO] [ai_colab.webui] [26931] Spawned terminal 3 (gemini) with PID 27156[0m
+[0;32m[2026-03-28T21:13:41-0700] [INFO] [ai_colab.webui] [26931] Spawned terminal 3 (gemini) with PID 27156[0m
+[0;32m[2026-03-28T21:13:41-0700] [INFO] [ai_colab.api] [26931] API POST /api/terminal/spawn -> 200 (28.50ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:13:41] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:13:41-0700] [INFO] [ai_colab.webui] [26931] Closed terminal 3[0m
+[0;32m[2026-03-28T21:13:41-0700] [INFO] [ai_colab.webui] [26931] Closed terminal 3[0m
+[0;32m[2026-03-28T21:13:45-0700] [INFO] [ai_colab.webui] [26931] Spawned terminal 4 (user-console) with PID 27164[0m
+[0;32m[2026-03-28T21:13:45-0700] [INFO] [ai_colab.webui] [26931] Spawned terminal 4 (user-console) with PID 27164[0m
+[0;32m[2026-03-28T21:13:45-0700] [INFO] [ai_colab.api] [26931] API POST /api/terminal/spawn -> 200 (14.86ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:13:45] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:13:52-0700] [INFO] [ai_colab.api] [26931] API GET /api/agents -> 200 (0.74ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:13:52] "GET /api/agents HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:13:55-0700] [INFO] [ai_colab.api] [26931] API GET /api/status -> 200 (38.21ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:13:55] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:14:27-0700] [INFO] [ai_colab.api] [26931] API GET /api/status -> 200 (8.17ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:14:27] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:14:56-0700] [INFO] [ai_colab.api] [26931] API GET /api/status -> 200 (7.46ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:14:56] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:15:27-0700] [INFO] [ai_colab.api] [26931] API GET /api/status -> 200 (18.15ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:15:27] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:15:57-0700] [INFO] [ai_colab.api] [26931] API GET /api/status -> 200 (13.96ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:15:57] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:17:00-0700] [INFO] [ai_colab.api] [26931] API GET /api/status -> 200 (20.88ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:17:00] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:17:26-0700] [INFO] [ai_colab.api] [26931] API GET /api/status -> 200 (8.67ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:17:26] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:17:57-0700] [INFO] [ai_colab.api] [26931] API GET /api/status -> 200 (9.76ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:17:57] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:43:08-0700] [INFO] [ai_colab] [28561] Logging initialized (level: INFO, dir: /home/rchennau/.ai-colab/logs)[0m
+[0;32m[2026-03-28T21:43:08-0700] [INFO] [ai_colab.webui] [28561] Rate limiting enabled: 100 req/min, 1000 req/hour[0m
+[0;32m[2026-03-28T21:43:08-0700] [INFO] [ai_colab.webui] [28561] Rate limiting enabled: 100 req/min, 1000 req/hour[0m
+[0;32m[2026-03-28T21:43:09-0700] [INFO] [ai_colab.webui] [28561] PTY manager initialized for web terminals[0m
+[0;32m[2026-03-28T21:43:09-0700] [INFO] [ai_colab.webui] [28561] PTY manager initialized for web terminals[0m
+[0;32m[2026-03-28T21:43:09-0700] [INFO] [ai_colab.webui] [28561] Real-time update thread started[0m
+[0;32m[2026-03-28T21:43:09-0700] [INFO] [ai_colab.webui] [28561] Real-time update thread started[0m
+[0;32m[2026-03-28T21:43:09-0700] [INFO] [ai_colab.webui] [28561] Starting ai-colab Web UI server...[0m
+[0;32m[2026-03-28T21:43:09-0700] [INFO] [ai_colab.webui] [28561] Starting ai-colab Web UI server...[0m
+ * Serving Flask app 'app'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8080
+ * Running on http://192.168.164.116:8080
+[33mPress CTRL+C to quit[0m
+[0;32m[2026-03-28T21:44:02-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (10.15ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:44:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:45:02-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (28.70ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:45:02] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [28/Mar/2026 21:45:07] "GET / HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:45:08-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (44.37ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:45:08] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:45:08-0700] [INFO] [ai_colab.webui] [28561] Client connected to WebSocket[0m
+[0;32m[2026-03-28T21:45:08-0700] [INFO] [ai_colab.webui] [28561] Client connected to WebSocket[0m
+[0;32m[2026-03-28T21:45:08-0700] [INFO] [ai_colab.webui] [28561] Client subscribed to status updates[0m
+[0;32m[2026-03-28T21:45:08-0700] [INFO] [ai_colab.webui] [28561] Client subscribed to status updates[0m
+[0;32m[2026-03-28T21:45:13-0700] [INFO] [ai_colab.agent_coordination] [28561] AgentCoordination initialized: /home/rchennau/.ai-colab/agent_coordination.db[0m
+[0;32m[2026-03-28T21:45:13-0700] [INFO] [ai_colab.agent_coordination] [28561] FederatedLearning initialized: /home/rchennau/.ai-colab/federated_learning.db[0m
+[0;32m[2026-03-28T21:45:13-0700] [INFO] [ai_colab.agent_coordination] [28561] AgentFederation initialized[0m
+[0;32m[2026-03-28T21:45:13-0700] [INFO] [ai_colab.api] [28561] API GET /api/agents -> 200 (26.11ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:45:13] "GET /api/agents HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:45:15-0700] [INFO] [ai_colab.api] [28561] API GET /api/config -> 200 (2.93ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:45:15] "GET /api/config HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:45:19-0700] [INFO] [ai_colab.webui] [28561] Spawned terminal 1 (vllm) with PID 28692[0m
+[0;32m[2026-03-28T21:45:19-0700] [INFO] [ai_colab.webui] [28561] Spawned terminal 1 (vllm) with PID 28692[0m
+[0;32m[2026-03-28T21:45:19-0700] [INFO] [ai_colab.api] [28561] API POST /api/terminal/spawn -> 200 (28.97ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:45:19] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:45:19-0700] [INFO] [ai_colab.webui] [28561] Closed terminal 1[0m
+[0;32m[2026-03-28T21:45:19-0700] [INFO] [ai_colab.webui] [28561] Closed terminal 1[0m
+[0;32m[2026-03-28T21:45:23-0700] [INFO] [ai_colab.webui] [28561] Spawned terminal 2 (gemini) with PID 28699[0m
+[0;32m[2026-03-28T21:45:23-0700] [INFO] [ai_colab.webui] [28561] Spawned terminal 2 (gemini) with PID 28699[0m
+[0;32m[2026-03-28T21:45:23-0700] [INFO] [ai_colab.api] [28561] API POST /api/terminal/spawn -> 200 (28.02ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:45:23] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:45:24-0700] [INFO] [ai_colab.webui] [28561] Closed terminal 2[0m
+[0;32m[2026-03-28T21:45:24-0700] [INFO] [ai_colab.webui] [28561] Closed terminal 2[0m
+[0;32m[2026-03-28T21:45:30-0700] [INFO] [ai_colab.webui] [28561] Spawned terminal 3 (qwen) with PID 28755[0m
+[0;32m[2026-03-28T21:45:30-0700] [INFO] [ai_colab.webui] [28561] Spawned terminal 3 (qwen) with PID 28755[0m
+[0;32m[2026-03-28T21:45:30-0700] [INFO] [ai_colab.api] [28561] API POST /api/terminal/spawn -> 200 (18.11ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:45:30] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:45:30-0700] [INFO] [ai_colab.webui] [28561] Closed terminal 3[0m
+[0;32m[2026-03-28T21:45:30-0700] [INFO] [ai_colab.webui] [28561] Closed terminal 3[0m
+[0;32m[2026-03-28T21:45:33-0700] [INFO] [ai_colab.webui] [28561] Spawned terminal 4 (user-console) with PID 28762[0m
+[0;32m[2026-03-28T21:45:33-0700] [INFO] [ai_colab.webui] [28561] Spawned terminal 4 (user-console) with PID 28762[0m
+[0;32m[2026-03-28T21:45:33-0700] [INFO] [ai_colab.api] [28561] API POST /api/terminal/spawn -> 200 (21.89ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:45:33] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:45:38-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (14.70ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:45:38] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:45:51-0700] [INFO] [ai_colab.webui] [28561] Spawned terminal 5 (conductor) with PID 28932[0m
+[0;32m[2026-03-28T21:45:51-0700] [INFO] [ai_colab.webui] [28561] Spawned terminal 5 (conductor) with PID 28932[0m
+[0;32m[2026-03-28T21:45:51-0700] [INFO] [ai_colab.api] [28561] API POST /api/terminal/spawn -> 200 (18.56ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:45:51] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:46:02-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (8.94ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:46:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:46:06-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (8.25ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:46:06] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:46:07-0700] [INFO] [ai_colab.webui] [28561] Console command sent: !status to @conductor_webui[0m
+[0;32m[2026-03-28T21:46:07-0700] [INFO] [ai_colab.webui] [28561] Console command sent: !status to @conductor_webui[0m
+[0;32m[2026-03-28T21:46:07-0700] [INFO] [ai_colab.api] [28561] API POST /api/console/send -> 200 (302.79ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:46:07] "POST /api/console/send HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:46:11-0700] [INFO] [ai_colab.api] [28561] API GET /api/config -> 200 (1.49ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:46:11] "GET /api/config HTTP/1.1" 200 -
+[0;31m[2026-03-28T21:46:12-0700] [ERROR] [ai_colab.webui] [28561] Error getting modules: name 'SCRIPT_DIR' is not defined[0m
+[0;31m[2026-03-28T21:46:12-0700] [ERROR] [ai_colab.webui] [28561] Error getting modules: name 'SCRIPT_DIR' is not defined[0m
+[0;32m[2026-03-28T21:46:12-0700] [INFO] [ai_colab.api] [28561] API GET /api/modules -> 500 (1.42ms) from 127.0.0.1[0m
+[0;31m[2026-03-28T21:46:12-0700] [ERROR] [ai_colab.webui] [28561] Server error: GET /api/modules -> 500[0m
+[0;31m[2026-03-28T21:46:12-0700] [ERROR] [ai_colab.webui] [28561] Server error: GET /api/modules -> 500[0m
+127.0.0.1 - - [28/Mar/2026 21:46:12] "[35m[1mGET /api/modules HTTP/1.1[0m" 500 -
+[0;32m[2026-03-28T21:46:28-0700] [INFO] [ai_colab.api] [28561] API POST /api/profiles/save -> 200 (54.08ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:46:28] "POST /api/profiles/save HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:46:28-0700] [INFO] [ai_colab.api] [28561] API GET /api/profiles -> 200 (2.63ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:46:28] "GET /api/profiles HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:46:35-0700] [INFO] [ai_colab.api] [28561] API GET /api/profiles -> 200 (0.68ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:46:35] "GET /api/profiles HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:46:36-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (9.96ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:46:36] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:46:54-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (9.11ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:46:54] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:47:03-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (10.46ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:47:03] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:47:06-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (7.56ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:47:06] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:47:18-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (9.27ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:47:18] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:47:39-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (8.65ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:47:39] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:47:59-0700] [INFO] [ai_colab.api] [28561] API GET /api/config -> 200 (1.14ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:47:59] "GET /api/config HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:48:01-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (11.21ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:48:01] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:48:07-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (7.85ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:48:07] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:48:37-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (8.49ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:48:37] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:49:01-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (26.06ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:49:01] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:49:07-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (15.31ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:49:07] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:49:38-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (8.17ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:49:38] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:50:01-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (34.47ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:50:01] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:51:02-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (76.75ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:51:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:51:02-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (29.62ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:51:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:52:02-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (22.09ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:52:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:52:02-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (20.14ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:52:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:53:03-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (17.09ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:53:03] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:53:03-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (23.74ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:53:03] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:54:01-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (17.20ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:54:01] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:54:01-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (13.84ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:54:01] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:55:01-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (58.08ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:55:01] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:55:02-0700] [INFO] [ai_colab.api] [28561] API GET /api/status -> 200 (34.37ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:55:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:57:01-0700] [INFO] [ai_colab] [29884] Logging initialized (level: INFO, dir: /home/rchennau/.ai-colab/logs)[0m
+[0;32m[2026-03-28T21:57:01-0700] [INFO] [ai_colab.webui] [29884] Rate limiting enabled: 100 req/min, 1000 req/hour[0m
+[0;32m[2026-03-28T21:57:01-0700] [INFO] [ai_colab.webui] [29884] Rate limiting enabled: 100 req/min, 1000 req/hour[0m
+[0;32m[2026-03-28T21:57:02-0700] [INFO] [ai_colab.webui] [29884] PTY manager initialized for web terminals[0m
+[0;32m[2026-03-28T21:57:02-0700] [INFO] [ai_colab.webui] [29884] PTY manager initialized for web terminals[0m
+[0;32m[2026-03-28T21:57:02-0700] [INFO] [ai_colab.webui] [29884] Real-time update thread started[0m
+[0;32m[2026-03-28T21:57:02-0700] [INFO] [ai_colab.webui] [29884] Real-time update thread started[0m
+[0;32m[2026-03-28T21:57:02-0700] [INFO] [ai_colab.webui] [29884] Starting ai-colab Web UI server...[0m
+[0;32m[2026-03-28T21:57:02-0700] [INFO] [ai_colab.webui] [29884] Starting ai-colab Web UI server...[0m
+ * Serving Flask app 'app'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8080
+ * Running on http://192.168.164.116:8080
+[33mPress CTRL+C to quit[0m
+[0;32m[2026-03-28T21:57:03-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (15.99ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:57:03] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:57:03-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (9.47ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:57:03] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [28/Mar/2026 21:57:08] "[36mGET / HTTP/1.1[0m" 304 -
+[0;32m[2026-03-28T21:57:09-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (30.78ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:57:09] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:57:09-0700] [INFO] [ai_colab.webui] [29884] Client connected to WebSocket[0m
+[0;32m[2026-03-28T21:57:09-0700] [INFO] [ai_colab.webui] [29884] Client connected to WebSocket[0m
+[0;32m[2026-03-28T21:57:09-0700] [INFO] [ai_colab.webui] [29884] Client subscribed to status updates[0m
+[0;32m[2026-03-28T21:57:09-0700] [INFO] [ai_colab.webui] [29884] Client subscribed to status updates[0m
+[0;32m[2026-03-28T21:57:39-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (9.54ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:57:39] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:58:02-0700] [INFO] [ai_colab.api] [29884] API GET /api/config -> 200 (1.54ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:58:02] "GET /api/config HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:58:02-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (21.56ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:58:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:58:03-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (47.28ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:58:03] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:58:07-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (10.01ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:58:07] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:58:38-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (15.08ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:58:38] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:59:02-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (13.49ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:59:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:59:03-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (17.29ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:59:03] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:59:08-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (17.56ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:59:08] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T21:59:20-0700] [INFO] [ai_colab.api] [29884] API GET /api/config -> 200 (1.26ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:59:20] "GET /api/config HTTP/1.1" 200 -
+[0;31m[2026-03-28T21:59:20-0700] [ERROR] [ai_colab.webui] [29884] Error getting modules: name 'SCRIPT_DIR' is not defined[0m
+[0;31m[2026-03-28T21:59:20-0700] [ERROR] [ai_colab.webui] [29884] Error getting modules: name 'SCRIPT_DIR' is not defined[0m
+[0;32m[2026-03-28T21:59:20-0700] [INFO] [ai_colab.api] [29884] API GET /api/modules -> 500 (1.27ms) from 127.0.0.1[0m
+[0;31m[2026-03-28T21:59:20-0700] [ERROR] [ai_colab.webui] [29884] Server error: GET /api/modules -> 500[0m
+[0;31m[2026-03-28T21:59:20-0700] [ERROR] [ai_colab.webui] [29884] Server error: GET /api/modules -> 500[0m
+127.0.0.1 - - [28/Mar/2026 21:59:20] "[35m[1mGET /api/modules HTTP/1.1[0m" 500 -
+[0;32m[2026-03-28T21:59:38-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (8.66ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 21:59:38] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:00:01-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (15.67ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:00:01] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:00:01-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (15.21ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:00:01] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:00:08-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (11.44ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:00:08] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:00:38-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (11.50ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:00:38] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:01:01-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (29.88ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:01:01] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:01:01-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (20.69ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:01:01] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:01:08-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (20.22ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:01:08] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:01:38-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (8.52ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:01:38] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:01:39-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (8.15ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:01:39] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:01:51-0700] [INFO] [ai_colab.api] [29884] API GET /api/preflight -> 200 (8.48ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:01:51] "GET /api/preflight HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:02:02-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (18.41ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:02:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:02:02-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (17.19ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:02:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:02:09-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (15.15ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:02:09] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:02:39-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (15.36ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:02:39] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:03:02-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (20.10ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:03:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:03:02-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (24.62ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:03:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:03:09-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (13.47ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:03:09] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:03:12-0700] [INFO] [ai_colab.api] [29884] API GET /api/logs -> 200 (7.85ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:03:12] "GET /api/logs?lines=100 HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:03:11-0700] [INFO] [ai_colab.api] [29884] API GET /api/logs -> 200 (8.08ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:03:11] "GET /api/logs?lines=100 HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:03:12-0700] [INFO] [ai_colab.api] [29884] API GET /api/logs -> 200 (9.92ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:03:12] "GET /api/logs?lines=100 HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:03:13-0700] [INFO] [ai_colab.api] [29884] API GET /api/config -> 200 (1.63ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:03:13] "GET /api/config HTTP/1.1" 200 -
+[0;31m[2026-03-28T22:03:14-0700] [ERROR] [ai_colab.webui] [29884] Error getting modules: name 'SCRIPT_DIR' is not defined[0m
+[0;31m[2026-03-28T22:03:14-0700] [ERROR] [ai_colab.webui] [29884] Error getting modules: name 'SCRIPT_DIR' is not defined[0m
+[0;32m[2026-03-28T22:03:14-0700] [INFO] [ai_colab.api] [29884] API GET /api/modules -> 500 (1.21ms) from 127.0.0.1[0m
+[0;31m[2026-03-28T22:03:14-0700] [ERROR] [ai_colab.webui] [29884] Server error: GET /api/modules -> 500[0m
+[0;31m[2026-03-28T22:03:14-0700] [ERROR] [ai_colab.webui] [29884] Server error: GET /api/modules -> 500[0m
+127.0.0.1 - - [28/Mar/2026 22:03:14] "[35m[1mGET /api/modules HTTP/1.1[0m" 500 -
+[0;32m[2026-03-28T22:03:18-0700] [INFO] [ai_colab] [29884] Logging initialized (level: INFO, dir: /home/rchennau/.ai-colab/logs)[0m
+[1;33m[2026-03-28T22:03:23-0700] [WARNING] [ai_colab.health] [29884] System health: unhealthy[0m
+[1;33m[2026-03-28T22:03:23-0700] [WARNING] [ai_colab.health] [29884] System health: unhealthy[0m
+[1;33m[2026-03-28T22:03:23-0700] [WARNING] [ai_colab.health] [29884]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:03:23-0700] [WARNING] [ai_colab.health] [29884]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:03:23-0700] [WARNING] [ai_colab.webui] [29884] Health check: unhealthy[0m
+[1;33m[2026-03-28T22:03:23-0700] [WARNING] [ai_colab.webui] [29884] Health check: unhealthy[0m
+[1;33m[2026-03-28T22:03:23-0700] [WARNING] [ai_colab.webui] [29884]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:03:23-0700] [WARNING] [ai_colab.webui] [29884]   vllm: unhealthy - vLLM connection timeout[0m
+[0;31m[2026-03-28T22:03:23-0700] [ERROR] [ai_colab.webui] [29884] Server error: GET /health -> 503[0m
+[0;31m[2026-03-28T22:03:23-0700] [ERROR] [ai_colab.webui] [29884] Server error: GET /health -> 503[0m
+127.0.0.1 - - [28/Mar/2026 22:03:23] "[35m[1mGET /health HTTP/1.1[0m" 503 -
+[0;32m[2026-03-28T22:03:39-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (8.04ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:03:39] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:04:02-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (22.68ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:04:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:04:02-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (15.30ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:04:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:04:07-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (6.80ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:04:07] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:04:35-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (18.67ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:04:35] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:04:37-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (8.51ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:04:37] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:05:02-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (13.60ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:05:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:05:03-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (25.82ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:05:03] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:05:08-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (7.16ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:05:08] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:05:38-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (8.91ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:05:38] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:06:01-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (39.62ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:06:01] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:06:01-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (19.22ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:06:01] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:06:08-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (8.79ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:06:08] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:06:38-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (15.10ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:06:38] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:07:01-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (24.89ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:07:01] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:07:01-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (20.38ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:07:01] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:07:08-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (17.89ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:07:08] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:07:38-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (8.72ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:07:38] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:08:02-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (13.98ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:08:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:08:02-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (16.90ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:08:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:08:09-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (8.77ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:08:09] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:08:39-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (9.99ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:08:39] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:09:02-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (22.59ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:09:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:09:02-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (19.97ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:09:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:09:10-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (11.40ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:09:10] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:09:40-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (22.88ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:09:40] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:10:02-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (12.98ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:10:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:10:03-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (33.99ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:10:03] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:11:03-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (18.59ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:11:03] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:11:03-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (13.21ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:11:03] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:11:03-0700] [INFO] [ai_colab.api] [29884] API GET /api/status -> 200 (17.92ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:11:03] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:16:21-0700] [INFO] [ai_colab] [31127] Logging initialized (level: INFO, dir: /home/rchennau/.ai-colab/logs)[0m
+[0;32m[2026-03-28T22:16:21-0700] [INFO] [ai_colab.webui] [31127] Rate limiting enabled: 100 req/min, 1000 req/hour[0m
+[0;32m[2026-03-28T22:16:21-0700] [INFO] [ai_colab.webui] [31127] Rate limiting enabled: 100 req/min, 1000 req/hour[0m
+[0;32m[2026-03-28T22:16:21-0700] [INFO] [ai_colab.webui] [31127] PTY manager initialized for web terminals[0m
+[0;32m[2026-03-28T22:16:21-0700] [INFO] [ai_colab.webui] [31127] PTY manager initialized for web terminals[0m
+[0;32m[2026-03-28T22:16:21-0700] [INFO] [ai_colab.webui] [31127] Real-time update thread started[0m
+[0;32m[2026-03-28T22:16:21-0700] [INFO] [ai_colab.webui] [31127] Real-time update thread started[0m
+[0;32m[2026-03-28T22:16:21-0700] [INFO] [ai_colab.webui] [31127] Starting ai-colab Web UI server...[0m
+[0;32m[2026-03-28T22:16:21-0700] [INFO] [ai_colab.webui] [31127] Starting ai-colab Web UI server...[0m
+ * Serving Flask app 'app'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8080
+ * Running on http://192.168.164.116:8080
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [28/Mar/2026 22:16:27] "GET / HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:16:28-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (22.48ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:16:28] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:16:28-0700] [INFO] [ai_colab.webui] [31127] Client connected to WebSocket[0m
+[0;32m[2026-03-28T22:16:28-0700] [INFO] [ai_colab.webui] [31127] Client connected to WebSocket[0m
+[0;32m[2026-03-28T22:16:28-0700] [INFO] [ai_colab.webui] [31127] Client subscribed to status updates[0m
+[0;32m[2026-03-28T22:16:28-0700] [INFO] [ai_colab.webui] [31127] Client subscribed to status updates[0m
+[0;32m[2026-03-28T22:16:45-0700] [INFO] [ai_colab.agent_coordination] [31127] AgentCoordination initialized: /home/rchennau/.ai-colab/agent_coordination.db[0m
+[0;32m[2026-03-28T22:16:45-0700] [INFO] [ai_colab.agent_coordination] [31127] FederatedLearning initialized: /home/rchennau/.ai-colab/federated_learning.db[0m
+[0;32m[2026-03-28T22:16:45-0700] [INFO] [ai_colab.agent_coordination] [31127] AgentFederation initialized[0m
+[0;32m[2026-03-28T22:16:45-0700] [INFO] [ai_colab.api] [31127] API GET /api/agents -> 200 (13.50ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:16:45] "GET /api/agents HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:16:45-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (7.33ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:16:45] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:16:55-0700] [INFO] [ai_colab.api] [31127] API GET /api/config -> 200 (1.59ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:16:55] "GET /api/config HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:16:58-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (7.42ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:16:58] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:17:03-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (19.77ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:17:03] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:17:03-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (26.34ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:17:03] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:17:03-0700] [INFO] [ai_colab.webui] [31127] Spawned terminal 1 (qwen) with PID 31194[0m
+[0;32m[2026-03-28T22:17:03-0700] [INFO] [ai_colab.webui] [31127] Spawned terminal 1 (qwen) with PID 31194[0m
+[0;32m[2026-03-28T22:17:03-0700] [INFO] [ai_colab.api] [31127] API POST /api/terminal/spawn -> 200 (41.76ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:17:03] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:17:04-0700] [INFO] [ai_colab.webui] [31127] Closed terminal 1[0m
+[0;32m[2026-03-28T22:17:04-0700] [INFO] [ai_colab.webui] [31127] Closed terminal 1[0m
+[0;32m[2026-03-28T22:17:04-0700] [INFO] [ai_colab.webui] [31127] Spawned terminal 2 (gemini) with PID 31203[0m
+[0;32m[2026-03-28T22:17:04-0700] [INFO] [ai_colab.webui] [31127] Spawned terminal 2 (gemini) with PID 31203[0m
+[0;32m[2026-03-28T22:17:04-0700] [INFO] [ai_colab.api] [31127] API POST /api/terminal/spawn -> 200 (41.02ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:17:04] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:17:04-0700] [INFO] [ai_colab.webui] [31127] Closed terminal 2[0m
+[0;32m[2026-03-28T22:17:04-0700] [INFO] [ai_colab.webui] [31127] Closed terminal 2[0m
+[0;32m[2026-03-28T22:17:07-0700] [INFO] [ai_colab.webui] [31127] Spawned terminal 3 (deepseek) with PID 31208[0m
+[0;32m[2026-03-28T22:17:07-0700] [INFO] [ai_colab.webui] [31127] Spawned terminal 3 (deepseek) with PID 31208[0m
+[0;32m[2026-03-28T22:17:07-0700] [INFO] [ai_colab.api] [31127] API POST /api/terminal/spawn -> 200 (19.54ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:17:07] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:17:12-0700] [INFO] [ai_colab.webui] [31127] Spawned terminal 4 (vllm) with PID 31221[0m
+[0;32m[2026-03-28T22:17:12-0700] [INFO] [ai_colab.webui] [31127] Spawned terminal 4 (vllm) with PID 31221[0m
+[0;32m[2026-03-28T22:17:12-0700] [INFO] [ai_colab.api] [31127] API POST /api/terminal/spawn -> 200 (41.31ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:17:12] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:17:12-0700] [INFO] [ai_colab.webui] [31127] Closed terminal 4[0m
+[0;32m[2026-03-28T22:17:12-0700] [INFO] [ai_colab.webui] [31127] Closed terminal 4[0m
+[0;32m[2026-03-28T22:17:28-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (15.09ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:17:28] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:17:58-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (16.96ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:17:58] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:18:01-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (39.28ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:18:01] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:18:01-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (18.22ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:18:01] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:18:26-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (10.62ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:18:26] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:18:52-0700] [INFO] [ai_colab.webui] [31127] Spawned terminal 5 (user-console) with PID 31308[0m
+[0;32m[2026-03-28T22:18:52-0700] [INFO] [ai_colab.webui] [31127] Spawned terminal 5 (user-console) with PID 31308[0m
+[0;32m[2026-03-28T22:18:52-0700] [INFO] [ai_colab.api] [31127] API POST /api/terminal/spawn -> 200 (19.49ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:18:52] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:18:56-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (15.12ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:18:56] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:19:01-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (20.91ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:19:01] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:19:02-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (22.21ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:19:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:19:12-0700] [INFO] [ai_colab.webui] [31127] Spawned terminal 6 (conductor) with PID 31482[0m
+[0;32m[2026-03-28T22:19:12-0700] [INFO] [ai_colab.webui] [31127] Spawned terminal 6 (conductor) with PID 31482[0m
+[0;32m[2026-03-28T22:19:12-0700] [INFO] [ai_colab.api] [31127] API POST /api/terminal/spawn -> 200 (20.09ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:19:12] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:19:24-0700] [INFO] [ai_colab.webui] [31127] Spawned terminal 7 (qwen) with PID 31644[0m
+[0;32m[2026-03-28T22:19:24-0700] [INFO] [ai_colab.webui] [31127] Spawned terminal 7 (qwen) with PID 31644[0m
+[0;32m[2026-03-28T22:19:24-0700] [INFO] [ai_colab.api] [31127] API POST /api/terminal/spawn -> 200 (20.93ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:19:24] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:19:24-0700] [INFO] [ai_colab.webui] [31127] Closed terminal 7[0m
+[0;32m[2026-03-28T22:19:24-0700] [INFO] [ai_colab.webui] [31127] Closed terminal 7[0m
+[0;32m[2026-03-28T22:19:25-0700] [INFO] [ai_colab.webui] [31127] Spawned terminal 8 (gemini) with PID 31650[0m
+[0;32m[2026-03-28T22:19:25-0700] [INFO] [ai_colab.webui] [31127] Spawned terminal 8 (gemini) with PID 31650[0m
+[0;32m[2026-03-28T22:19:25-0700] [INFO] [ai_colab.api] [31127] API POST /api/terminal/spawn -> 200 (50.30ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:19:25] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:19:26-0700] [INFO] [ai_colab.webui] [31127] Closed terminal 8[0m
+[0;32m[2026-03-28T22:19:26-0700] [INFO] [ai_colab.webui] [31127] Closed terminal 8[0m
+[0;32m[2026-03-28T22:19:27-0700] [INFO] [ai_colab.webui] [31127] Spawned terminal 9 (deepseek) with PID 31655[0m
+[0;32m[2026-03-28T22:19:27-0700] [INFO] [ai_colab.webui] [31127] Spawned terminal 9 (deepseek) with PID 31655[0m
+[0;32m[2026-03-28T22:19:27-0700] [INFO] [ai_colab.api] [31127] API POST /api/terminal/spawn -> 200 (17.82ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:19:27] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:19:27-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (23.92ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:19:27] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:19:41-0700] [INFO] [ai_colab.webui] [31127] Closed terminal 9[0m
+[0;32m[2026-03-28T22:19:41-0700] [INFO] [ai_colab.webui] [31127] Closed terminal 9[0m
+[0;32m[2026-03-28T22:19:57-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (12.24ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:19:57] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:20:02-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (16.72ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:20:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:20:02-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (15.42ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:20:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:20:10-0700] [INFO] [ai_colab.api] [31127] API GET /api/agents -> 200 (2.82ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:20:10] "GET /api/agents HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:20:11-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (7.54ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:20:11] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:20:17-0700] [INFO] [ai_colab.webui] [31127] Console command sent: !status to @conductor_webui[0m
+[0;32m[2026-03-28T22:20:17-0700] [INFO] [ai_colab.webui] [31127] Console command sent: !status to @conductor_webui[0m
+[0;32m[2026-03-28T22:20:17-0700] [INFO] [ai_colab.api] [31127] API POST /api/console/send -> 200 (526.00ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:20:17] "POST /api/console/send HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:20:20-0700] [INFO] [ai_colab] [31127] Logging initialized (level: INFO, dir: /home/rchennau/.ai-colab/logs)[0m
+[0;32m[2026-03-28T22:20:21-0700] [INFO] [ai_colab.api] [31127] API GET /api/logs -> 200 (13.44ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:20:21] "GET /api/logs?lines=100 HTTP/1.1" 200 -
+[1;33m[2026-03-28T22:20:25-0700] [WARNING] [ai_colab.health] [31127] System health: unhealthy[0m
+[1;33m[2026-03-28T22:20:25-0700] [WARNING] [ai_colab.health] [31127] System health: unhealthy[0m
+[1;33m[2026-03-28T22:20:25-0700] [WARNING] [ai_colab.health] [31127]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:20:25-0700] [WARNING] [ai_colab.health] [31127]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:20:25-0700] [WARNING] [ai_colab.webui] [31127] Health check: unhealthy[0m
+[1;33m[2026-03-28T22:20:25-0700] [WARNING] [ai_colab.webui] [31127] Health check: unhealthy[0m
+[1;33m[2026-03-28T22:20:25-0700] [WARNING] [ai_colab.webui] [31127]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:20:25-0700] [WARNING] [ai_colab.webui] [31127]   vllm: unhealthy - vLLM connection timeout[0m
+[0;31m[2026-03-28T22:20:25-0700] [ERROR] [ai_colab.webui] [31127] Server error: GET /health -> 503[0m
+[0;31m[2026-03-28T22:20:25-0700] [ERROR] [ai_colab.webui] [31127] Server error: GET /health -> 503[0m
+127.0.0.1 - - [28/Mar/2026 22:20:25] "[35m[1mGET /health HTTP/1.1[0m" 503 -
+[0;32m[2026-03-28T22:20:27-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (7.86ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:20:27] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:20:33-0700] [INFO] [ai_colab.api] [31127] API GET /api/config -> 200 (7.59ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:20:33] "GET /api/config HTTP/1.1" 200 -
+[0;31m[2026-03-28T22:20:33-0700] [ERROR] [ai_colab.webui] [31127] Error getting modules: name 'SCRIPT_DIR' is not defined[0m
+[0;31m[2026-03-28T22:20:33-0700] [ERROR] [ai_colab.webui] [31127] Error getting modules: name 'SCRIPT_DIR' is not defined[0m
+[0;32m[2026-03-28T22:20:33-0700] [INFO] [ai_colab.api] [31127] API GET /api/modules -> 500 (3.30ms) from 127.0.0.1[0m
+[0;31m[2026-03-28T22:20:33-0700] [ERROR] [ai_colab.webui] [31127] Server error: GET /api/modules -> 500[0m
+[0;31m[2026-03-28T22:20:33-0700] [ERROR] [ai_colab.webui] [31127] Server error: GET /api/modules -> 500[0m
+127.0.0.1 - - [28/Mar/2026 22:20:33] "[35m[1mGET /api/modules HTTP/1.1[0m" 500 -
+[0;32m[2026-03-28T22:20:52-0700] [INFO] [ai_colab.api] [31127] API POST /api/profiles/save -> 200 (28.69ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:20:52] "POST /api/profiles/save HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:20:52-0700] [INFO] [ai_colab.api] [31127] API GET /api/profiles -> 200 (1.32ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:20:52] "GET /api/profiles HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:20:56-0700] [INFO] [ai_colab.api] [31127] API POST /api/profiles/default/apply -> 200 (128.05ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:20:56] "POST /api/profiles/default/apply HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:20:57-0700] [INFO] [ai_colab.api] [31127] API GET /api/profiles -> 200 (1.20ms) from 127.0.0.1[0m
+[0;32m[2026-03-28T22:20:57-0700] [INFO] [ai_colab.api] [31127] API GET /api/config -> 200 (5.90ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:20:57] "GET /api/profiles HTTP/1.1" 200 -
+127.0.0.1 - - [28/Mar/2026 22:20:57] "GET /api/config HTTP/1.1" 200 -
+[0;31m[2026-03-28T22:20:57-0700] [ERROR] [ai_colab.webui] [31127] Error getting modules: name 'SCRIPT_DIR' is not defined[0m
+[0;31m[2026-03-28T22:20:57-0700] [ERROR] [ai_colab.webui] [31127] Error getting modules: name 'SCRIPT_DIR' is not defined[0m
+[0;32m[2026-03-28T22:20:57-0700] [INFO] [ai_colab.api] [31127] API GET /api/modules -> 500 (1.34ms) from 127.0.0.1[0m
+[0;31m[2026-03-28T22:20:57-0700] [ERROR] [ai_colab.webui] [31127] Server error: GET /api/modules -> 500[0m
+[0;31m[2026-03-28T22:20:57-0700] [ERROR] [ai_colab.webui] [31127] Server error: GET /api/modules -> 500[0m
+127.0.0.1 - - [28/Mar/2026 22:20:57] "[35m[1mGET /api/modules HTTP/1.1[0m" 500 -
+[0;32m[2026-03-28T22:20:57-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (13.76ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:20:57] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:20:59-0700] [INFO] [ai_colab.api] [31127] API GET /api/profiles -> 200 (0.85ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:20:59] "GET /api/profiles HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:21:02-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (17.61ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:21:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:21:02-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (16.38ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:21:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:21:09-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (9.39ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:21:09] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:21:27-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (16.00ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:21:27] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:21:46-0700] [INFO] [ai_colab.api] [31127] API GET /api/config -> 200 (1.11ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:21:46] "GET /api/config HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:21:58-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (11.57ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:21:58] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:22:02-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (15.54ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:22:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:22:02-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (21.88ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:22:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:22:28-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (12.02ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:22:28] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:22:40-0700] [INFO] [ai_colab.api] [31127] API GET /api/logs -> 200 (7.88ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:22:40] "GET /api/logs?lines=100 HTTP/1.1" 200 -
+[1;33m[2026-03-28T22:22:45-0700] [WARNING] [ai_colab.health] [31127] System health: unhealthy[0m
+[1;33m[2026-03-28T22:22:45-0700] [WARNING] [ai_colab.health] [31127] System health: unhealthy[0m
+[1;33m[2026-03-28T22:22:45-0700] [WARNING] [ai_colab.health] [31127]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:22:45-0700] [WARNING] [ai_colab.health] [31127]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:22:45-0700] [WARNING] [ai_colab.webui] [31127] Health check: unhealthy[0m
+[1;33m[2026-03-28T22:22:45-0700] [WARNING] [ai_colab.webui] [31127] Health check: unhealthy[0m
+[1;33m[2026-03-28T22:22:45-0700] [WARNING] [ai_colab.webui] [31127]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:22:45-0700] [WARNING] [ai_colab.webui] [31127]   vllm: unhealthy - vLLM connection timeout[0m
+[0;31m[2026-03-28T22:22:45-0700] [ERROR] [ai_colab.webui] [31127] Server error: GET /health -> 503[0m
+[0;31m[2026-03-28T22:22:45-0700] [ERROR] [ai_colab.webui] [31127] Server error: GET /health -> 503[0m
+127.0.0.1 - - [28/Mar/2026 22:22:45] "[35m[1mGET /health HTTP/1.1[0m" 503 -
+[0;32m[2026-03-28T22:22:58-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (17.37ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:22:58] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:23:02-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (13.19ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:23:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:23:03-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (16.70ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:23:03] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:23:28-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (14.41ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:23:28] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:24:01-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (17.77ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:24:01] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:24:01-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (34.28ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:24:01] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:24:01-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (21.37ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:24:01] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:25:01-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (16.08ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:25:01] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:25:01-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (41.61ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:25:01] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:25:02-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (18.79ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:25:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:26:02-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (17.43ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:26:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:26:02-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (45.48ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:26:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:26:02-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (25.82ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:26:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:27:02-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (33.96ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:27:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:27:02-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (30.00ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:27:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:27:03-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (15.48ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:27:03] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:28:00-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (33.74ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:28:00] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:28:02-0700] [INFO] [ai_colab.webui] [31127] Client disconnected from WebSocket[0m
+[0;32m[2026-03-28T22:28:02-0700] [INFO] [ai_colab.webui] [31127] Client disconnected from WebSocket[0m
+127.0.0.1 - - [28/Mar/2026 22:28:02] "[35m[1mGET /socket.io/?EIO=4&transport=websocket HTTP/1.1[0m" 500 -
+Error on request:
+Traceback (most recent call last):
+  File "/home/rchennau/miniconda3/envs/ai_agents/lib/python3.10/site-packages/werkzeug/serving.py", line 371, in run_wsgi
+    execute(self.server.app)
+  File "/home/rchennau/miniconda3/envs/ai_agents/lib/python3.10/site-packages/werkzeug/serving.py", line 337, in execute
+    write(b"")
+  File "/home/rchennau/miniconda3/envs/ai_agents/lib/python3.10/site-packages/werkzeug/serving.py", line 262, in write
+    assert status_set is not None, "write() before start_response"
+AssertionError: write() before start_response
+[0;32m[2026-03-28T22:28:02-0700] [INFO] [ai_colab.api] [31127] API GET /api/status -> 200 (32.49ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:28:02] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:35:57-0700] [INFO] [ai_colab] [33416] Logging initialized (level: INFO, dir: /home/rchennau/.ai-colab/logs)[0m
+[0;32m[2026-03-28T22:35:58-0700] [INFO] [ai_colab.webui] [33416] Rate limiting enabled: 100 req/min, 1000 req/hour[0m
+[0;32m[2026-03-28T22:35:58-0700] [INFO] [ai_colab.webui] [33416] Rate limiting enabled: 100 req/min, 1000 req/hour[0m
+[0;32m[2026-03-28T22:35:58-0700] [INFO] [ai_colab.webui] [33416] PTY manager initialized for web terminals[0m
+[0;32m[2026-03-28T22:35:58-0700] [INFO] [ai_colab.webui] [33416] PTY manager initialized for web terminals[0m
+[0;32m[2026-03-28T22:35:58-0700] [INFO] [ai_colab.webui] [33416] Real-time update thread started[0m
+[0;32m[2026-03-28T22:35:58-0700] [INFO] [ai_colab.webui] [33416] Real-time update thread started[0m
+[0;32m[2026-03-28T22:35:58-0700] [INFO] [ai_colab.webui] [33416] Starting ai-colab Web UI server...[0m
+[0;32m[2026-03-28T22:35:58-0700] [INFO] [ai_colab.webui] [33416] Starting ai-colab Web UI server...[0m
+ * Serving Flask app 'app'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8080
+ * Running on http://192.168.164.116:8080
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [28/Mar/2026 22:36:21] "GET / HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:36:22-0700] [INFO] [ai_colab.api] [33416] API GET /api/status -> 200 (20.56ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:36:22] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:36:22-0700] [INFO] [ai_colab.webui] [33416] Client connected to WebSocket[0m
+[0;32m[2026-03-28T22:36:22-0700] [INFO] [ai_colab.webui] [33416] Client connected to WebSocket[0m
+[0;32m[2026-03-28T22:36:22-0700] [INFO] [ai_colab.webui] [33416] Client subscribed to status updates[0m
+[0;32m[2026-03-28T22:36:22-0700] [INFO] [ai_colab.webui] [33416] Client subscribed to status updates[0m
+[0;32m[2026-03-28T22:36:29-0700] [INFO] [ai_colab] [33416] Logging initialized (level: INFO, dir: /home/rchennau/.ai-colab/logs)[0m
+[0;32m[2026-03-28T22:36:29-0700] [INFO] [ai_colab.api] [33416] API GET /api/logs -> 200 (16.62ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:36:29] "GET /api/logs?lines=100 HTTP/1.1" 200 -
+[1;33m[2026-03-28T22:36:34-0700] [WARNING] [ai_colab.health] [33416] System health: unhealthy[0m
+[1;33m[2026-03-28T22:36:34-0700] [WARNING] [ai_colab.health] [33416] System health: unhealthy[0m
+[1;33m[2026-03-28T22:36:34-0700] [WARNING] [ai_colab.health] [33416]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:36:34-0700] [WARNING] [ai_colab.health] [33416]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:36:34-0700] [WARNING] [ai_colab.webui] [33416] Health check: unhealthy[0m
+[1;33m[2026-03-28T22:36:34-0700] [WARNING] [ai_colab.webui] [33416] Health check: unhealthy[0m
+[1;33m[2026-03-28T22:36:34-0700] [WARNING] [ai_colab.webui] [33416]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:36:34-0700] [WARNING] [ai_colab.webui] [33416]   vllm: unhealthy - vLLM connection timeout[0m
+[0;31m[2026-03-28T22:36:34-0700] [ERROR] [ai_colab.webui] [33416] Server error: GET /health -> 503[0m
+[0;31m[2026-03-28T22:36:34-0700] [ERROR] [ai_colab.webui] [33416] Server error: GET /health -> 503[0m
+127.0.0.1 - - [28/Mar/2026 22:36:34] "[35m[1mGET /health HTTP/1.1[0m" 503 -
+[0;32m[2026-03-28T22:36:45-0700] [INFO] [ai_colab.api] [33416] API GET /api/config -> 200 (1.28ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:36:45] "GET /api/config HTTP/1.1" 200 -
+[0;31m[2026-03-28T22:36:45-0700] [ERROR] [ai_colab.webui] [33416] Error getting modules: name 'SCRIPT_DIR' is not defined[0m
+[0;31m[2026-03-28T22:36:45-0700] [ERROR] [ai_colab.webui] [33416] Error getting modules: name 'SCRIPT_DIR' is not defined[0m
+[0;32m[2026-03-28T22:36:45-0700] [INFO] [ai_colab.api] [33416] API GET /api/modules -> 500 (1.31ms) from 127.0.0.1[0m
+[0;31m[2026-03-28T22:36:45-0700] [ERROR] [ai_colab.webui] [33416] Server error: GET /api/modules -> 500[0m
+[0;31m[2026-03-28T22:36:45-0700] [ERROR] [ai_colab.webui] [33416] Server error: GET /api/modules -> 500[0m
+127.0.0.1 - - [28/Mar/2026 22:36:45] "[35m[1mGET /api/modules HTTP/1.1[0m" 500 -
+[0;32m[2026-03-28T22:36:52-0700] [INFO] [ai_colab.api] [33416] API GET /api/status -> 200 (23.88ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:36:52] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:36:53-0700] [INFO] [ai_colab.api] [33416] API GET /api/config -> 200 (2.09ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:36:53] "GET /api/config HTTP/1.1" 200 -
+[0;31m[2026-03-28T22:36:53-0700] [ERROR] [ai_colab.webui] [33416] Error getting modules: name 'SCRIPT_DIR' is not defined[0m
+[0;31m[2026-03-28T22:36:53-0700] [ERROR] [ai_colab.webui] [33416] Error getting modules: name 'SCRIPT_DIR' is not defined[0m
+[0;32m[2026-03-28T22:36:53-0700] [INFO] [ai_colab.api] [33416] API GET /api/modules -> 500 (2.17ms) from 127.0.0.1[0m
+[0;31m[2026-03-28T22:36:53-0700] [ERROR] [ai_colab.webui] [33416] Server error: GET /api/modules -> 500[0m
+[0;31m[2026-03-28T22:36:53-0700] [ERROR] [ai_colab.webui] [33416] Server error: GET /api/modules -> 500[0m
+127.0.0.1 - - [28/Mar/2026 22:36:53] "[35m[1mGET /api/modules HTTP/1.1[0m" 500 -
+[0;32m[2026-03-28T22:36:54-0700] [INFO] [ai_colab.api] [33416] API GET /api/profiles -> 200 (1.05ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:36:54] "GET /api/profiles HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:36:56-0700] [INFO] [ai_colab.api] [33416] API POST /api/profiles/default/apply -> 200 (154.32ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:36:56] "POST /api/profiles/default/apply HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:36:56-0700] [INFO] [ai_colab.api] [33416] API GET /api/config -> 200 (1.43ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:36:56] "GET /api/config HTTP/1.1" 200 -
+[0;31m[2026-03-28T22:36:56-0700] [ERROR] [ai_colab.webui] [33416] Error getting modules: name 'SCRIPT_DIR' is not defined[0m
+[0;31m[2026-03-28T22:36:56-0700] [ERROR] [ai_colab.webui] [33416] Error getting modules: name 'SCRIPT_DIR' is not defined[0m
+[0;32m[2026-03-28T22:36:56-0700] [INFO] [ai_colab.api] [33416] API GET /api/profiles -> 200 (6.30ms) from 127.0.0.1[0m
+[0;32m[2026-03-28T22:36:56-0700] [INFO] [ai_colab.api] [33416] API GET /api/modules -> 500 (4.61ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:36:56] "GET /api/profiles HTTP/1.1" 200 -
+[0;31m[2026-03-28T22:36:56-0700] [ERROR] [ai_colab.webui] [33416] Server error: GET /api/modules -> 500[0m
+[0;31m[2026-03-28T22:36:56-0700] [ERROR] [ai_colab.webui] [33416] Server error: GET /api/modules -> 500[0m
+127.0.0.1 - - [28/Mar/2026 22:36:56] "[35m[1mGET /api/modules HTTP/1.1[0m" 500 -
+[0;32m[2026-03-28T22:36:58-0700] [INFO] [ai_colab.api] [33416] API POST /api/profiles/default/apply -> 200 (165.70ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:36:58] "POST /api/profiles/default/apply HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:36:58-0700] [INFO] [ai_colab.api] [33416] API GET /api/config -> 200 (5.32ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:36:58] "GET /api/config HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:36:58-0700] [INFO] [ai_colab.api] [33416] API GET /api/profiles -> 200 (5.57ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:36:58] "GET /api/profiles HTTP/1.1" 200 -
+[0;31m[2026-03-28T22:36:59-0700] [ERROR] [ai_colab.webui] [33416] Error getting modules: name 'SCRIPT_DIR' is not defined[0m
+[0;31m[2026-03-28T22:36:59-0700] [ERROR] [ai_colab.webui] [33416] Error getting modules: name 'SCRIPT_DIR' is not defined[0m
+[0;32m[2026-03-28T22:36:59-0700] [INFO] [ai_colab.api] [33416] API GET /api/modules -> 500 (1.16ms) from 127.0.0.1[0m
+[0;31m[2026-03-28T22:36:59-0700] [ERROR] [ai_colab.webui] [33416] Server error: GET /api/modules -> 500[0m
+[0;31m[2026-03-28T22:36:59-0700] [ERROR] [ai_colab.webui] [33416] Server error: GET /api/modules -> 500[0m
+127.0.0.1 - - [28/Mar/2026 22:36:59] "[35m[1mGET /api/modules HTTP/1.1[0m" 500 -
+[0;32m[2026-03-28T22:37:03-0700] [INFO] [ai_colab.api] [33416] API POST /api/profiles/delete -> 200 (2.34ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:37:03] "POST /api/profiles/delete HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:37:03-0700] [INFO] [ai_colab.api] [33416] API GET /api/profiles -> 200 (0.85ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:37:03] "GET /api/profiles HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:37:13-0700] [INFO] [ai_colab.api] [33416] API POST /api/profiles/minimal/apply -> 200 (122.74ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:37:13] "POST /api/profiles/minimal/apply HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:37:14-0700] [INFO] [ai_colab.api] [33416] API GET /api/profiles -> 200 (1.49ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:37:14] "GET /api/profiles HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:37:14-0700] [INFO] [ai_colab.api] [33416] API GET /api/config -> 200 (5.81ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:37:14] "GET /api/config HTTP/1.1" 200 -
+[0;31m[2026-03-28T22:37:14-0700] [ERROR] [ai_colab.webui] [33416] Error getting modules: name 'SCRIPT_DIR' is not defined[0m
+[0;31m[2026-03-28T22:37:14-0700] [ERROR] [ai_colab.webui] [33416] Error getting modules: name 'SCRIPT_DIR' is not defined[0m
+[0;32m[2026-03-28T22:37:14-0700] [INFO] [ai_colab.api] [33416] API GET /api/modules -> 500 (1.13ms) from 127.0.0.1[0m
+[0;31m[2026-03-28T22:37:14-0700] [ERROR] [ai_colab.webui] [33416] Server error: GET /api/modules -> 500[0m
+[0;31m[2026-03-28T22:37:14-0700] [ERROR] [ai_colab.webui] [33416] Server error: GET /api/modules -> 500[0m
+127.0.0.1 - - [28/Mar/2026 22:37:14] "[35m[1mGET /api/modules HTTP/1.1[0m" 500 -
+[0;32m[2026-03-28T22:37:22-0700] [INFO] [ai_colab.api] [33416] API GET /api/status -> 200 (8.52ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:37:22] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:37:26-0700] [INFO] [ai_colab.api] [33416] API POST /api/profiles/save -> 200 (19.06ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:37:26] "POST /api/profiles/save HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:37:26-0700] [INFO] [ai_colab.api] [33416] API GET /api/profiles -> 200 (0.86ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:37:26] "GET /api/profiles HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:37:40-0700] [INFO] [ai_colab.agent_coordination] [33416] AgentCoordination initialized: /home/rchennau/.ai-colab/agent_coordination.db[0m
+[0;32m[2026-03-28T22:37:40-0700] [INFO] [ai_colab.agent_coordination] [33416] FederatedLearning initialized: /home/rchennau/.ai-colab/federated_learning.db[0m
+[0;32m[2026-03-28T22:37:40-0700] [INFO] [ai_colab.agent_coordination] [33416] AgentFederation initialized[0m
+[0;32m[2026-03-28T22:37:40-0700] [INFO] [ai_colab.api] [33416] API GET /api/agents -> 200 (13.93ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:37:40] "GET /api/agents HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:37:41-0700] [INFO] [ai_colab.api] [33416] API GET /api/status -> 200 (10.40ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:37:41] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:37:46-0700] [INFO] [ai_colab.api] [33416] API GET /api/config -> 200 (1.10ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:37:46] "GET /api/config HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:37:50-0700] [INFO] [ai_colab.api] [33416] API GET /api/status -> 200 (13.76ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:37:50] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:37:53-0700] [INFO] [ai_colab.webui] [33416] Console command sent: !status to @conductor_webui[0m
+[0;32m[2026-03-28T22:37:53-0700] [INFO] [ai_colab.webui] [33416] Console command sent: !status to @conductor_webui[0m
+[0;32m[2026-03-28T22:37:53-0700] [INFO] [ai_colab.api] [33416] API POST /api/console/send -> 200 (270.87ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:37:53] "POST /api/console/send HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:37:58-0700] [INFO] [ai_colab.api] [33416] API GET /api/config -> 200 (1.70ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:37:58] "GET /api/config HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:38:04-0700] [INFO] [ai_colab.api] [33416] API GET /api/logs -> 200 (18.97ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:38:04] "GET /api/logs?lines=100 HTTP/1.1" 200 -
+[1;33m[2026-03-28T22:38:09-0700] [WARNING] [ai_colab.health] [33416] System health: unhealthy[0m
+[1;33m[2026-03-28T22:38:09-0700] [WARNING] [ai_colab.health] [33416] System health: unhealthy[0m
+[1;33m[2026-03-28T22:38:09-0700] [WARNING] [ai_colab.health] [33416]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:38:09-0700] [WARNING] [ai_colab.health] [33416]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:38:09-0700] [WARNING] [ai_colab.webui] [33416] Health check: unhealthy[0m
+[1;33m[2026-03-28T22:38:09-0700] [WARNING] [ai_colab.webui] [33416] Health check: unhealthy[0m
+[1;33m[2026-03-28T22:38:09-0700] [WARNING] [ai_colab.webui] [33416]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:38:09-0700] [WARNING] [ai_colab.webui] [33416]   vllm: unhealthy - vLLM connection timeout[0m
+[0;31m[2026-03-28T22:38:09-0700] [ERROR] [ai_colab.webui] [33416] Server error: GET /health -> 503[0m
+[0;31m[2026-03-28T22:38:09-0700] [ERROR] [ai_colab.webui] [33416] Server error: GET /health -> 503[0m
+127.0.0.1 - - [28/Mar/2026 22:38:09] "[35m[1mGET /health HTTP/1.1[0m" 503 -
+[0;32m[2026-03-28T22:38:20-0700] [INFO] [ai_colab.api] [33416] API GET /api/status -> 200 (9.77ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:38:20] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:38:22-0700] [INFO] [ai_colab.webui] [33416] Backup created: /home/rchennau/ai_colab/scripts/../config/backups/config.20260328-223822.toml[0m
+[0;32m[2026-03-28T22:38:22-0700] [INFO] [ai_colab.webui] [33416] Backup created: /home/rchennau/ai_colab/scripts/../config/backups/config.20260328-223822.toml[0m
+[0;32m[2026-03-28T22:38:23-0700] [INFO] [ai_colab.webui] [33416] Configuration updated successfully[0m
+[0;32m[2026-03-28T22:38:23-0700] [INFO] [ai_colab.webui] [33416] Configuration updated successfully[0m
+[0;32m[2026-03-28T22:38:23-0700] [INFO] [ai_colab.api] [33416] API PUT /api/config -> 200 (522.34ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:38:23] "PUT /api/config HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:38:23-0700] [INFO] [ai_colab.api] [33416] API POST /api/install -> 404 (0.67ms) from 127.0.0.1[0m
+[1;33m[2026-03-28T22:38:23-0700] [WARNING] [ai_colab.webui] [33416] Client error: POST /api/install -> 404[0m
+[1;33m[2026-03-28T22:38:23-0700] [WARNING] [ai_colab.webui] [33416] Client error: POST /api/install -> 404[0m
+127.0.0.1 - - [28/Mar/2026 22:38:23] "[33mPOST /api/install HTTP/1.1[0m" 404 -
+[0;32m[2026-03-28T22:38:25-0700] [INFO] [ai_colab.api] [33416] API GET /api/status -> 200 (364.34ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:38:25] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:38:25-0700] [INFO] [ai_colab.api] [33416] API GET /api/status -> 200 (25.24ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:38:25] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:38:35-0700] [INFO] [ai_colab.api] [33416] API GET /api/config -> 200 (2.14ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:38:35] "GET /api/config HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:38:39-0700] [INFO] [ai_colab.webui] [33416] Spawned terminal 1 (qwen) with PID 33713[0m
+[0;32m[2026-03-28T22:38:39-0700] [INFO] [ai_colab.webui] [33416] Spawned terminal 1 (qwen) with PID 33713[0m
+[0;32m[2026-03-28T22:38:39-0700] [INFO] [ai_colab.api] [33416] API POST /api/terminal/spawn -> 200 (46.79ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:38:39] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:38:51-0700] [INFO] [ai_colab.api] [33416] API GET /api/status -> 200 (26.93ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:38:51] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:39:21-0700] [INFO] [ai_colab.api] [33416] API GET /api/status -> 200 (34.90ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:39:21] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:39:51-0700] [INFO] [ai_colab.api] [33416] API GET /api/status -> 200 (9.70ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:39:51] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:40:21-0700] [INFO] [ai_colab.api] [33416] API GET /api/status -> 200 (13.76ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:40:21] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:40:52-0700] [INFO] [ai_colab.api] [33416] API GET /api/status -> 200 (16.42ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:40:52] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:41:21-0700] [INFO] [ai_colab.api] [33416] API GET /api/status -> 200 (15.43ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:41:21] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:41:52-0700] [INFO] [ai_colab.api] [33416] API GET /api/status -> 200 (17.10ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:41:52] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:42:22-0700] [INFO] [ai_colab.api] [33416] API GET /api/status -> 200 (8.79ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:42:22] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:42:52-0700] [INFO] [ai_colab.api] [33416] API GET /api/status -> 200 (9.19ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:42:52] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:43:22-0700] [INFO] [ai_colab.api] [33416] API GET /api/status -> 200 (8.74ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:43:22] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:43:50-0700] [INFO] [ai_colab.api] [33416] API GET /api/status -> 200 (10.36ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:43:50] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:44:20-0700] [INFO] [ai_colab.api] [33416] API GET /api/status -> 200 (15.67ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:44:20] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:44:51-0700] [INFO] [ai_colab.api] [33416] API GET /api/status -> 200 (9.57ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:44:51] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:45:00-0700] [INFO] [ai_colab.webui] [33416] Spawned terminal 2 (gemini) with PID 34995[0m
+[0;32m[2026-03-28T22:45:00-0700] [INFO] [ai_colab.webui] [33416] Spawned terminal 2 (gemini) with PID 34995[0m
+[0;32m[2026-03-28T22:45:00-0700] [INFO] [ai_colab.api] [33416] API POST /api/terminal/spawn -> 200 (22.96ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:45:00] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:45:21-0700] [INFO] [ai_colab.api] [33416] API GET /api/status -> 200 (18.98ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:45:21] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:45:51-0700] [INFO] [ai_colab.api] [33416] API GET /api/status -> 200 (12.51ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:45:51] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:46:21-0700] [INFO] [ai_colab.api] [33416] API GET /api/status -> 200 (18.95ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:46:21] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:46:51-0700] [INFO] [ai_colab.api] [33416] API GET /api/status -> 200 (11.90ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:46:51] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:49:10-0700] [INFO] [ai_colab] [35827] Logging initialized (level: INFO, dir: /home/rchennau/.ai-colab/logs)[0m
+[0;32m[2026-03-28T22:49:10-0700] [INFO] [ai_colab.webui] [35827] Rate limiting enabled: 100 req/min, 1000 req/hour[0m
+[0;32m[2026-03-28T22:49:10-0700] [INFO] [ai_colab.webui] [35827] Rate limiting enabled: 100 req/min, 1000 req/hour[0m
+[0;32m[2026-03-28T22:49:11-0700] [INFO] [ai_colab.webui] [35827] PTY manager initialized for web terminals[0m
+[0;32m[2026-03-28T22:49:11-0700] [INFO] [ai_colab.webui] [35827] PTY manager initialized for web terminals[0m
+[0;32m[2026-03-28T22:49:11-0700] [INFO] [ai_colab.webui] [35827] Real-time update thread started[0m
+[0;32m[2026-03-28T22:49:11-0700] [INFO] [ai_colab.webui] [35827] Real-time update thread started[0m
+[0;32m[2026-03-28T22:49:11-0700] [INFO] [ai_colab.webui] [35827] Starting ai-colab Web UI server...[0m
+[0;32m[2026-03-28T22:49:11-0700] [INFO] [ai_colab.webui] [35827] Starting ai-colab Web UI server...[0m
+ * Serving Flask app 'app'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8080
+ * Running on http://192.168.164.116:8080
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [28/Mar/2026 22:49:15] "GET / HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:49:16-0700] [INFO] [ai_colab.api] [35827] API GET /api/status -> 200 (44.95ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:49:16] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:49:16-0700] [INFO] [ai_colab.webui] [35827] Client connected to WebSocket[0m
+[0;32m[2026-03-28T22:49:16-0700] [INFO] [ai_colab.webui] [35827] Client connected to WebSocket[0m
+[0;32m[2026-03-28T22:49:16-0700] [INFO] [ai_colab.webui] [35827] Client subscribed to status updates[0m
+[0;32m[2026-03-28T22:49:16-0700] [INFO] [ai_colab.webui] [35827] Client subscribed to status updates[0m
+[0;32m[2026-03-28T22:49:28-0700] [INFO] [ai_colab.api] [35827] API GET /api/terminal/list -> 200 (0.21ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:49:28] "GET /api/terminal/list HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:49:29-0700] [INFO] [ai_colab.api] [35827] API GET /api/config -> 200 (2.58ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:49:29] "GET /api/config HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:49:29-0700] [INFO] [ai_colab.api] [35827] API GET /api/terminal/list -> 200 (0.24ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:49:29] "GET /api/terminal/list HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:49:29-0700] [INFO] [ai_colab.api] [35827] API GET /api/terminal/list -> 200 (0.22ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:49:29] "GET /api/terminal/list HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:49:29-0700] [INFO] [ai_colab.webui] [35827] Spawned terminal fixed-user-console (user-console) with PID 35890[0m
+[0;32m[2026-03-28T22:49:29-0700] [INFO] [ai_colab.webui] [35827] Spawned terminal fixed-user-console (user-console) with PID 35890[0m
+[0;32m[2026-03-28T22:49:29-0700] [INFO] [ai_colab.webui] [35827] Spawned terminal fixed-conductor (conductor) with PID 35887[0m
+[0;32m[2026-03-28T22:49:29-0700] [INFO] [ai_colab.webui] [35827] Spawned terminal fixed-conductor (conductor) with PID 35887[0m
+[0;32m[2026-03-28T22:49:29-0700] [INFO] [ai_colab.api] [35827] API POST /api/terminal/spawn -> 200 (14.47ms) from 127.0.0.1[0m
+[0;32m[2026-03-28T22:49:29-0700] [INFO] [ai_colab.api] [35827] API POST /api/terminal/spawn -> 200 (30.01ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:49:29] "POST /api/terminal/spawn HTTP/1.1" 200 -
+127.0.0.1 - - [28/Mar/2026 22:49:29] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:49:37-0700] [INFO] [ai_colab.api] [35827] API GET /api/terminal/list -> 200 (0.53ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:49:37] "GET /api/terminal/list HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:49:37-0700] [INFO] [ai_colab.webui] [35827] Spawned terminal 1 (qwen) with PID 36774[0m
+[0;32m[2026-03-28T22:49:37-0700] [INFO] [ai_colab.webui] [35827] Spawned terminal 1 (qwen) with PID 36774[0m
+[0;32m[2026-03-28T22:49:37-0700] [INFO] [ai_colab.api] [35827] API POST /api/terminal/spawn -> 200 (34.29ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:49:37] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:49:46-0700] [INFO] [ai_colab.api] [35827] API GET /api/status -> 200 (16.02ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:49:46] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:50:16-0700] [INFO] [ai_colab.api] [35827] API GET /api/status -> 200 (10.67ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:50:16] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:50:29-0700] [INFO] [ai_colab.api] [35827] API GET /api/terminal/list -> 200 (0.88ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:50:29] "GET /api/terminal/list HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:50:30-0700] [INFO] [ai_colab.webui] [35827] Spawned terminal 2 (gemini) with PID 37342[0m
+[0;32m[2026-03-28T22:50:30-0700] [INFO] [ai_colab.webui] [35827] Spawned terminal 2 (gemini) with PID 37342[0m
+[0;32m[2026-03-28T22:50:30-0700] [INFO] [ai_colab.api] [35827] API POST /api/terminal/spawn -> 200 (20.01ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:50:30] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:50:47-0700] [INFO] [ai_colab.api] [35827] API GET /api/status -> 200 (16.16ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:50:47] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:51:14-0700] [INFO] [ai_colab.api] [35827] API GET /api/status -> 200 (10.98ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:51:14] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:51:16-0700] [INFO] [ai_colab.api] [35827] API GET /api/terminal/list -> 200 (0.73ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:51:16] "GET /api/terminal/list HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:51:17-0700] [INFO] [ai_colab.webui] [35827] Spawned terminal 3 (vllm) with PID 37742[0m
+[0;32m[2026-03-28T22:51:17-0700] [INFO] [ai_colab.webui] [35827] Spawned terminal 3 (vllm) with PID 37742[0m
+[0;32m[2026-03-28T22:51:17-0700] [INFO] [ai_colab.api] [35827] API POST /api/terminal/spawn -> 200 (33.02ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:51:17] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:51:28-0700] [INFO] [ai_colab.webui] [35827] Closed terminal 3[0m
+[0;32m[2026-03-28T22:51:28-0700] [INFO] [ai_colab.webui] [35827] Closed terminal 3[0m
+[0;32m[2026-03-28T22:51:45-0700] [INFO] [ai_colab.api] [35827] API GET /api/status -> 200 (27.08ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:51:45] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:52:15-0700] [INFO] [ai_colab.api] [35827] API GET /api/status -> 200 (26.07ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:52:15] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:52:30-0700] [INFO] [ai_colab.api] [35827] API GET /api/terminal/list -> 200 (0.33ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:52:30] "GET /api/terminal/list HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:52:30-0700] [INFO] [ai_colab.webui] [35827] Spawned terminal 4 (deepseek) with PID 38255[0m
+[0;32m[2026-03-28T22:52:30-0700] [INFO] [ai_colab.webui] [35827] Spawned terminal 4 (deepseek) with PID 38255[0m
+[0;32m[2026-03-28T22:52:30-0700] [INFO] [ai_colab.api] [35827] API POST /api/terminal/spawn -> 200 (40.69ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:52:30] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:52:35-0700] [INFO] [ai_colab.api] [35827] API GET /api/terminal/list -> 200 (0.41ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:52:35] "GET /api/terminal/list HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:52:42-0700] [INFO] [ai_colab] [35827] Logging initialized (level: INFO, dir: /home/rchennau/.ai-colab/logs)[0m
+[0;32m[2026-03-28T22:52:45-0700] [INFO] [ai_colab.api] [35827] API GET /api/status -> 200 (11.43ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:52:45] "GET /api/status HTTP/1.1" 200 -
+[1;33m[2026-03-28T22:52:48-0700] [WARNING] [ai_colab.health] [35827] System health: unhealthy[0m
+[1;33m[2026-03-28T22:52:48-0700] [WARNING] [ai_colab.health] [35827] System health: unhealthy[0m
+[1;33m[2026-03-28T22:52:48-0700] [WARNING] [ai_colab.health] [35827]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:52:48-0700] [WARNING] [ai_colab.health] [35827]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:52:48-0700] [WARNING] [ai_colab.webui] [35827] Health check: unhealthy[0m
+[1;33m[2026-03-28T22:52:48-0700] [WARNING] [ai_colab.webui] [35827] Health check: unhealthy[0m
+[1;33m[2026-03-28T22:52:48-0700] [WARNING] [ai_colab.webui] [35827]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:52:48-0700] [WARNING] [ai_colab.webui] [35827]   vllm: unhealthy - vLLM connection timeout[0m
+[0;31m[2026-03-28T22:52:48-0700] [ERROR] [ai_colab.webui] [35827] Server error: GET /health -> 503[0m
+[0;31m[2026-03-28T22:52:48-0700] [ERROR] [ai_colab.webui] [35827] Server error: GET /health -> 503[0m
+127.0.0.1 - - [28/Mar/2026 22:52:48] "[35m[1mGET /health HTTP/1.1[0m" 503 -
+[1;33m[2026-03-28T22:52:53-0700] [WARNING] [ai_colab.health] [35827] System health: unhealthy[0m
+[1;33m[2026-03-28T22:52:53-0700] [WARNING] [ai_colab.health] [35827] System health: unhealthy[0m
+[1;33m[2026-03-28T22:52:53-0700] [WARNING] [ai_colab.health] [35827]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:52:53-0700] [WARNING] [ai_colab.health] [35827]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:52:53-0700] [WARNING] [ai_colab.webui] [35827] Health check: unhealthy[0m
+[1;33m[2026-03-28T22:52:53-0700] [WARNING] [ai_colab.webui] [35827] Health check: unhealthy[0m
+[1;33m[2026-03-28T22:52:53-0700] [WARNING] [ai_colab.webui] [35827]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:52:53-0700] [WARNING] [ai_colab.webui] [35827]   vllm: unhealthy - vLLM connection timeout[0m
+[0;31m[2026-03-28T22:52:53-0700] [ERROR] [ai_colab.webui] [35827] Server error: GET /health -> 503[0m
+[0;31m[2026-03-28T22:52:53-0700] [ERROR] [ai_colab.webui] [35827] Server error: GET /health -> 503[0m
+127.0.0.1 - - [28/Mar/2026 22:52:53] "[35m[1mGET /health HTTP/1.1[0m" 503 -
+[1;33m[2026-03-28T22:52:58-0700] [WARNING] [ai_colab.health] [35827] System health: unhealthy[0m
+[1;33m[2026-03-28T22:52:58-0700] [WARNING] [ai_colab.health] [35827] System health: unhealthy[0m
+[1;33m[2026-03-28T22:52:58-0700] [WARNING] [ai_colab.health] [35827]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:52:58-0700] [WARNING] [ai_colab.health] [35827]   vllm: unhealthy - vLLM connection timeout[0m
+127.0.0.1 - - [28/Mar/2026 22:52:58] "GET /health/detailed HTTP/1.1" 200 -
+127.0.0.1 - - [28/Mar/2026 22:52:58] "GET /health/logs HTTP/1.1" 200 -
+[1;33m[2026-03-28T22:53:03-0700] [WARNING] [ai_colab.health] [35827] System health: unhealthy[0m
+[1;33m[2026-03-28T22:53:03-0700] [WARNING] [ai_colab.health] [35827] System health: unhealthy[0m
+[1;33m[2026-03-28T22:53:03-0700] [WARNING] [ai_colab.health] [35827]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:53:03-0700] [WARNING] [ai_colab.health] [35827]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:53:03-0700] [WARNING] [ai_colab.webui] [35827] Health check: unhealthy[0m
+[1;33m[2026-03-28T22:53:03-0700] [WARNING] [ai_colab.webui] [35827] Health check: unhealthy[0m
+[1;33m[2026-03-28T22:53:03-0700] [WARNING] [ai_colab.webui] [35827]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:53:03-0700] [WARNING] [ai_colab.webui] [35827]   vllm: unhealthy - vLLM connection timeout[0m
+[0;31m[2026-03-28T22:53:03-0700] [ERROR] [ai_colab.webui] [35827] Server error: GET /health -> 503[0m
+[0;31m[2026-03-28T22:53:03-0700] [ERROR] [ai_colab.webui] [35827] Server error: GET /health -> 503[0m
+127.0.0.1 - - [28/Mar/2026 22:53:03] "[35m[1mGET /health HTTP/1.1[0m" 503 -
+[0;31m[2026-03-28T22:53:03-0700] [ERROR] [ai_colab.webui] [35827] Error getting logs: bad operand type for unary -: 'str'[0m
+[0;31m[2026-03-28T22:53:03-0700] [ERROR] [ai_colab.webui] [35827] Error getting logs: bad operand type for unary -: 'str'[0m
+[0;32m[2026-03-28T22:53:03-0700] [INFO] [ai_colab.api] [35827] API GET /api/logs -> 500 (16.56ms) from 127.0.0.1[0m
+[0;31m[2026-03-28T22:53:03-0700] [ERROR] [ai_colab.webui] [35827] Server error: GET /api/logs -> 500[0m
+[0;31m[2026-03-28T22:53:03-0700] [ERROR] [ai_colab.webui] [35827] Server error: GET /api/logs -> 500[0m
+127.0.0.1 - - [28/Mar/2026 22:53:03] "[35m[1mGET /api/logs HTTP/1.1[0m" 500 -
+[0;32m[2026-03-28T22:53:03-0700] [INFO] [ai_colab.api] [35827] API GET /api/logs -> 200 (25.29ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:53:03] "GET /api/logs?lines=50 HTTP/1.1" 200 -
+[0;31m[2026-03-28T22:53:04-0700] [ERROR] [ai_colab.webui] [35827] Error getting logs: bad operand type for unary -: 'str'[0m
+[0;31m[2026-03-28T22:53:04-0700] [ERROR] [ai_colab.webui] [35827] Error getting logs: bad operand type for unary -: 'str'[0m
+[0;32m[2026-03-28T22:53:04-0700] [INFO] [ai_colab.api] [35827] API GET /api/logs -> 500 (36.27ms) from 127.0.0.1[0m
+[0;31m[2026-03-28T22:53:04-0700] [ERROR] [ai_colab.webui] [35827] Server error: GET /api/logs -> 500[0m
+[0;31m[2026-03-28T22:53:04-0700] [ERROR] [ai_colab.webui] [35827] Server error: GET /api/logs -> 500[0m
+127.0.0.1 - - [28/Mar/2026 22:53:04] "[35m[1mGET /api/logs HTTP/1.1[0m" 500 -
+[0;32m[2026-03-28T22:53:04-0700] [INFO] [ai_colab.api] [35827] API POST /api/logs/rotate -> 405 (3.61ms) from 127.0.0.1[0m
+[1;33m[2026-03-28T22:53:04-0700] [WARNING] [ai_colab.webui] [35827] Client error: POST /api/logs/rotate -> 405[0m
+[1;33m[2026-03-28T22:53:04-0700] [WARNING] [ai_colab.webui] [35827] Client error: POST /api/logs/rotate -> 405[0m
+127.0.0.1 - - [28/Mar/2026 22:53:04] "[31m[1mPOST /api/logs/rotate HTTP/1.1[0m" 405 -
+[0;32m[2026-03-28T22:53:04-0700] [INFO] [ai_colab.api] [35827] API POST /api/logs/clear -> 405 (3.81ms) from 127.0.0.1[0m
+[1;33m[2026-03-28T22:53:04-0700] [WARNING] [ai_colab.webui] [35827] Client error: POST /api/logs/clear -> 405[0m
+[1;33m[2026-03-28T22:53:04-0700] [WARNING] [ai_colab.webui] [35827] Client error: POST /api/logs/clear -> 405[0m
+127.0.0.1 - - [28/Mar/2026 22:53:04] "[31m[1mPOST /api/logs/clear HTTP/1.1[0m" 405 -
+[0;32m[2026-03-28T22:53:04-0700] [INFO] [ai_colab.api] [35827] API GET /api/status -> 200 (29.30ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:53:04] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:53:04-0700] [INFO] [ai_colab.api] [35827] API GET /api/status -> 200 (19.12ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:53:04] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:53:04-0700] [INFO] [ai_colab.api] [35827] API GET /api/terminal/list -> 200 (0.38ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:53:04] "GET /api/terminal/list HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:53:04-0700] [INFO] [ai_colab.webui] [35827] Spawned terminal test-1 (bash) with PID 38865[0m
+[0;32m[2026-03-28T22:53:04-0700] [INFO] [ai_colab.webui] [35827] Spawned terminal test-1 (bash) with PID 38865[0m
+[0;32m[2026-03-28T22:53:04-0700] [INFO] [ai_colab.api] [35827] API POST /api/terminal/spawn -> 200 (27.97ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:53:04] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:53:04-0700] [INFO] [ai_colab.webui] [35827] Closed terminal test-1[0m
+[0;32m[2026-03-28T22:53:04-0700] [INFO] [ai_colab.webui] [35827] Closed terminal test-1[0m
+[0;32m[2026-03-28T22:53:04-0700] [INFO] [ai_colab.api] [35827] API POST /api/terminal/close -> 200 (4.57ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:53:04] "POST /api/terminal/close HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:53:04-0700] [INFO] [ai_colab.api] [35827] API GET /api/terminal/list -> 200 (0.74ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:53:04] "GET /api/terminal/list HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:53:05-0700] [INFO] [ai_colab.api] [35827] API GET /api/conductor/status -> 200 (31.75ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:53:05] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:53:05-0700] [INFO] [ai_colab.api] [35827] API GET /api/conductor/status -> 200 (19.10ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:53:05] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:53:05-0700] [INFO] [ai_colab.api] [35827] API GET /api/config -> 200 (1.96ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:53:05] "GET /api/config HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:53:05-0700] [INFO] [ai_colab.webui] [35827] Backup created: /home/rchennau/ai_colab/scripts/../config/backups/config.20260328-225305.toml[0m
+[0;32m[2026-03-28T22:53:05-0700] [INFO] [ai_colab.webui] [35827] Backup created: /home/rchennau/ai_colab/scripts/../config/backups/config.20260328-225305.toml[0m
+[0;32m[2026-03-28T22:53:05-0700] [INFO] [ai_colab.webui] [35827] Configuration updated successfully[0m
+[0;32m[2026-03-28T22:53:05-0700] [INFO] [ai_colab.webui] [35827] Configuration updated successfully[0m
+[0;32m[2026-03-28T22:53:05-0700] [INFO] [ai_colab.api] [35827] API PUT /api/config -> 200 (28.15ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:53:05] "PUT /api/config HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:53:05-0700] [INFO] [ai_colab.api] [35827] API POST /api/config/validate -> 200 (26.02ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:53:05] "POST /api/config/validate HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:53:05-0700] [INFO] [ai_colab.api] [35827] API GET /api/profiles -> 200 (2.59ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:53:05] "GET /api/profiles HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:53:05-0700] [INFO] [ai_colab.api] [35827] API POST /api/profiles/save -> 200 (85.05ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:53:05] "POST /api/profiles/save HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:53:05-0700] [INFO] [ai_colab.api] [35827] API POST /api/profiles/delete -> 200 (1.26ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:53:05] "POST /api/profiles/delete HTTP/1.1" 200 -
+[0;31m[2026-03-28T22:53:05-0700] [ERROR] [ai_colab.webui] [35827] Error getting modules: name 'SCRIPT_DIR' is not defined[0m
+[0;31m[2026-03-28T22:53:05-0700] [ERROR] [ai_colab.webui] [35827] Error getting modules: name 'SCRIPT_DIR' is not defined[0m
+[0;32m[2026-03-28T22:53:05-0700] [INFO] [ai_colab.api] [35827] API GET /api/modules -> 500 (2.31ms) from 127.0.0.1[0m
+[0;31m[2026-03-28T22:53:05-0700] [ERROR] [ai_colab.webui] [35827] Server error: GET /api/modules -> 500[0m
+[0;31m[2026-03-28T22:53:05-0700] [ERROR] [ai_colab.webui] [35827] Server error: GET /api/modules -> 500[0m
+127.0.0.1 - - [28/Mar/2026 22:53:05] "[35m[1mGET /api/modules HTTP/1.1[0m" 500 -
+[0;31m[2026-03-28T22:53:05-0700] [ERROR] [ai_colab.webui] [35827] Error enabling module: name 'SCRIPT_DIR' is not defined[0m
+[0;31m[2026-03-28T22:53:05-0700] [ERROR] [ai_colab.webui] [35827] Error enabling module: name 'SCRIPT_DIR' is not defined[0m
+[0;32m[2026-03-28T22:53:05-0700] [INFO] [ai_colab.api] [35827] API POST /api/modules/atari-8bit/enable -> 500 (2.46ms) from 127.0.0.1[0m
+[0;31m[2026-03-28T22:53:05-0700] [ERROR] [ai_colab.webui] [35827] Server error: POST /api/modules/atari-8bit/enable -> 500[0m
+[0;31m[2026-03-28T22:53:05-0700] [ERROR] [ai_colab.webui] [35827] Server error: POST /api/modules/atari-8bit/enable -> 500[0m
+127.0.0.1 - - [28/Mar/2026 22:53:05] "[35m[1mPOST /api/modules/atari-8bit/enable HTTP/1.1[0m" 500 -
+[0;31m[2026-03-28T22:53:05-0700] [ERROR] [ai_colab.webui] [35827] Error disabling module: name 'SCRIPT_DIR' is not defined[0m
+[0;31m[2026-03-28T22:53:05-0700] [ERROR] [ai_colab.webui] [35827] Error disabling module: name 'SCRIPT_DIR' is not defined[0m
+[0;32m[2026-03-28T22:53:05-0700] [INFO] [ai_colab.api] [35827] API POST /api/modules/atari-8bit/disable -> 500 (4.25ms) from 127.0.0.1[0m
+[0;31m[2026-03-28T22:53:05-0700] [ERROR] [ai_colab.webui] [35827] Server error: POST /api/modules/atari-8bit/disable -> 500[0m
+[0;31m[2026-03-28T22:53:05-0700] [ERROR] [ai_colab.webui] [35827] Server error: POST /api/modules/atari-8bit/disable -> 500[0m
+127.0.0.1 - - [28/Mar/2026 22:53:05] "[35m[1mPOST /api/modules/atari-8bit/disable HTTP/1.1[0m" 500 -
+[0;31m[2026-03-28T22:53:05-0700] [ERROR] [ai_colab.webui] [35827] KB search error: '<' not supported between instances of 'str' and 'int'[0m
+[0;31m[2026-03-28T22:53:05-0700] [ERROR] [ai_colab.webui] [35827] KB search error: '<' not supported between instances of 'str' and 'int'[0m
+[0;32m[2026-03-28T22:53:05-0700] [INFO] [ai_colab.api] [35827] API GET /api/kb/search -> 500 (3.68ms) from 127.0.0.1[0m
+[0;31m[2026-03-28T22:53:05-0700] [ERROR] [ai_colab.webui] [35827] Server error: GET /api/kb/search -> 500[0m
+[0;31m[2026-03-28T22:53:05-0700] [ERROR] [ai_colab.webui] [35827] Server error: GET /api/kb/search -> 500[0m
+127.0.0.1 - - [28/Mar/2026 22:53:05] "[35m[1mGET /api/kb/search?query=test HTTP/1.1[0m" 500 -
+[0;32m[2026-03-28T22:53:06-0700] [INFO] [ai_colab.api] [35827] API GET /api/kb/index -> 404 (2.60ms) from 127.0.0.1[0m
+[1;33m[2026-03-28T22:53:06-0700] [WARNING] [ai_colab.webui] [35827] Client error: GET /api/kb/index -> 404[0m
+[1;33m[2026-03-28T22:53:06-0700] [WARNING] [ai_colab.webui] [35827] Client error: GET /api/kb/index -> 404[0m
+127.0.0.1 - - [28/Mar/2026 22:53:06] "[33mGET /api/kb/index HTTP/1.1[0m" 404 -
+[0;32m[2026-03-28T22:53:04-0700] [INFO] [ai_colab.webui] [35827] Shutdown complete. Tmux killed: False, Process patterns: 3[0m
+[0;32m[2026-03-28T22:53:04-0700] [INFO] [ai_colab.webui] [35827] Shutdown complete. Tmux killed: False, Process patterns: 3[0m
+[0;32m[2026-03-28T22:53:04-0700] [INFO] [ai_colab.api] [35827] API POST /api/shutdown -> 200 (-2363.53ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:53:04] "POST /api/shutdown HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:53:15-0700] [INFO] [ai_colab.api] [35827] API GET /api/status -> 200 (27.71ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:53:15] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:53:37-0700] [INFO] [ai_colab.api] [35827] API GET /api/status -> 200 (13.44ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:53:37] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:53:37-0700] [INFO] [ai_colab.agent_coordination] [35827] AgentCoordination initialized: /home/rchennau/.ai-colab/agent_coordination.db[0m
+[0;32m[2026-03-28T22:53:37-0700] [INFO] [ai_colab.agent_coordination] [35827] FederatedLearning initialized: /home/rchennau/.ai-colab/federated_learning.db[0m
+[0;32m[2026-03-28T22:53:37-0700] [INFO] [ai_colab.agent_coordination] [35827] AgentFederation initialized[0m
+[0;32m[2026-03-28T22:53:37-0700] [INFO] [ai_colab.api] [35827] API GET /api/agents -> 200 (42.49ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:53:37] "GET /api/agents HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:53:43-0700] [INFO] [ai_colab.api] [35827] API GET /api/terminal/list -> 200 (0.50ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:53:43] "GET /api/terminal/list HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:53:43-0700] [INFO] [ai_colab.api] [35827] API GET /api/config -> 200 (0.95ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:53:43] "GET /api/config HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:53:45-0700] [INFO] [ai_colab.api] [35827] API GET /api/status -> 200 (14.05ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:53:45] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:54:16-0700] [INFO] [ai_colab.api] [35827] API GET /api/status -> 200 (11.36ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:54:16] "GET /api/status HTTP/1.1" 200 -
+[1;33m[2026-03-28T22:54:18-0700] [WARNING] [ai_colab.health] [35827] System health: unhealthy[0m
+[1;33m[2026-03-28T22:54:18-0700] [WARNING] [ai_colab.health] [35827] System health: unhealthy[0m
+[1;33m[2026-03-28T22:54:18-0700] [WARNING] [ai_colab.health] [35827]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:54:18-0700] [WARNING] [ai_colab.health] [35827]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:54:18-0700] [WARNING] [ai_colab.webui] [35827] Health check: unhealthy[0m
+[1;33m[2026-03-28T22:54:18-0700] [WARNING] [ai_colab.webui] [35827] Health check: unhealthy[0m
+[1;33m[2026-03-28T22:54:18-0700] [WARNING] [ai_colab.webui] [35827]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:54:18-0700] [WARNING] [ai_colab.webui] [35827]   vllm: unhealthy - vLLM connection timeout[0m
+[0;31m[2026-03-28T22:54:18-0700] [ERROR] [ai_colab.webui] [35827] Server error: GET /health -> 503[0m
+[0;31m[2026-03-28T22:54:18-0700] [ERROR] [ai_colab.webui] [35827] Server error: GET /health -> 503[0m
+127.0.0.1 - - [28/Mar/2026 22:54:18] "[35m[1mGET /health HTTP/1.1[0m" 503 -
+[1;33m[2026-03-28T22:54:24-0700] [WARNING] [ai_colab.health] [35827] System health: unhealthy[0m
+[1;33m[2026-03-28T22:54:24-0700] [WARNING] [ai_colab.health] [35827] System health: unhealthy[0m
+[1;33m[2026-03-28T22:54:24-0700] [WARNING] [ai_colab.health] [35827]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:54:24-0700] [WARNING] [ai_colab.health] [35827]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:54:24-0700] [WARNING] [ai_colab.webui] [35827] Health check: unhealthy[0m
+[1;33m[2026-03-28T22:54:24-0700] [WARNING] [ai_colab.webui] [35827] Health check: unhealthy[0m
+[1;33m[2026-03-28T22:54:24-0700] [WARNING] [ai_colab.webui] [35827]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:54:24-0700] [WARNING] [ai_colab.webui] [35827]   vllm: unhealthy - vLLM connection timeout[0m
+[0;31m[2026-03-28T22:54:24-0700] [ERROR] [ai_colab.webui] [35827] Server error: GET /health -> 503[0m
+[0;31m[2026-03-28T22:54:24-0700] [ERROR] [ai_colab.webui] [35827] Server error: GET /health -> 503[0m
+127.0.0.1 - - [28/Mar/2026 22:54:24] "[35m[1mGET /health HTTP/1.1[0m" 503 -
+[1;33m[2026-03-28T22:54:29-0700] [WARNING] [ai_colab.health] [35827] System health: unhealthy[0m
+[1;33m[2026-03-28T22:54:29-0700] [WARNING] [ai_colab.health] [35827] System health: unhealthy[0m
+[1;33m[2026-03-28T22:54:29-0700] [WARNING] [ai_colab.health] [35827]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:54:29-0700] [WARNING] [ai_colab.health] [35827]   vllm: unhealthy - vLLM connection timeout[0m
+127.0.0.1 - - [28/Mar/2026 22:54:29] "GET /health/detailed HTTP/1.1" 200 -
+127.0.0.1 - - [28/Mar/2026 22:54:29] "GET /health/logs HTTP/1.1" 200 -
+[1;33m[2026-03-28T22:54:32-0700] [WARNING] [ai_colab.health] [35827] System health: unhealthy[0m
+[1;33m[2026-03-28T22:54:32-0700] [WARNING] [ai_colab.health] [35827] System health: unhealthy[0m
+[1;33m[2026-03-28T22:54:32-0700] [WARNING] [ai_colab.health] [35827]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:54:32-0700] [WARNING] [ai_colab.health] [35827]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:54:32-0700] [WARNING] [ai_colab.webui] [35827] Health check: unhealthy[0m
+[1;33m[2026-03-28T22:54:32-0700] [WARNING] [ai_colab.webui] [35827] Health check: unhealthy[0m
+[1;33m[2026-03-28T22:54:32-0700] [WARNING] [ai_colab.webui] [35827]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T22:54:32-0700] [WARNING] [ai_colab.webui] [35827]   vllm: unhealthy - vLLM connection timeout[0m
+[0;31m[2026-03-28T22:54:32-0700] [ERROR] [ai_colab.webui] [35827] Server error: GET /health -> 503[0m
+[0;31m[2026-03-28T22:54:32-0700] [ERROR] [ai_colab.webui] [35827] Server error: GET /health -> 503[0m
+127.0.0.1 - - [28/Mar/2026 22:54:32] "[35m[1mGET /health HTTP/1.1[0m" 503 -
+[0;31m[2026-03-28T22:54:32-0700] [ERROR] [ai_colab.webui] [35827] Error getting logs: bad operand type for unary -: 'str'[0m
+[0;31m[2026-03-28T22:54:32-0700] [ERROR] [ai_colab.webui] [35827] Error getting logs: bad operand type for unary -: 'str'[0m
+[0;32m[2026-03-28T22:54:32-0700] [INFO] [ai_colab.api] [35827] API GET /api/logs -> 500 (16.07ms) from 127.0.0.1[0m
+[0;31m[2026-03-28T22:54:32-0700] [ERROR] [ai_colab.webui] [35827] Server error: GET /api/logs -> 500[0m
+[0;31m[2026-03-28T22:54:32-0700] [ERROR] [ai_colab.webui] [35827] Server error: GET /api/logs -> 500[0m
+127.0.0.1 - - [28/Mar/2026 22:54:32] "[35m[1mGET /api/logs HTTP/1.1[0m" 500 -
+[0;32m[2026-03-28T22:54:32-0700] [INFO] [ai_colab.api] [35827] API GET /api/logs -> 200 (11.44ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:54:32] "GET /api/logs?lines=50 HTTP/1.1" 200 -
+[0;31m[2026-03-28T22:54:32-0700] [ERROR] [ai_colab.webui] [35827] Error getting logs: bad operand type for unary -: 'str'[0m
+[0;31m[2026-03-28T22:54:32-0700] [ERROR] [ai_colab.webui] [35827] Error getting logs: bad operand type for unary -: 'str'[0m
+[0;32m[2026-03-28T22:54:32-0700] [INFO] [ai_colab.api] [35827] API GET /api/logs -> 500 (17.29ms) from 127.0.0.1[0m
+[0;31m[2026-03-28T22:54:32-0700] [ERROR] [ai_colab.webui] [35827] Server error: GET /api/logs -> 500[0m
+[0;31m[2026-03-28T22:54:32-0700] [ERROR] [ai_colab.webui] [35827] Server error: GET /api/logs -> 500[0m
+127.0.0.1 - - [28/Mar/2026 22:54:32] "[35m[1mGET /api/logs HTTP/1.1[0m" 500 -
+[0;32m[2026-03-28T22:54:32-0700] [INFO] [ai_colab.api] [35827] API POST /api/logs/rotate -> 405 (1.29ms) from 127.0.0.1[0m
+[1;33m[2026-03-28T22:54:32-0700] [WARNING] [ai_colab.webui] [35827] Client error: POST /api/logs/rotate -> 405[0m
+[1;33m[2026-03-28T22:54:32-0700] [WARNING] [ai_colab.webui] [35827] Client error: POST /api/logs/rotate -> 405[0m
+127.0.0.1 - - [28/Mar/2026 22:54:32] "[31m[1mPOST /api/logs/rotate HTTP/1.1[0m" 405 -
+[0;32m[2026-03-28T22:54:32-0700] [INFO] [ai_colab.api] [35827] API POST /api/logs/clear -> 405 (0.77ms) from 127.0.0.1[0m
+[1;33m[2026-03-28T22:54:32-0700] [WARNING] [ai_colab.webui] [35827] Client error: POST /api/logs/clear -> 405[0m
+[1;33m[2026-03-28T22:54:32-0700] [WARNING] [ai_colab.webui] [35827] Client error: POST /api/logs/clear -> 405[0m
+127.0.0.1 - - [28/Mar/2026 22:54:32] "[31m[1mPOST /api/logs/clear HTTP/1.1[0m" 405 -
+[0;32m[2026-03-28T22:54:32-0700] [INFO] [ai_colab.api] [35827] API GET /api/status -> 200 (20.50ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:54:32] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:54:32-0700] [INFO] [ai_colab.api] [35827] API GET /api/status -> 200 (16.23ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:54:32] "GET /api/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:54:32-0700] [INFO] [ai_colab.api] [35827] API GET /api/terminal/list -> 200 (0.62ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:54:32] "GET /api/terminal/list HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:54:32-0700] [INFO] [ai_colab.webui] [35827] Spawned terminal test-1 (bash) with PID 39618[0m
+[0;32m[2026-03-28T22:54:32-0700] [INFO] [ai_colab.webui] [35827] Spawned terminal test-1 (bash) with PID 39618[0m
+[0;32m[2026-03-28T22:54:32-0700] [INFO] [ai_colab.api] [35827] API POST /api/terminal/spawn -> 200 (51.07ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:54:32] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:54:33-0700] [INFO] [ai_colab.webui] [35827] Closed terminal test-1[0m
+[0;32m[2026-03-28T22:54:33-0700] [INFO] [ai_colab.webui] [35827] Closed terminal test-1[0m
+[0;32m[2026-03-28T22:54:33-0700] [INFO] [ai_colab.api] [35827] API POST /api/terminal/close -> 200 (7.09ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:54:33] "POST /api/terminal/close HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:54:33-0700] [INFO] [ai_colab.api] [35827] API GET /api/terminal/list -> 200 (0.76ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:54:33] "GET /api/terminal/list HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:54:33-0700] [INFO] [ai_colab.api] [35827] API GET /api/conductor/status -> 200 (16.23ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:54:33] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:54:33-0700] [INFO] [ai_colab.api] [35827] API GET /api/conductor/status -> 200 (39.28ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:54:33] "GET /api/conductor/status HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:54:33-0700] [INFO] [ai_colab.api] [35827] API GET /api/config -> 200 (1.24ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:54:33] "GET /api/config HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:54:33-0700] [INFO] [ai_colab.webui] [35827] Backup created: /home/rchennau/ai_colab/scripts/../config/backups/config.20260328-225433.toml[0m
+[0;32m[2026-03-28T22:54:33-0700] [INFO] [ai_colab.webui] [35827] Backup created: /home/rchennau/ai_colab/scripts/../config/backups/config.20260328-225433.toml[0m
+[0;32m[2026-03-28T22:54:33-0700] [INFO] [ai_colab.webui] [35827] Configuration updated successfully[0m
+[0;32m[2026-03-28T22:54:33-0700] [INFO] [ai_colab.webui] [35827] Configuration updated successfully[0m
+[0;32m[2026-03-28T22:54:33-0700] [INFO] [ai_colab.api] [35827] API PUT /api/config -> 200 (51.43ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:54:33] "PUT /api/config HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:54:33-0700] [INFO] [ai_colab.api] [35827] API POST /api/config/validate -> 200 (51.73ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:54:33] "POST /api/config/validate HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:54:33-0700] [INFO] [ai_colab.api] [35827] API GET /api/profiles -> 200 (1.46ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:54:33] "GET /api/profiles HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:54:33-0700] [INFO] [ai_colab.api] [35827] API POST /api/profiles/save -> 200 (46.77ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:54:33] "POST /api/profiles/save HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:54:33-0700] [INFO] [ai_colab.api] [35827] API POST /api/profiles/delete -> 200 (1.50ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:54:33] "POST /api/profiles/delete HTTP/1.1" 200 -
+[0;31m[2026-03-28T22:54:34-0700] [ERROR] [ai_colab.webui] [35827] Error getting modules: name 'SCRIPT_DIR' is not defined[0m
+[0;31m[2026-03-28T22:54:34-0700] [ERROR] [ai_colab.webui] [35827] Error getting modules: name 'SCRIPT_DIR' is not defined[0m
+[0;32m[2026-03-28T22:54:34-0700] [INFO] [ai_colab.api] [35827] API GET /api/modules -> 500 (8.67ms) from 127.0.0.1[0m
+[0;31m[2026-03-28T22:54:34-0700] [ERROR] [ai_colab.webui] [35827] Server error: GET /api/modules -> 500[0m
+[0;31m[2026-03-28T22:54:34-0700] [ERROR] [ai_colab.webui] [35827] Server error: GET /api/modules -> 500[0m
+127.0.0.1 - - [28/Mar/2026 22:54:34] "[35m[1mGET /api/modules HTTP/1.1[0m" 500 -
+[0;31m[2026-03-28T22:54:34-0700] [ERROR] [ai_colab.webui] [35827] Error enabling module: name 'SCRIPT_DIR' is not defined[0m
+[0;31m[2026-03-28T22:54:34-0700] [ERROR] [ai_colab.webui] [35827] Error enabling module: name 'SCRIPT_DIR' is not defined[0m
+[0;32m[2026-03-28T22:54:34-0700] [INFO] [ai_colab.api] [35827] API POST /api/modules/atari-8bit/enable -> 500 (2.21ms) from 127.0.0.1[0m
+[0;31m[2026-03-28T22:54:34-0700] [ERROR] [ai_colab.webui] [35827] Server error: POST /api/modules/atari-8bit/enable -> 500[0m
+[0;31m[2026-03-28T22:54:34-0700] [ERROR] [ai_colab.webui] [35827] Server error: POST /api/modules/atari-8bit/enable -> 500[0m
+127.0.0.1 - - [28/Mar/2026 22:54:34] "[35m[1mPOST /api/modules/atari-8bit/enable HTTP/1.1[0m" 500 -
+[0;31m[2026-03-28T22:54:34-0700] [ERROR] [ai_colab.webui] [35827] Error disabling module: name 'SCRIPT_DIR' is not defined[0m
+[0;31m[2026-03-28T22:54:34-0700] [ERROR] [ai_colab.webui] [35827] Error disabling module: name 'SCRIPT_DIR' is not defined[0m
+[0;32m[2026-03-28T22:54:34-0700] [INFO] [ai_colab.api] [35827] API POST /api/modules/atari-8bit/disable -> 500 (4.04ms) from 127.0.0.1[0m
+[0;31m[2026-03-28T22:54:34-0700] [ERROR] [ai_colab.webui] [35827] Server error: POST /api/modules/atari-8bit/disable -> 500[0m
+[0;31m[2026-03-28T22:54:34-0700] [ERROR] [ai_colab.webui] [35827] Server error: POST /api/modules/atari-8bit/disable -> 500[0m
+127.0.0.1 - - [28/Mar/2026 22:54:34] "[35m[1mPOST /api/modules/atari-8bit/disable HTTP/1.1[0m" 500 -
+[0;31m[2026-03-28T22:54:34-0700] [ERROR] [ai_colab.webui] [35827] KB search error: '<' not supported between instances of 'str' and 'int'[0m
+[0;31m[2026-03-28T22:54:34-0700] [ERROR] [ai_colab.webui] [35827] KB search error: '<' not supported between instances of 'str' and 'int'[0m
+[0;32m[2026-03-28T22:54:34-0700] [INFO] [ai_colab.api] [35827] API GET /api/kb/search -> 500 (8.57ms) from 127.0.0.1[0m
+[0;31m[2026-03-28T22:54:34-0700] [ERROR] [ai_colab.webui] [35827] Server error: GET /api/kb/search -> 500[0m
+[0;31m[2026-03-28T22:54:34-0700] [ERROR] [ai_colab.webui] [35827] Server error: GET /api/kb/search -> 500[0m
+127.0.0.1 - - [28/Mar/2026 22:54:34] "[35m[1mGET /api/kb/search?query=test HTTP/1.1[0m" 500 -
+[0;32m[2026-03-28T22:54:34-0700] [INFO] [ai_colab.api] [35827] API GET /api/kb/index -> 404 (1.70ms) from 127.0.0.1[0m
+[1;33m[2026-03-28T22:54:34-0700] [WARNING] [ai_colab.webui] [35827] Client error: GET /api/kb/index -> 404[0m
+[1;33m[2026-03-28T22:54:34-0700] [WARNING] [ai_colab.webui] [35827] Client error: GET /api/kb/index -> 404[0m
+127.0.0.1 - - [28/Mar/2026 22:54:34] "[33mGET /api/kb/index HTTP/1.1[0m" 404 -
+[0;32m[2026-03-28T22:54:34-0700] [INFO] [ai_colab.webui] [35827] Shutdown complete. Tmux killed: False, Process patterns: 3[0m
+[0;32m[2026-03-28T22:54:34-0700] [INFO] [ai_colab.webui] [35827] Shutdown complete. Tmux killed: False, Process patterns: 3[0m
+[0;32m[2026-03-28T22:54:34-0700] [INFO] [ai_colab.api] [35827] API POST /api/shutdown -> 200 (208.45ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 22:54:34] "POST /api/shutdown HTTP/1.1" 200 -
+[0;32m[2026-03-28T22:54:40-0700] [INFO] [ai_colab.webui] [35827] Closed terminal 4[0m
+[0;32m[2026-03-28T22:54:40-0700] [INFO] [ai_colab.webui] [35827] Closed terminal 4[0m

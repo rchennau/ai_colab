@@ -2484,15 +2484,39 @@ def register_routes(app, socketio, limiter=None):
     def get_modules():
         """Get all modules with their enabled status"""
         try:
+            # Get module list from module-manager
             result = subprocess.run(
-                ["bash", str(SCRIPTS_DIR / "module-manager.sh"), "status"],
+                ["bash", str(SCRIPTS_DIR / "module-manager.sh"), "list"],
                 capture_output=True,
                 text=True,
                 cwd=str(APP_DIR)
             )
 
             if result.returncode == 0:
-                modules = json.loads(result.stdout)
+                modules_raw = json.loads(result.stdout)
+                
+                # Get enabled modules from prefs
+                prefs_file = APP_DIR / ".ai-colab-prefs"
+                enabled_ids = []
+                if prefs_file.exists():
+                    with open(prefs_file, 'r') as f:
+                        for line in f:
+                            if line.startswith("MODULE_"):
+                                k, v = line.strip().split("=", 1)
+                                if v == "true":
+                                    enabled_ids.append(k.replace("MODULE_", "").lower().replace("_", "-"))
+                
+                # Combine module info with enabled status
+                modules = []
+                for mod in modules_raw:
+                    modules.append({
+                        'id': mod.get('id', ''),
+                        'name': mod.get('name', ''),
+                        'description': mod.get('description', ''),
+                        'version': mod.get('version', ''),
+                        'enabled': mod.get('id', '') in enabled_ids
+                    })
+                
                 return jsonify({"modules": modules})
             else:
                 return jsonify({"error": "Failed to get modules"}), 500

@@ -1,0 +1,46 @@
+[0;32m[2026-03-28T20:39:08-0700] [INFO] [ai_colab] [24329] Logging initialized (level: INFO, dir: /home/rchennau/.ai-colab/logs)[0m
+[0;32m[2026-03-28T20:39:08-0700] [INFO] [ai_colab.webui] [24329] Rate limiting enabled: 100 req/min, 1000 req/hour[0m
+[0;32m[2026-03-28T20:39:08-0700] [INFO] [ai_colab.webui] [24329] Rate limiting enabled: 100 req/min, 1000 req/hour[0m
+[0;32m[2026-03-28T20:39:09-0700] [INFO] [ai_colab.webui] [24329] PTY manager initialized for web terminals[0m
+[0;32m[2026-03-28T20:39:09-0700] [INFO] [ai_colab.webui] [24329] PTY manager initialized for web terminals[0m
+[0;32m[2026-03-28T20:39:09-0700] [INFO] [ai_colab.webui] [24329] Real-time update thread started[0m
+[0;32m[2026-03-28T20:39:09-0700] [INFO] [ai_colab.webui] [24329] Real-time update thread started[0m
+[0;32m[2026-03-28T20:39:09-0700] [INFO] [ai_colab.webui] [24329] Starting ai-colab Web UI server...[0m
+[0;32m[2026-03-28T20:39:09-0700] [INFO] [ai_colab.webui] [24329] Starting ai-colab Web UI server...[0m
+ * Serving Flask app 'app'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8080
+ * Running on http://192.168.164.116:8080
+[33mPress CTRL+C to quit[0m
+[0;32m[2026-03-28T20:39:09-0700] [INFO] [ai_colab] [24329] Logging initialized (level: INFO, dir: /home/rchennau/.ai-colab/logs)[0m
+[1;33m[2026-03-28T20:39:14-0700] [WARNING] [ai_colab.health] [24329] System health: unhealthy[0m
+[1;33m[2026-03-28T20:39:14-0700] [WARNING] [ai_colab.health] [24329] System health: unhealthy[0m
+[1;33m[2026-03-28T20:39:14-0700] [WARNING] [ai_colab.health] [24329]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T20:39:14-0700] [WARNING] [ai_colab.health] [24329]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T20:39:14-0700] [WARNING] [ai_colab.webui] [24329] Health check: unhealthy[0m
+[1;33m[2026-03-28T20:39:14-0700] [WARNING] [ai_colab.webui] [24329] Health check: unhealthy[0m
+[1;33m[2026-03-28T20:39:14-0700] [WARNING] [ai_colab.webui] [24329]   vllm: unhealthy - vLLM connection timeout[0m
+[1;33m[2026-03-28T20:39:14-0700] [WARNING] [ai_colab.webui] [24329]   vllm: unhealthy - vLLM connection timeout[0m
+[0;31m[2026-03-28T20:39:14-0700] [ERROR] [ai_colab.webui] [24329] Server error: GET /health -> 503[0m
+[0;31m[2026-03-28T20:39:14-0700] [ERROR] [ai_colab.webui] [24329] Server error: GET /health -> 503[0m
+127.0.0.1 - - [28/Mar/2026 20:39:14] "[35m[1mGET /health HTTP/1.1[0m" 503 -
+127.0.0.1 - - [28/Mar/2026 20:39:14] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [28/Mar/2026 20:39:14] "GET / HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:39:14-0700] [INFO] [ai_colab.webui] [24329] Spawned terminal 999 (bash) with PID 24367[0m
+[0;32m[2026-03-28T20:39:14-0700] [INFO] [ai_colab.webui] [24329] Spawned terminal 999 (bash) with PID 24367[0m
+[0;32m[2026-03-28T20:39:14-0700] [INFO] [ai_colab.api] [24329] API POST /api/terminal/spawn -> 200 (12.91ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:39:14] "POST /api/terminal/spawn HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:39:14-0700] [INFO] [ai_colab.webui] [24329] Closed terminal 999[0m
+[0;32m[2026-03-28T20:39:14-0700] [INFO] [ai_colab.webui] [24329] Closed terminal 999[0m
+[0;32m[2026-03-28T20:39:14-0700] [INFO] [ai_colab.api] [24329] API POST /api/terminal/close -> 200 (1.50ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:39:14] "POST /api/terminal/close HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:39:15-0700] [INFO] [ai_colab.webui] [24329] Console command sent: !status to @conductor_alienware_14791[0m
+[0;32m[2026-03-28T20:39:15-0700] [INFO] [ai_colab.webui] [24329] Console command sent: !status to @conductor_alienware_14791[0m
+[0;32m[2026-03-28T20:39:15-0700] [INFO] [ai_colab.api] [24329] API POST /api/console/send -> 200 (378.98ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:39:15] "POST /api/console/send HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:39:15-0700] [INFO] [ai_colab.api] [24329] API GET /api/logs -> 200 (14.06ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:39:15] "GET /api/logs?lines=10 HTTP/1.1" 200 -
+[0;32m[2026-03-28T20:39:15-0700] [INFO] [ai_colab.api] [24329] API GET /api/conductor/status -> 200 (9.97ms) from 127.0.0.1[0m
+127.0.0.1 - - [28/Mar/2026 20:39:15] "GET /api/conductor/status HTTP/1.1" 200 -
