@@ -5,6 +5,7 @@
 #
 # Options:
 #   --rag-watcher    Start RAG file watcher for auto-reindexing
+#   -m, --module     Enable a specific module (e.g., -m atari-8bit)
 
 set -e
 
@@ -12,14 +13,24 @@ set -e
 INTERACTIVE=true
 RAG_WATCHER=false
 SHOW_HELP=false
-for arg in "$@"; do
+MODULE_TO_ENABLE=""
+
+# Parse arguments
+args=("$@")
+for ((i=0; i<${#args[@]}; i++)); do
+    arg="${args[i]}"
     if [[ "$arg" == "--no-interactive" || "$arg" == "--auto" ]]; then
         INTERACTIVE=false
-        break
     elif [[ "$arg" == "--rag-watcher" ]]; then
         RAG_WATCHER=true
     elif [[ "$arg" == "--help" || "$arg" == "-h" ]]; then
         SHOW_HELP=true
+    elif [[ "$arg" == "-m" || "$arg" == "--module" ]]; then
+        # Next argument is the module ID
+        next_i=$((i + 1))
+        if [[ $next_i -lt ${#args[@]} ]]; then
+            MODULE_TO_ENABLE="${args[next_i]}"
+        fi
     fi
 done
 
@@ -31,15 +42,18 @@ ai-colab Unified Launcher
 Usage: ./launch.sh [options]
 
 Options:
-  --rag-watcher     Start RAG file watcher for auto-reindexing
-  --no-interactive  Non-interactive mode (use saved preferences)
-  --auto            Alias for --no-interactive
-  --help, -h        Show this help message
+  --rag-watcher         Start RAG file watcher for auto-reindexing
+  -m, --module <id>     Enable a specific module (e.g., -m atari-8bit)
+  --no-interactive      Non-interactive mode (use saved preferences)
+  --auto                Alias for --no-interactive
+  --help, -h            Show this help message
 
 Examples:
-  ./launch.sh                  # Interactive launch
-  ./launch.sh --rag-watcher    # Launch with RAG auto-indexing
-  ./launch.sh --auto           # Non-interactive launch
+  ./launch.sh                      # Interactive launch
+  ./launch.sh --rag-watcher        # Launch with RAG auto-indexing
+  ./launch.sh -m atari-8bit        # Launch with Atari module enabled
+  ./launch.sh --module mock-test   # Launch with Mock module enabled
+  ./launch.sh --auto               # Non-interactive launch
 
 Launch Targets (via interactive selection):
   - Web UI (Flask dashboard on http://localhost:8080)
@@ -315,6 +329,38 @@ case "$LAUNCH_CHOICE" in
     3) DEBUG=true ;;
     *) echo "Invalid choice"; exit 1 ;;
 esac
+
+# 2.5 Module Enablement (if -m/--module flag specified)
+if [[ -n "$MODULE_TO_ENABLE" ]]; then
+    ui_title "Module Enablement" "${BLUE}"
+    echo -e "${CYAN}Enabling module: ${MODULE_TO_ENABLE}${NC}"
+    
+    # Discover modules directory
+    MODULES_DIR="$PROJECT_ROOT/modules"
+    
+    # Validate module exists
+    if [[ -d "$MODULES_DIR/$MODULE_TO_ENABLE" && -f "$MODULES_DIR/$MODULE_TO_ENABLE/module.toml" ]]; then
+        # Enable the module
+        bash "$CONFIG_MGR" set "MODULE_$(echo "$MODULE_TO_ENABLE" | tr '-' '_' | tr '[:lower:]' '[:upper:]')" "true"
+        
+        if [[ $? -eq 0 ]]; then
+            echo -e "${GREEN}✓${NC} Module '${MODULE_TO_ENABLE}' enabled"
+            echo -e "${CYAN}→ Module will be loaded on next launch${NC}"
+        else
+            echo -e "${RED}✗${NC} Failed to enable module '${MODULE_TO_ENABLE}'"
+        fi
+    else
+        echo -e "${RED}✗${NC} Module '${MODULE_TO_ENABLE}' not found"
+        echo -e "${YELLOW}Available modules:${NC}"
+        for module_dir in "$MODULES_DIR"/*/; do
+            if [[ -f "${module_dir}module.toml" ]]; then
+                mod_id=$(basename "$module_dir")
+                echo -e "  • ${mod_id}"
+            fi
+        done
+    fi
+    echo ""
+fi
 
 # 3. Module Status Display
 # Show available and loaded modules early in the launch process
