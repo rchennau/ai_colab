@@ -452,14 +452,11 @@
     <!-- Navigation -->
     <nav>
         <button class="nav-btn active" data-page="dashboard">Dashboard</button>
-        <button class="nav-btn" data-page="terminal">Web Terminal</button>
-        <button class="nav-btn" data-page="setup">Setup Wizard</button>
         <button class="nav-btn" data-page="agents">Agents</button>
+        <button class="nav-btn" data-page="terminal">Agent Terminal</button>
+        <button class="nav-btn" data-page="system">System</button>
         <button class="nav-btn" data-page="config">Configuration</button>
         <button class="nav-btn" data-page="knowledge">Knowledge Base</button>
-        <button class="nav-btn" data-page="observability">Observability</button>
-        <button class="nav-btn" data-page="logs">Logs</button>
-        <button class="nav-btn" data-page="settings">Settings</button>
     </nav>
 
     <!-- Toast Container -->
@@ -473,16 +470,9 @@
 
     <!-- Main Content -->
     <main>
-        <!-- Dashboard Page -->
+        <!-- Dashboard Page - Agent Development Focus -->
         <div class="page active" id="dashboard-page">
             <div class="card-grid">
-                <div class="card">
-                    <h2>📊 System Status</h2>
-                    <div id="systemStatus">
-                        <p>Loading...</p>
-                    </div>
-                </div>
-
                 <div class="card">
                     <h2>🤖 Active Agents</h2>
                     <div id="agentStatus">
@@ -491,8 +481,15 @@
                 </div>
 
                 <div class="card">
-                    <h2>⚙️ Configuration</h2>
-                    <div id="configStatus">
+                    <h2>🎛️ Conductor Status</h2>
+                    <div id="conductorStatus">
+                        <p>Loading conductor status...</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>📊 Project Health</h2>
+                    <div id="projectHealth">
                         <p>Loading...</p>
                     </div>
                 </div>
@@ -501,7 +498,7 @@
             <div class="card">
                 <h2>⚡ Quick Actions</h2>
                 <div class="btn-group">
-                    <button class="btn btn-primary" onclick="launchDashboard()">Launch Dashboard</button>
+                    <button class="btn btn-primary" onclick="launchDashboard()">Launch tmux Dashboard</button>
                     <button class="btn btn-success" onclick="runStatusCheck()">Run Status Check</button>
                     <button class="btn btn-warning" onclick="runPreflightCheck()">Pre-flight Checks</button>
                     <button class="btn btn-info" onclick="recoverSession()">Recover Session</button>
@@ -515,13 +512,44 @@
                     <p>Loading activity log...</p>
                 </div>
             </div>
+        </div>
 
-            <div class="card">
-                <h2>🎛️ Conductor Status</h2>
-                <div id="conductorStatus">
-                    <p>Loading conductor status...</p>
+        <!-- System Page - Monitoring, Config, Logs -->
+        <div class="page" id="system-page">
+            <div class="card-grid">
+                <div class="card">
+                    <h2>🖥️ System Status</h2>
+                    <div id="systemStatus">
+                        <p>Loading...</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>📋 Health Check</h2>
+                    <div id="healthStatus">
+                        <p>Loading...</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>📝 Recent Logs</h2>
+                    <div id="systemLogs" class="log-viewer" style="max-height: 300px;">
+                        <p>Loading logs...</p>
+                    </div>
                 </div>
             </div>
+
+            <div class="card">
+                <h2>⚙️ System Actions</h2>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="showConfigSection('health')">Health Check</button>
+                    <button class="btn btn-primary" onclick="showConfigSection('logs')">View Logs</button>
+                    <button class="btn btn-primary" onclick="showConfigSection('config')">Configuration</button>
+                    <button class="btn btn-warning" onclick="showConfigSection('setup')">Setup Wizard</button>
+                    <button class="btn btn-secondary" onclick="showConfigSection('settings')">Settings</button>
+                </div>
+            </div>
+        </div>
 
             <div class="card">
                 <h2>💻 Web Console</h2>
@@ -542,10 +570,10 @@
             </div>
         </div>
 
-        <!-- Web Terminal Page -->
+        <!-- Agent Terminal Page - Replaces Web Terminal -->
         <div class="page" id="terminal-page">
             <div class="card">
-                <h2>💻 Web Terminal</h2>
+                <h2>💻 Agent Terminal</h2>
                 <p style="margin-bottom: 1rem;">Run LLM agents and commands directly in your browser</p>
 
                 <div class="btn-group" style="margin-bottom: 1rem;">
@@ -553,7 +581,8 @@
                     <button class="btn btn-primary" onclick="spawnTerminal('qwen')">+ Qwen</button>
                     <button class="btn btn-primary" onclick="spawnTerminal('gemini')">+ Gemini</button>
                     <button class="btn btn-primary" onclick="spawnTerminal('claude')">+ Claude</button>
-                    <button class="btn btn-primary" onclick="spawnTerminal('debug')">+ Debug Shell</button>
+                    <button class="btn btn-primary" onclick="spawnTerminal('deepseek')">+ DeepSeek</button>
+                    <button class="btn btn-primary" onclick="spawnTerminal('user-console')">+ User Console</button>
                     <button class="btn btn-danger" onclick="closeAllTerminals()">Close All</button>
                 </div>
 
@@ -702,11 +731,23 @@
         <div class="page" id="config-page">
             <div class="card">
                 <h2>⚙️ Configuration Editor</h2>
-                
+
                 <div class="btn-group" style="margin-bottom: 1rem;">
-                    <button class="btn btn-primary" onclick="loadConfig()">Load Configuration</button>
+                    <button class="btn btn-primary" onclick="loadConfig()">Load Current Config</button>
                     <button class="btn btn-success" onclick="saveConfig()">Save Configuration</button>
-                    <button class="btn btn-warning" onclick="loadProfiles()">Load Profile</button>
+                    <button class="btn btn-secondary" onclick="showProfileManager()">Manage Profiles</button>
+                </div>
+
+                <!-- Configuration Profiles -->
+                <div class="form-group" style="margin-bottom: 1rem; padding: 1rem; background: var(--bg-tertiary); border-radius: 4px;">
+                    <h3 style="margin-bottom: 0.5rem;">📁 Configuration Profiles</h3>
+                    <div id="profileList" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+                        <p style="color: var(--text-secondary);">Loading profiles...</p>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <input type="text" id="newProfileName" placeholder="New profile name" style="flex: 1;">
+                        <button class="btn btn-success" onclick="saveCurrentAsProfile()">Save as Profile</button>
+                    </div>
                 </div>
 
                 <!-- LLM Configuration -->
@@ -2055,12 +2096,12 @@
                 if (data.profiles && data.profiles.length > 0) {
                     const profileNames = data.profiles.map(p => p.name).join(', ');
                     const selected = prompt(`Available profiles: ${profileNames}\n\nEnter profile name to load:`);
-                    
+
                     if (selected) {
                         const applyResponse = await fetch(`${API_BASE}/api/profiles/${selected}/apply`, {
                             method: 'POST'
                         });
-                        
+
                         if (applyResponse.ok) {
                             showToast(`Profile '${selected}' applied`, 'success');
                             loadConfig(); // Reload config to show changes
@@ -2074,6 +2115,131 @@
             } catch (error) {
                 console.error('Failed to load profiles:', error);
                 showToast('Failed to load profiles', 'error');
+            }
+        }
+
+        // Profile Management Functions
+        async function showProfileManager() {
+            try {
+                const response = await fetch(`${API_BASE}/api/profiles`);
+                const data = await response.json();
+
+                const container = document.getElementById('profileList');
+                if (!container) return;
+
+                if (data.profiles && data.profiles.length > 0) {
+                    let html = '';
+                    data.profiles.forEach(profile => {
+                        html += `
+                            <button class="btn btn-secondary" onclick="applyProfile('${profile.name}')" style="padding: 0.25rem 0.5rem; font-size: 0.875rem;">
+                                📄 ${profile.name}
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteProfile('${profile.name}')" style="padding: 0.25rem 0.5rem; font-size: 0.875rem;">
+                                &times;
+                            </button>
+                        `;
+                    });
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<p style="color: var(--text-secondary);">No profiles saved yet</p>';
+                }
+            } catch (error) {
+                console.error('Failed to load profiles:', error);
+            }
+        }
+
+        async function applyProfile(profileName) {
+            try {
+                const response = await fetch(`${API_BASE}/api/profiles/${profileName}/apply`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    showToast(`Profile '${profileName}' applied`, 'success');
+                    loadConfig();
+                    showProfileManager();
+                } else {
+                    showToast('Failed to apply profile', 'error');
+                }
+            } catch (error) {
+                console.error('Failed to apply profile:', error);
+                showToast('Failed to apply profile', 'error');
+            }
+        }
+
+        async function saveCurrentAsProfile() {
+            const input = document.getElementById('newProfileName');
+            const profileName = input.value.trim();
+
+            if (!profileName) {
+                showToast('Please enter a profile name', 'warning');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/profiles/save`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: profileName })
+                });
+
+                if (response.ok) {
+                    showToast(`Profile '${profileName}' saved`, 'success');
+                    input.value = '';
+                    showProfileManager();
+                } else {
+                    const error = await response.json();
+                    showToast('Failed to save: ' + error.error, 'error');
+                }
+            } catch (error) {
+                console.error('Failed to save profile:', error);
+                showToast('Failed to save profile', 'error');
+            }
+        }
+
+        async function deleteProfile(profileName) {
+            if (!confirm(`Delete profile '${profileName}'?`)) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/profiles/delete`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: profileName })
+                });
+
+                if (response.ok) {
+                    showToast(`Profile '${profileName}' deleted`, 'success');
+                    showProfileManager();
+                } else {
+                    const error = await response.json();
+                    showToast('Failed to delete: ' + error.error, 'error');
+                }
+            } catch (error) {
+                console.error('Failed to delete profile:', error);
+                showToast('Failed to delete profile', 'error');
+            }
+        }
+
+        // System page section navigation
+        function showConfigSection(section) {
+            switch(section) {
+                case 'health':
+                    refreshHealth();
+                    showToast('Health check running...', 'info');
+                    break;
+                case 'logs':
+                    refreshLogs();
+                    document.querySelector('[data-page="logs"]').click();
+                    break;
+                case 'config':
+                    document.querySelector('[data-page="config"]').click();
+                    break;
+                case 'setup':
+                    document.querySelector('[data-page="setup"]').click();
+                    break;
+                case 'settings':
+                    document.querySelector('[data-page="settings"]').click();
+                    break;
             }
         }
 

@@ -198,10 +198,12 @@ class PTYManager:
         try:
             # Determine command based on terminal type
             commands = {
-                'conductor': ['bash', '-c', 'echo "=== ai-colab Conductor ===" && echo "Type !status, !test, !build" && bash'],
-                'qwen': ['qwen-code'],
-                'gemini': ['gemini-cli'],
-                'claude': ['claude-code'],
+                'conductor': ['bash', '-c', 'cd /home/rchennau/ai_colab && echo "=== ai-colab Conductor Agent ===" && echo "Commands: !status, !test, !build, !kb <query>" && echo "" && hcom start --name conductor_webui 2>/dev/null; bash'],
+                'qwen': ['bash', '-c', 'echo "=== Qwen Agent ===" && echo "Starting qwen-code..." && qwen-code'],
+                'gemini': ['bash', '-c', 'echo "=== Gemini Agent ===" && echo "Starting gemini-cli..." && gemini-cli'],
+                'claude': ['bash', '-c', 'echo "=== Claude Agent ===" && echo "Starting claude-code..." && claude-code'],
+                'deepseek': ['bash', '-c', 'echo "=== DeepSeek Agent ===" && echo "Starting deepseek-cli..." && deepseek-cli'],
+                'user-console': ['bash', '-c', 'cd /home/rchennau/ai_colab && echo "=== User Console ===" && echo "Send commands to conductor via hcom" && echo "Example: hcom send @conductor -- \"!status\"" && echo "" && hcom start --name user_console 2>/dev/null; bash'],
                 'debug': ['bash', '-c', 'echo "=== Debug Shell ===" && echo "KB: /conductor/knowledge_base_map.md" && bash']
             }
 
@@ -2231,6 +2233,68 @@ def register_routes(app, socketio, limiter=None):
             
         except Exception as e:
             logger.error(f"Error applying profile: {e}")
+            return jsonify({"error": str(e)}), 500
+
+    @app.route('/api/profiles/save', methods=['POST'])
+    def save_profile():
+        """Save current configuration as a profile"""
+        try:
+            data = request.json or {}
+            profile_name = data.get('name', '')
+
+            if not profile_name:
+                return jsonify({"error": "Profile name required"}), 400
+
+            # Get current config
+            config_manager = SCRIPTS_DIR / "config-manager.sh"
+            if not config_manager.exists():
+                return jsonify({"error": "Config manager not found"}), 404
+
+            # Save current config to profile
+            result = subprocess.run(
+                ["bash", str(config_manager), "save-profile", profile_name],
+                capture_output=True,
+                text=True,
+                cwd=str(APP_DIR)
+            )
+
+            if result.returncode != 0:
+                return jsonify({"error": result.stderr or "Failed to save profile"}), 400
+
+            return jsonify({
+                "status": "success",
+                "message": f"Profile '{profile_name}' saved"
+            })
+
+        except Exception as e:
+            logger.error(f"Error saving profile: {e}")
+            return jsonify({"error": str(e)}), 500
+
+    @app.route('/api/profiles/delete', methods=['POST'])
+    def delete_profile():
+        """Delete a configuration profile"""
+        try:
+            data = request.json or {}
+            profile_name = data.get('name', '')
+
+            if not profile_name:
+                return jsonify({"error": "Profile name required"}), 400
+
+            profiles_dir = CONFIG_DIR / "profiles"
+            profile_file = profiles_dir / f"{profile_name}.toml"
+
+            if not profile_file.exists():
+                return jsonify({"error": "Profile not found"}), 404
+
+            profile_file.unlink()
+
+            return jsonify({
+                "status": "success",
+                "message": f"Profile '{profile_name}' deleted"
+            })
+
+        except Exception as e:
+            logger.error(f"Error deleting profile: {e}")
             return jsonify({"error": str(e)}), 500
 
     # SECURITY: Rate-limited KB endpoints
