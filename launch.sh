@@ -409,6 +409,97 @@ if [[ -d "$MODULES_DIR" ]]; then
     echo -e "  ${BLUE}• mock-test${NC} - Simple test module for verifying plugin system"
     echo -e "  ${YELLOW}→ Use these as templates for creating new modules${NC}"
     echo ""
+    
+    # Interactive module enablement menu
+    if [ "$INTERACTIVE" = true ]; then
+        echo -e "${YELLOW}═══════════════════════════════════════════════════════════${NC}"
+        echo -e "${YELLOW}  Module Management${NC}"
+        echo -e "${YELLOW}═══════════════════════════════════════════════════════════${NC}"
+        echo ""
+        echo -e "  ${CYAN}1)${NC} Enable a module"
+        echo -e "  ${CYAN}2)${NC} Disable a module"
+        echo -e "  ${CYAN}3)${NC} Skip (continue with current configuration)"
+        echo ""
+        read -p "  Choice [1-3]: " MODULE_CHOICE
+        
+        case "$MODULE_CHOICE" in
+            1)
+                echo ""
+                echo -e "${CYAN}Available modules to enable:${NC}"
+                mod_num=1
+                MOD_ARRAY=()
+                for module_dir in "$MODULES_DIR"/*/; do
+                    if [[ -f "${module_dir}module.toml" ]]; then
+                        mod_id=$(basename "$module_dir")
+                        pref_key="MODULE_$(echo "$mod_id" | tr '-' '_' | tr '[:lower:]' '[:upper:]')"
+                        is_enabled=$(bash "$CONFIG_MGR" get "$pref_key" "false" 2>/dev/null)
+                        if [[ "$is_enabled" != "true" ]]; then
+                            echo -e "  ${mod_num}) ${BLUE}${mod_id}${NC}"
+                            MOD_ARRAY+=("$mod_id")
+                            ((mod_num++))
+                        fi
+                    fi
+                done
+                
+                if [[ ${#MOD_ARRAY[@]} -gt 0 ]]; then
+                    echo ""
+                    read -p "  Select module to enable [1-${#MOD_ARRAY[@]}]: " mod_select
+                    if [[ $mod_select -ge 1 && $mod_select -le ${#MOD_ARRAY[@]} ]]; then
+                        selected_mod="${MOD_ARRAY[$((mod_select-1))]}"
+                        bash "$CONFIG_MGR" set "MODULE_$(echo "$selected_mod" | tr '-' '_' | tr '[:lower:]' '[:upper:]')" "true"
+                        echo -e "${GREEN}✓${NC} Module '${selected_mod}' enabled"
+                        echo -e "${CYAN}→ Module will be loaded on next launch${NC}"
+                    else
+                        echo -e "${YELLOW}Invalid selection${NC}"
+                    fi
+                else
+                    echo -e "${GREEN}✓${NC} All modules are already enabled"
+                fi
+                echo ""
+                ;;
+            2)
+                echo ""
+                echo -e "${CYAN}Available modules to disable:${NC}"
+                mod_num=1
+                MOD_ARRAY=()
+                for module_dir in "$MODULES_DIR"/*/; do
+                    if [[ -f "${module_dir}module.toml" ]]; then
+                        mod_id=$(basename "$module_dir")
+                        pref_key="MODULE_$(echo "$mod_id" | tr '-' '_' | tr '[:lower:]' '[:upper:]')"
+                        is_enabled=$(bash "$CONFIG_MGR" get "$pref_key" "false" 2>/dev/null)
+                        if [[ "$is_enabled" == "true" ]]; then
+                            echo -e "  ${mod_num}) ${GREEN}${mod_id}${NC} (enabled)"
+                            MOD_ARRAY+=("$mod_id")
+                            ((mod_num++))
+                        fi
+                    fi
+                done
+                
+                if [[ ${#MOD_ARRAY[@]} -gt 0 ]]; then
+                    echo ""
+                    read -p "  Select module to disable [1-${#MOD_ARRAY[@]}]: " mod_select
+                    if [[ $mod_select -ge 1 && $mod_select -le ${#MOD_ARRAY[@]} ]]; then
+                        selected_mod="${MOD_ARRAY[$((mod_select-1))]}"
+                        bash "$CONFIG_MGR" set "MODULE_$(echo "$selected_mod" | tr '-' '_' | tr '[:lower:]' '[:upper:]')" "false"
+                        echo -e "${YELLOW}○${NC} Module '${selected_mod}' disabled"
+                        echo -e "${CYAN}→ Changes take effect on next launch${NC}"
+                    else
+                        echo -e "${YELLOW}Invalid selection${NC}"
+                    fi
+                else
+                    echo -e "${YELLOW}○${NC} No enabled modules to disable"
+                fi
+                echo ""
+                ;;
+            3)
+                echo -e "${CYAN}Module configuration unchanged${NC}"
+                echo ""
+                ;;
+            *)
+                echo -e "${RED}Invalid choice${NC}"
+                ;;
+        esac
+    fi
 else
     echo -e "  ${YELLOW}(No modules directory found)${NC}"
 fi
