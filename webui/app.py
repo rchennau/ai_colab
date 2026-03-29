@@ -197,15 +197,16 @@ class PTYManager:
         """Spawn a new PTY session"""
         try:
             # Determine command based on terminal type
+            # Source bashrc to get nvm and other environment
             commands = {
-                'conductor': ['bash', '-c', 'cd /home/rchennau/ai_colab && echo "=== ai-colab Conductor Agent ===" && echo "Commands: !status, !test, !build, !kb <query>" && echo "" && hcom start --name conductor_webui 2>/dev/null; bash'],
-                'qwen': ['bash', '-c', 'echo "=== Qwen Agent ===" && echo "Starting qwen-code..." && qwen-code'],
-                'gemini': ['bash', '-c', 'echo "=== Gemini Agent ===" && echo "Starting gemini-cli..." && gemini-cli'],
-                'claude': ['bash', '-c', 'echo "=== Claude Agent ===" && echo "Starting claude-code..." && claude-code'],
-                'deepseek': ['bash', '-c', 'echo "=== DeepSeek Agent ===" && echo "Starting deepseek-cli..." && deepseek-cli'],
-                'vllm': ['bash', '-c', 'echo "=== vLLM Agent ===" && echo "Starting vLLM CLI..." && vllm-hcom.sh'],
-                'user-console': ['bash', '-c', 'cd /home/rchennau/ai_colab && echo "=== User Console ===" && echo "Send commands to conductor via hcom" && echo "Example: hcom send @conductor -- \"!status\"" && echo "" && hcom start --name user_console 2>/dev/null; bash'],
-                'debug': ['bash', '-c', 'echo "=== Debug Shell ===" && echo "KB: /conductor/knowledge_base_map.md" && bash']
+                'conductor': ['bash', '-c', 'source ~/.bashrc 2>/dev/null; cd /home/rchennau/ai_colab && echo "=== ai-colab Conductor Agent ===" && echo "Commands: !status, !test, !build, !kb <query>" && echo "" && hcom start --name conductor_webui 2>/dev/null; bash'],
+                'qwen': ['bash', '-c', 'source ~/.bashrc 2>/dev/null; echo "=== Qwen Agent ===" && echo "Starting qwen-code..." && qwen-code'],
+                'gemini': ['bash', '-c', 'source ~/.bashrc 2>/dev/null; echo "=== Gemini Agent ===" && echo "Starting gemini-cli..." && gemini-cli'],
+                'claude': ['bash', '-c', 'source ~/.bashrc 2>/dev/null; echo "=== Claude Agent ===" && echo "Starting claude-code..." && claude'],
+                'deepseek': ['bash', '-c', 'source ~/.bashrc 2>/dev/null; echo "=== DeepSeek Agent ===" && echo "Starting deepseek-cli..." && deepseek-cli'],
+                'vllm': ['bash', '-c', 'source ~/.bashrc 2>/dev/null; echo "=== vLLM Agent ===" && echo "Starting vLLM CLI..." && vllm-hcom.sh'],
+                'user-console': ['bash', '-c', 'source ~/.bashrc 2>/dev/null; cd /home/rchennau/ai_colab && echo "=== User Console ===" && echo "Send commands to conductor via hcom" && echo "Example: hcom send @conductor -- \"!status\"" && echo "" && hcom start --name user_console 2>/dev/null; bash'],
+                'debug': ['bash', '-c', 'source ~/.bashrc 2>/dev/null; echo "=== Debug Shell ===" && echo "KB: /conductor/knowledge_base_map.md" && bash']
             }
 
             cmd = commands.get(terminal_type, ['bash'])
