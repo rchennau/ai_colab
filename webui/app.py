@@ -68,6 +68,7 @@ CONFIG_SCHEMA = CONFIG_DIR / "config.schema.json"
 STATE_FILE = APP_DIR / ".ai-colab-state.json"
 SCRIPTS_DIR = APP_DIR / "scripts"
 LOGS_DIR = APP_DIR / "logs"
+PROJECT_ROOT = APP_DIR  # Alias for compatibility
 
 # Configuration constants
 MIN_DISK_SPACE_MB = 100
