@@ -1715,14 +1715,6 @@
                 input.value = '';
             }
         }
-                    ).join('');
-                } else {
-                    logViewer.innerHTML = '<p>No logs available</p>';
-                }
-            } catch (error) {
-                console.error('Failed to refresh logs:', error);
-            }
-        }
 
         function getLogLevelClass(log) {
             if (log.includes('ERROR')) return 'log-error';
