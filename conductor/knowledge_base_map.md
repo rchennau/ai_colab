@@ -12,6 +12,7 @@ Last Updated: 2026-03-28 (Web Terminal & Debug Mode)
 - `scripts/conductor-dashboard.sh`: High-density TUI for real-time project monitoring. Features a new **Fleet Health** section for spoke monitoring.
 - `scripts/dashboard-launch.sh`: Enhanced dashboard launcher (v2.4) with pre-flight checks, session recovery, and dynamic module initialization.
 - `scripts/debug-mode.sh`: **NEW** - Debug mode wrapper that loads project context (product.md, tech-stack.md, KB) for focused LLM troubleshooting sessions with KB/RAG integration.
+- `scripts/test-launch-options.sh`: **NEW** - Comprehensive test harness with 58 automated tests for all launch options (Dashboard, WebUI, Debug Mode).
 - `webui/app.py`: Flask-based API and web server (v2.3) with **PTY Manager** for web terminals, WebSocket streaming, and enhanced health checks.
 - `webui/index.html`: Single-page application featuring **xterm.js web terminals**, setup wizards, real-time monitoring, and tabbed terminal interface.
 - `scripts/module-manager.py`: Logic for discovering and registering manifest-based modular addons.

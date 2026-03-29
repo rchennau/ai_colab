@@ -55,7 +55,24 @@ After installation:
 2. **WebUI (Browser-based)** - Web interface with embedded xterm.js terminals for browser-only workflow
 3. **Debug Mode** - Single LLM CLI session with KB/RAG integration for troubleshooting
 
+### Testing
+
+Run the comprehensive test harness to verify all launch options:
+
+```bash
+./scripts/test-launch-options.sh
+```
+
+**Test Coverage:** 58 automated tests
+- Prerequisites (tmux, hcom, Python, dependencies)
+- Dashboard (tmux) tests
+- WebUI server and API tests
+- Debug Mode tests
+- Integration tests
+- Performance tests
+
 📖 **Full Documentation:** See [`docs/INSTALLATION.md`](docs/INSTALLATION.md) for detailed installation guide.
+📖 **Web Terminal Guide:** See [`docs/WEB_TERMINAL_GUIDE.md`](docs/WEB_TERMINAL_GUIDE.md) for browser-based workflow.
 
 ## 🆕 New: MCP Server & RAG System
 
