@@ -55,6 +55,14 @@ After installation:
 2. **WebUI (Browser-based)** - Web interface with embedded xterm.js terminals for browser-only workflow
 3. **Debug Mode** - Single LLM CLI session with KB/RAG integration for troubleshooting
 
+**Module Options:**
+
+```bash
+./launch.sh -m atari-8bit        # Enable Atari module
+./launch.sh --module mock-test   # Enable Mock module
+./launch.sh -m atari-8bit --auto # Enable module in auto mode
+```
+
 ### Testing
 
 Run the comprehensive test harness to verify all launch options:

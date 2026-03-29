@@ -2,7 +2,7 @@
 Last Updated: 2026-03-28 (Web Terminal & Debug Mode)
 
 ## Orchestration Core (Hub)
-- `launch.sh`: Unified launcher with **three launch modes**: Dashboard (tmux), WebUI (browser terminals), Debug Mode (KB/RAG troubleshooting).
+- `launch.sh`: Unified launcher with **three launch modes** (Dashboard, WebUI, Debug) and **module enablement** (`-m/--module` flag).
 - `install.sh`: Master installer for project dependencies. Supports `--wizard`, `--reconfigure`, and `--auto` modes.
 - `scripts/install-wizard.sh`: Interactive terminal-based configuration wizard (5-step guided setup). Enhanced with 80-column ANSI UI.
 - `scripts/migrate-project.sh`: Project Detection & Migration Tool. Automatically imports existing AI integrations.
@@ -13,9 +13,10 @@ Last Updated: 2026-03-28 (Web Terminal & Debug Mode)
 - `scripts/dashboard-launch.sh`: Enhanced dashboard launcher (v2.4) with pre-flight checks, session recovery, and dynamic module initialization.
 - `scripts/debug-mode.sh`: **NEW** - Debug mode wrapper that loads project context (product.md, tech-stack.md, KB) for focused LLM troubleshooting sessions with KB/RAG integration.
 - `scripts/test-launch-options.sh`: **NEW** - Comprehensive test harness with 58 automated tests for all launch options (Dashboard, WebUI, Debug Mode).
-- `webui/app.py`: Flask-based API and web server (v2.3) with **PTY Manager** for web terminals, WebSocket streaming, and enhanced health checks.
-- `webui/index.html`: Single-page application featuring **xterm.js web terminals**, setup wizards, real-time monitoring, and tabbed terminal interface.
-- `scripts/module-manager.py`: Logic for discovering and registering manifest-based modular addons.
+- `scripts/module-manager.sh`: Module management with enable/disable commands for WebUI and CLI integration.
+- `webui/app.py`: Flask-based API and web server (v2.3) with **PTY Manager** for web terminals, WebSocket streaming, module management API, and enhanced health checks.
+- `webui/index.html`: Single-page application featuring **xterm.js web terminals**, setup wizards, real-time monitoring, tabbed terminal interface, and module configuration.
+- `scripts/module-manager.py`: Logic for discovering, parsing, and loading module configurations with enable/disable support.
 - `Dockerfile`: Containerizes the Orchestration Hub and Web UI with optimized dependencies.
 - `docker-compose.yml`: Multi-service orchestration for the Hub, Web UI, and optional local LLM backends (vLLM).
 - `docker/entrypoint.sh`: Container initialization with health checks and first-run detection.

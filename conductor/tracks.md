@@ -19,6 +19,11 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 - [x] **Milestone 13: Advanced Fleet Autonomy** (Done ✅)
 - [x] **Milestone 14: Web Terminal & Browser-Based Workflow** (Done ✅)
 - [x] **Milestone 15: Automated Testing & Quality Assurance** (Done ✅)
+- [x] **Milestone 16: Module Management System** (Done ✅)
+  - WebUI module configuration with enable/disable toggles
+  - CLI module management via `module-manager.sh`
+  - Launch flag `-m/--module` for module enablement
+  - Module status display in launch.sh
 
 ---
 
