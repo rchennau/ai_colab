@@ -151,7 +151,7 @@ if python3 -c "import sentence_transformers" 2>/dev/null; then
     echo -e "  ${GREEN}✓ RAG system available${NC}"
     RAG_AVAILABLE=true
 else
-    echo -e "  ${CYAN}○ RAG system not installed (optional)${NC}"
+    echo -e "  ${YELLOW}⚠ RAG system not installed (recommended for KB search)${NC}"
 fi
 
 # If critical deps missing, offer to install
@@ -183,6 +183,47 @@ if [[ "$PYTHON_DEPS_OK" == "false" ]]; then
             fi
         fi
     fi
+fi
+
+# Offer to install RAG if not available (interactive mode only)
+if [[ "$RAG_AVAILABLE" == "false" && "$INTERACTIVE" == "true" ]]; then
+    echo -e "\n${YELLOW}═══════════════════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}  RAG System Not Detected${NC}"
+    echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "The RAG (Retrieval-Augmented Generation) system provides:"
+    echo -e "  • Semantic search across your codebase"
+    echo -e "  • Knowledge base integration for LLM context"
+    echo -e "  • Enhanced Debug Mode capabilities"
+    echo ""
+    echo -e "${BLUE}Would you like to install RAG dependencies now?${NC}"
+    echo -e "${YELLOW}  (Requires: sentence-transformers, faiss-cpu, watchdog)${NC}"
+    echo ""
+    read -p "  Install RAG system? [Y/n]: " -n 1 -r
+    echo ""
+
+    if [[ $REPLY =~ ^[Yy]$ || -z $REPLY ]]; then
+        echo -e "\n${BLUE}Installing RAG system...${NC}"
+        if [[ -f "$INSTALL_SCRIPT" ]]; then
+            # Install RAG requirements
+            pip3 install -r "$PROJECT_ROOT/requirements-rag.txt" 2>/dev/null || \
+            pip3 install sentence-transformers faiss-cpu watchdog
+            
+            if python3 -c "import sentence_transformers" 2>/dev/null; then
+                echo -e "\n${GREEN}✓ RAG system installed successfully${NC}"
+                RAG_AVAILABLE=true
+            else
+                echo -e "\n${YELLOW}⚠ RAG installation incomplete. Run manually:${NC}"
+                echo -e "  ${BLUE}pip3 install -r requirements-rag.txt${NC}"
+            fi
+        else
+            pip3 install sentence-transformers faiss-cpu watchdog
+        fi
+    else
+        echo -e "\n${CYAN}RAG installation skipped. Install later with:${NC}"
+        echo -e "  ${BLUE}pip3 install -r requirements-rag.txt${NC}"
+    fi
+    echo ""
 fi
 
 # 1. Project Detection
