@@ -452,11 +452,8 @@
     <!-- Navigation -->
     <nav>
         <button class="nav-btn active" data-page="dashboard">Dashboard</button>
-        <button class="nav-btn" data-page="agents">Agents</button>
-        <button class="nav-btn" data-page="terminal">Agent Terminal</button>
+        <button class="nav-btn" data-page="ai-command">AI Command</button>
         <button class="nav-btn" data-page="system">System</button>
-        <button class="nav-btn" data-page="config">Configuration</button>
-        <button class="nav-btn" data-page="knowledge">Knowledge Base</button>
     </nav>
 
     <!-- Toast Container -->
@@ -470,8 +467,40 @@
 
     <!-- Main Content -->
     <main>
-        <!-- Dashboard Page - Agent Development Focus -->
+        <!-- Dashboard Page -->
         <div class="page active" id="dashboard-page">
+            <!-- Knowledge Base Search - Main Dashboard -->
+            <div class="card">
+                <h2>📚 Knowledge Base Search</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                    Search project documentation, architecture docs, and code comments using semantic search.
+                </p>
+                <div class="form-group">
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="text" id="kbQuery" placeholder="e.g., How does the blackboard work?"
+                               style="flex: 1; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-secondary); color: var(--text-primary);"
+                               onkeypress="if(event.key==='Enter') searchKnowledgeBase()">
+                        <button class="btn btn-primary" onclick="searchKnowledgeBase()">Search</button>
+                    </div>
+                    <div style="display: flex; gap: 1rem; margin-top: 0.5rem; align-items: center;">
+                        <label for="kbTopK">Results:</label>
+                        <select id="kbTopK" style="width: auto; padding: 0.25rem;">
+                            <option value="3">3</option>
+                            <option value="5" selected>5</option>
+                            <option value="10">10</option>
+                        </select>
+                        <label for="kbSource">Source:</label>
+                        <select id="kbSource" style="width: auto; padding: 0.25rem;">
+                            <option value="">All Sources</option>
+                            <option value="conductor">Conductor</option>
+                            <option value="tracks">Tracks</option>
+                            <option value="docs">Docs</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="kbResults" style="margin-top: 1rem;"></div>
+            </div>
+
             <div class="card-grid">
                 <div class="card">
                     <h2>🤖 Active Agents</h2>
@@ -496,17 +525,6 @@
             </div>
 
             <div class="card">
-                <h2>⚡ Quick Actions</h2>
-                <div class="btn-group">
-                    <button class="btn btn-primary" onclick="launchDashboard()">Launch tmux Dashboard</button>
-                    <button class="btn btn-success" onclick="runStatusCheck()">Run Status Check</button>
-                    <button class="btn btn-warning" onclick="runPreflightCheck()">Pre-flight Checks</button>
-                    <button class="btn btn-info" onclick="recoverSession()">Recover Session</button>
-                    <button class="btn btn-danger" onclick="shutdownSystem()">Shutdown</button>
-                </div>
-            </div>
-
-            <div class="card">
                 <h2>📈 Recent Activity</h2>
                 <div id="recentActivity" class="log-viewer">
                     <p>Loading activity log...</p>
@@ -514,93 +532,212 @@
             </div>
         </div>
 
-        <!-- System Page - Monitoring, Config, Logs -->
-        <div class="page" id="system-page">
-            <div class="card-grid">
-                <div class="card">
-                    <h2>🖥️ System Status</h2>
-                    <div id="systemStatus">
-                        <p>Loading...</p>
-                    </div>
-                </div>
+        <!-- AI Command Page - Sub-menus for Console and Status -->
+        <div class="page" id="ai-command-page">
+            <!-- Sub-menu tabs -->
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">
+                <button class="btn btn-primary" onclick="showAISubmenu('console')" id="aiConsoleTab">AI Console</button>
+                <button class="btn btn-secondary" onclick="showAISubmenu('status')" id="aiStatusTab">AI Status</button>
+                <button class="btn btn-secondary" onclick="showAISubmenu('terminal')" id="aiTerminalTab">Agent Terminal</button>
+            </div>
 
+            <!-- AI Console Sub-page -->
+            <div id="ai-console-subpage">
                 <div class="card">
-                    <h2>📋 Health Check</h2>
-                    <div id="healthStatus">
-                        <p>Loading...</p>
+                    <h2>💻 AI Console</h2>
+                    <p style="margin-bottom: 1rem;">Send commands to the conductor directly:</p>
+                    <div class="form-group">
+                        <input type="text" id="consoleCommand" placeholder="Enter command (e.g., !status, !test, !build)"
+                               style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-secondary); color: var(--text-primary);">
                     </div>
-                </div>
-
-                <div class="card">
-                    <h2>📝 Recent Logs</h2>
-                    <div id="systemLogs" class="log-viewer" style="max-height: 300px;">
-                        <p>Loading logs...</p>
+                    <div class="btn-group" style="margin-top: 1rem;">
+                        <button class="btn btn-primary" onclick="sendConsoleCommand('!status')">!status</button>
+                        <button class="btn btn-primary" onclick="sendConsoleCommand('!test')">!test</button>
+                        <button class="btn btn-primary" onclick="sendConsoleCommand('!build')">!build</button>
+                        <button class="btn btn-secondary" onclick="sendCustomCommand()">Send</button>
+                    </div>
+                    <div id="consoleOutput" class="log-viewer" style="margin-top: 1rem; max-height: 300px;">
+                        <p>Command output will appear here...</p>
                     </div>
                 </div>
             </div>
 
-            <div class="card">
-                <h2>⚙️ System Actions</h2>
-                <div class="btn-group">
-                    <button class="btn btn-primary" onclick="showConfigSection('health')">Health Check</button>
-                    <button class="btn btn-primary" onclick="showConfigSection('logs')">View Logs</button>
-                    <button class="btn btn-primary" onclick="showConfigSection('config')">Configuration</button>
-                    <button class="btn btn-warning" onclick="showConfigSection('setup')">Setup Wizard</button>
-                    <button class="btn btn-secondary" onclick="showConfigSection('settings')">Settings</button>
+            <!-- AI Status Sub-page (hidden by default) -->
+            <div id="ai-status-subpage" style="display: none;">
+                <div class="card">
+                    <h2>🤖 Agent Management</h2>
+                    <div id="agentList" class="agent-list">
+                        <p>Loading agents...</p>
+                    </div>
+                </div>
+                <div class="card" style="margin-top: 1rem;">
+                    <h2>📊 Fleet Status</h2>
+                    <div id="fleetStatus">
+                        <p>Loading fleet status...</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="card">
-                <h2>💻 Web Console</h2>
-                <p style="margin-bottom: 1rem;">Send commands to the conductor directly from the web UI:</p>
-                <div class="form-group">
-                    <input type="text" id="consoleCommand" placeholder="Enter command (e.g., !status, !test, !build)"
-                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-secondary); color: var(--text-primary);">
-                </div>
-                <div class="btn-group" style="margin-top: 1rem;">
-                    <button class="btn btn-primary" onclick="sendConsoleCommand('!status')">!status</button>
-                    <button class="btn btn-primary" onclick="sendConsoleCommand('!test')">!test</button>
-                    <button class="btn btn-primary" onclick="sendConsoleCommand('!build')">!build</button>
-                    <button class="btn btn-secondary" onclick="sendCustomCommand()">Send</button>
-                </div>
-                <div id="consoleOutput" class="log-viewer" style="margin-top: 1rem; max-height: 300px;">
-                    <p>Command output will appear here...</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Agent Terminal Page - Replaces Web Terminal -->
-        <div class="page" id="terminal-page">
-            <div class="card">
-                <h2>💻 Agent Terminal</h2>
-                <p style="margin-bottom: 1rem; color: var(--text-secondary);">
-                    <strong>Launch LLM agents in embedded terminals.</strong> Click a button below to spawn an agent.
-                </p>
-
-                <div id="terminalButtons" class="btn-group" style="margin-bottom: 1rem;">
-                    <!-- Buttons populated dynamically based on configuration -->
-                    <p style="color: var(--text-secondary);">Loading available agents...</p>
-                </div>
-
-                <div id="terminalTabs" style="margin-bottom: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                    <!-- Terminal tabs will be added here -->
-                </div>
-
-                <div id="terminalContainer" style="height: 600px; background: #1a1a1a; border-radius: 4px; overflow: hidden;">
-                    <div id="noTerminalMessage" style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666;">
-                        <div style="text-align: center;">
-                            <p style="font-size: 1.2rem; margin-bottom: 1rem;">No terminal active</p>
-                            <p style="color: var(--text-secondary);">Click a button above to spawn an agent terminal</p>
+            <!-- Agent Terminal Sub-page (hidden by default) -->
+            <div id="ai-terminal-subpage" style="display: none;">
+                <div class="card">
+                    <h2>💻 Agent Terminal</h2>
+                    <p style="margin-bottom: 1rem; color: var(--text-secondary);">
+                        <strong>Launch LLM agents in embedded terminals.</strong> Click a button below to spawn an agent.
+                    </p>
+                    <div id="terminalButtons" class="btn-group" style="margin-bottom: 1rem;">
+                        <!-- Buttons populated dynamically based on configuration -->
+                        <p style="color: var(--text-secondary);">Loading available agents...</p>
+                    </div>
+                    <div id="terminalTabs" style="margin-bottom: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <!-- Terminal tabs will be added here -->
+                    </div>
+                    <div id="terminalContainer" style="height: 600px; background: #1a1a1a; border-radius: 4px; overflow: hidden;">
+                        <div id="noTerminalMessage" style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666;">
+                            <div style="text-align: center;">
+                                <p style="font-size: 1.2rem; margin-bottom: 1rem;">No terminal active</p>
+                                <p style="color: var(--text-secondary);">Click a button above to spawn an agent terminal</p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Setup Wizard Page -->
-        <div class="page" id="setup-page">
-            <div class="card">
-                <h2>🎯 Setup Wizard</h2>
+        <!-- System Page - Monitoring, Config, Logs -->
+        <div class="page" id="system-page">
+            <!-- Sub-menu tabs -->
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">
+                <button class="btn btn-primary" onclick="showSystemSubmenu('monitor')" id="systemMonitorTab">Monitoring</button>
+                <button class="btn btn-secondary" onclick="showSystemSubmenu('config')" id="systemConfigTab">Configuration</button>
+                <button class="btn btn-secondary" onclick="showSystemSubmenu('setup')" id="systemSetupTab">Setup</button>
+            </div>
+
+            <!-- Monitoring Sub-page -->
+            <div id="system-monitor-subpage">
+                <div class="card-grid">
+                    <div class="card">
+                        <h2>🖥️ System Status</h2>
+                        <div id="systemStatus">
+                            <p>Loading...</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2>📋 Health Check</h2>
+                        <div id="healthStatus">
+                            <p>Loading...</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2>📝 Recent Logs</h2>
+                        <div id="systemLogs" class="log-viewer" style="max-height: 300px;">
+                            <p>Loading logs...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 1rem;">
+                    <h2>⚡ Quick Actions</h2>
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="runStatusCheck()">Run Status Check</button>
+                        <button class="btn btn-warning" onclick="runPreflightCheck()">Pre-flight Checks</button>
+                        <button class="btn btn-info" onclick="recoverSession()">Recover Session</button>
+                        <button class="btn btn-danger" onclick="shutdownSystem()">Shutdown</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configuration Sub-page (hidden by default) -->
+            <div id="system-config-subpage" style="display: none;">
+                <div class="card">
+                    <h2>⚙️ Configuration Editor</h2>
+
+                    <div class="btn-group" style="margin-bottom: 1rem;">
+                        <button class="btn btn-primary" onclick="loadConfig()">Load Current Config</button>
+                        <button class="btn btn-success" onclick="saveConfig()">Save Configuration</button>
+                        <button class="btn btn-secondary" onclick="showProfileManager()">Manage Profiles</button>
+                    </div>
+
+                    <!-- Configuration Profiles -->
+                    <div class="form-group" style="margin-bottom: 1rem; padding: 1rem; background: var(--bg-tertiary); border-radius: 4px;">
+                        <h3 style="margin-bottom: 0.5rem;">📁 Configuration Profiles</h3>
+                        <div id="profileList" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+                            <p style="color: var(--text-secondary);">Loading profiles...</p>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <input type="text" id="newProfileName" placeholder="New profile name" style="flex: 1;">
+                            <button class="btn btn-success" onclick="saveCurrentAsProfile()">Save as Profile</button>
+                        </div>
+                    </div>
+
+                    <!-- LLM Configuration -->
+                    <div class="form-group">
+                        <h3 style="color: var(--accent-blue); margin-bottom: 0.5rem;">LLM Providers</h3>
+                        <div id="llmConfig">
+                            <div class="checkbox-group" style="margin-bottom: 0.5rem;">
+                                <input type="checkbox" id="cfg-llm-gemini">
+                                <label for="cfg-llm-gemini">Gemini</label>
+                            </div>
+                            <div class="checkbox-group" style="margin-bottom: 0.5rem;">
+                                <input type="checkbox" id="cfg-llm-qwen">
+                                <label for="cfg-llm-qwen">Qwen</label>
+                            </div>
+                            <div class="checkbox-group" style="margin-bottom: 0.5rem;">
+                                <input type="checkbox" id="cfg-llm-vllm">
+                                <label for="cfg-llm-vllm">vLLM (Local)</label>
+                            </div>
+                            <div class="checkbox-group" style="margin-bottom: 0.5rem;">
+                                <input type="checkbox" id="cfg-llm-claude">
+                                <label for="cfg-llm-claude">Claude</label>
+                            </div>
+                            <div class="checkbox-group" style="margin-bottom: 0.5rem;">
+                                <input type="checkbox" id="cfg-llm-deepseek">
+                                <label for="cfg-llm-deepseek">DeepSeek</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modules Configuration -->
+                    <div class="form-group">
+                        <h3 style="color: var(--accent-blue); margin-bottom: 0.5rem;">Modules</h3>
+                        <div id="modulesConfig" style="padding: 1rem; background: var(--bg-tertiary); border-radius: 4px;">
+                            <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                                Enable or disable module addons. Changes take effect on next launch.
+                            </p>
+                            <div id="moduleList" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                <p style="color: var(--text-secondary);">Loading modules...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Compute Backend -->
+                    <div class="form-group">
+                        <h3 style="color: var(--accent-blue); margin-bottom: 0.5rem;">Compute Backend</h3>
+                        <label for="cfg-compute-backend">Backend:</label>
+                        <select id="cfg-compute-backend" style="margin-bottom: 0.5rem;">
+                            <option value="local">Local Server (vLLM / Ollama)</option>
+                            <option value="nvidia">NVIDIA NIM API</option>
+                            <option value="runpod">RunPod</option>
+                        </select>
+
+                        <div id="cfg-api-key-group" style="display: none;">
+                            <label for="cfg-api-key">API Key:</label>
+                            <input type="password" id="cfg-api-key" placeholder="Enter your API key">
+                        </div>
+                    </div>
+
+                    <!-- JSON Editor (Advanced) -->
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <h3 style="color: var(--accent-blue); margin-bottom: 0.5rem;">Advanced: JSON Editor</h3>
+                        <textarea id="configJsonEditor" rows="15" style="width: 100%; font-family: monospace; background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.75rem;"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Setup Sub-page (hidden by default) -->
+            <div id="system-setup-subpage" style="display: none;">
 
                 <div class="wizard-nav">
                     <div class="wizard-step-indicator active" data-step="1">1. Welcome</div>
@@ -1175,17 +1312,13 @@
                 case 'dashboard':
                     refreshStatus();
                     break;
-                case 'agents':
-                    loadAgents();
+                case 'ai-command':
+                    // Default to console subpage
+                    showAISubmenu('console');
                     break;
-                case 'config':
-                    loadConfig();
-                    break;
-                case 'terminal':
-                    loadTerminalButtons();
-                    break;
-                case 'logs':
-                    refreshLogs();
+                case 'system':
+                    // Default to monitor subpage
+                    showSystemSubmenu('monitor');
                     break;
             }
         }
@@ -1767,18 +1900,31 @@
                 const response = await fetch(`${API_BASE}/api/logs?lines=100`);
                 const data = await response.json();
 
-                const logViewer = document.getElementById('logViewer');
-                if (data.logs && data.logs.length > 0) {
-                    logViewer.innerHTML = data.logs.map(log =>
+                // Update system logs viewer
+                const systemLogs = document.getElementById('systemLogs');
+                if (systemLogs && data.logs && data.logs.length > 0) {
+                    systemLogs.innerHTML = data.logs.map(log =>
                         `<div class="log-entry ${getLogLevelClass(log)}">${escapeHtml(log)}</div>`
                     ).join('');
-                    // Auto-scroll to bottom
-                    logViewer.scrollTop = logViewer.scrollHeight;
-                } else {
-                    logViewer.innerHTML = '<p>No logs available</p>';
+                    systemLogs.scrollTop = systemLogs.scrollHeight;
+                } else if (systemLogs) {
+                    systemLogs.innerHTML = '<p style="color: var(--text-secondary);">No logs available</p>';
+                }
+
+                // Also update recent activity on dashboard
+                const recentActivity = document.getElementById('recentActivity');
+                if (recentActivity && data.logs && data.logs.length > 0) {
+                    recentActivity.innerHTML = data.logs.map(log =>
+                        `<div class="log-entry ${getLogLevelClass(log)}">${escapeHtml(log)}</div>`
+                    ).join('');
+                    recentActivity.scrollTop = recentActivity.scrollHeight;
                 }
             } catch (error) {
                 console.error('Failed to refresh logs:', error);
+                const systemLogs = document.getElementById('systemLogs');
+                if (systemLogs) {
+                    systemLogs.innerHTML = '<p style="color: var(--text-secondary);">Error loading logs</p>';
+                }
             }
         }
 
@@ -2346,17 +2492,103 @@
                     break;
                 case 'logs':
                     refreshLogs();
-                    document.querySelector('[data-page="logs"]').click();
+                    showSystemSubmenu('monitor');
                     break;
                 case 'config':
-                    document.querySelector('[data-page="config"]').click();
+                    showSystemSubmenu('config');
                     break;
                 case 'setup':
-                    document.querySelector('[data-page="setup"]').click();
+                    showSystemSubmenu('setup');
                     break;
                 case 'settings':
-                    document.querySelector('[data-page="settings"]').click();
+                    showToast('Settings coming soon', 'info');
                     break;
+            }
+        }
+
+        // AI Command submenu switching
+        function showAISubmenu(submenu) {
+            // Hide all subpages
+            document.getElementById('ai-console-subpage').style.display = 'none';
+            document.getElementById('ai-status-subpage').style.display = 'none';
+            document.getElementById('ai-terminal-subpage').style.display = 'none';
+            
+            // Reset tab styles
+            document.getElementById('aiConsoleTab').className = 'btn btn-secondary';
+            document.getElementById('aiStatusTab').className = 'btn btn-secondary';
+            document.getElementById('aiTerminalTab').className = 'btn btn-secondary';
+            
+            // Show selected subpage
+            if (submenu === 'console') {
+                document.getElementById('ai-console-subpage').style.display = 'block';
+                document.getElementById('aiConsoleTab').className = 'btn btn-primary';
+            } else if (submenu === 'status') {
+                document.getElementById('ai-status-subpage').style.display = 'block';
+                document.getElementById('aiStatusTab').className = 'btn btn-primary';
+                loadAgents();
+                loadFleetStatus();
+            } else if (submenu === 'terminal') {
+                document.getElementById('ai-terminal-subpage').style.display = 'block';
+                document.getElementById('aiTerminalTab').className = 'btn btn-primary';
+                loadTerminalButtons();
+            }
+        }
+
+        // System submenu switching
+        function showSystemSubmenu(submenu) {
+            // Hide all subpages
+            document.getElementById('system-monitor-subpage').style.display = 'none';
+            document.getElementById('system-config-subpage').style.display = 'none';
+            document.getElementById('system-setup-subpage').style.display = 'none';
+            
+            // Reset tab styles
+            document.getElementById('systemMonitorTab').className = 'btn btn-secondary';
+            document.getElementById('systemConfigTab').className = 'btn btn-secondary';
+            document.getElementById('systemSetupTab').className = 'btn btn-secondary';
+            
+            // Show selected subpage and load data
+            if (submenu === 'monitor') {
+                document.getElementById('system-monitor-subpage').style.display = 'block';
+                document.getElementById('systemMonitorTab').className = 'btn btn-primary';
+                refreshHealth();
+                refreshLogs();
+            } else if (submenu === 'config') {
+                document.getElementById('system-config-subpage').style.display = 'block';
+                document.getElementById('systemConfigTab').className = 'btn btn-primary';
+                loadConfig();
+            } else if (submenu === 'setup') {
+                document.getElementById('system-setup-subpage').style.display = 'block';
+                document.getElementById('systemSetupTab').className = 'btn btn-primary';
+            }
+        }
+
+        // Load fleet status for AI Status page
+        async function loadFleetStatus() {
+            const container = document.getElementById('fleetStatus');
+            if (!container) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/status`);
+                const status = await response.json();
+
+                if (status.agents && status.agents.length > 0) {
+                    let html = '<div style="display: flex; flex-direction: column; gap: 0.5rem;">';
+                    status.agents.forEach(agent => {
+                        html += `
+                            <div style="display: flex; justify-content: space-between; padding: 0.5rem; background: var(--bg-secondary); border-radius: 4px;">
+                                <span><strong>${agent.name}</strong></span>
+                                <span class="badge badge-success">${agent.status}</span>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<p style="color: var(--text-secondary);">No active agents</p>';
+                }
+            } catch (error) {
+                console.error('Failed to load fleet status:', error);
+                container.innerHTML = '<p style="color: var(--text-secondary);">Error loading fleet status</p>';
             }
         }
 
