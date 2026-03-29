@@ -1884,7 +1884,7 @@ def register_routes(app, socketio, limiter=None):
 
     @app.route('/api/console/send', methods=['POST'])
     def send_console_command():
-        """Send a command to the conductor console via tmux"""
+        """Send a command to conductor via hcom with webui identity"""
         try:
             data = request.json or {}
             command = data.get("command", "")
@@ -1893,33 +1893,49 @@ def register_routes(app, socketio, limiter=None):
             if not command:
                 return jsonify({"error": "No command provided"}), 400
 
-            # Find the conductor pane in the tmux session
-            # Typically pane 1 in hcom-dashboard session
-            pane = "hcom-dashboard.1"
+            # First ensure webui identity exists
+            subprocess.run(
+                ["hcom", "start", "--name", "webui"],
+                capture_output=True,
+                timeout=5
+            )
 
-            # Escape the command for tmux send-keys
-            escaped_command = command.replace('"', '\\"')
-
-            # Send the command to the conductor pane
-            result = subprocess.run(
-                ["tmux", "send-keys", "-t", pane, f"{command}", "C-m"],
+            # Find conductor agent name
+            conductor_name = "conductor"
+            list_result = subprocess.run(
+                ["hcom", "list", "--names"],
                 capture_output=True,
                 text=True,
                 timeout=5
             )
+            if list_result.stdout:
+                for name in list_result.stdout.strip().split():
+                    if "conductor" in name.lower():
+                        conductor_name = name
+                        break
+
+            # Send command to conductor
+            result = subprocess.run(
+                ["hcom", "send", "--name", "webui", f"@{conductor_name}", "--", command],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                cwd=str(APP_DIR)
+            )
 
             if result.returncode == 0:
-                logger.info(f"Console command sent to {target}: {command}")
+                logger.info(f"Console command sent: {command} to @{conductor_name}")
                 return jsonify({
                     "status": "success",
-                    "message": f"Command sent to {target}",
+                    "message": f"Command sent to conductor ({conductor_name})",
                     "command": command
                 })
             else:
-                logger.warning(f"Failed to send command: {result.stderr}")
+                error_msg = result.stderr.strip() if result.stderr else result.stdout.strip()
+                logger.warning(f"Failed to send command: {error_msg}")
                 return jsonify({
-                    "error": "Failed to send command. Is tmux session running?",
-                    "details": result.stderr
+                    "error": "Failed to send command",
+                    "details": error_msg
                 }), 500
 
         except subprocess.TimeoutExpired:
