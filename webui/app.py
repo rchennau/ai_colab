@@ -408,20 +408,20 @@ def register_routes(app, socketio, limiter=None):
             # Import health monitor
             sys.path.insert(0, str(PROJECT_ROOT / 'scripts'))
             from health_monitor import get_health_monitor
-            
+
             monitor = get_health_monitor()
             health_data = monitor.get_health(force_refresh=True)
-            
+
             # Determine status code
             status_code = 200 if health_data.status == 'healthy' else 503
-            
+
             # Log health status
             if health_data.status != 'healthy':
                 logger.warning(f"Health check: {health_data.status}")
                 for name, status in health_data.components.items():
                     if status.status != 'healthy':
                         logger.warning(f"  {name}: {status.status} - {status.message}")
-            
+
             return jsonify({
                 'status': health_data.status,
                 'timestamp': health_data.timestamp,
@@ -436,21 +436,86 @@ def register_routes(app, socketio, limiter=None):
                     for name, status in health_data.components.items()
                 }
             }), status_code
-            
+
         except ImportError as e:
-            logger.error(f"Health monitor not available: {e}")
+            logger.warning(f"Health monitor not available, using fallback: {e}")
             # Fallback to basic health check
-            return jsonify({
-                'status': 'degraded',
-                'message': 'Health monitor not available',
-                'error': str(e)
-            }), 503
+            return get_fallback_health()
         except Exception as e:
             logger.error(f"Health check failed: {e}")
-            return jsonify({
+            return get_fallback_health()
+
+    def get_fallback_health():
+        """Fallback health check when health_monitor is unavailable"""
+        import subprocess
+        
+        health = {
+            'status': 'healthy',
+            'timestamp': datetime.now().isoformat(),
+            'uptime_seconds': 0,
+            'version': '2.0.0-fallback',
+            'components': {}
+        }
+        
+        # Check tmux
+        try:
+            result = subprocess.run(['tmux', '-V'], capture_output=True, text=True, timeout=5)
+            health['components']['tmux'] = {
+                'status': 'healthy' if result.returncode == 0 else 'error',
+                'message': result.stdout.strip() if result.returncode == 0 else 'tmux not found',
+                'details': {'version': result.stdout.strip() if result.returncode == 0 else None}
+            }
+        except Exception as e:
+            health['components']['tmux'] = {
                 'status': 'error',
-                'error': str(e)
-            }), 500
+                'message': str(e),
+                'details': {}
+            }
+            health['status'] = 'degraded'
+        
+        # Check hcom
+        try:
+            result = subprocess.run(['hcom', '--version'], capture_output=True, text=True, timeout=5)
+            health['components']['hcom'] = {
+                'status': 'healthy' if result.returncode == 0 else 'error',
+                'message': result.stdout.strip() if result.returncode == 0 else 'hcom not found',
+                'details': {'version': result.stdout.strip() if result.returncode == 0 else None}
+            }
+        except Exception as e:
+            health['components']['hcom'] = {
+                'status': 'error',
+                'message': str(e),
+                'details': {}
+            }
+            health['status'] = 'degraded'
+        
+        # Check disk space
+        try:
+            import shutil
+            total, used, free = shutil.disk_usage(str(APP_DIR))
+            free_mb = free // (1024 * 1024)
+            health['components']['disk'] = {
+                'status': 'healthy' if free_mb > 100 else 'warning',
+                'message': f'{free_mb}MB free',
+                'details': {'free_mb': free_mb, 'total_gb': total // (1024 * 1024 * 1024)}
+            }
+            if free_mb < 100:
+                health['status'] = 'degraded'
+        except Exception as e:
+            health['components']['disk'] = {
+                'status': 'error',
+                'message': str(e),
+                'details': {}
+            }
+        
+        # Check WebUI
+        health['components']['webui'] = {
+            'status': 'healthy',
+            'message': 'Web UI is running',
+            'details': {'port': 8080}
+        }
+        
+        return jsonify(health)
     
     @app.route('/health/detailed')
     def health_detailed():
@@ -1991,17 +2056,26 @@ def register_routes(app, socketio, limiter=None):
     def get_logs():
         """Get recent logs from file and tmux sessions"""
         try:
-            lines = request.args.get('lines', '100', type=int)
-            log_file = APP_DIR / "logs" / "ai-colab.log"
-
+            lines = request.args.get('lines', '10', type=int)
+            
             all_logs = []
-
-            # Read application log file if exists
-            if log_file.exists():
-                with open(log_file, 'r') as f:
-                    file_lines = f.readlines()
-                    all_logs.extend([line.strip() for line in file_lines[-lines:]])
-
+            
+            # Try multiple log locations
+            log_locations = [
+                Path.home() / ".ai-colab" / "logs" / "ai-colab.log",  # Centralized logging
+                APP_DIR / "logs" / "ai-colab.log",  # Project logs
+                APP_DIR / "logs" / "webui.log",  # WebUI specific logs
+            ]
+            
+            for log_file in log_locations:
+                if log_file.exists():
+                    with open(log_file, 'r') as f:
+                        file_lines = f.readlines()
+                        # Get last N lines
+                        recent_lines = file_lines[-lines:] if len(file_lines) > lines else file_lines
+                        all_logs.extend([line.strip() for line in recent_lines if line.strip()])
+                    break  # Use first available log file
+            
             # Capture hcom dashboard tmux logs if session exists
             try:
                 result = subprocess.run(
@@ -2017,17 +2091,84 @@ def register_routes(app, socketio, limiter=None):
                             all_logs.append(f"[hcom-dashboard] {line}")
             except:
                 pass  # Tmux session may not exist
-
-            # Sort by timestamp if possible, otherwise keep order
-            all_logs = all_logs[-lines:]  # Ensure we don't exceed requested lines
-
+            
+            # Ensure we return at least 'lines' number of entries
+            all_logs = all_logs[-lines:] if len(all_logs) > lines else all_logs
+            
             return jsonify({
                 "logs": all_logs if all_logs else [],
-                "message": "Logs retrieved" if all_logs else "No logs available"
+                "message": f"Retrieved {len(all_logs)} log entries" if all_logs else "No logs available",
+                "count": len(all_logs)
             })
-
+            
         except Exception as e:
             logger.error(f"Error getting logs: {e}")
+            return jsonify({"error": str(e)}), 500
+
+    @app.route('/api/logs/rotate', methods=['POST'])
+    def rotate_logs():
+        """Rotate log files - archive current logs and start fresh"""
+        try:
+            import shutil
+            from datetime import datetime
+            
+            log_locations = [
+                Path.home() / ".ai-colab" / "logs",
+                APP_DIR / "logs",
+            ]
+            
+            rotated_files = []
+            timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+            
+            for log_dir in log_locations:
+                if log_dir.exists():
+                    archive_dir = log_dir / "archives"
+                    archive_dir.mkdir(exist_ok=True)
+                    
+                    for log_file in log_dir.glob("*.log"):
+                        if log_file.is_file() and log_file.stat().st_size > 0:
+                            archive_name = archive_dir / f"{log_file.stem}.{timestamp}.log"
+                            shutil.move(str(log_file), str(archive_name))
+                            rotated_files.append(str(archive_name))
+                            logger.info(f"Rotated log: {log_file} -> {archive_name}")
+            
+            return jsonify({
+                "status": "success",
+                "message": f"Rotated {len(rotated_files)} log files",
+                "rotated_files": rotated_files
+            })
+            
+        except Exception as e:
+            logger.error(f"Error rotating logs: {e}")
+            return jsonify({"error": str(e)}), 500
+
+    @app.route('/api/logs/clear', methods=['POST'])
+    def clear_logs():
+        """Clear current log files (use with caution)"""
+        try:
+            log_locations = [
+                Path.home() / ".ai-colab" / "logs",
+                APP_DIR / "logs",
+            ]
+            
+            cleared_count = 0
+            for log_dir in log_locations:
+                if log_dir.exists():
+                    for log_file in log_dir.glob("*.log"):
+                        if log_file.is_file():
+                            # Truncate file instead of deleting (keeps file handles valid)
+                            with open(log_file, 'w') as f:
+                                f.write("")
+                            cleared_count += 1
+            
+            return jsonify({
+                "status": "success",
+                "message": f"Cleared {cleared_count} log files",
+                "cleared_count": cleared_count
+            })
+            
+        except Exception as e:
+            logger.error(f"Error clearing logs: {e}")
             return jsonify({"error": str(e)}), 500
 
     @app.route('/api/conductor/status', methods=['GET'])

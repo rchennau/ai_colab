@@ -671,6 +671,18 @@
                         <button class="btn btn-danger" onclick="shutdownSystem()">Shutdown</button>
                     </div>
                 </div>
+
+                <div class="card" style="margin-top: 1rem;">
+                    <h2>📋 Log Management</h2>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="rotateLogs()">Rotate Logs</button>
+                        <button class="btn btn-warning" onclick="clearLogs()">Clear Logs</button>
+                        <button class="btn btn-secondary" onclick="downloadLogs()">Download Logs</button>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 0.5rem;">
+                        Log rotation archives current logs. Clear removes all log content.
+                    </p>
+                </div>
             </div>
 
             <!-- Configuration Sub-page (hidden by default) -->
@@ -1975,6 +1987,89 @@
             } catch (error) {
                 console.error('Shutdown failed:', error);
                 showToast('Shutdown failed: ' + error.message, 'error');
+            }
+        }
+
+        // Log Management Functions
+        async function rotateLogs() {
+            if (!confirm('Rotate logs? Current logs will be archived and new logs will start fresh.')) {
+                return;
+            }
+
+            try {
+                showToast('Rotating logs...', 'info');
+                const response = await fetch(`${API_BASE}/api/logs/rotate`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showToast(`Logs rotated: ${data.rotated_files?.length || 0} files archived`, 'success');
+                    // Refresh logs display
+                    refreshLogs();
+                } else {
+                    const error = await response.json();
+                    showToast('Failed: ' + error.error, 'error');
+                }
+            } catch (error) {
+                console.error('Log rotation failed:', error);
+                showToast('Log rotation failed: ' + error.message, 'error');
+            }
+        }
+
+        async function clearLogs() {
+            if (!confirm('Clear all logs? This cannot be undone.')) {
+                return;
+            }
+
+            try {
+                showToast('Clearing logs...', 'info');
+                const response = await fetch(`${API_BASE}/api/logs/clear`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showToast(`Logs cleared: ${data.cleared_count || 0} files`, 'success');
+                    // Refresh logs display
+                    refreshLogs();
+                } else {
+                    const error = await response.json();
+                    showToast('Failed: ' + error.error, 'error');
+                }
+            } catch (error) {
+                console.error('Log clearing failed:', error);
+                showToast('Log clearing failed: ' + error.message, 'error');
+            }
+        }
+
+        async function downloadLogs() {
+            try {
+                showToast('Preparing logs for download...', 'info');
+                const response = await fetch(`${API_BASE}/api/logs?lines=1000`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const logContent = data.logs?.join('\n') || 'No logs available';
+                    
+                    // Create download blob
+                    const blob = new Blob([logContent], { type: 'text/plain' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `ai-colab-logs-${new Date().toISOString().split('T')[0]}.txt`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                    
+                    showToast(`Downloaded ${data.count || 0} log entries`, 'success');
+                } else {
+                    showToast('Failed to download logs', 'error');
+                }
+            } catch (error) {
+                console.error('Log download failed:', error);
+                showToast('Log download failed: ' + error.message, 'error');
             }
         }
 
