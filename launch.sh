@@ -631,12 +631,35 @@ if [ "$WEBUI" = true ]; then
                     echo ""
                     echo -e "${YELLOW}Stopping Web UI...${NC}"
                     kill $WEBUI_PID 2>/dev/null
-                    wait $WEBUI_PID 2>/dev/null
-                    echo -e "${GREEN}✓${NC} Web UI stopped"
-                    echo ""
-                    echo -e "${GREEN}Session ended. Happy collaborating! 🚀${NC}"
-                    echo ""
-                    exit 0
+                    
+                    # Wait for process to terminate (up to 5 seconds)
+                    for i in {1..5}; do
+                        if ! kill -0 $WEBUI_PID 2>/dev/null; then
+                            break
+                        fi
+                        sleep 1
+                    done
+                    
+                    # Verify process stopped
+                    if ! kill -0 $WEBUI_PID 2>/dev/null; then
+                        echo -e "${GREEN}✓${NC} Web UI stopped"
+                        echo ""
+                        echo -e "${GREEN}Session ended. Happy collaborating! 🚀${NC}"
+                        echo ""
+                        exit 0
+                    else
+                        echo -e "${RED}✗${NC} Web UI did not stop gracefully"
+                        echo -e "${YELLOW}Force killing...${NC}"
+                        kill -9 $WEBUI_PID 2>/dev/null
+                        sleep 1
+                        if ! kill -0 $WEBUI_PID 2>/dev/null; then
+                            echo -e "${GREEN}✓${NC} Web UI force stopped"
+                            echo ""
+                            echo -e "${GREEN}Session ended. Happy collaborating! 🚀${NC}"
+                            echo ""
+                        fi
+                        exit 0
+                    fi
                     ;;
                 *)
                     echo -e "${RED}Invalid choice. Please select 1, 2, or 3.${NC}"

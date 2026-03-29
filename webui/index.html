@@ -577,14 +577,9 @@
                     <strong>Launch LLM agents in embedded terminals.</strong> Click a button below to spawn an agent.
                 </p>
 
-                <div class="btn-group" style="margin-bottom: 1rem;">
-                    <button class="btn btn-primary" onclick="spawnTerminal('conductor')">+ Conductor</button>
-                    <button class="btn btn-primary" onclick="spawnTerminal('qwen')">+ Qwen</button>
-                    <button class="btn btn-primary" onclick="spawnTerminal('gemini')">+ Gemini</button>
-                    <button class="btn btn-primary" onclick="spawnTerminal('claude')">+ Claude</button>
-                    <button class="btn btn-primary" onclick="spawnTerminal('deepseek')">+ DeepSeek</button>
-                    <button class="btn btn-primary" onclick="spawnTerminal('user-console')">+ User Console</button>
-                    <button class="btn btn-danger" onclick="closeAllTerminals()">Close All</button>
+                <div id="terminalButtons" class="btn-group" style="margin-bottom: 1rem;">
+                    <!-- Buttons populated dynamically based on configuration -->
+                    <p style="color: var(--text-secondary);">Loading available agents...</p>
                 </div>
 
                 <div id="terminalTabs" style="margin-bottom: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
@@ -1184,9 +1179,60 @@
                 case 'config':
                     loadConfig();
                     break;
+                case 'terminal':
+                    loadTerminalButtons();
+                    break;
                 case 'logs':
                     refreshLogs();
                     break;
+            }
+        }
+
+        // Load terminal buttons based on configuration
+        async function loadTerminalButtons() {
+            const container = document.getElementById('terminalButtons');
+            if (!container) return;
+
+            try {
+                // Always show Conductor and User Console
+                let html = `
+                    <button class="btn btn-primary" onclick="spawnTerminal('conductor')">+ Conductor</button>
+                    <button class="btn btn-primary" onclick="spawnTerminal('user-console')">+ User Console</button>
+                `;
+
+                // Load config to check enabled LLMs
+                const response = await fetch(`${API_BASE}/api/config`);
+                const config = await response.json();
+
+                // Check which LLMs are enabled
+                const llms = config.llms || [];
+                const enabledLlms = llms.filter(llm => llm.enabled).map(llm => llm.name.toLowerCase());
+
+                // Add buttons for enabled LLMs
+                const llmButtons = [
+                    { name: 'qwen', label: 'Qwen' },
+                    { name: 'gemini', label: 'Gemini' },
+                    { name: 'claude', label: 'Claude' },
+                    { name: 'deepseek', label: 'DeepSeek' },
+                    { name: 'vllm', label: 'vLLM' }
+                ];
+
+                for (const llm of llmButtons) {
+                    if (enabledLlms.includes(llm.name)) {
+                        html += `<button class="btn btn-primary" onclick="spawnTerminal('${llm.name}')">+ ${llm.label}</button>`;
+                    }
+                }
+
+                // Add Close All button
+                html += `<button class="btn btn-danger" onclick="closeAllTerminals()">Close All</button>`;
+
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Failed to load terminal buttons:', error);
+                container.innerHTML = '<p style="color: var(--text-secondary);">Error loading agents. Using defaults.</p>' +
+                    '<button class="btn btn-primary" onclick="spawnTerminal(\'conductor\')">+ Conductor</button>' +
+                    '<button class="btn btn-primary" onclick="spawnTerminal(\'user-console\')">+ User Console</button>' +
+                    '<button class="btn btn-danger" onclick="closeAllTerminals()">Close All</button>';
             }
         }
 

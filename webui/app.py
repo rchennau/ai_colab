@@ -203,6 +203,7 @@ class PTYManager:
                 'gemini': ['bash', '-c', 'echo "=== Gemini Agent ===" && echo "Starting gemini-cli..." && gemini-cli'],
                 'claude': ['bash', '-c', 'echo "=== Claude Agent ===" && echo "Starting claude-code..." && claude-code'],
                 'deepseek': ['bash', '-c', 'echo "=== DeepSeek Agent ===" && echo "Starting deepseek-cli..." && deepseek-cli'],
+                'vllm': ['bash', '-c', 'echo "=== vLLM Agent ===" && echo "Starting vLLM CLI..." && vllm-hcom.sh'],
                 'user-console': ['bash', '-c', 'cd /home/rchennau/ai_colab && echo "=== User Console ===" && echo "Send commands to conductor via hcom" && echo "Example: hcom send @conductor -- \"!status\"" && echo "" && hcom start --name user_console 2>/dev/null; bash'],
                 'debug': ['bash', '-c', 'echo "=== Debug Shell ===" && echo "KB: /conductor/knowledge_base_map.md" && bash']
             }
