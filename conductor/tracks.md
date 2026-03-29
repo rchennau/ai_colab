@@ -24,6 +24,136 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - CLI module management via `module-manager.sh`
   - Launch flag `-m/--module` for module enablement
   - Module status display in launch.sh
+- [ ] **Milestone 17: WebUI Engineering & UX Overhaul** (In Progress)
+  - [ ] Simplified navigation structure (3 main menus)
+  - [ ] Knowledge Base integration on dashboard
+  - [ ] Submenu architecture for complex pages
+  - [ ] Enhanced agent status and fleet management
+  - [ ] System monitoring with health checks and logs
+
+---
+
+## 📋 Engineering Plan - Phase 1 (Q2 2026)
+
+### Phase 1.1: Core Infrastructure Stabilization
+- [ ] **Task: PTY Session Management**
+  - Improve terminal session lifecycle management
+  - Add session persistence across page refreshes
+  - Implement terminal session recovery
+  
+- [ ] **Task: Agent Health Monitoring**
+  - Real-time agent status via WebSocket
+  - Automatic agent restart on failure
+  - Agent log aggregation and display
+
+- [ ] **Task: Configuration Management**
+  - Atomic config writes with rollback
+  - Config validation before apply
+  - Config diff and preview before save
+
+### Phase 1.2: User Experience Improvements
+- [ ] **Task: Dashboard Enhancements**
+  - Real-time KB search results
+  - Project progress visualization
+  - Track completion timeline
+
+- [ ] **Task: AI Command Console**
+  - Command history and autocomplete
+  - Multi-conductor support
+  - Command output streaming
+
+- [ ] **Task: System Monitoring**
+  - Resource usage graphs (CPU, memory, disk)
+  - Log filtering and search
+  - Alerting for critical events
+
+### Phase 1.3: Developer Experience
+- [ ] **Task: Module Development Kit**
+  - Module template generator
+  - Module testing framework
+  - Module documentation generator
+
+- [ ] **Task: Debug Mode Enhancements**
+  - Integrated debugger for agents
+  - Step-through execution
+  - Variable inspection
+
+- [ ] **Task: Testing Infrastructure**
+  - Automated UI testing
+  - Integration test suite
+  - Performance benchmarking
+
+---
+
+## 📋 Engineering Plan - Phase 2 (Q3 2026)
+
+### Phase 2.1: Advanced Features
+- [ ] **Task: Multi-Project Support**
+  - Project switching
+  - Project templates
+  - Cross-project dependencies
+
+- [ ] **Task: Enhanced RAG System**
+  - Multi-modal embeddings (code + docs)
+  - Context-aware search
+  - RAG-powered code suggestions
+
+- [ ] **Task: Collaboration Features**
+  - Shared sessions
+  - Team workspaces
+  - Role-based access control
+
+### Phase 2.2: Performance & Scalability
+- [ ] **Task: Backend Optimization**
+  - Async task processing
+  - Result caching
+  - Database optimization
+
+- [ ] **Task: Frontend Optimization**
+  - Code splitting
+  - Lazy loading
+  - Service worker caching
+
+- [ ] **Task: Deployment Improvements**
+  - One-click deploy
+  - Blue-green deployments
+  - Rollback automation
+
+---
+
+## 📋 Engineering Plan - Phase 3 (Q4 2026)
+
+### Phase 3.1: AI Capabilities
+- [ ] **Task: Agent Autonomy**
+  - Self-healing agents
+  - Autonomous task prioritization
+  - Agent-to-agent negotiation
+
+- [ ] **Task: Knowledge Management**
+  - Auto-documentation
+  - Architecture decision records
+  - Knowledge graph visualization
+
+- [ ] **Task: Code Intelligence**
+  - Static analysis integration
+  - Automated refactoring
+  - Security scanning
+
+### Phase 3.2: Enterprise Features
+- [ ] **Task: Audit & Compliance**
+  - Audit logging
+  - Compliance reporting
+  - Data retention policies
+
+- [ ] **Task: Integration Ecosystem**
+  - GitHub/GitLab integration
+  - CI/CD pipeline integration
+  - Issue tracker integration
+
+- [ ] **Task: Monitoring & Observability**
+  - Distributed tracing
+  - Metrics dashboard
+  - Anomaly detection
 
 ---
 
