@@ -594,11 +594,55 @@ if [ "$WEBUI" = true ]; then
         echo -e "${BLUE}➜${NC} Open in browser: ${CYAN}http://localhost:8080${NC}"
         echo -e "${BLUE}➜${NC} Logs: $PROJECT_ROOT/logs/webui.log"
         echo ""
-        echo -e "${YELLOW}Note: Press Ctrl+C to stop the Web UI server${NC}"
-        echo ""
+        
+        # Interactive menu loop
+        while true; do
+            echo -e "${YELLOW}═══════════════════════════════════════════════════════════${NC}"
+            echo -e "${YELLOW}  Web UI is running${NC}"
+            echo -e "${YELLOW}═══════════════════════════════════════════════════════════${NC}"
+            echo ""
+            echo -e "  ${CYAN}1)${NC} Open in browser"
+            echo -e "  ${CYAN}2)${NC} Debug Mode (launch CLI agent)"
+            echo -e "  ${CYAN}3)${NC} Exit (stop Web UI and exit)"
+            echo ""
+            read -p "  Choice [1-3]: " WEBUI_CHOICE
 
-        # Keep script running to maintain the WebUI process
-        wait $WEBUI_PID
+            case "$WEBUI_CHOICE" in
+                1)
+                    echo ""
+                    echo -e "${GREEN}➜${NC} Web UI is available at: ${CYAN}http://localhost:8080${NC}"
+                    echo -e "${CYAN}   (Copy and paste into your browser)${NC}"
+                    echo ""
+                    ;;
+                2)
+                    echo ""
+                    echo -e "${YELLOW}Launching Debug Mode...${NC}"
+                    echo ""
+                    
+                    # Stop WebUI before debug mode
+                    kill $WEBUI_PID 2>/dev/null
+                    wait $WEBUI_PID 2>/dev/null
+                    
+                    # Launch debug mode
+                    cd "$PROJECT_ROOT"
+                    exec bash "$SCRIPT_DIR/scripts/debug-mode.sh"
+                    ;;
+                3)
+                    echo ""
+                    echo -e "${YELLOW}Stopping Web UI...${NC}"
+                    kill $WEBUI_PID 2>/dev/null
+                    wait $WEBUI_PID 2>/dev/null
+                    echo -e "${GREEN}✓${NC} Web UI stopped"
+                    echo ""
+                    echo -e "${GREEN}Session ended. Happy collaborating! 🚀${NC}"
+                    echo ""
+                    exit 0
+                    ;;
+                *)
+                    echo -e "${RED}Invalid choice. Please select 1, 2, or 3.${NC}"
+                    ;;
+            esac
+        done
     else
         echo -e "${RED}✗${NC} Web UI failed to start. Check logs: $PROJECT_ROOT/logs/webui.log"
         exit 1
