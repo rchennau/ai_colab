@@ -316,9 +316,59 @@ case "$LAUNCH_CHOICE" in
     *) echo "Invalid choice"; exit 1 ;;
 esac
 
-# 3. Module Selection
+# 3. Module Status Display
+# Show available and loaded modules early in the launch process
+ui_title "Module Addons" "${BLUE}"
+
+# Discover modules
+MODULES_DIR="$PROJECT_ROOT/modules"
+if [[ -d "$MODULES_DIR" ]]; then
+    echo -e "${CYAN}Available Modules:${NC}"
+    
+    # List all modules with their status
+    for module_dir in "$MODULES_DIR"/*/; do
+        if [[ -f "${module_dir}module.toml" ]]; then
+            MODULE_ID=$(basename "$module_dir")
+            MODULE_TOML="${module_dir}module.toml"
+            
+            # Extract module name and description from toml
+            MODULE_NAME=$(grep "^name = " "$MODULE_TOML" 2>/dev/null | sed 's/name = "//; s/"$//')
+            MODULE_DESC=$(grep "^description = " "$MODULE_TOML" 2>/dev/null | sed 's/description = "//; s/"$//')
+            MODULE_VERSION=$(grep "^version = " "$MODULE_TOML" 2>/dev/null | sed 's/version = "//; s/"$//')
+            
+            # Check if module is enabled
+            PREF_KEY="MODULE_$(echo "$MODULE_ID" | tr '-' '_' | tr '[:lower:]' '[:upper:]')"
+            IS_ENABLED=$(bash "$CONFIG_MGR" get "$PREF_KEY" "false" 2>/dev/null)
+            
+            if [[ "$IS_ENABLED" == "true" ]]; then
+                STATUS_ICON="${GREEN}✓${NC}"
+                STATUS_TEXT="${GREEN}Loaded${NC}"
+            else
+                STATUS_ICON="${YELLOW}○${NC}"
+                STATUS_TEXT="${YELLOW}Available${NC}"
+            fi
+            
+            echo -e "  ${STATUS_ICON} ${BLUE}${MODULE_NAME}${NC} (${MODULE_ID})"
+            echo -e "      ${STATUS_TEXT} • v${MODULE_VERSION}"
+            if [[ -n "$MODULE_DESC" ]]; then
+                echo -e "      ${CYAN}${MODULE_DESC}${NC}"
+            fi
+            echo ""
+        fi
+    done
+    
+    # Show template modules for developers
+    echo -e "${CYAN}Module Templates (for development):${NC}"
+    echo -e "  ${BLUE}• atari-8bit${NC} - Example module with conductor commands, periodic hooks, dashboard sections"
+    echo -e "  ${BLUE}• mock-test${NC} - Simple test module for verifying plugin system"
+    echo -e "  ${YELLOW}→ Use these as templates for creating new modules${NC}"
+    echo ""
+else
+    echo -e "  ${YELLOW}(No modules directory found)${NC}"
+fi
+
+# 3.1 Module Selection (if not WebUI)
 if [ "$WEBUI" = false ]; then
-    ui_title "Module Addons" "${BLUE}"
     MODULES_JSON=$(python3 "$SCRIPT_DIR/scripts/module-manager.py" list "$PROJECT_ROOT")
 
     # Use python3 for portable JSON extraction
