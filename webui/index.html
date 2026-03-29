@@ -1375,18 +1375,41 @@
             progressBar.textContent = 'Starting...';
 
             try {
-                // Gather configuration
+                // Gather configuration - build arrays to match schema
+                const llmsArray = [];
+                const llmConfigs = [
+                    { name: 'gemini', id: 'llm-gemini' },
+                    { name: 'qwen', id: 'llm-qwen' },
+                    { name: 'vllm', id: 'llm-vllm' },
+                    { name: 'claude', id: 'llm-claude' },
+                    { name: 'deepseek', id: 'llm-deepseek' }
+                ];
+                for (const llm of llmConfigs) {
+                    const el = document.getElementById(llm.id);
+                    if (el) {
+                        llmsArray.push({ name: llm.name, enabled: el.checked });
+                    }
+                }
+
+                const modulesArray = [];
+                const modConfigs = [
+                    { id: 'atari-8bit', domId: 'mod-atari' }
+                ];
+                for (const mod of modConfigs) {
+                    const el = document.getElementById(mod.domId);
+                    if (el) {
+                        modulesArray.push({ id: mod.id, enabled: el.checked });
+                    }
+                }
+
                 const config = {
-                    llms: {
-                        gemini: document.getElementById('llm-gemini').checked,
-                        qwen: document.getElementById('llm-qwen').checked,
-                        vllm: document.getElementById('llm-vllm').checked,
-                        claude: document.getElementById('llm-claude').checked,
-                        deepseek: document.getElementById('llm-deepseek').checked
+                    version: '1.0.0',
+                    installation: {
+                        status: 'in-progress',
+                        pathway: 'webui'
                     },
-                    modules: {
-                        'atari-8bit': document.getElementById('mod-atari').checked
-                    },
+                    llms: llmsArray,
+                    modules: modulesArray,
                     compute: {
                         backend: document.getElementById('computeBackend').value
                     }
@@ -1635,6 +1658,10 @@
 
                 const config = {
                     version: '1.0.0',
+                    installation: {
+                        status: 'complete',
+                        pathway: 'webui'
+                    },
                     llms: llms,
                     modules: modules,
                     compute: {

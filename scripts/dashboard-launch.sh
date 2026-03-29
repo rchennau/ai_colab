@@ -352,6 +352,7 @@ create_dashboard() {
         
         # Send hcom initialization commands with proper error handling
         tmux send-keys -t "$console_id" "export HCOM_NAME=$user_name" C-m
+        tmux send-keys -t "$console_id" "set +H  # Disable history expansion to avoid ! issues" C-m
         tmux send-keys -t "$console_id" "sleep 1" C-m
         # Register user with hcom without blocking the shell
         tmux send-keys -t "$console_id" "if command -v hcom >/dev/null 2>&1; then hcom status --name \$HCOM_NAME >/dev/null 2>&1; else echo 'hcom not found, please run ./install.sh'; fi" C-m
@@ -387,7 +388,7 @@ create_dashboard() {
             fi
         done < <(bash "$SCRIPT_DIR/module-manager.sh" active 2>/dev/null)
 
-        tmux send-keys -t "$console_id" "echo -e \"  !help            - Show all available commands\"" C-m
+        tmux send-keys -t "$console_id" "echo -e '  !help            - Show all available commands'" C-m
         tmux send-keys -t "$console_id" "echo \\\"\\\"" C-m
         tmux send-keys -t "$console_id" "echo -e \"${GREEN}HCOM Status:\${NC} \$(hcom status --name \$HCOM_NAME 2>&1 | head -1 || echo 'Not connected')\"" C-m
 

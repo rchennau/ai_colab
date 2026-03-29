@@ -231,7 +231,7 @@ if [[ -f "$SCRIPT_DIR/scripts/migrate-project.sh" ]]; then
 fi
 
 # Configuration Manager
-CONFIG_MGR="$SCRIPT_DIR/scripts/config-manager.sh"
+CONFIG_MGR="$SCRIPT_DIR/config-manager.sh"
 
 # Preferences handling via config-manager
 load_pref() {
