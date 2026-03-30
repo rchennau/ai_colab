@@ -157,3 +157,150 @@ def metrics():
     except Exception as e:
         current_app.logger.error(f"Metrics request failed: {e}")
         return jsonify({'status': 'error', 'error': str(e)}), 500
+
+
+@system_bp.route('/session/status', methods=['GET'])
+def session_status():
+    """Get tmux session status and agent information"""
+    try:
+        # Check if session exists
+        result = subprocess.run(
+            ['tmux', 'has-session', '-t', 'hcom-dashboard'],
+            capture_output=True,
+            timeout=2
+        )
+
+        if result.returncode != 0:
+            return jsonify({
+                "exists": False,
+                "healthy": False,
+                "message": "Session not running"
+            })
+
+        # Get pane count
+        result = subprocess.run(
+            ['tmux', 'list-panes', '-t', 'hcom-dashboard', '-F', '#{pane_id} #{pane_title}'],
+            capture_output=True,
+            text=True,
+            timeout=2
+        )
+
+        panes = []
+        if result.returncode == 0:
+            for line in result.stdout.strip().split('\n'):
+                if line:
+                    parts = line.split(' ', 1)
+                    panes.append({
+                        "id": parts[0],
+                        "title": parts[1] if len(parts) > 1 else "unknown"
+                    })
+
+        # Get window count
+        result = subprocess.run(
+            ['tmux', 'list-windows', '-t', 'hcom-dashboard', '-F', '#{window_id}'],
+            capture_output=True,
+            text=True,
+            timeout=2
+        )
+        window_count = len(result.stdout.strip().split('\n')) if result.returncode == 0 else 0
+
+        return jsonify({
+            "exists": True,
+            "healthy": True,
+            "pane_count": len(panes),
+            "window_count": window_count,
+            "panes": panes
+        })
+
+    except Exception as e:
+        current_app.logger.error(f"Session status failed: {e}")
+        return jsonify({"error": str(e), "exists": False}), 500
+
+
+@system_bp.route('/status', methods=['GET'])
+def get_status():
+    """Get system status"""
+    project_root = current_app.config.get('PROJECT_ROOT')
+    state_file = project_root / ".ai-colab-state.json"
+    from datetime import datetime
+    try:
+        status = {
+            "installation": {"status": "unknown", "pathway": "unknown"},
+            "agents": [],
+            "timestamp": datetime.now().isoformat()
+        }
+
+        # Read state file
+        if state_file.exists():
+            with open(state_file, 'r') as f:
+                state = json.load(f)
+                status["installation"] = state.get("installation", {})
+
+        # Check hcom status if available
+        try:
+            result = subprocess.run(
+                ["hcom", "list"],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            if result.returncode == 0:
+                for line in result.stdout.splitlines():
+                    if "○" in line or "●" in line:
+                        parts = line.split()
+                        if len(parts) >= 2:
+                            status["agents"].append({
+                                "name": parts[0],
+                                "status": parts[1]
+                            })
+        except:
+            pass
+
+        return jsonify(status)
+
+    except Exception as e:
+        current_app.logger.error(f"Status failed: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@system_bp.route('/dashboard/launch', methods=['POST'])
+def launch_dashboard():
+    """Launch the dashboard with specified configuration"""
+    project_root = current_app.config.get('PROJECT_ROOT')
+    scripts_dir = project_root / 'scripts'
+    try:
+        config = request.json or {}
+
+        # Build command
+        cmd = ['bash', str(scripts_dir / 'dashboard-launch.sh')]
+
+        # Add flags based on config
+        if config.get('conductor'):
+            cmd.append('--conductor')
+        if config.get('vllm'):
+            cmd.append('--vllm')
+        if config.get('claude'):
+            cmd.append('--add-claude')
+        if config.get('deepseek'):
+            cmd.append('--add-deepseek')
+        if config.get('bridge'):
+            cmd.append('--bridge')
+
+        # Launch in background
+        subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            cwd=str(project_root)
+        )
+
+        return jsonify({
+            "status": "started",
+            "message": "Launching dashboard...",
+            "command": " ".join(cmd)
+        })
+
+    except Exception as e:
+        current_app.logger.error(f"Dashboard launch failed: {e}")
+        return jsonify({"error": str(e)}), 500
+

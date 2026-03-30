@@ -2,7 +2,7 @@
 # Web UI Comprehensive Test Script
 # Tests all new endpoints and functionality
 
-set -euo pipefail
+set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -43,6 +43,9 @@ print_info() {
 
 # Check if server is running
 check_server() {
+    print_test "Ensuring clean state (stopping any existing server)..."
+    stop_server
+    
     print_test "Checking if Web UI server is running..."
     
     if curl -s --connect-timeout 2 "$BASE_URL/health" >/dev/null 2>&1; then
@@ -58,17 +61,18 @@ check_server() {
 start_server() {
     print_test "Starting Web UI server..."
     
-    if [[ ! -d "$VENV_DIR" ]]; then
-        print_failure "Virtual environment not found at $VENV_DIR"
-        echo "  Run: python3 -m venv webui-venv && source webui-venv/bin/activate && pip install flask flask-cors toml jsonschema"
-        return 1
+    if [[ -d "$VENV_DIR" ]]; then
+        source "$VENV_DIR/bin/activate"
+    else
+        print_info "Virtual environment not found at $VENV_DIR, using system Python"
     fi
     
-    cd "$WEBUI_DIR"
-    source "$VENV_DIR/bin/activate"
+    # Run from root to maintain module structure
+    cd "$PROJECT_ROOT"
     
     # Start server in background
-    python3 app.py --port $PORT > /tmp/webui.log 2>&1 &
+    export PYTHONPATH="$PROJECT_ROOT:${PYTHONPATH:-}"
+    python3 webui/app_refactored.py --port $PORT > /tmp/webui.log 2>&1 &
     SERVER_PID=$!
     echo $SERVER_PID > /tmp/webui.pid
     
@@ -91,20 +95,26 @@ start_server() {
 stop_server() {
     print_test "Stopping Web UI server..."
     
+    # Try PID file first
     if [[ -f /tmp/webui.pid ]]; then
         local pid=$(cat /tmp/webui.pid)
         if kill -0 "$pid" 2>/dev/null; then
-            kill "$pid" 2>/dev/null || true
+            kill -9 "$pid" 2>/dev/null || true
             print_success "Server stopped (PID: $pid)"
-        else
-            print_info "Server not running"
         fi
         rm -f /tmp/webui.pid
-    else
-        # Kill by process name
-        pkill -f "python.*app.py.*--port $PORT" 2>/dev/null || true
-        print_info "Server processes cleaned up"
     fi
+    
+    # Kill any processes listening on our port
+    local port_pid=$(lsof -t -i :$PORT 2>/dev/null || true)
+    if [[ -n "$port_pid" ]]; then
+        kill -9 $port_pid 2>/dev/null || true
+        print_success "Killed processes on port $PORT (PIDs: $port_pid)"
+    fi
+
+    # Kill by process name as well
+    pkill -9 -f "python.*webui/app.*.py" 2>/dev/null || true
+    print_info "Server processes cleaned up"
 }
 
 # Test health endpoint

@@ -6,7 +6,7 @@ Flask-based API with modular blueprints for better maintainability.
 import os
 import logging
 from pathlib import Path
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory, request
 from flask_cors import CORS
 from flask_socketio import SocketIO
 
@@ -145,6 +145,12 @@ def create_app():
     @app.route('/')
     def index():
         return send_from_directory(APP_DIR, 'index.html')
+
+    @app.route('/health')
+    def health_redirect():
+        # Delegate to the system blueprint's health function
+        from webui.api.system import health
+        return health()
     
     @app.route('/<path:filename>')
     def static_files(filename):

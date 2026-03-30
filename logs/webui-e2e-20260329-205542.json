@@ -1,0 +1,42 @@
+{
+  "passed": 0,
+  "failed": 7,
+  "skipped": 0,
+  "tests": [
+    {
+      "name": "Dashboard loads",
+      "status": "failed",
+      "error": "Locator.wait_for: Timeout 10000ms exceeded.\nCall log:\n  - waiting for locator(\"#kbQuery\") to be visible\n    24 \u00d7 locator resolved to hidden <input type=\"text\" id=\"kbQuery\" placeholder=\"e.g., How does the blackboard work?\" onkeypress=\"if(event.key==='Enter') searchKnowledgeBase()\"/>\n"
+    },
+    {
+      "name": "KB Search functional",
+      "status": "failed",
+      "error": "Locator.fill: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\"#kbQuery\")\n    - locator resolved to <input type=\"text\" id=\"kbQuery\" placeholder=\"e.g., How does the blackboard work?\" onkeypress=\"if(event.key==='Enter') searchKnowledgeBase()\"/>\n    - fill(\"project\")\n  - attempting fill action\n    2 \u00d7 waiting for element to be visible, enabled and editable\n      - element is not visible\n    - retrying fill action\n    - waiting 20ms\n    2 \u00d7 waiting for element to be visible, enabled and editable\n      - element is not visible\n    - retrying fill action\n      - waiting 100ms\n    58 \u00d7 waiting for element to be visible, enabled and editable\n       - element is not visible\n     - retrying fill action\n       - waiting 500ms\n"
+    },
+    {
+      "name": "Agent Terminal loads",
+      "status": "failed",
+      "error": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for get_by_text(\"AI Command\")\n"
+    },
+    {
+      "name": "System page loads",
+      "status": "failed",
+      "error": "Locator.click: Error: strict mode violation: get_by_text(\"System\") resolved to 6 elements:\n    1) <button class=\"nav-btn\" data-page=\"system\">System</button> aka get_by_role(\"button\", name=\"System\")\n    2) <option value=\"system-prompts/*\">System Prompts</option> aka get_by_text(\"System Prompts\")\n    3) <h2>\ud83d\udda5\ufe0f System Status</h2> aka get_by_text(\"\ud83d\udda5\ufe0f System Status\")\n    4) <h2>\ud83d\udcc8 System Observability</h2> aka get_by_text(\"\ud83d\udcc8 System Observability\")\n    5) <h2>\ud83d\udcdd System Logs</h2> aka get_by_text(\"\ud83d\udcdd System Logs\")\n    6) <h2>\ud83d\udd27 System Settings</h2> aka get_by_text(\"\ud83d\udd27 System Settings\")\n\nCall log:\n  - waiting for get_by_text(\"System\")\n"
+    },
+    {
+      "name": "Health check displays",
+      "status": "failed",
+      "error": "Locator.click: Error: strict mode violation: get_by_text(\"System\") resolved to 6 elements:\n    1) <button class=\"nav-btn\" data-page=\"system\">System</button> aka get_by_role(\"button\", name=\"System\")\n    2) <option value=\"system-prompts/*\">System Prompts</option> aka get_by_text(\"System Prompts\")\n    3) <h2>\ud83d\udda5\ufe0f System Status</h2> aka get_by_text(\"\ud83d\udda5\ufe0f System Status\")\n    4) <h2>\ud83d\udcc8 System Observability</h2> aka get_by_text(\"\ud83d\udcc8 System Observability\")\n    5) <h2>\ud83d\udcdd System Logs</h2> aka get_by_text(\"\ud83d\udcdd System Logs\")\n    6) <h2>\ud83d\udd27 System Settings</h2> aka get_by_text(\"\ud83d\udd27 System Settings\")\n\nCall log:\n  - waiting for get_by_text(\"System\")\n"
+    },
+    {
+      "name": "Logs display",
+      "status": "failed",
+      "error": "Locator.click: Error: strict mode violation: get_by_text(\"System\") resolved to 6 elements:\n    1) <button class=\"nav-btn\" data-page=\"system\">System</button> aka get_by_role(\"button\", name=\"System\")\n    2) <option value=\"system-prompts/*\">System Prompts</option> aka get_by_text(\"System Prompts\")\n    3) <h2>\ud83d\udda5\ufe0f System Status</h2> aka get_by_text(\"\ud83d\udda5\ufe0f System Status\")\n    4) <h2>\ud83d\udcc8 System Observability</h2> aka get_by_text(\"\ud83d\udcc8 System Observability\")\n    5) <h2>\ud83d\udcdd System Logs</h2> aka get_by_text(\"\ud83d\udcdd System Logs\")\n    6) <h2>\ud83d\udd27 System Settings</h2> aka get_by_text(\"\ud83d\udd27 System Settings\")\n\nCall log:\n  - waiting for get_by_text(\"System\")\n"
+    },
+    {
+      "name": "Log Management buttons",
+      "status": "failed",
+      "error": "Locator.click: Error: strict mode violation: get_by_text(\"System\") resolved to 6 elements:\n    1) <button class=\"nav-btn\" data-page=\"system\">System</button> aka get_by_role(\"button\", name=\"System\")\n    2) <option value=\"system-prompts/*\">System Prompts</option> aka get_by_text(\"System Prompts\")\n    3) <h2>\ud83d\udda5\ufe0f System Status</h2> aka get_by_text(\"\ud83d\udda5\ufe0f System Status\")\n    4) <h2>\ud83d\udcc8 System Observability</h2> aka get_by_text(\"\ud83d\udcc8 System Observability\")\n    5) <h2>\ud83d\udcdd System Logs</h2> aka get_by_text(\"\ud83d\udcdd System Logs\")\n    6) <h2>\ud83d\udd27 System Settings</h2> aka get_by_text(\"\ud83d\udd27 System Settings\")\n\nCall log:\n  - waiting for get_by_text(\"System\")\n"
+    }
+  ]
+}
