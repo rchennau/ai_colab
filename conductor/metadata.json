@@ -1,0 +1,9 @@
+{
+  "id": "webui_overhaul_20260329",
+  "name": "WebUI Engineering & UX Overhaul",
+  "milestone": 17,
+  "status": "in-progress",
+  "assigned": "@all",
+  "description": "Transform the monolithic Web UI into a modular v3.0 architecture with 3-menu navigation.",
+  "created_at": "2026-03-29T21:45:00Z"
+}

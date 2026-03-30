@@ -768,8 +768,8 @@ if [ "$WEBUI" = true ]; then
         source "$SCRIPT_DIR/webui-venv/bin/activate"
     fi
 
-    # Start WebUI in background with output redirected to log file
-    python3 "$SCRIPT_DIR/../webui/app.py" >> "$PROJECT_ROOT/logs/webui.log" 2>&1 &
+    # Start WebUI in background (v3.0 Refactored)
+    python3 "$SCRIPT_DIR/../webui/app_refactored.py" >> "$PROJECT_ROOT/logs/webui.log" 2>&1 &
     WEBUI_PID=$!
 
     # Wait for server to start

@@ -1,0 +1,13 @@
+
+[0;32m╔══════════════════════════════════════════════════════════╗[0m
+[0;32m║     ai-colab WebUI API Test Suite v1.0                   ║[0m
+[0;32m╚══════════════════════════════════════════════════════════╝[0m
+
+Test Log: /home/rchennau/ai_colab/logs/webui-api-test-20260328-225910.log
+API Base: http://localhost:8080
+
+[0;31mError: WebUI is not running at http://localhost:8080[0m
+Please start the WebUI server first:
+  cd /home/rchennau/ai_colab
+  python3 webui/app.py &
+

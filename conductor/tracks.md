@@ -25,6 +25,7 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - Launch flag `-m/--module` for module enablement
   - Module status display in launch.sh
 - [ ] **Milestone 17: WebUI Engineering & UX Overhaul** (In Progress)
+  *Link: [./tracks/webui_overhaul_20260329/](./tracks/webui_overhaul_20260329/)*
   - [ ] Simplified navigation structure (3 main menus)
   - [ ] Knowledge Base integration on dashboard
   - [ ] Submenu architecture for complex pages
@@ -247,6 +248,11 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   *Link: [./tracks/fleet_autonomy_20260326/](./tracks/fleet_autonomy_20260326/)*
   - **Assigned:** @conductor
   - **Description:** Implement advanced heartbeat monitoring and autonomous agent recovery for distributed fleets.
+
+- [ ] **Track: WebUI Overhaul & Modular Architecture** (In Progress)
+  *Link: [./tracks/webui_overhaul_20260329/](./tracks/webui_overhaul_20260329/)*
+  - **Assigned:** @all
+  - **Description:** Transform the Web UI into a modular v3.0 architecture with 3-menu navigation.
 
 ---
 

@@ -452,7 +452,7 @@
     <!-- Navigation -->
     <nav>
         <button class="nav-btn active" data-page="dashboard">Dashboard</button>
-        <button class="nav-btn" data-page="ai-command">AI Command</button>
+        <button class="nav-btn" data-page="ai-command">Collaboration</button>
         <button class="nav-btn" data-page="system">System</button>
     </nav>
 
@@ -469,69 +469,101 @@
     <main>
         <!-- Dashboard Page -->
         <div class="page active" id="dashboard-page">
-            <!-- Knowledge Base Search - Main Dashboard -->
-            <div class="card">
-                <h2>📚 Knowledge Base Search</h2>
-                <p style="color: var(--text-secondary); margin-bottom: 1rem;">
-                    Search project documentation, architecture docs, and code comments using semantic search.
-                </p>
-                <div class="form-group">
-                    <div style="display: flex; gap: 0.5rem;">
-                        <input type="text" id="kbQuery" placeholder="e.g., How does the blackboard work?"
-                               style="flex: 1; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-secondary); color: var(--text-primary);"
-                               onkeypress="if(event.key==='Enter') searchKnowledgeBase()">
-                        <button class="btn btn-primary" onclick="searchKnowledgeBase()">Search</button>
+            <!-- Sub-menu tabs -->
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">
+                <button class="btn btn-primary" onclick="showDashboardSubmenu('overview')" id="dbOverviewTab">Overview</button>
+                <button class="btn btn-secondary" onclick="showDashboardSubmenu('knowledge')" id="dbKnowledgeTab">Knowledge Base</button>
+            </div>
+
+            <!-- Overview Sub-page -->
+            <div id="db-overview-subpage">
+                <div class="card-grid">
+                    <div class="card">
+                        <h2>🤖 Active Agents</h2>
+                        <div id="agentStatus">
+                            <p>Loading...</p>
+                        </div>
                     </div>
-                    <div style="display: flex; gap: 1rem; margin-top: 0.5rem; align-items: center;">
-                        <label for="kbTopK">Results:</label>
-                        <select id="kbTopK" style="width: auto; padding: 0.25rem;">
-                            <option value="3">3</option>
-                            <option value="5" selected>5</option>
-                            <option value="10">10</option>
-                        </select>
-                        <label for="kbSource">Source:</label>
-                        <select id="kbSource" style="width: auto; padding: 0.25rem;">
-                            <option value="">All Sources</option>
-                            <option value="conductor">Conductor</option>
-                            <option value="tracks">Tracks</option>
-                            <option value="docs">Docs</option>
-                        </select>
+
+                    <div class="card">
+                        <h2>🎛️ Conductor Status</h2>
+                        <div id="conductorStatus">
+                            <p>Loading conductor status...</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2>📊 Project Health</h2>
+                        <div id="projectHealth">
+                            <p>Loading...</p>
+                        </div>
                     </div>
                 </div>
-                <div id="kbResults" style="margin-top: 1rem;">
-                    <div id="kbResultsContent">
-                        <p style="color: var(--text-secondary); text-align: center;">Enter a query and click Search to find relevant documentation</p>
+
+                <div class="card">
+                    <h2>📈 Recent Activity</h2>
+                    <div id="recentActivity" class="log-viewer">
+                        <p>Loading activity log...</p>
                     </div>
                 </div>
             </div>
 
-            <div class="card-grid">
+            <!-- Knowledge Base Sub-page (hidden by default) -->
+            <div id="db-knowledge-subpage" style="display: none;">
                 <div class="card">
-                    <h2>🤖 Active Agents</h2>
-                    <div id="agentStatus">
-                        <p>Loading...</p>
-                    </div>
-                </div>
+                    <h2>📚 Knowledge Base Search</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                        Search project documentation, architecture docs, and code comments using semantic search.
+                    </p>
 
-                <div class="card">
-                    <h2>🎛️ Conductor Status</h2>
-                    <div id="conductorStatus">
-                        <p>Loading conductor status...</p>
+                    <!-- Search Box -->
+                    <div class="form-group">
+                        <label for="kbQuery">Search Query:</label>
+                        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                            <input type="text" id="kbQuery" placeholder="e.g., How does the blackboard work?" 
+                                   style="flex: 1;" onkeypress="if(event.key==='Enter') searchKnowledgeBase()">
+                            <button class="btn btn-primary" onclick="searchKnowledgeBase()">Search</button>
+                        </div>
                     </div>
-                </div>
 
-                <div class="card">
-                    <h2>📊 Project Health</h2>
-                    <div id="projectHealth">
-                        <p>Loading...</p>
+                    <!-- Filters -->
+                    <div class="form-group" style="display: flex; gap: 1rem; align-items: center; margin-top: 1rem;">
+                        <div>
+                            <label for="kbTopK">Results:</label>
+                            <select id="kbTopK" style="width: auto;">
+                                <option value="3">3</option>
+                                <option value="5" selected>5</option>
+                                <option value="10">10</option>
+                                <option value="20">20</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="kbSource">Source:</label>
+                            <select id="kbSource" style="width: auto;">
+                                <option value="">All Sources</option>
+                                <option value="conductor/*">Conductor Docs</option>
+                                <option value="tracks/*">Track Plans</option>
+                                <option value="system-prompts/*">System Prompts</option>
+                                <option value="docs/*">User Docs</option>
+                                <option value="scripts/*">Scripts</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-warning" onclick="triggerIndex()" style="margin-top: 1.4rem;">
+                            🔄 Re-index
+                        </button>
+                        <button class="btn btn-info" onclick="showKBStats()" style="margin-top: 1.4rem;">
+                            📊 Stats
+                        </button>
                     </div>
-                </div>
-            </div>
 
-            <div class="card">
-                <h2>📈 Recent Activity</h2>
-                <div id="recentActivity" class="log-viewer">
-                    <p>Loading activity log...</p>
+                    <!-- Results -->
+                    <div id="kbResults" style="margin-top: 1.5rem;">
+                        <div id="kbResultsContent">
+                            <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">
+                                Enter a search query to find relevant documentation
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -541,8 +573,8 @@
             <!-- Sub-menu tabs -->
             <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">
                 <button class="btn btn-primary" onclick="showAISubmenu('console')" id="aiConsoleTab">AI Console</button>
-                <button class="btn btn-secondary" onclick="showAISubmenu('status')" id="aiStatusTab">AI Status</button>
-                <button class="btn btn-secondary" onclick="showAISubmenu('terminal')" id="aiTerminalTab">Agent Terminal</button>
+                <button class="btn btn-secondary" onclick="showAISubmenu('status')" id="aiStatusTab">Fleet Management</button>
+                <button class="btn btn-secondary" onclick="showAISubmenu('terminal')" id="aiTerminalTab">Agent Terminals</button>
             </div>
 
             <!-- AI Console Sub-page -->
@@ -639,10 +671,12 @@
                 <button class="btn btn-primary" onclick="showSystemSubmenu('monitor')" id="systemMonitorTab">Monitoring</button>
                 <button class="btn btn-secondary" onclick="showSystemSubmenu('config')" id="systemConfigTab">Configuration</button>
                 <button class="btn btn-secondary" onclick="showSystemSubmenu('setup')" id="systemSetupTab">Setup</button>
+                <button class="btn btn-secondary" onclick="showSystemSubmenu('settings')" id="systemSettingsTab">Settings</button>
             </div>
 
             <!-- Monitoring Sub-page -->
             <div id="system-monitor-subpage">
+                <!-- Status Row -->
                 <div class="card-grid">
                     <div class="card">
                         <h2>🖥️ System Status</h2>
@@ -657,16 +691,48 @@
                             <p>Loading...</p>
                         </div>
                     </div>
+                </div>
 
-                    <div class="card">
-                        <h2>📝 Recent Logs</h2>
-                        <div id="systemLogs" class="log-viewer" style="max-height: 300px;">
-                            <p>Loading logs...</p>
+                <!-- Observability Section -->
+                <div class="card">
+                    <h2>📈 System Observability</h2>
+                    <div class="card-grid" style="margin-bottom: 0;">
+                        <div class="card" style="background: var(--bg-tertiary);">
+                            <h3>🚀 API Requests</h3>
+                            <div id="apiRequestsStat" style="font-size: 2rem; font-weight: bold; color: var(--accent-blue);">-</div>
                         </div>
+                        <div class="card" style="background: var(--bg-tertiary);">
+                            <h3>⚡ Avg Response</h3>
+                            <div id="avgResponseTimeStat" style="font-size: 2rem; font-weight: bold; color: var(--accent-green);">-</div>
+                        </div>
+                        <div class="card" style="background: var(--bg-tertiary);">
+                            <h3>❌ Error Rate</h3>
+                            <div id="errorRateStat" style="font-size: 2rem; font-weight: bold; color: var(--accent-red);">-</div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                        <button class="btn btn-primary" onclick="exportMetrics('prometheus')">Export Prometheus</button>
+                        <button class="btn btn-primary" onclick="exportMetrics('json')">Export JSON</button>
+                        <button class="btn btn-success" onclick="refreshMetrics()">🔄 Refresh</button>
                     </div>
                 </div>
 
-                <div class="card" style="margin-top: 1rem;">
+                <!-- Logs Section -->
+                <div class="card">
+                    <h2>📝 System Logs</h2>
+                    <div id="systemLogs" class="log-viewer" style="max-height: 400px;">
+                        <p>Loading logs...</p>
+                    </div>
+                    <div class="btn-group" style="margin-top: 1rem;">
+                        <button class="btn btn-primary" onclick="rotateLogs()">Rotate Logs</button>
+                        <button class="btn btn-warning" onclick="clearLogs()">Clear Logs</button>
+                        <button class="btn btn-secondary" onclick="downloadLogs()">Download Logs</button>
+                    </div>
+                </div>
+
+                <!-- Maintenance Section -->
+                <div class="card">
                     <h2>⚡ Quick Actions</h2>
                     <div class="btn-group">
                         <button class="btn btn-success" onclick="runStatusCheck()">Run Status Check</button>
@@ -674,18 +740,6 @@
                         <button class="btn btn-info" onclick="recoverSession()">Recover Session</button>
                         <button class="btn btn-danger" onclick="shutdownSystem()">Shutdown</button>
                     </div>
-                </div>
-
-                <div class="card" style="margin-top: 1rem;">
-                    <h2>📋 Log Management</h2>
-                    <div class="btn-group">
-                        <button class="btn btn-primary" onclick="rotateLogs()">Rotate Logs</button>
-                        <button class="btn btn-warning" onclick="clearLogs()">Clear Logs</button>
-                        <button class="btn btn-secondary" onclick="downloadLogs()">Download Logs</button>
-                    </div>
-                    <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 0.5rem;">
-                        Log rotation archives current logs. Clear removes all log content.
-                    </p>
                 </div>
             </div>
 
@@ -891,277 +945,46 @@
                     <button class="btn btn-success" id="applyBtn" onclick="applySetup()" style="display: none;">Apply Configuration</button>
                 </div>
             </div>
-        </div>
 
-        <!-- Agents Page -->
-        <div class="page" id="agents-page">
-            <div class="card">
-                <h2>🤖 Agent Management</h2>
-                <div id="agentList" class="agent-list">
-                    <p>Loading agents...</p>
-                </div>
-            </div>
-        </div>
+            <!-- Settings Sub-page (hidden by default) -->
+            <div id="system-settings-subpage" style="display: none;">
+                <div class="card">
+                    <h2>🔧 System Settings</h2>
 
-        <!-- Configuration Page -->
-        <div class="page" id="config-page">
-            <div class="card">
-                <h2>⚙️ Configuration Editor</h2>
-
-                <div class="btn-group" style="margin-bottom: 1rem;">
-                    <button class="btn btn-primary" onclick="loadConfig()">Load Current Config</button>
-                    <button class="btn btn-success" onclick="saveConfig()">Save Configuration</button>
-                    <button class="btn btn-secondary" onclick="showProfileManager()">Manage Profiles</button>
-                </div>
-
-                <!-- Configuration Profiles -->
-                <div class="form-group" style="margin-bottom: 1rem; padding: 1rem; background: var(--bg-tertiary); border-radius: 4px;">
-                    <h3 style="margin-bottom: 0.5rem;">📁 Configuration Profiles</h3>
-                    <div id="profileList" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
-                        <p style="color: var(--text-secondary);">Loading profiles...</p>
-                    </div>
-                    <div style="display: flex; gap: 0.5rem; align-items: center;">
-                        <input type="text" id="newProfileName" placeholder="New profile name" style="flex: 1;">
-                        <button class="btn btn-success" onclick="saveCurrentAsProfile()">Save as Profile</button>
-                    </div>
-                </div>
-
-                <!-- LLM Configuration -->
-                <div class="form-group">
-                    <h3 style="color: var(--accent-blue); margin-bottom: 0.5rem;">LLM Providers</h3>
-                    <div id="llmConfig">
-                        <div class="checkbox-group" style="margin-bottom: 0.5rem;">
-                            <input type="checkbox" id="cfg-llm-gemini">
-                            <label for="cfg-llm-gemini">Gemini</label>
-                        </div>
-                        <div class="checkbox-group" style="margin-bottom: 0.5rem;">
-                            <input type="checkbox" id="cfg-llm-qwen">
-                            <label for="cfg-llm-qwen">Qwen</label>
-                        </div>
-                        <div class="checkbox-group" style="margin-bottom: 0.5rem;">
-                            <input type="checkbox" id="cfg-llm-vllm">
-                            <label for="cfg-llm-vllm">vLLM (Local)</label>
-                        </div>
-                        <div class="checkbox-group" style="margin-bottom: 0.5rem;">
-                            <input type="checkbox" id="cfg-llm-claude">
-                            <label for="cfg-llm-claude">Claude</label>
-                        </div>
-                        <div class="checkbox-group" style="margin-bottom: 0.5rem;">
-                            <input type="checkbox" id="cfg-llm-deepseek">
-                            <label for="cfg-llm-deepseek">DeepSeek</label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Modules Configuration -->
-                <div class="form-group">
-                    <h3 style="color: var(--accent-blue); margin-bottom: 0.5rem;">Modules</h3>
-                    <div id="modulesConfig" style="padding: 1rem; background: var(--bg-tertiary); border-radius: 4px;">
-                        <p style="color: var(--text-secondary); margin-bottom: 1rem;">
-                            Enable or disable module addons. Changes take effect on next launch.
-                        </p>
-                        <div id="moduleList" style="display: flex; flex-direction: column; gap: 0.75rem;">
-                            <p style="color: var(--text-secondary);">Loading modules...</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Compute Backend -->
-                <div class="form-group">
-                    <h3 style="color: var(--accent-blue); margin-bottom: 0.5rem;">Compute Backend</h3>
-                    <label for="cfg-compute-backend">Backend:</label>
-                    <select id="cfg-compute-backend" style="margin-bottom: 0.5rem;">
-                        <option value="local">Local Server (vLLM / Ollama)</option>
-                        <option value="nvidia">NVIDIA NIM API</option>
-                        <option value="runpod">RunPod</option>
-                    </select>
-                    
-                    <div id="cfg-api-key-group" style="display: none;">
-                        <label for="cfg-api-key">API Key:</label>
-                        <input type="password" id="cfg-api-key" placeholder="Enter your API key">
-                    </div>
-                </div>
-
-                <!-- JSON Editor (Advanced) -->
-                <div class="form-group" style="margin-top: 1rem;">
-                    <h3 style="color: var(--accent-blue); margin-bottom: 0.5rem;">Advanced: JSON Editor</h3>
-                    <textarea id="configJsonEditor" rows="15" style="width: 100%; font-family: monospace; background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.75rem;"></textarea>
-                </div>
-            </div>
-        </div>
-
-        <!-- Knowledge Base Page -->
-        <div class="page" id="knowledge-page">
-            <div class="card">
-                <h2>📚 Knowledge Base Search</h2>
-                <p style="color: var(--text-secondary); margin-bottom: 1rem;">
-                    Search project documentation, architecture docs, and code comments using semantic search.
-                </p>
-
-                <!-- Search Box -->
-                <div class="form-group">
-                    <label for="kbQuery">Search Query:</label>
-                    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
-                        <input type="text" id="kbQuery" placeholder="e.g., How does the blackboard work?" 
-                               style="flex: 1;" onkeypress="if(event.key==='Enter') searchKnowledgeBase()">
-                        <button class="btn btn-primary" onclick="searchKnowledgeBase()">Search</button>
-                    </div>
-                </div>
-
-                <!-- Filters -->
-                <div class="form-group" style="display: flex; gap: 1rem; align-items: center; margin-top: 1rem;">
-                    <div>
-                        <label for="kbTopK">Results:</label>
-                        <select id="kbTopK" style="width: auto;">
-                            <option value="3">3</option>
-                            <option value="5" selected>5</option>
-                            <option value="10">10</option>
-                            <option value="20">20</option>
+                    <div class="form-group">
+                        <label>Theme:</label>
+                        <select id="themeSelect" onchange="changeTheme(this.value)">
+                            <option value="dark">Dark</option>
+                            <option value="light">Light</option>
+                            <option value="auto">Auto</option>
                         </select>
                     </div>
-                    <div>
-                        <label for="kbSource">Source:</label>
-                        <select id="kbSource" style="width: auto;">
-                            <option value="">All Sources</option>
-                            <option value="conductor/*">Conductor Docs</option>
-                            <option value="tracks/*">Track Plans</option>
-                            <option value="system-prompts/*">System Prompts</option>
-                            <option value="docs/*">User Docs</option>
-                            <option value="scripts/*">Scripts</option>
-                        </select>
-                    </div>
-                    <button class="btn btn-warning" onclick="triggerIndex()" style="margin-top: 1.4rem;">
-                        🔄 Re-index
-                    </button>
-                    <button class="btn btn-info" onclick="showKBStats()" style="margin-top: 1.4rem;">
-                        📊 Stats
-                    </button>
-                </div>
 
-                <!-- Results -->
-                <div id="kbResults" style="margin-top: 1.5rem;">
-                    <div id="kbResultsContent">
-                        <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">
-                            Enter a search query to find relevant documentation
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Observability Page -->
-        <div class="page" id="observability-page">
-            <div class="card">
-                <h2>📈 System Observability</h2>
-                <p style="color: var(--text-secondary); margin-bottom: 1rem;">
-                    Real-time metrics, performance dashboards, and system analytics.
-                </p>
-
-                <!-- Quick Stats -->
-                <div class="card-grid">
-                    <div class="card">
-                        <h3>🚀 API Requests</h3>
-                        <div id="apiRequestsStat" style="font-size: 2rem; font-weight: bold; color: var(--accent-blue);">-</div>
-                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Total requests</p>
-                    </div>
-                    <div class="card">
-                        <h3>⚡ Avg Response Time</h3>
-                        <div id="avgResponseTimeStat" style="font-size: 2rem; font-weight: bold; color: var(--accent-green);">-</div>
-                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Milliseconds</p>
-                    </div>
-                    <div class="card">
-                        <h3>❌ Error Rate</h3>
-                        <div id="errorRateStat" style="font-size: 2rem; font-weight: bold; color: var(--accent-red);">-</div>
-                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Errors per minute</p>
-                    </div>
-                    <div class="card">
-                        <h3>🤖 Active Agents</h3>
-                        <div id="activeAgentsStat" style="font-size: 2rem; font-weight: bold; color: var(--accent-yellow);">-</div>
-                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Currently active</p>
-                    </div>
-                </div>
-
-                <!-- Metrics Export -->
-                <div class="form-group" style="margin-top: 1.5rem;">
-                    <h3>Metrics Export</h3>
-                    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
-                        <button class="btn btn-primary" onclick="exportMetrics('prometheus')">Export Prometheus Format</button>
-                        <button class="btn btn-primary" onclick="exportMetrics('json')">Export JSON</button>
-                        <button class="btn btn-success" onclick="refreshMetrics()">🔄 Refresh</button>
-                    </div>
-                </div>
-
-                <!-- Metrics Display -->
-                <div id="metricsDisplay" style="margin-top: 1.5rem;">
-                    <div class="card">
-                        <h3>API Performance (Last 1000 requests)</h3>
-                        <div id="apiPerformanceMetrics" style="font-family: monospace; font-size: 0.9rem;">
-                            Loading metrics...
+                    <div class="form-group">
+                        <label>Auto-approve Actions:</label>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="autoApprove">
+                            <label for="autoApprove">Enable auto-approve for agent actions</label>
                         </div>
                     </div>
-                </div>
 
-                <!-- Health Timeline -->
-                <div class="card" style="margin-top: 1.5rem;">
-                    <h3>🏥 Health Timeline</h3>
-                    <div id="healthTimeline" style="height: 200px; background: var(--bg-tertiary); border-radius: 4px; padding: 1rem;">
-                        <p style="text-align: center; color: var(--text-secondary); margin-top: 3rem;">Loading health history...</p>
+                    <div class="form-group">
+                        <label>Log Level:</label>
+                        <select id="logLevel">
+                            <option value="debug">Debug</option>
+                            <option value="info" selected>Info</option>
+                            <option value="warn">Warn</option>
+                            <option value="error">Error</option>
+                        </select>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="saveSettings()">Save Settings</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Logs Page -->
-        <div class="page" id="logs-page">
-            <div class="card">
-                <h2>📋 System Logs</h2>
-                <div class="btn-group" style="margin-bottom: 1rem;">
-                    <button class="btn btn-primary" onclick="refreshLogs()">Refresh</button>
-                    <button class="btn btn-warning" onclick="clearLogs()">Clear</button>
-                </div>
-                <div id="logViewer" class="log-viewer">
-                    <p>Loading logs...</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Settings Page -->
-        <div class="page" id="settings-page">
-            <div class="card">
-                <h2>🔧 Settings</h2>
-
-                <div class="form-group">
-                    <label>Theme:</label>
-                    <select id="themeSelect" onchange="changeTheme(this.value)">
-                        <option value="dark">Dark</option>
-                        <option value="light">Light</option>
-                        <option value="auto">Auto</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Auto-approve Actions:</label>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="autoApprove">
-                        <label for="autoApprove">Enable auto-approve for agent actions</label>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Log Level:</label>
-                    <select id="logLevel">
-                        <option value="debug">Debug</option>
-                        <option value="info" selected>Info</option>
-                        <option value="warn">Warn</option>
-                        <option value="error">Error</option>
-                    </select>
-                </div>
-
-                <div class="btn-group">
-                    <button class="btn btn-success" onclick="saveSettings()">Save Settings</button>
-                </div>
-            </div>
-        </div>
     </main>
 
     <!-- Socket.IO Client Library -->
@@ -1187,7 +1010,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             initWebSocket();
             initNavigation();
-            refreshStatus();
+            showPage('dashboard');
             setInterval(refreshStatus, 30000); // Refresh every 30 seconds
         });
 
@@ -1350,16 +1173,35 @@
         function loadPageData(pageName) {
             switch(pageName) {
                 case 'dashboard':
-                    refreshStatus();
+                    showDashboardSubmenu('overview');
                     break;
                 case 'ai-command':
-                    // Default to console subpage
                     showAISubmenu('console');
                     break;
                 case 'system':
-                    // Default to monitor subpage
                     showSystemSubmenu('monitor');
                     break;
+            }
+        }
+
+        // Dashboard submenu switching
+        function showDashboardSubmenu(submenu) {
+            // Hide all subpages
+            document.getElementById('db-overview-subpage').style.display = 'none';
+            document.getElementById('db-knowledge-subpage').style.display = 'none';
+
+            // Reset tab styles
+            document.getElementById('dbOverviewTab').className = 'btn btn-secondary';
+            document.getElementById('dbKnowledgeTab').className = 'btn btn-secondary';
+
+            // Show selected subpage
+            if (submenu === 'overview') {
+                document.getElementById('db-overview-subpage').style.display = 'block';
+                document.getElementById('dbOverviewTab').className = 'btn btn-primary';
+                refreshStatus();
+            } else if (submenu === 'knowledge') {
+                document.getElementById('db-knowledge-subpage').style.display = 'block';
+                document.getElementById('dbKnowledgeTab').className = 'btn btn-primary';
             }
         }
 
@@ -1573,7 +1415,7 @@
         // Enhanced health check
         async function refreshHealth() {
             try {
-                const response = await fetch(`${API_BASE}/health`);
+                const response = await fetch(`${API_BASE}/api/health`);
                 const health = await response.json();
 
                 const container = document.getElementById('systemStatus');
@@ -2227,7 +2069,7 @@
 
             try {
                 // Send command via tmux send-keys to conductor pane
-                const response = await fetch(`${API_BASE}/api/console/send`, {
+                const response = await fetch(`${API_BASE}/api/conductor/send`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ command: command, target: 'conductor' })
@@ -2755,21 +2597,22 @@
         function showConfigSection(section) {
             switch(section) {
                 case 'health':
-                    refreshHealth();
-                    showToast('Health check running...', 'info');
-                    break;
                 case 'logs':
-                    refreshLogs();
+                case 'observability':
+                    showPage('system');
                     showSystemSubmenu('monitor');
                     break;
                 case 'config':
+                    showPage('system');
                     showSystemSubmenu('config');
                     break;
                 case 'setup':
+                    showPage('system');
                     showSystemSubmenu('setup');
                     break;
                 case 'settings':
-                    showToast('Settings coming soon', 'info');
+                    showPage('system');
+                    showSystemSubmenu('settings');
                     break;
             }
         }
@@ -2911,18 +2754,21 @@
             document.getElementById('system-monitor-subpage').style.display = 'none';
             document.getElementById('system-config-subpage').style.display = 'none';
             document.getElementById('system-setup-subpage').style.display = 'none';
-            
+            document.getElementById('system-settings-subpage').style.display = 'none';
+
             // Reset tab styles
             document.getElementById('systemMonitorTab').className = 'btn btn-secondary';
             document.getElementById('systemConfigTab').className = 'btn btn-secondary';
             document.getElementById('systemSetupTab').className = 'btn btn-secondary';
-            
+            document.getElementById('systemSettingsTab').className = 'btn btn-secondary';
+
             // Show selected subpage and load data
             if (submenu === 'monitor') {
                 document.getElementById('system-monitor-subpage').style.display = 'block';
                 document.getElementById('systemMonitorTab').className = 'btn btn-primary';
                 refreshHealth();
                 refreshLogs();
+                refreshMetrics();
             } else if (submenu === 'config') {
                 document.getElementById('system-config-subpage').style.display = 'block';
                 document.getElementById('systemConfigTab').className = 'btn btn-primary';
@@ -2930,9 +2776,11 @@
             } else if (submenu === 'setup') {
                 document.getElementById('system-setup-subpage').style.display = 'block';
                 document.getElementById('systemSetupTab').className = 'btn btn-primary';
+            } else if (submenu === 'settings') {
+                document.getElementById('system-settings-subpage').style.display = 'block';
+                document.getElementById('systemSettingsTab').className = 'btn btn-primary';
             }
         }
-
         // Load fleet status for AI Status page
         async function loadFleetStatus() {
             const container = document.getElementById('fleetStatus');
@@ -3020,7 +2868,7 @@
             }
 
             try {
-                const response = await fetch(`${API_BASE}/metrics`);
+                const response = await fetch(`${API_BASE}/api/metrics`);
                 if (!response.ok) throw new Error('Failed to fetch metrics');
                 
                 metricsCache = await response.json();
@@ -3110,7 +2958,7 @@
 
         async function exportMetrics(format) {
             try {
-                const response = await fetch(`${API_BASE}/metrics?format=${format}`);
+                const response = await fetch(`${API_BASE}/api/metrics?format=${format}`);
                 if (!response.ok) throw new Error('Failed to export metrics');
                 
                 if (format === 'prometheus') {

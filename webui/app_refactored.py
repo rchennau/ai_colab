@@ -45,7 +45,7 @@ CONFIG_FILE = CONFIG_DIR / "config.toml"
 STATE_FILE = APP_DIR / ".ai-colab-state.json"
 SCRIPTS_DIR = APP_DIR / "scripts"
 LOGS_DIR = APP_DIR / "logs"
-PROJECT_ROOT = APP_DIR.parent
+PROJECT_ROOT = APP_DIR  # Root of the project
 
 # Configuration constants
 MIN_DISK_SPACE_MB = 100
@@ -59,6 +59,9 @@ def create_app():
     # Enable CORS
     CORS(app, resources={r"/api/*": {"origins": "*"}})
     
+    # Store PROJECT_ROOT in app config
+    app.config['PROJECT_ROOT'] = PROJECT_ROOT
+    
     # Initialize rate limiter
     if RATE_LIMIT_AVAILABLE:
         limiter = Limiter(
@@ -71,6 +74,34 @@ def create_app():
     
     # Initialize SocketIO
     socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+    
+    # Initialize PTY manager for web terminals
+    from webui.api.terminal import PTYManager
+    import webui.api.terminal as terminal_module
+    terminal_module.pty_manager = PTYManager(socketio)
+    logger.info("PTY manager initialized for web terminals")
+
+    # Socket.IO Event Handlers
+    @socketio.on('connect')
+    def handle_connect():
+        logger.info('Client connected to WebSocket')
+        from flask_socketio import emit
+        emit('connected', {'message': 'Connected to ai-colab Web UI'})
+
+    @socketio.on('terminal_input')
+    def handle_terminal_input(data):
+        terminal_id = data.get('id')
+        input_data = data.get('data', '')
+        if terminal_module.pty_manager and terminal_id:
+            terminal_module.pty_manager.write(terminal_id, input_data)
+
+    @socketio.on('terminal_resize')
+    def handle_terminal_resize(data):
+        terminal_id = data.get('id')
+        rows = data.get('rows', 24)
+        cols = data.get('cols', 80)
+        if terminal_module.pty_manager and terminal_id:
+            terminal_module.pty_manager.resize(terminal_id, rows, cols)
     
     # Add request logging middleware
     @app.before_request
@@ -95,12 +126,20 @@ def create_app():
         return response
     
     # Register API blueprints
-    from webui.api import inference_bp, models_bp, federation_bp, vision_bp, system_bp
+    from webui.api import (
+        inference_bp, models_bp, federation_bp, 
+        vision_bp, system_bp, terminal_bp, config_bp,
+        conductor_bp, kb_bp
+    )
     app.register_blueprint(inference_bp)
     app.register_blueprint(models_bp)
     app.register_blueprint(federation_bp)
     app.register_blueprint(vision_bp)
     app.register_blueprint(system_bp)
+    app.register_blueprint(terminal_bp)
+    app.register_blueprint(config_bp)
+    app.register_blueprint(conductor_bp)
+    app.register_blueprint(kb_bp)
     
     # Serve main HTML page
     @app.route('/')

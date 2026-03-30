@@ -1,29 +1,16 @@
-# Project Context
+# Track: WebUI Engineering & UX Overhaul
 
-## Definition
-- [Product Definition](./product.md)
-- [Product Guidelines](./product-guidelines.md)
-- [Tech Stack](./tech-stack.md)
+## Overview
+This track focuses on the comprehensive redesign and refactoring of the Web UI to move from the v2.2 monolithic backend to a v3.0 modular architecture. It also includes a frontend UX overhaul with simplified navigation and better submenu organization.
 
-## Workflow
-- [Workflow](./workflow.md)
-- [Code Style Guides](./code_styleguides/)
+## Key Links
+- [Implementation Plan](./plan.md)
+- [Metadata](./metadata.json)
 
-## Management
-- [Tracks Registry](./tracks.md)
-- [Tracks Directory](./tracks/)
-- [Track: Git Lifecycle Automation](./tracks/git_lifecycle_20260323/index.md)
-- [Track: Semantic Knowledge Base](./tracks/semantic_kb_20260323/index.md)
-- [Track: Visual Memory Map](./tracks/memory_map_20260323/index.md)
-- [Track: Performance Dashboard](./tracks/perf_dashboard_20260323/index.md)
-- [Track: Generic Module Plugin System](./tracks/plugin_system_20260323/index.md)
-- [Track: Visual Health Web Overlay](./tracks/web_dashboard_20260323/index.md)
-- [Track: MCP-First Architecture](./tracks/core_dev_mcp_20260323/index.md)
-- [Track: Multi-Backend Compute](./tracks/backend_selection_20260323/index.md)
-- [Track: CI/CD Deployment](./tracks/cicd_pipeline_20260323/index.md)
-- [Track: Autonomous Evolution](./tracks/autonomous_evolution_20260323/index.md)
-- [Track: nemoclaw NVIDIA Integration](./tracks/nemoclaw_nvidia_20260324/index.md)
-- [Track: Specialized NeMo Module](./tracks/nemo_module_20260324/index.md)
-- [Milestone 10 Plan](./milestone-10-plan.md)
-- [Milestone 11 Plan](./tracks/enhanced_install_launch_20260324/plan.md)
-- [Milestone 12 Plan](./milestone-12-plan.md)
+## Progress
+- [ ] Phase 1: Modular Backend (v3.0)
+- [ ] Phase 2: Frontend UX Overhaul
+- [ ] Phase 3: Final Switch & Validation
+
+## Related Issues
+- Milestone 17 in `conductor/tracks.md`

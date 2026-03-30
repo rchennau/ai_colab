@@ -2,7 +2,8 @@
 Vision/Screenshot API Blueprint
 """
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
+import sys
 
 vision_bp = Blueprint('vision', __name__, url_prefix='/api/vision')
 
@@ -10,10 +11,11 @@ vision_bp = Blueprint('vision', __name__, url_prefix='/api/vision')
 @vision_bp.route('/screenshot', methods=['POST'])
 def capture_screenshot():
     """Capture and analyze screenshot"""
-    from webui.app import logger, PROJECT_ROOT
+    project_root = current_app.config.get('PROJECT_ROOT')
     try:
         import asyncio
-        sys.path.insert(0, str(PROJECT_ROOT / 'scripts'))
+        if str(project_root / 'scripts') not in sys.path:
+            sys.path.insert(0, str(project_root / 'scripts'))
         from vision import get_vision_client
         
         data = request.json or {}
@@ -31,17 +33,18 @@ def capture_screenshot():
         return jsonify(result) if result.get('success') else \
                jsonify({'status': 'error', 'error': result.get('error')}), 500
     except Exception as e:
-        logger.error(f"Screenshot analysis failed: {e}")
+        current_app.logger.error(f"Screenshot analysis failed: {e}")
         return jsonify({'status': 'error', 'error': str(e)}), 500
 
 
 @vision_bp.route('/analyze', methods=['POST'])
 def analyze_image():
     """Analyze uploaded image"""
-    from webui.app import logger, PROJECT_ROOT
+    project_root = current_app.config.get('PROJECT_ROOT')
     try:
         import asyncio, base64, tempfile, os
-        sys.path.insert(0, str(PROJECT_ROOT / 'scripts'))
+        if str(project_root / 'scripts') not in sys.path:
+            sys.path.insert(0, str(project_root / 'scripts'))
         from vision import get_vision_client
         
         if 'image' not in request.files:
@@ -74,16 +77,17 @@ def analyze_image():
         finally:
             os.unlink(image_path)
     except Exception as e:
-        logger.error(f"Image analysis failed: {e}")
+        current_app.logger.error(f"Image analysis failed: {e}")
         return jsonify({'status': 'error', 'error': str(e)}), 500
 
 
 @vision_bp.route('/images', methods=['GET'])
 def list_images():
     """List stored images"""
-    from webui.app import logger, PROJECT_ROOT
+    project_root = current_app.config.get('PROJECT_ROOT')
     try:
-        sys.path.insert(0, str(PROJECT_ROOT / 'scripts'))
+        if str(project_root / 'scripts') not in sys.path:
+            sys.path.insert(0, str(project_root / 'scripts'))
         from vision import VisionManager
         vision = VisionManager()
         image_type = request.args.get('type')
@@ -91,16 +95,17 @@ def list_images():
         images = vision.list_images(image_type, limit)
         return jsonify({'images': images, 'count': len(images)})
     except Exception as e:
-        logger.error(f"List images failed: {e}")
+        current_app.logger.error(f"List images failed: {e}")
         return jsonify({'status': 'error', 'error': str(e)}), 500
 
 
 @vision_bp.route('/images/<image_id>', methods=['GET'])
 def get_image(image_id):
     """Get image info or download"""
-    from webui.app import logger, PROJECT_ROOT
+    project_root = current_app.config.get('PROJECT_ROOT')
     try:
-        sys.path.insert(0, str(PROJECT_ROOT / 'scripts'))
+        if str(project_root / 'scripts') not in sys.path:
+            sys.path.insert(0, str(project_root / 'scripts'))
         from vision import VisionManager
         vision = VisionManager()
         image_info = vision.get_image(image_id)
@@ -111,21 +116,22 @@ def get_image(image_id):
             return send_file(image_info['path'], as_attachment=True)
         return jsonify({'status': 'success', 'image': image_info})
     except Exception as e:
-        logger.error(f"Get image failed: {e}")
+        current_app.logger.error(f"Get image failed: {e}")
         return jsonify({'status': 'error', 'error': str(e)}), 500
 
 
 @vision_bp.route('/images/<image_id>', methods=['DELETE'])
 def delete_image(image_id):
     """Delete image"""
-    from webui.app import logger, PROJECT_ROOT
+    project_root = current_app.config.get('PROJECT_ROOT')
     try:
-        sys.path.insert(0, str(PROJECT_ROOT / 'scripts'))
+        if str(project_root / 'scripts') not in sys.path:
+            sys.path.insert(0, str(project_root / 'scripts'))
         from vision import VisionManager
         vision = VisionManager()
         success = vision.delete_image(image_id)
         return jsonify({'status': 'success', 'message': 'Image deleted'}) if success else \
                jsonify({'status': 'error', 'error': 'Image not found'}), 404
     except Exception as e:
-        logger.error(f"Delete image failed: {e}")
+        current_app.logger.error(f"Delete image failed: {e}")
         return jsonify({'status': 'error', 'error': str(e)}), 500

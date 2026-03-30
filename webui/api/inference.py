@@ -3,7 +3,7 @@ Inference Gateway API Blueprint
 Handles all inference-related endpoints.
 """
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 import asyncio
 import sys
 from pathlib import Path
@@ -14,10 +14,11 @@ inference_bp = Blueprint('inference', __name__, url_prefix='/api/inference')
 @inference_bp.route('/v1/complete', methods=['POST'])
 def complete():
     """Execute inference request"""
-    from webui.app import logger, PROJECT_ROOT
+    project_root = current_app.config.get('PROJECT_ROOT')
     
     try:
-        sys.path.insert(0, str(PROJECT_ROOT / 'scripts'))
+        if str(project_root / 'scripts') not in sys.path:
+            sys.path.insert(0, str(project_root / 'scripts'))
         from inference import get_gateway
         
         gateway = get_gateway()
@@ -40,17 +41,18 @@ def complete():
         })
         
     except Exception as e:
-        logger.error(f"Inference request failed: {e}")
+        current_app.logger.error(f"Inference request failed: {e}")
         return jsonify({'status': 'error', 'error': str(e)}), 500
 
 
 @inference_bp.route('/v1/batch', methods=['POST'])
 def batch():
     """Execute batch inference requests"""
-    from webui.app import logger, PROJECT_ROOT
+    project_root = current_app.config.get('PROJECT_ROOT')
     
     try:
-        sys.path.insert(0, str(PROJECT_ROOT / 'scripts'))
+        if str(project_root / 'scripts') not in sys.path:
+            sys.path.insert(0, str(project_root / 'scripts'))
         from inference import get_gateway
         
         gateway = get_gateway()
@@ -88,17 +90,18 @@ def batch():
         })
         
     except Exception as e:
-        logger.error(f"Batch inference failed: {e}")
+        current_app.logger.error(f"Batch inference failed: {e}")
         return jsonify({'status': 'error', 'error': str(e)}), 500
 
 
 @inference_bp.route('/v1/metrics', methods=['GET'])
 def metrics():
     """Get inference metrics"""
-    from webui.app import logger, PROJECT_ROOT
+    project_root = current_app.config.get('PROJECT_ROOT')
     
     try:
-        sys.path.insert(0, str(PROJECT_ROOT / 'scripts'))
+        if str(project_root / 'scripts') not in sys.path:
+            sys.path.insert(0, str(project_root / 'scripts'))
         from inference import get_gateway
         
         gateway = get_gateway()
@@ -107,17 +110,18 @@ def metrics():
         return jsonify(metrics)
         
     except Exception as e:
-        logger.error(f"Metrics request failed: {e}")
+        current_app.logger.error(f"Metrics request failed: {e}")
         return jsonify({'status': 'error', 'error': str(e)}), 500
 
 
 @inference_bp.route('/v1/models', methods=['GET'])
 def models():
     """Get available models and their status"""
-    from webui.app import logger, PROJECT_ROOT
+    project_root = current_app.config.get('PROJECT_ROOT')
     
     try:
-        sys.path.insert(0, str(PROJECT_ROOT / 'scripts'))
+        if str(project_root / 'scripts') not in sys.path:
+            sys.path.insert(0, str(project_root / 'scripts'))
         from inference import get_gateway
         
         gateway = get_gateway()
@@ -138,5 +142,5 @@ def models():
         })
         
     except Exception as e:
-        logger.error(f"Models request failed: {e}")
+        current_app.logger.error(f"Models request failed: {e}")
         return jsonify({'status': 'error', 'error': str(e)}), 500

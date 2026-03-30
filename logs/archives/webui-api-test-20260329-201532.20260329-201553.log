@@ -1,0 +1,29 @@
+
+[0;32m╔══════════════════════════════════════════════════════════╗[0m
+[0;32m║     ai-colab WebUI API Test Suite v1.0                   ║[0m
+[0;32m╚══════════════════════════════════════════════════════════╝[0m
+
+Test Log: /home/rchennau/ai_colab/logs/webui-api-test-20260329-201532.log
+API Base: http://localhost:8080
+
+[0;32m✓ WebUI is running[0m
+
+
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;34m  Health Endpoint Tests[0m
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;31m✗ FAIL:[0m Health check endpoint (Expected HTTP 200, got 503)
+  Response: {"components":{"hcom":{"details":{"agent_count":4,"agents":[{"name":"No","status":"active"},{"name":"Recently","status":"stopped"},{"name":"->","status":"hcom"},{"name":"(1","status":"archived"}],"installed":true,"path":"/home/rchennau/.local/bin/hcom","version":"hcom 0.7.5"},"message":"hcom available with 4 agent(s)","status":"healthy"},"system":{"details":{"disk_free_mb":674592.33,"disk_total_mb":1031018.43,"disk_used_percent":34.57,"load_average":{"15min":1.24,"1min":1.18,"5min":1.21},"memory_available_mb":11266.75,"memory_used_percent":37.4},"message":"All system resources within normal limits","status":"healthy"},"tmux":{"details":{"active_sessions":[],"installed":true,"path":"/usr/bin/tmux","session_count":0,"version":"tmux 3.4"},"message":"tmux available with 0 active session(s)","status":"healthy"},"vllm":{"details":{"error":"Connection timeout","host":"192.168.0.193","port":"8000"},"message":"vLLM connection timeout","status":"unhealthy"},"webui":{"details":{"listening":true,"port":8080},"message":"Web UI is running on port 8080","status":"healthy"}},"status":"unhealthy","timestamp":"2026-03-29T20:15:42.559726","uptime_seconds":76309.83,"version":"2.2.0"}
+[0;32m✓ PASS:[0m Detailed health check endpoint (HTTP 200)
+[0;32m✓ PASS:[0m Health logs endpoint (HTTP 200)
+[0;32m✓ PASS:[0m Health response contains status field
+[0;32m✓ PASS:[0m Health response contains components field
+
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;34m  Logs Endpoint Tests[0m
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;31m✗ FAIL:[0m Get logs (default 10 lines) (Expected HTTP 200, got 500)
+  Response: {"error":"'>' not supported between instances of 'int' and 'str'"}
+[0;32m✓ PASS:[0m Get logs (50 lines) (HTTP 200)
+[0;31m✗ FAIL:[0m Logs response missing logs field
+[0;31m✗ FAIL:[0m Logs response missing count field
