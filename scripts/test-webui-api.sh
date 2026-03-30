@@ -89,8 +89,15 @@ test_api() {
 
 # Check if WebUI is running
 check_webui_running() {
-    curl -s --max-time 5 "${API_BASE}/health" >/dev/null 2>&1
-    return $?
+    # Check if we can connect (200 or 503 both mean server is running)
+    local http_code
+    http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "${API_BASE}/health" 2>/dev/null)
+    
+    if [[ "$http_code" == "200" || "$http_code" == "503" ]]; then
+        return 0
+    else
+        return 1
+    fi
 }
 
 # ============================================
