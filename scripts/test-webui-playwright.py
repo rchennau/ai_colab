@@ -55,8 +55,12 @@ def test_dashboard_loads(page):
     try:
         page.goto(f"{BASE_URL}/", timeout=TIMEOUT)
         
-        # Check for KB search bar
-        expect(page.locator('#kbQuery')).to_be_visible(timeout=5000)
+        # Wait for page to fully load
+        page.wait_for_load_state('networkidle', timeout=10000)
+        
+        # Check for KB search bar (may need to wait for it to be visible)
+        search_input = page.locator('#kbQuery')
+        search_input.wait_for(state='visible', timeout=10000)
         
         # Check for agent status card
         expect(page.locator('#agentStatus')).to_be_visible(timeout=5000)
@@ -114,11 +118,17 @@ def test_agent_terminal_loads(page):
     try:
         page.goto(f"{BASE_URL}/", timeout=TIMEOUT)
         
+        # Wait for page to load
+        page.wait_for_load_state('networkidle', timeout=10000)
+        
         # Click AI Command tab
-        page.get_by_text('AI Command').click()
+        page.locator('button.nav-btn[data-page="ai-command"]').click()
         
         # Click Agent Terminal submenu
-        page.get_by_text('Agent Terminal').click()
+        page.get_by_text('Agent Terminal').first.click()
+        
+        # Wait for terminal containers to be visible
+        time.sleep(2)
         
         # Check for conductor terminal container
         expect(page.locator('#conductorTerminalContainer')).to_be_visible(timeout=5000)
@@ -147,8 +157,11 @@ def test_system_page_loads(page):
     try:
         page.goto(f"{BASE_URL}/", timeout=TIMEOUT)
         
-        # Click System tab
-        page.get_by_text('System').click()
+        # Wait for page to load
+        page.wait_for_load_state('networkidle', timeout=10000)
+        
+        # Click System tab (use button with data-page attribute)
+        page.locator('button.nav-btn[data-page="system"]').click()
         
         # Check for system status card
         expect(page.locator('#systemStatus')).to_be_visible(timeout=5000)
@@ -177,8 +190,11 @@ def test_health_check_displays(page):
     try:
         page.goto(f"{BASE_URL}/", timeout=TIMEOUT)
         
+        # Wait for page to load
+        page.wait_for_load_state('networkidle', timeout=10000)
+        
         # Click System tab
-        page.get_by_text('System').click()
+        page.locator('button.nav-btn[data-page="system"]').click()
         
         # Check for health status content
         health_status = page.locator('#healthStatus')
@@ -206,8 +222,11 @@ def test_logs_display(page):
     try:
         page.goto(f"{BASE_URL}/", timeout=TIMEOUT)
         
+        # Wait for page to load
+        page.wait_for_load_state('networkidle', timeout=10000)
+        
         # Click System tab
-        page.get_by_text('System').click()
+        page.locator('button.nav-btn[data-page="system"]').click()
         
         # Check for logs content
         logs_element = page.locator('#systemLogs')
@@ -231,16 +250,19 @@ def test_log_management_buttons(page):
     try:
         page.goto(f"{BASE_URL}/", timeout=TIMEOUT)
         
+        # Wait for page to load
+        page.wait_for_load_state('networkidle', timeout=10000)
+        
         # Click System tab
-        page.get_by_text('System').click()
+        page.locator('button.nav-btn[data-page="system"]').click()
         
-        # Check for log management section
-        expect(page.get_by_text('Log Management')).to_be_visible(timeout=5000)
+        # Check for log management section (look for heading)
+        expect(page.get_by_role('heading', name='Log Management')).to_be_visible(timeout=5000)
         
-        # Check for buttons
-        expect(page.get_by_text('Rotate Logs')).to_be_visible(timeout=5000)
-        expect(page.get_by_text('Clear Logs')).to_be_visible(timeout=5000)
-        expect(page.get_by_text('Download Logs')).to_be_visible(timeout=5000)
+        # Check for buttons (use text content)
+        expect(page.get_by_role('button', name='Rotate Logs')).to_be_visible(timeout=5000)
+        expect(page.get_by_role('button', name='Clear Logs')).to_be_visible(timeout=5000)
+        expect(page.get_by_role('button', name='Download Logs')).to_be_visible(timeout=5000)
         
         log(f"✅ PASS: {test_name}")
         results['passed'] += 1
@@ -333,6 +355,8 @@ def save_results():
     log(f"Results saved to: {results_file}")
 
 def main():
+    global BASE_URL
+    
     parser = argparse.ArgumentParser(description='WebUI E2E Tests')
     parser.add_argument('--headed', action='store_true', help='Run with browser UI (not headless)')
     parser.add_argument('--url', default=BASE_URL, help=f'WebUI URL (default: {BASE_URL})')
@@ -340,7 +364,6 @@ def main():
     
     args = parser.parse_args()
     
-    global BASE_URL
     BASE_URL = args.url
     
     if args.test:
