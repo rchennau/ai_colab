@@ -41,6 +41,20 @@ Automated installation with sensible defaults (for CI/CD):
 ./install.sh --auto
 ```
 
+### Python Environment
+
+The installer automatically detects and configures the best Python environment manager:
+- **uv** (preferred) → **conda** → **venv** → system pip
+
+A virtual environment is created in `.venv/` and auto-activated by all project scripts.
+
+**Manual activation:**
+```bash
+source .venv/bin/activate
+```
+
+📖 **Full Details:** See [`docs/INSTALLATION.md`](docs/INSTALLATION.md) and [`PYTHON_ENV_SETUP.md`](PYTHON_ENV_SETUP.md)
+
 ### Launch the Dashboard
 
 After installation:
@@ -195,10 +209,10 @@ Full support for WSL2 with Windows Terminal optimizations.
 
 | Script | Purpose |
 |--------|---------|
-| `./install.sh` | Master installer with `--wizard`, `--reconfigure`, and `--auto` modes |
+| `./install.sh` | Master installer with `--wizard`, `--reconfigure`, and `--auto` modes. Auto-detects Python environment |
 | `./install.sh --wizard` | Interactive CLI installation wizard (5-step guided setup) |
 | `./install.sh --reconfigure` | Modify existing installation without reinstalling |
-| `./launch.sh` | Unified launcher with interactive module and agent selection |
+| `./launch.sh` | Unified launcher with interactive module and agent selection. Auto-activates `.venv` |
 | `./launch.sh --rag-watcher` | Launch with RAG file watcher for auto-indexing |
 | `./scripts/migrate-project.sh` | Project Detection & Migration Tool (automated AI import) |
 | `./scripts/setup-mcp-clients.sh` | MCP client setup for gemini-cli, qwen-code, claude-code |
@@ -219,6 +233,7 @@ Full support for WSL2 with Windows Terminal optimizations.
 | `scripts/webui-test-watch.sh` | Local file watcher for automated testing |
 | `mcp/ai_colab_server/` | MCP server with 12 tools for LLM-CLI integration |
 | `rag/` | RAG system for semantic search and auto-indexing |
+| `.venv/` | **Auto-created** virtual environment for Python dependencies |
 
 ---
 

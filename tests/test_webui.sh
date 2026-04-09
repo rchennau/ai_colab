@@ -11,6 +11,11 @@ WEBUI_DIR="$PROJECT_ROOT/webui"
 PORT=8080
 BASE_URL="http://localhost:$PORT"
 
+# Activate virtual environment if it exists
+if [[ -f "$PROJECT_ROOT/.venv/bin/activate" ]]; then
+    source "$PROJECT_ROOT/.venv/bin/activate"
+fi
+
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'

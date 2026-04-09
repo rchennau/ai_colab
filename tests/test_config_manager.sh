@@ -21,6 +21,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 CONFIG_MANAGER="$PROJECT_ROOT/scripts/config-manager.sh"
 
+# Activate virtual environment if it exists
+if [[ -f "$PROJECT_ROOT/.venv/bin/activate" ]]; then
+    source "$PROJECT_ROOT/.venv/bin/activate"
+fi
+
 # Test helpers
 test_start() {
     echo -e "\n${BLUE}TEST:${NC} $1"

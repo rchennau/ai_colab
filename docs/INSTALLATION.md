@@ -2,6 +2,32 @@
 
 ai-colab provides a flexible installation experience with three distinct pathways.
 
+## Python Environment Management
+
+ai-colab automatically detects and configures the best available Python environment manager. The installer checks for Python environment tools in this order:
+
+1. **uv** (preferred) - Fast Python package installer and environment manager
+2. **conda** - Anaconda/Miniconda environment manager
+3. **venv** - Standard Python virtual environment tool
+4. **system pip** - Fallback with `--break-system-packages` flag (PEP 668)
+
+### Automatic Virtual Environment
+
+The installer creates a virtual environment in `.venv/` at the project root. This environment is automatically activated when you run `install.sh` or `launch.sh`.
+
+**Manual activation:**
+```bash
+source .venv/bin/activate
+```
+
+**If you don't have uv installed:**
+```bash
+# Install uv (recommended)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Or the installer will fall back to venv or conda if available
+```
+
 ## Pathway 1: Interactive CLI Wizard (Recommended)
 Best for: Developers who want a guided setup in their native terminal environment.
 
@@ -98,3 +124,43 @@ tmux -V
 -   **Local:** Uses local model servers (vLLM or Ollama).
 -   **NVIDIA NIM API:** Leverages hosted NVIDIA NIM endpoints for high-power reasoning (requires `NVIDIA_API_KEY`).
 -   **RunPod:** Deploys remote compute spokes to RunPod GPU instances (requires `RUNPOD_API_KEY`).
+
+## Troubleshooting
+
+### Python Environment Issues
+
+**Problem: "externally-managed-environment" error**
+This occurs on Debian-based systems (Ubuntu, Pop!_OS, etc.) that restrict system-wide Python package installation.
+
+**Solution:** The installer now automatically creates a virtual environment. If you encounter this error:
+```bash
+# Ensure you have a Python environment manager installed
+# Option 1: Install uv (recommended)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Option 2: Use venv (usually available with python3-full)
+sudo apt install python3-full python3-venv
+
+# Then re-run the installer
+./install.sh --auto
+```
+
+**Problem: Virtual environment not activating**
+```bash
+# Manual activation
+source .venv/bin/activate
+
+# Verify activation
+which python  # Should show .venv/bin/python
+```
+
+**Problem: Dependencies not importable after installation**
+```bash
+# Ensure virtual environment is active
+source .venv/bin/activate
+
+# Reinstall requirements
+uv pip install -r requirements-webui.txt
+uv pip install -r requirements-mcp.txt
+uv pip install -r requirements-rag.txt
+```

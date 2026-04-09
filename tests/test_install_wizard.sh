@@ -98,6 +98,40 @@ else
     test_fail "Legacy preference sync logic missing"
 fi
 
+# Test 6: Python Environment Detection
+test_start "Python Environment Detection"
+if grep -q "detect_python_env" "$PROJECT_ROOT/install.sh"; then
+    test_pass "Python environment detection function present"
+else
+    test_fail "Python environment detection function missing"
+fi
+
+# Test 7: Virtual Environment Setup
+test_start "Virtual Environment Setup"
+if grep -q "setup_venv_with_uv" "$PROJECT_ROOT/install.sh" && \
+   grep -q "setup_venv_with_venv" "$PROJECT_ROOT/install.sh"; then
+    test_pass "Virtual environment setup functions present"
+else
+    test_fail "Virtual environment setup functions missing"
+fi
+
+# Test 8: Python Command Variables
+test_start "Python Command Variables"
+if grep -q 'PYTHON_CMD=' "$PROJECT_ROOT/install.sh" && \
+   grep -q 'PIP_CMD=' "$PROJECT_ROOT/install.sh"; then
+    test_pass "Python command variables defined"
+else
+    test_fail "Python command variables missing"
+fi
+
+# Test 9: Virtual Environment in launch.sh
+test_start "Virtual Environment Activation in Launcher"
+if grep -q '.venv/bin/activate' "$PROJECT_ROOT/launch.sh"; then
+    test_pass "Virtual environment activation in launch.sh"
+else
+    test_fail "Virtual environment activation missing in launch.sh"
+fi
+
 # ============================================
 # Summary
 # ============================================

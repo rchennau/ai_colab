@@ -261,39 +261,139 @@ else
     echo -e "${GREEN}✓ hcom is already installed.${NC}"
 fi
 
-# 2.1 Python Dependencies (MCP Server & RAG System)
-echo -e "\n${GREEN}Installing Python Dependencies...${NC}"
-echo "  - MCP Server (Model Context Protocol)"
-echo "  - RAG System (Semantic Search)"
-echo "  - Web UI (Flask Dashboard)"
-echo "  - Vision/Screenshot Support"
+# 2.1 Python Environment Detection & Dependency Installation
+echo -e "\n${GREEN}Setting up Python Environment...${NC}"
+
+# Function to detect Python package manager
+detect_python_env() {
+    # Preference order: uv > conda > venv > system pip (with --break-system-packages)
+    
+    # Check for uv (preferred)
+    if has_command uv; then
+        PYTHON_PKG_MANAGER="uv"
+        echo -e "${GREEN}✓ Detected uv (fast Python package manager)${NC}"
+        return
+    fi
+    
+    # Check for conda
+    if has_command conda; then
+        PYTHON_PKG_MANAGER="conda"
+        echo -e "${GREEN}✓ Detected conda${NC}"
+        return
+    fi
+    
+    # Check if we're already in a virtual environment
+    if [[ -n "$VIRTUAL_ENV" ]]; then
+        PYTHON_PKG_MANAGER="venv_active"
+        echo -e "${GREEN}✓ Using active virtual environment: $VIRTUAL_ENV${NC}"
+        return
+    fi
+    
+    # Check for venv availability
+    if python3 -m venv --help >/dev/null 2>&1; then
+        PYTHON_PKG_MANAGER="venv"
+        echo -e "${YELLOW}○ Will create virtual environment with venv${NC}"
+        return
+    fi
+    
+    # Fallback: system pip with override
+    PYTHON_PKG_MANAGER="system"
+    echo -e "${YELLOW}⚠ No virtual environment manager detected, will use system pip${NC}"
+}
+
+# Detect Python environment
+detect_python_env
+
+# Create/activate virtual environment if needed
+PYTHON_CMD="python3"
+PIP_CMD="python3 -m pip"
+
+setup_venv_with_uv() {
+    local venv_dir="$PROJECT_ROOT/.venv"
+    
+    if [[ ! -d "$venv_dir" ]]; then
+        echo -e "${BLUE}Creating virtual environment with uv...${NC}"
+        uv venv "$venv_dir"
+    fi
+    
+    # Activate virtual environment
+    source "$venv_dir/bin/activate"
+    PYTHON_CMD="python"
+    PIP_CMD="uv pip"
+    echo -e "${GREEN}✓ Virtual environment activated: $venv_dir${NC}"
+}
+
+setup_venv_with_venv() {
+    local venv_dir="$PROJECT_ROOT/.venv"
+    
+    if [[ ! -d "$venv_dir" ]]; then
+        echo -e "${BLUE}Creating virtual environment with venv...${NC}"
+        python3 -m venv "$venv_dir"
+    fi
+    
+    # Activate virtual environment
+    source "$venv_dir/bin/activate"
+    PYTHON_CMD="python"
+    PIP_CMD="python -m pip"
+    echo -e "${GREEN}✓ Virtual environment activated: $venv_dir${NC}"
+}
+
+# Setup environment based on detection
+case "$PYTHON_PKG_MANAGER" in
+    uv)
+        setup_venv_with_uv
+        ;;
+    conda)
+        # Check if we're in a conda environment
+        if [[ -z "$CONDA_DEFAULT_ENV" ]]; then
+            echo -e "${BLUE}Creating conda environment: ai-colab${NC}"
+            conda create -n ai-colab python=3.10 -y
+            conda activate ai-colab
+        fi
+        PYTHON_CMD="python"
+        PIP_CMD="pip"
+        ;;
+    venv)
+        setup_venv_with_venv
+        ;;
+    venv_active)
+        # Already in a virtual environment
+        PYTHON_CMD="python"
+        PIP_CMD="python -m pip"
+        ;;
+    system)
+        # Use system pip with --break-system-packages flag
+        PIP_CMD="python3 -m pip --break-system-packages"
+        echo -e "${YELLOW}⚠ Using system-wide pip installation${NC}"
+        ;;
+esac
 
 # Function to check and install missing dependencies
 install_python_deps() {
     local req_file="$1"
     local description="$2"
-    
+
     if [[ -f "$req_file" ]]; then
         echo -e "\n${BLUE}Installing $description...${NC}"
-        
+
         # Check which packages are missing
         local missing=()
         while IFS= read -r package; do
             # Skip comments and empty lines
             [[ -z "$package" || "$package" =~ ^# ]] && continue
-            
+
             # Extract package name (before ==)
             local pkg_name=$(echo "$package" | cut -d'=' -f1)
-            
+
             # Check if installed
-            if ! python3 -c "import ${pkg_name//-/_}" 2>/dev/null; then
+            if ! $PYTHON_CMD -c "import ${pkg_name//-/_}" 2>/dev/null; then
                 missing+=("$package")
             fi
         done < "$req_file"
-        
+
         if [[ ${#missing[@]} -gt 0 ]]; then
             echo "  Installing missing packages: ${missing[*]}"
-            python3 -m pip install -r "$req_file" || echo -e "${YELLOW}  Warning: $description had issues${NC}"
+            $PIP_CMD install -r "$req_file" || echo -e "${YELLOW}  Warning: $description had issues${NC}"
         else
             echo -e "  ${GREEN}✓ All $description already installed${NC}"
         fi
@@ -301,26 +401,28 @@ install_python_deps() {
 }
 
 # Install Web UI dependencies (includes vision support)
-install_python_deps "$SCRIPT_DIR/requirements-webui.txt" "Web UI dependencies"
+install_python_deps "$PROJECT_ROOT/requirements-webui.txt" "Web UI dependencies"
 
 # Install MCP Server dependencies
-install_python_deps "$SCRIPT_DIR/requirements-mcp.txt" "MCP Server dependencies"
+install_python_deps "$PROJECT_ROOT/requirements-mcp.txt" "MCP Server dependencies"
 
 # Install RAG System dependencies
-install_python_deps "$SCRIPT_DIR/requirements-rag.txt" "RAG System dependencies"
+install_python_deps "$PROJECT_ROOT/requirements-rag.txt" "RAG System dependencies"
 
 # Install test dependencies if running tests
-if [[ -f "$SCRIPT_DIR/requirements-test.txt" ]]; then
-    install_python_deps "$SCRIPT_DIR/requirements-test.txt" "Test dependencies"
+if [[ -f "$PROJECT_ROOT/requirements-test.txt" ]]; then
+    install_python_deps "$PROJECT_ROOT/requirements-test.txt" "Test dependencies"
 fi
 
 # Check for optional vision dependencies
 echo -e "\n${BLUE}Checking Vision/Screenshot Support...${NC}"
-if python3 -c "import pyautogui" 2>/dev/null && python3 -c "import PIL" 2>/dev/null; then
+if $PYTHON_CMD -c "import pyautogui" 2>/dev/null && $PYTHON_CMD -c "import PIL" 2>/dev/null; then
     echo -e "  ${GREEN}✓ Vision support ready (pyautogui, Pillow)${NC}"
+elif $PYTHON_CMD -c "import PIL" 2>/dev/null; then
+    echo -e "  ${CYAN}○ Pillow installed (pyautogui requires X11 display)${NC}"
 else
     echo -e "  ${YELLOW}⚠ Vision dependencies missing. Installing...${NC}"
-    python3 -m pip install pyautogui Pillow || echo -e "${YELLOW}  Warning: Vision support installation failed${NC}"
+    $PIP_CMD install pyautogui Pillow || echo -e "${YELLOW}  Warning: Vision support installation failed${NC}"
 fi
 
 echo -e "${GREEN}✓ Python dependencies installed${NC}"
@@ -433,7 +535,7 @@ for llm in $LLMS_TO_INSTALL; do
             ;;
         nemo)
             echo -e "\n${BLUE}Installing NeMo dependencies...${NC}"
-            python3 -m pip install openai
+            $PIP_CMD install openai
             ;;
         deepseek)
             if ! has_command deepseek; then

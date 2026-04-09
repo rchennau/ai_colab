@@ -68,17 +68,17 @@ fi
 get_script_dir() {
     # Use $0 if BASH_SOURCE is empty (happens when sourced)
     local source="${BASH_SOURCE[0]:-$0}"
-    
+
     # If source is relative, make it absolute
     [[ $source != /* ]] && source="$(pwd)/$source"
-    
+
     # Resolve all symlinks
     while [ -h "$source" ]; do
         local dir="$(cd -P "$(dirname "$source")" && pwd)"
         source="$(readlink "$source")"
         [[ $source != /* ]] && source="$dir/$source"
     done
-    
+
     # Get the directory and resolve it physically
     local dir="$(cd -P "$(dirname "$source")" && pwd -P)"
     echo "$dir"
@@ -87,6 +87,15 @@ get_script_dir() {
 SCRIPT_DIR="$(get_script_dir)"
 PROJECT_ROOT="$SCRIPT_DIR"
 export PROJECT_ROOT
+
+# Activate virtual environment if it exists
+if [[ -f "$PROJECT_ROOT/.venv/bin/activate" ]]; then
+    source "$PROJECT_ROOT/.venv/bin/activate"
+fi
+
+# Set Python command
+PYTHON_CMD="python"
+PIP_CMD="pip"
 
 if [ -f "$SCRIPT_DIR/scripts/utils.sh" ]; then
     source "$SCRIPT_DIR/scripts/utils.sh"
@@ -144,7 +153,7 @@ PYTHON_DEPS_OK=true
 
 # Check critical Python packages
 for pkg in flask flask_cors flask_limiter redis aiohttp; do
-    if ! python3 -c "import ${pkg}" 2>/dev/null; then
+    if ! $PYTHON_CMD -c "import ${pkg}" 2>/dev/null; then
         echo -e "  ${YELLOW}⚠ Missing: ${pkg}${NC}"
         PYTHON_DEPS_OK=false
     fi
@@ -152,16 +161,18 @@ done
 
 # Check vision packages (optional)
 VISION_AVAILABLE=false
-if python3 -c "import pyautogui" 2>/dev/null && python3 -c "import PIL" 2>/dev/null; then
+if $PYTHON_CMD -c "import pyautogui" 2>/dev/null && $PYTHON_CMD -c "import PIL" 2>/dev/null; then
     echo -e "  ${GREEN}✓ Vision support available${NC}"
     VISION_AVAILABLE=true
+elif $PYTHON_CMD -c "import PIL" 2>/dev/null; then
+    echo -e "  ${CYAN}○ Pillow installed (pyautogui requires X11 display)${NC}"
 else
     echo -e "  ${CYAN}○ Vision support not installed (optional)${NC}"
 fi
 
 # Check RAG packages (optional)
 RAG_AVAILABLE=false
-if python3 -c "import sentence_transformers" 2>/dev/null; then
+if $PYTHON_CMD -c "import sentence_transformers" 2>/dev/null; then
     echo -e "  ${GREEN}✓ RAG system available${NC}"
     RAG_AVAILABLE=true
 else
@@ -180,7 +191,7 @@ if [[ "$PYTHON_DEPS_OK" == "false" ]]; then
             bash "$INSTALL_SCRIPT" --auto
         else
             print_error "Could not find install.sh"
-            echo -e "${YELLOW}Please run: pip3 install -r requirements-webui.txt${NC}"
+            echo -e "${YELLOW}Please run: $PIP_CMD install -r requirements-webui.txt${NC}"
         fi
     else
         # Interactive mode: ask
@@ -193,7 +204,7 @@ if [[ "$PYTHON_DEPS_OK" == "false" ]]; then
                 bash "$INSTALL_SCRIPT" --auto
             else
                 print_error "Could not find install.sh at $INSTALL_SCRIPT"
-                echo -e "${YELLOW}Please run: pip3 install -r requirements-webui.txt${NC}"
+                echo -e "${YELLOW}Please run: $PIP_CMD install -r requirements-webui.txt${NC}"
             fi
         fi
     fi
@@ -220,22 +231,22 @@ if [[ "$RAG_AVAILABLE" == "false" && "$INTERACTIVE" == "true" ]]; then
         echo -e "\n${BLUE}Installing RAG system...${NC}"
         if [[ -f "$INSTALL_SCRIPT" ]]; then
             # Install RAG requirements
-            pip3 install -r "$PROJECT_ROOT/requirements-rag.txt" 2>/dev/null || \
-            pip3 install sentence-transformers faiss-cpu watchdog
-            
-            if python3 -c "import sentence_transformers" 2>/dev/null; then
+            $PIP_CMD install -r "$PROJECT_ROOT/requirements-rag.txt" 2>/dev/null || \
+            $PIP_CMD install sentence-transformers faiss-cpu watchdog
+
+            if $PYTHON_CMD -c "import sentence_transformers" 2>/dev/null; then
                 echo -e "\n${GREEN}✓ RAG system installed successfully${NC}"
                 RAG_AVAILABLE=true
             else
                 echo -e "\n${YELLOW}⚠ RAG installation incomplete. Run manually:${NC}"
-                echo -e "  ${BLUE}pip3 install -r requirements-rag.txt${NC}"
+                echo -e "  ${BLUE}$PIP_CMD install -r requirements-rag.txt${NC}"
             fi
         else
-            pip3 install sentence-transformers faiss-cpu watchdog
+            $PIP_CMD install sentence-transformers faiss-cpu watchdog
         fi
     else
         echo -e "\n${CYAN}RAG installation skipped. Install later with:${NC}"
-        echo -e "  ${BLUE}pip3 install -r requirements-rag.txt${NC}"
+        echo -e "  ${BLUE}$PIP_CMD install -r requirements-rag.txt${NC}"
     fi
     echo ""
 fi
@@ -506,11 +517,11 @@ fi
 
 # 3.1 Module Selection (if not WebUI)
 if [ "$WEBUI" = false ]; then
-    MODULES_JSON=$(python3 "$SCRIPT_DIR/scripts/module-manager.py" list "$PROJECT_ROOT")
+    MODULES_JSON=$($PYTHON_CMD "$SCRIPT_DIR/scripts/module-manager.py" list "$PROJECT_ROOT")
 
-    # Use python3 for portable JSON extraction
-    MOD_IDS=$(echo "$MODULES_JSON" | python3 -c 'import json, sys; print("\n".join([m["id"] for m in json.load(sys.stdin)]))' 2>/dev/null || echo "")
-    MOD_NAMES=$(echo "$MODULES_JSON" | python3 -c 'import json, sys; print("\n".join([m["name"] for m in json.load(sys.stdin)]))' 2>/dev/null || echo "")
+    # Use python for portable JSON extraction
+    MOD_IDS=$(echo "$MODULES_JSON" | $PYTHON_CMD -c 'import json, sys; print("\n".join([m["id"] for m in json.load(sys.stdin)]))' 2>/dev/null || echo "")
+    MOD_NAMES=$(echo "$MODULES_JSON" | $PYTHON_CMD -c 'import json, sys; print("\n".join([m["name"] for m in json.load(sys.stdin)]))' 2>/dev/null || echo "")
 
     # Iterate and ask
     IFS=$'\n'
@@ -560,7 +571,7 @@ if [ "$WEBUI" = false ]; then
     fi
 
     # Evaluate active module environment variables
-    eval "$(python3 "$SCRIPT_DIR/scripts/module-manager.py" env "$PROJECT_ROOT")"
+    eval "$($PYTHON_CMD "$SCRIPT_DIR/scripts/module-manager.py" env "$PROJECT_ROOT")"
 
     # 3.1 Compute Backend (Spoke Architecture)
     LAST_BACKEND=$(load_pref "compute.backend" "local")
@@ -719,11 +730,11 @@ ui_title "Finalizing Launch" "${BLUE}"
 # Start RAG file watcher if requested
 if [[ "$RAG_WATCHER" == "true" ]]; then
     ui_status "RAG Watcher" "Starting file watcher for auto-reindexing" "${CYAN}"
-    
+
     # Check if watchdog is installed
-    if python3 -c "import watchdog" 2>/dev/null; then
+    if $PYTHON_CMD -c "import watchdog" 2>/dev/null; then
         # Start watcher in background
-        python3 << 'PYTHON_EOF' &
+        $PYTHON_CMD << 'PYTHON_EOF' &
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -769,7 +780,7 @@ if [ "$WEBUI" = true ]; then
     fi
 
     # Start WebUI in background (v3.0 Refactored)
-    python3 "$SCRIPT_DIR/../webui/app_refactored.py" >> "$PROJECT_ROOT/logs/webui.log" 2>&1 &
+    $PYTHON_CMD "$SCRIPT_DIR/../webui/app_refactored.py" >> "$PROJECT_ROOT/logs/webui.log" 2>&1 &
     WEBUI_PID=$!
 
     # Wait for server to start

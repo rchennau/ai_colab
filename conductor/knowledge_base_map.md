@@ -1,9 +1,10 @@
 # ai-colab Project Map (Semantic Knowledge Base)
-Last Updated: 2026-03-28 (Web Terminal & Debug Mode)
+Last Updated: 2026-04-09 (Python Environment Management)
 
 ## Orchestration Core (Hub)
-- `launch.sh`: Unified launcher with **three launch modes** (Dashboard, WebUI, Debug) and **module enablement** (`-m/--module` flag).
-- `install.sh`: Master installer for project dependencies. Supports `--wizard`, `--reconfigure`, and `--auto` modes.
+- `launch.sh`: Unified launcher with **three launch modes** (Dashboard, WebUI, Debug) and **module enablement** (`-m/--module` flag). Auto-activates `.venv` virtual environment.
+- `install.sh`: Master installer for project dependencies. Supports `--wizard`, `--reconfigure`, and `--auto` modes. **Auto-detects Python environment** (uv → conda → venv → system) and creates virtual environment in `.venv/`.
+- `.venv/`: **Auto-created** virtual environment for Python dependencies. Activated by all project scripts.
 - `scripts/install-wizard.sh`: Interactive terminal-based configuration wizard (5-step guided setup). Enhanced with 80-column ANSI UI.
 - `scripts/migrate-project.sh`: Project Detection & Migration Tool. Automatically imports existing AI integrations.
 - `scripts/utils.sh`: Shared utilities including 80-column ANSI UI helpers and **Health 2.0** reporting logic (`report_health`, `get_ms`).
@@ -54,14 +55,16 @@ Last Updated: 2026-03-28 (Web Terminal & Debug Mode)
   - Frontend HTML verification
 - `tests/test_dashboard_fixes.sh`: Dashboard launcher verification tests (11 automated tests covering tmux syntax, flag propagation, and hcom initialization).
 - `tests/test_config_manager.sh`: Automated test suite for the unified configuration foundation.
-- `tests/test_install_wizard.sh`: Integration tests for the interactive installer and CLI experience.
+- `tests/test_install_wizard.sh`: Integration tests for the interactive installer and CLI experience. **Now includes Python environment detection tests**.
 - `tests/webui-test-config.ini`: Configuration file for automated testing system.
 - `tests/test_fleet_autonomy.sh`: Verification of Health 2.0 metrics and Blackboard reporting.
 - `tests/test_fleet_recovery.sh`: End-to-end simulation of agent crash detection and Watchdog recovery.
 - `tests/test_module_hooks.sh`: Verification of dynamic periodic hooks and manifest parsing.
+- `scripts/run-tests.sh`: MCP & RAG test runner. **Updated to use virtual environment**.
 
 ## Documentation
-- `docs/INSTALLATION.md`: Comprehensive installation guide covering CLI wizard, Web UI, and Docker pathways.
+- `docs/INSTALLATION.md`: Comprehensive installation guide covering CLI wizard, Web UI, and Docker pathways. **Now includes Python environment management section**.
+- `PYTHON_ENV_SETUP.md`: **NEW** - Python environment setup guide with troubleshooting tips.
 - `docs/WEBUI_GUIDE.md`: Complete Web UI user guide with API reference.
 - `docs/AUTOMATED_WEBUI_TESTING.md`: Guide for automated testing setup and usage.
 - `conductor/tracks/enhanced_install_launch_20260324/`: Milestone 11 implementation track.
@@ -70,5 +73,4 @@ Last Updated: 2026-03-28 (Web Terminal & Debug Mode)
 ## Index Metadata
 - Status: Active
 - Source: Milestone 11, 12 & 13 Architectural Review
-- Architecture: Hub and Spoke (Self-Hosted Hub)
-- Latest Enhancements: Web UI v2.0, Dashboard v2.4, Fleet Autonomy & Self-Healing, Health 2.0
+- Latest Enhancements: Web UI v2.0, Dashboard v2.4, Fleet Autonomy & Self-Healing, Health 2.0, **Python Environment Management**

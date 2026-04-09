@@ -12,6 +12,11 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
+# Activate virtual environment if it exists
+if [[ -f "$PROJECT_ROOT/.venv/bin/activate" ]]; then
+    source "$PROJECT_ROOT/.venv/bin/activate"
+fi
+
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -44,19 +49,19 @@ TESTS_FAILED=0
 run_unit_tests() {
     print_info "Running Unit Tests..."
     echo ""
-    
+
     cd "$PROJECT_ROOT"
-    
+
     # Check if pytest is installed
-    if ! python3 -c "import pytest" 2>/dev/null; then
+    if ! python -c "import pytest" 2>/dev/null; then
         print_warning "pytest not installed. Install with: pip install -r requirements-test.txt"
         return 1
     fi
-    
+
     # MCP tests
     if [[ -d "$PROJECT_ROOT/mcp/tests" ]]; then
         print_info "MCP Server Tests:"
-        if python3 -m pytest mcp/tests/ -v --tb=short 2>/dev/null; then
+        if python -m pytest mcp/tests/ -v --tb=short 2>/dev/null; then
             print_success "MCP tests passed"
             ((TESTS_PASSED++))
         else
@@ -65,11 +70,11 @@ run_unit_tests() {
         fi
         ((TESTS_RUN++))
     fi
-    
+
     # RAG tests
     if [[ -d "$PROJECT_ROOT/rag/tests" ]]; then
         print_info "RAG System Tests:"
-        if python3 -m pytest rag/tests/ -v --tb=short 2>/dev/null; then
+        if python -m pytest rag/tests/ -v --tb=short 2>/dev/null; then
             print_success "RAG tests passed"
             ((TESTS_PASSED++))
         else
@@ -78,7 +83,7 @@ run_unit_tests() {
         fi
         ((TESTS_RUN++))
     fi
-    
+
     echo ""
 }
 
@@ -86,11 +91,11 @@ run_unit_tests() {
 run_integration_tests() {
     print_info "Running Integration Tests..."
     echo ""
-    
+
     cd "$PROJECT_ROOT"
-    
+
     if [[ -f "$PROJECT_ROOT/tests/mcp_rag/test_integration.py" ]]; then
-        if python3 tests/mcp_rag/test_integration.py; then
+        if python tests/mcp_rag/test_integration.py; then
             print_success "Integration tests passed"
             ((TESTS_PASSED++))
         else
@@ -101,7 +106,7 @@ run_integration_tests() {
     else
         print_warning "Integration test file not found"
     fi
-    
+
     echo ""
 }
 
@@ -109,11 +114,11 @@ run_integration_tests() {
 run_security_audit() {
     print_info "Running Security Audit..."
     echo ""
-    
+
     cd "$PROJECT_ROOT"
-    
+
     if [[ -f "$PROJECT_ROOT/tests/mcp_rag/security_audit.py" ]]; then
-        if python3 tests/mcp_rag/security_audit.py; then
+        if python tests/mcp_rag/security_audit.py; then
             print_success "Security audit passed"
             ((TESTS_PASSED++))
         else
@@ -124,7 +129,7 @@ run_security_audit() {
     else
         print_warning "Security audit script not found"
     fi
-    
+
     echo ""
 }
 
@@ -132,12 +137,12 @@ run_security_audit() {
 run_benchmarks() {
     print_info "Running Performance Benchmarks..."
     echo ""
-    
+
     cd "$PROJECT_ROOT"
-    
+
     if [[ -f "$PROJECT_ROOT/tests/mcp_rag/test_integration.py" ]]; then
-        python3 tests/mcp_rag/test_integration.py --benchmarks 2>/dev/null || \
-        python3 -c "
+        python tests/mcp_rag/test_integration.py --benchmarks 2>/dev/null || \
+        python -c "
 import sys
 sys.path.insert(0, '$PROJECT_ROOT')
 from tests.mcp_rag.test_integration import run_benchmarks
@@ -146,7 +151,7 @@ run_benchmarks()
     else
         print_warning "Benchmark script not found"
     fi
-    
+
     echo ""
 }
 

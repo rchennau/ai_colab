@@ -17,3 +17,7 @@ config.toml.backup
 # Ignore random user files or python caches if any
 __pycache__/
 *.pyc
+
+# Ignore virtual environments
+.venv/
+venv/
