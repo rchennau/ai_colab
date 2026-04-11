@@ -309,40 +309,44 @@ create_dashboard() {
     
     # Step 4: Layout Creation
 
-    # 4a. Create Console Pane (Bottom)
-    local console_id=""
-    if [ "${WITH_CONSOLE:-true}" == "true" ]; then
-        # Split and capture the newly created pane ID
-        tmux split-window -v -t "$SESSION:dashboard.0" -l 5 -c "$PWD"
-        console_id=$(tmux display-message -p "#{pane_id}")
-    fi
-
-    # 4b. Create Right Column
-    # Split Pane 0 (HCOM) horizontally to create Right Column
-    tmux split-window -h -t "$SESSION:dashboard.0" -c "$PWD"
+    # 4a. Create Right Column first by splitting HCOM pane horizontally
+    tmux split-window -h -t "$SESSION:dashboard.0" -c "$PROJECT_ROOT"
     local right_col_id=$(tmux display-message -p "#{pane_id}")
+    print_info "Created right column pane: $right_col_id"
 
-    # 4c. Split Right Column for components
+    # 4b. Split Right Column vertically for all agent components
     local agent_pane_ids=("$right_col_id")
     if [ $num_right_panes -gt 1 ]; then
         local current_pane_id="$right_col_id"
         for ((i=1; i<num_right_panes; i++)); do
-            tmux split-window -v -t "$current_pane_id" -c "$PWD"
+            # Split the current pane vertically to create a new pane below it
+            tmux split-window -v -t "$current_pane_id" -c "$PROJECT_ROOT"
             current_pane_id=$(tmux display-message -p "#{pane_id}")
             agent_pane_ids+=("$current_pane_id")
-            # Balancing space is critical to avoid "no space for new pane"
+
+            # Rebalance after each split to ensure equal sizing
             tmux select-layout -t "$SESSION:dashboard" tiled >/dev/null 2>&1 || true
+            print_info "Added agent pane $i: $current_pane_id"
         done
     fi
-    
-    # 4d. Finalize Geometry
-    # Re-apply main-vertical to get the HCOM on left, others on right
-    tmux select-layout -t "$SESSION:dashboard" "main-vertical"
-    tmux resize-pane -t "$SESSION:dashboard.0" -x 80
-    
-    if [ -n "$console_id" ]; then
-        tmux resize-pane -t "$console_id" -y 5
+
+    # 4c. Create Console Pane (Bottom) - after right column is set up
+    local console_id=""
+    if [ "${WITH_CONSOLE:-true}" == "true" ]; then
+        # Split the HCOM pane vertically at the bottom with fixed height
+        tmux split-window -v -t "$SESSION:dashboard.0" -l 8 -c "$PROJECT_ROOT"
+        console_id=$(tmux display-message -p "#{pane_id}")
+        print_info "Created console pane: $console_id"
+
+        # Resize console to ensure it has adequate height
+        tmux resize-pane -t "$console_id" -y 8
     fi
+
+    # 4d. Finalize Geometry
+    # Resize HCOM pane to ensure it has adequate width
+    tmux resize-pane -t "$SESSION:dashboard.0" -x 85
+
+    print_info "Layout creation complete. Total agent panes: ${#agent_pane_ids[@]}"
 
     # Step 5: Launch Console
     if [ -n "$console_id" ]; then
