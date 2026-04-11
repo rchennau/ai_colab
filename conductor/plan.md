@@ -29,32 +29,32 @@ Consolidate all existing and orphaned pages into three primary navigation pillar
 ## 🛠️ Implementation Plan
 
 ### Phase 1: Modular Backend (v3.0)
-1.  **Create `webui/api/terminal.py`**:
+1.  **Create `webui/api/terminal.py`**: ✅
     *   Migrate `PTYManager` from `app.py`.
     *   Implement `/api/terminal/spawn`, `/api/terminal/list`, `/api/terminal/close`.
     *   Handle Socket.IO events for terminal input/output/resize.
-2.  **Enhance `webui/api/system.py`**:
+2.  **Enhance `webui/api/system.py`**: ✅
     *   Ensure all health, preflight, and metrics endpoints are fully implemented.
     *   Add `/api/shutdown` and `/api/session/*` endpoints.
-3.  **Update `webui/app_refactored.py`**:
+3.  **Update `webui/app_refactored.py`**: ✅
     *   Register the new terminal blueprint.
     *   Ensure Socket.IO is correctly integrated with the PTY manager.
     *   Fix import paths to avoid monolithic `app.py` dependency.
 
 ### Phase 2: Frontend UX Overhaul
-1.  **Consolidate Navigation in `webui/index.html`**:
+1.  **Consolidate Navigation in `webui/index.html`**: ✅
     *   Update `nav` to strictly show 3 buttons.
     *   Reorganize all `page` divs into sub-pages of the 3 main menus.
-2.  **Integrate Knowledge Base**:
+2.  **Integrate Knowledge Base**: ✅
     *   Move detailed Knowledge Base search into a sub-tab of Dashboard.
     *   Ensure real-time KB stats are visible on the main Dashboard overview.
-3.  **Unified System Monitoring**:
+3.  **Unified System Monitoring**: ✅
     *   Merge Observability, Health, and Logs into a unified "Monitoring" sub-page under System.
     *   Implement "Quick Actions" panel for common maintenance tasks.
 
 ### Phase 3: Final Switch & Validation
-1.  **Update `launch.sh`**: Point to `webui/app_refactored.py`.
-2.  **Verify End-to-End**:
+1.  **Update `launch.sh`**: ✅ Point to `webui/app_refactored.py`.
+2.  **Verify End-to-End**: ✅
     *   Test agent spawning and terminal interaction.
     *   Verify configuration saving/loading.
     *   Test real-time status updates via WebSocket.

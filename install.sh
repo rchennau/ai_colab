@@ -264,109 +264,30 @@ fi
 # 2.1 Python Environment Detection & Dependency Installation
 echo -e "\n${GREEN}Setting up Python Environment...${NC}"
 
-# Function to detect Python package manager
-detect_python_env() {
-    # Preference order: uv > conda > venv > system pip (with --break-system-packages)
-    
-    # Check for uv (preferred)
-    if has_command uv; then
-        PYTHON_PKG_MANAGER="uv"
-        echo -e "${GREEN}✓ Detected uv (fast Python package manager)${NC}"
-        return
-    fi
-    
-    # Check for conda
-    if has_command conda; then
-        PYTHON_PKG_MANAGER="conda"
-        echo -e "${GREEN}✓ Detected conda${NC}"
-        return
-    fi
-    
-    # Check if we're already in a virtual environment
-    if [[ -n "$VIRTUAL_ENV" ]]; then
-        PYTHON_PKG_MANAGER="venv_active"
-        echo -e "${GREEN}✓ Using active virtual environment: $VIRTUAL_ENV${NC}"
-        return
-    fi
-    
-    # Check for venv availability
-    if python3 -m venv --help >/dev/null 2>&1; then
-        PYTHON_PKG_MANAGER="venv"
-        echo -e "${YELLOW}○ Will create virtual environment with venv${NC}"
-        return
-    fi
-    
-    # Fallback: system pip with override
-    PYTHON_PKG_MANAGER="system"
-    echo -e "${YELLOW}⚠ No virtual environment manager detected, will use system pip${NC}"
-}
+PYTHON_ENV_MGR="$PROJECT_ROOT/scripts/python-env-manager.sh"
+if [[ ! -x "$PYTHON_ENV_MGR" ]]; then
+    chmod +x "$PYTHON_ENV_MGR"
+fi
 
-# Detect Python environment
-detect_python_env
+# Detect and create/activate environment
+MANAGER=$("$PYTHON_ENV_MGR" detect)
+echo -e "${BLUE}Detected environment manager: $MANAGER${NC}"
 
-# Create/activate virtual environment if needed
-PYTHON_CMD="python3"
-PIP_CMD="python3 -m pip"
+# Create environment if it doesn't exist
+"$PYTHON_ENV_MGR" create
 
-setup_venv_with_uv() {
-    local venv_dir="$PROJECT_ROOT/.venv"
-    
-    if [[ ! -d "$venv_dir" ]]; then
-        echo -e "${BLUE}Creating virtual environment with uv...${NC}"
-        uv venv "$venv_dir"
-    fi
-    
-    # Activate virtual environment
-    source "$venv_dir/bin/activate"
-    PYTHON_CMD="python"
+# Get activation command and source it
+ACTIVATE_CMD=$("$PYTHON_ENV_MGR" activate-cmd)
+echo -e "${BLUE}Activating environment: $ACTIVATE_CMD${NC}"
+eval "$ACTIVATE_CMD"
+
+# Set Python and Pip commands based on environment
+PYTHON_CMD="python"
+if [[ "$MANAGER" == "uv" ]]; then
     PIP_CMD="uv pip"
-    echo -e "${GREEN}✓ Virtual environment activated: $venv_dir${NC}"
-}
-
-setup_venv_with_venv() {
-    local venv_dir="$PROJECT_ROOT/.venv"
-    
-    if [[ ! -d "$venv_dir" ]]; then
-        echo -e "${BLUE}Creating virtual environment with venv...${NC}"
-        python3 -m venv "$venv_dir"
-    fi
-    
-    # Activate virtual environment
-    source "$venv_dir/bin/activate"
-    PYTHON_CMD="python"
+else
     PIP_CMD="python -m pip"
-    echo -e "${GREEN}✓ Virtual environment activated: $venv_dir${NC}"
-}
-
-# Setup environment based on detection
-case "$PYTHON_PKG_MANAGER" in
-    uv)
-        setup_venv_with_uv
-        ;;
-    conda)
-        # Check if we're in a conda environment
-        if [[ -z "$CONDA_DEFAULT_ENV" ]]; then
-            echo -e "${BLUE}Creating conda environment: ai-colab${NC}"
-            conda create -n ai-colab python=3.10 -y
-            conda activate ai-colab
-        fi
-        PYTHON_CMD="python"
-        PIP_CMD="pip"
-        ;;
-    venv)
-        setup_venv_with_venv
-        ;;
-    venv_active)
-        # Already in a virtual environment
-        PYTHON_CMD="python"
-        PIP_CMD="python -m pip"
-        ;;
-    system)
-        # Use system pip with --break-system-packages flag
-        PIP_CMD="python3 -m pip --break-system-packages"
-        echo -e "${YELLOW}⚠ Using system-wide pip installation${NC}"
-        ;;
-esac
+fi
 
 # Function to check and install missing dependencies
 install_python_deps() {

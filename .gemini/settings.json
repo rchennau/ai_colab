@@ -1,0 +1,26 @@
+{
+  "general": {
+    "sessionRetention": {
+      "maxAge": "15d"
+    }
+  },
+  "ui": {
+    "autoThemeSwitching": false,
+    "inlineThinkingMode": "full",
+    "showStatusInTitle": true,
+    "showLineNumbers": false,
+    "loadingPhrases": "tips"
+  },
+  "model": {
+    "name": ""
+  },
+  "tools": {
+    "shell": {
+      "showColor": true
+    }
+  },
+  "security": {
+    "enablePermanentToolApproval": true,
+    "autoAddToPolicyByDefault": true
+  }
+}

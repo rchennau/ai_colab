@@ -66,8 +66,10 @@ check_server() {
 start_server() {
     print_test "Starting Web UI server..."
     
+    local python_bin="python3"
     if [[ -d "$VENV_DIR" ]]; then
-        source "$VENV_DIR/bin/activate"
+        python_bin="$VENV_DIR/bin/python3"
+        print_info "Using virtual environment Python: $python_bin"
     else
         print_info "Virtual environment not found at $VENV_DIR, using system Python"
     fi
@@ -77,9 +79,9 @@ start_server() {
     
     # Start server in background
     export PYTHONPATH="$PROJECT_ROOT:${PYTHONPATH:-}"
-    python3 webui/app_refactored.py --port $PORT > /tmp/webui.log 2>&1 &
+    "$python_bin" webui/app_refactored.py --port $PORT > "$PROJECT_ROOT/logs/test_webui.log" 2>&1 &
     SERVER_PID=$!
-    echo $SERVER_PID > /tmp/webui.pid
+    echo $SERVER_PID > "$PROJECT_ROOT/logs/test_webui.pid"
     
     # Wait for server to start
     print_info "Waiting for server to start (PID: $SERVER_PID)..."
@@ -92,7 +94,7 @@ start_server() {
     done
     
     print_failure "Server failed to start"
-    cat /tmp/webui.log
+    cat "$PROJECT_ROOT/logs/test_webui.log"
     return 1
 }
 
@@ -101,13 +103,13 @@ stop_server() {
     print_test "Stopping Web UI server..."
     
     # Try PID file first
-    if [[ -f /tmp/webui.pid ]]; then
-        local pid=$(cat /tmp/webui.pid)
+    if [[ -f "$PROJECT_ROOT/logs/test_webui.pid" ]]; then
+        local pid=$(cat "$PROJECT_ROOT/logs/test_webui.pid")
         if kill -0 "$pid" 2>/dev/null; then
             kill -9 "$pid" 2>/dev/null || true
             print_success "Server stopped (PID: $pid)"
         fi
-        rm -f /tmp/webui.pid
+        rm -f "$PROJECT_ROOT/logs/test_webui.pid"
     fi
     
     # Kill any processes listening on our port

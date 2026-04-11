@@ -3,3 +3,4 @@ migration_date=2026-03-24
 backup_location=/Users/rchennault/Documents/iCloud/GitHub/ai_colab/.ai-colab-backup-20260324-124710
 MODULE_COMPUTE_BACKEND=local
 MODULE_ATARI_8BIT=true
+MODULE_COMPUTE_BACKEND=local

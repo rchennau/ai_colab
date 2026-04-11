@@ -248,8 +248,7 @@ with open('$CONFIG_FILE', 'r') as f:
             continue
         if '=' in line:
             key, value = line.split('=', 1)
-            key = key.strip()
-            value = value.strip().strip('"').strip("'")
+            key, value = key.strip(), value.strip().strip('"').strip("'")
             config[key] = value
 
 import json

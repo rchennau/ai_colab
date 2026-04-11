@@ -88,14 +88,44 @@ SCRIPT_DIR="$(get_script_dir)"
 PROJECT_ROOT="$SCRIPT_DIR"
 export PROJECT_ROOT
 
-# Activate virtual environment if it exists
-if [[ -f "$PROJECT_ROOT/.venv/bin/activate" ]]; then
-    source "$PROJECT_ROOT/.venv/bin/activate"
+# Python Environment Activation
+PYTHON_ENV_MGR="$PROJECT_ROOT/scripts/python-env-manager.sh"
+if [[ -f "$PYTHON_ENV_MGR" ]]; then
+    # Detect manager and get activation command
+    ACTIVATE_CMD=$(bash "$PYTHON_ENV_MGR" activate-cmd)
+    if [[ "$ACTIVATE_CMD" != "true" ]]; then
+        eval "$ACTIVATE_CMD"
+    fi
+    
+    # Set Python and Pip commands based on manager
+    MANAGER=$(bash "$PYTHON_ENV_MGR" detect)
+    PYTHON_CMD="python"
+    if [[ "$MANAGER" == "uv" ]]; then
+        PIP_CMD="uv pip"
+    else
+        PIP_CMD="pip"
+    fi
+else
+    # Fallback to manual venv activation if manager script is missing
+    if [[ -f "$PROJECT_ROOT/.venv/bin/activate" ]]; then
+        source "$PROJECT_ROOT/.venv/bin/activate"
+    fi
+    PYTHON_CMD="python"
+    PIP_CMD="pip"
 fi
 
-# Set Python command
-PYTHON_CMD="python"
-PIP_CMD="pip"
+# Ensure we use the correct python command
+if ! command -v "$PYTHON_CMD" >/dev/null 2>&1; then
+    PYTHON_CMD="python3"
+    PIP_CMD="pip3"
+fi
+
+if ! command -v "$PYTHON_CMD" >/dev/null 2>&1; then
+    ui_banner "Dependency Error" "${RED}"
+    echo -e "${RED}Error: python is not installed.${NC}"
+    echo -e "Please install Python 3.9+."
+    exit 1
+fi
 
 if [ -f "$SCRIPT_DIR/scripts/utils.sh" ]; then
     source "$SCRIPT_DIR/scripts/utils.sh"
@@ -120,7 +150,10 @@ clear
 ui_banner "ai-colab Unified Launcher" "${BLUE}"
 echo ""
 
-# Display terminal info if detected
+# Display terminal and environment info
+PYTHON_VER=$($PYTHON_CMD --version 2>&1)
+ui_status "Python" "$PYTHON_VER" "${CYAN}"
+
 if [[ -n "$AI_COLAB_TERMINAL" ]]; then
     ui_status "Terminal" "$AI_COLAB_TERMINAL ($AI_COLAB_ENVIRONMENT)" "${CYAN}"
     
@@ -132,19 +165,25 @@ if [[ -n "$AI_COLAB_TERMINAL" ]]; then
 fi
 
 # Check for hcom
+echo -ne "  ${BLUE}Checking hcom...${NC}\r"
 if ! has_command hcom; then
     ui_banner "Dependency Error" "${RED}"
     echo -e "${RED}Error: hcom is not installed.${NC}"
     echo -e "Please run ./install.sh first."
     exit 1
+else
+    echo -e "  ${GREEN}✓ hcom available              ${NC}"
 fi
 
 # Check for tmux
+echo -ne "  ${BLUE}Checking tmux...${NC}\r"
 if ! has_command tmux; then
     ui_banner "Dependency Error" "${RED}"
     echo -e "${RED}Error: tmux is not installed.${NC}"
     echo -e "Please run ./install.sh first."
     exit 1
+else
+    echo -e "  ${GREEN}✓ tmux available              ${NC}"
 fi
 
 # Check Python dependencies
@@ -153,16 +192,21 @@ PYTHON_DEPS_OK=true
 
 # Check critical Python packages
 for pkg in flask flask_cors flask_limiter redis aiohttp; do
+    echo -ne "  ${BLUE}Checking ${pkg}...${NC}\r"
     if ! $PYTHON_CMD -c "import ${pkg}" 2>/dev/null; then
-        echo -e "  ${YELLOW}⚠ Missing: ${pkg}${NC}"
+        echo -e "  ${YELLOW}⚠ Missing: ${pkg}                ${NC}"
         PYTHON_DEPS_OK=false
+    else
+        echo -ne "  ${GREEN}✓ ${pkg}                          ${NC}\r"
     fi
 done
+echo -e "  ${GREEN}✓ Critical dependencies checked${NC}    "
 
 # Check vision packages (optional)
+echo -ne "  ${BLUE}Checking vision support...${NC}\r"
 VISION_AVAILABLE=false
 if $PYTHON_CMD -c "import pyautogui" 2>/dev/null && $PYTHON_CMD -c "import PIL" 2>/dev/null; then
-    echo -e "  ${GREEN}✓ Vision support available${NC}"
+    echo -e "  ${GREEN}✓ Vision support available         ${NC}"
     VISION_AVAILABLE=true
 elif $PYTHON_CMD -c "import PIL" 2>/dev/null; then
     echo -e "  ${CYAN}○ Pillow installed (pyautogui requires X11 display)${NC}"
@@ -171,10 +215,25 @@ else
 fi
 
 # Check RAG packages (optional)
+echo -ne "  ${BLUE}Checking RAG system...${NC}\r"
 RAG_AVAILABLE=false
-if $PYTHON_CMD -c "import sentence_transformers" 2>/dev/null; then
-    echo -e "  ${GREEN}✓ RAG system available${NC}"
+# First check if RAG was previously confirmed as installed
+RAG_STATE=$(bash "$CONFIG_MGR" get "rag.installed" "false" 2>/dev/null || echo "false")
+if [[ "$RAG_STATE" == "true" ]]; then
+    # Verify it's still actually available
+    if $PYTHON_CMD -c "import sentence_transformers" 2>/dev/null; then
+        echo -e "  ${GREEN}✓ RAG system available             ${NC}"
+        RAG_AVAILABLE=true
+    else
+        # State says installed but import fails, clear the state
+        bash "$CONFIG_MGR" set "rag.installed" "false" 2>/dev/null || true
+        echo -e "  ${YELLOW}⚠ RAG system not installed (recommended for KB search)${NC}"
+    fi
+elif $PYTHON_CMD -c "import sentence_transformers" 2>/dev/null; then
+    echo -e "  ${GREEN}✓ RAG system available             ${NC}"
     RAG_AVAILABLE=true
+    # Persist that RAG is installed
+    bash "$CONFIG_MGR" set "rag.installed" "true" 2>/dev/null || true
 else
     echo -e "  ${YELLOW}⚠ RAG system not installed (recommended for KB search)${NC}"
 fi
@@ -212,41 +271,52 @@ fi
 
 # Offer to install RAG if not available (interactive mode only)
 if [[ "$RAG_AVAILABLE" == "false" && "$INTERACTIVE" == "true" ]]; then
-    echo -e "\n${YELLOW}═══════════════════════════════════════════════════════${NC}"
-    echo -e "${YELLOW}  RAG System Not Detected${NC}"
-    echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
-    echo ""
-    echo -e "The RAG (Retrieval-Augmented Generation) system provides:"
-    echo -e "  • Semantic search across your codebase"
-    echo -e "  • Knowledge base integration for LLM context"
-    echo -e "  • Enhanced Debug Mode capabilities"
-    echo ""
-    echo -e "${BLUE}Would you like to install RAG dependencies now?${NC}"
-    echo -e "${YELLOW}  (Requires: sentence-transformers, faiss-cpu, watchdog)${NC}"
-    echo ""
-    read -p "  Install RAG system? [Y/n]: " -n 1 -r
-    echo ""
+    # Check if user already declined RAG installation in a previous run
+    RAG_PROMPTED=$(bash "$CONFIG_MGR" get "rag.prompted" "false" 2>/dev/null || echo "false")
 
-    if [[ $REPLY =~ ^[Yy]$ || -z $REPLY ]]; then
-        echo -e "\n${BLUE}Installing RAG system...${NC}"
-        if [[ -f "$INSTALL_SCRIPT" ]]; then
-            # Install RAG requirements
-            $PIP_CMD install -r "$PROJECT_ROOT/requirements-rag.txt" 2>/dev/null || \
-            $PIP_CMD install sentence-transformers faiss-cpu watchdog
+    # Only prompt if we haven't already asked
+    if [[ "$RAG_PROMPTED" != "true" ]]; then
+        echo -e "\n${YELLOW}═══════════════════════════════════════════════════════${NC}"
+        echo -e "${YELLOW}  RAG System Not Detected${NC}"
+        echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
+        echo ""
+        echo -e "The RAG (Retrieval-Augmented Generation) system provides:"
+        echo -e "  • Semantic search across your codebase"
+        echo -e "  • Knowledge base integration for LLM context"
+        echo -e "  • Enhanced Debug Mode capabilities"
+        echo ""
+        echo -e "${BLUE}Would you like to install RAG dependencies now?${NC}"
+        echo -e "${YELLOW}  (Requires: sentence-transformers, faiss-cpu, watchdog)${NC}"
+        echo ""
+        read -p "  Install RAG system? [Y/n]: " -n 1 -r
+        echo ""
 
-            if $PYTHON_CMD -c "import sentence_transformers" 2>/dev/null; then
-                echo -e "\n${GREEN}✓ RAG system installed successfully${NC}"
-                RAG_AVAILABLE=true
+        if [[ $REPLY =~ ^[Yy]$ || -z $REPLY ]]; then
+            echo -e "\n${BLUE}Installing RAG system...${NC}"
+            if [[ -f "$INSTALL_SCRIPT" ]]; then
+                # Install RAG requirements
+                $PIP_CMD install -r "$PROJECT_ROOT/requirements-rag.txt" 2>/dev/null || \
+                $PIP_CMD install sentence-transformers faiss-cpu watchdog
+
+                if $PYTHON_CMD -c "import sentence_transformers" 2>/dev/null; then
+                    echo -e "\n${GREEN}✓ RAG system installed successfully${NC}"
+                    RAG_AVAILABLE=true
+                    bash "$CONFIG_MGR" set "rag.installed" "true" 2>/dev/null || true
+                else
+                    echo -e "\n${YELLOW}⚠ RAG installation incomplete. Run manually:${NC}"
+                    echo -e "  ${BLUE}$PIP_CMD install -r requirements-rag.txt${NC}"
+                fi
             else
-                echo -e "\n${YELLOW}⚠ RAG installation incomplete. Run manually:${NC}"
-                echo -e "  ${BLUE}$PIP_CMD install -r requirements-rag.txt${NC}"
+                $PIP_CMD install sentence-transformers faiss-cpu watchdog
             fi
         else
-            $PIP_CMD install sentence-transformers faiss-cpu watchdog
+            echo -e "\n${CYAN}RAG installation skipped. Install later with:${NC}"
+            echo -e "  ${BLUE}$PIP_CMD install -r requirements-rag.txt${NC}"
         fi
+        # Mark that we've prompted the user so we don't ask again
+        bash "$CONFIG_MGR" set "rag.prompted" "true" 2>/dev/null || true
     else
-        echo -e "\n${CYAN}RAG installation skipped. Install later with:${NC}"
-        echo -e "  ${BLUE}$PIP_CMD install -r requirements-rag.txt${NC}"
+        echo -e "  ${CYAN}○ RAG system (previously skipped)${NC}"
     fi
     echo ""
 fi
@@ -263,8 +333,10 @@ ui_status "Project Root" "$PROJECT_ROOT" "${GREEN}"
 
 # 1.1 Project Artifact Detection & Migration
 if [[ -f "$SCRIPT_DIR/scripts/migrate-project.sh" ]]; then
+    echo -ne "  ${BLUE}Scanning for project artifacts...${NC}\r"
     # Run detection (non-interactive mode first)
     bash "$SCRIPT_DIR/scripts/migrate-project.sh" "$PROJECT_ROOT" --detect-only 2>/dev/null || true
+    echo -e "  ${GREEN}✓ Project scan complete            ${NC}"
     
     # Check if migration is needed
     if [[ -f "$PROJECT_ROOT/.ai-colab-migration-pending" ]]; then
@@ -297,7 +369,20 @@ if [[ -f "$SCRIPT_DIR/scripts/migrate-project.sh" ]]; then
 fi
 
 # Configuration Manager
-CONFIG_MGR="$SCRIPT_DIR/config-manager.sh"
+CONFIG_MGR="$PROJECT_ROOT/scripts/config-manager.sh"
+
+if [[ ! -f "$CONFIG_MGR" ]]; then
+    # Fallback to current directory scripts if PROJECT_ROOT/scripts/config-manager.sh not found
+    CONFIG_MGR="$SCRIPT_DIR/scripts/config-manager.sh"
+fi
+
+# Final check
+if [[ ! -f "$CONFIG_MGR" ]]; then
+    ui_banner "Configuration Error" "${RED}"
+    echo -e "${RED}Error: config-manager.sh not found at $CONFIG_MGR${NC}"
+    echo -e "Please ensure you are running launch.sh from the project root."
+    exit 1
+fi
 
 # Preferences handling via config-manager
 load_pref() {
@@ -775,12 +860,15 @@ if [ "$WEBUI" = true ]; then
     # Ensure logs directory exists
     mkdir -p "$PROJECT_ROOT/logs"
 
-    if [ -d "$SCRIPT_DIR/webui-venv" ]; then
-        source "$SCRIPT_DIR/webui-venv/bin/activate"
+    if [ -d "$PROJECT_ROOT/webui-venv" ]; then
+        source "$PROJECT_ROOT/webui-venv/bin/activate"
+        PYTHON_CMD="python3"
     fi
 
     # Start WebUI in background (v3.0 Refactored)
-    $PYTHON_CMD "$SCRIPT_DIR/../webui/app_refactored.py" >> "$PROJECT_ROOT/logs/webui.log" 2>&1 &
+    # Ensure PYTHONPATH includes project root for modular imports
+    export PYTHONPATH="$PROJECT_ROOT:${PYTHONPATH:-}"
+    $PYTHON_CMD "$PROJECT_ROOT/webui/app_refactored.py" >> "$PROJECT_ROOT/logs/webui.log" 2>&1 &
     WEBUI_PID=$!
 
     # Wait for server to start
@@ -897,7 +985,71 @@ elif [ "$DEBUG" = true ]; then
     exec bash "$SCRIPT_DIR/scripts/debug-mode.sh" "$AGENT"
 
 elif [ "$DASHBOARD" = true ]; then
-    echo -e "  Launching Unified Dashboard..."
+    ui_banner "Dashboard Launch Summary" "${GREEN}"
+    echo ""
+
+    # Display launch configuration
+    echo -e "${BLUE}Launch Configuration:${NC}"
+    echo -e "  ${GREEN}✓${NC} Compute Backend: ${CYAN}$COMPUTE_BACKEND${NC}"
+
+    # Show enabled agents
+    echo -e "  ${GREEN}✓${NC} Agents:"
+    [[ $(load_pref "llm.qwen.enabled" "true") == "true" ]] && echo -e "      • ${GREEN}Qwen${NC}"
+    [[ $(load_pref "llm.gemini.enabled" "true") == "true" ]] && echo -e "      • ${GREEN}Gemini${NC}"
+    [[ $(load_pref "llm.nemoclaw.enabled" "false") == "true" && "$COMPUTE_BACKEND" == "nvidia" ]] && echo -e "      • ${GREEN}NVIDIA nemoclaw${NC}"
+    [[ $(load_pref "llm.vllm.enabled" "false") == "true" && ("$COMPUTE_BACKEND" == "vllm-remote" || "$COMPUTE_BACKEND" == "local") ]] && echo -e "      • ${GREEN}vLLM Spoke${NC} ($(load_pref "llm.vllm.host" "192.168.0.193"))"
+    [[ $(load_pref "llm.claude.enabled" "false") == "true" ]] && echo -e "      • ${GREEN}Claude${NC}"
+    [[ $(load_pref "llm.deepseek.enabled" "false") == "true" ]] && echo -e "      • ${GREEN}DeepSeek${NC}"
+
+    # Show enabled modules
+    if [[ -d "$PROJECT_ROOT/modules" ]]; then
+        echo -e "  ${GREEN}✓${NC} Modules:"
+        for module_dir in "$PROJECT_ROOT/modules"/*/; do
+            if [[ -f "${module_dir}module.toml" ]]; then
+                MODULE_ID=$(basename "$module_dir")
+                MODULE_NAME=$(grep "^name = " "${module_dir}module.toml" 2>/dev/null | sed 's/name = "//; s/"$//')
+                PREF_KEY="MODULE_$(echo "$MODULE_ID" | tr '-' '_' | tr '[:lower:]' '[:upper:]')"
+                IS_ENABLED=$(bash "$CONFIG_MGR" get "$PREF_KEY" "false" 2>/dev/null)
+                if [[ "$IS_ENABLED" == "true" ]]; then
+                    echo -e "      • ${GREEN}${MODULE_NAME}${NC} (${MODULE_ID})"
+                fi
+            fi
+        done
+    fi
+
+    # Show RAG status
+    if [[ "$RAG_AVAILABLE" == "true" ]]; then
+        echo -e "  ${GREEN}✓${NC} RAG System: ${GREEN}Available${NC}"
+    else
+        echo -e "  ${CYAN}○${NC} RAG System: Not installed"
+    fi
+
+    echo ""
+    echo -e "${BLUE}Dashboard Components:${NC}"
+    echo -e "  • hcom TUI (main pane)"
+    echo -e "  • User Console (bottom)"
+    [[ "${WITH_CONDUCTOR:-true}" == "true" ]] && echo -e "  • Conductor (right column)"
+    echo -e "  • Qwen (right column)"
+    echo -e "  • Gemini (right column)"
+
+    echo ""
+    echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}  Press any key to launch the tmux dashboard...${NC}"
+    echo -e "${YELLOW}  (Ctrl+C to cancel)${NC}"
+    echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
+    echo ""
+
+    if [ "$INTERACTIVE" = true ]; then
+        read -n 1 -s -r
+    else
+        echo -e "${CYAN}Auto mode: launching automatically...${NC}"
+        sleep 2
+    fi
+
+    echo ""
+    echo -e "${GREEN}Launching Unified Dashboard...${NC}"
+    echo ""
+
     # Change to project root to ensure dashboard detects it
     cd "$PROJECT_ROOT"
     exec bash "$SCRIPT_DIR/scripts/dashboard-launch.sh" $DASHBOARD_FLAGS

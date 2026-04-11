@@ -217,6 +217,60 @@ def session_status():
         return jsonify({"error": str(e), "exists": False}), 500
 
 
+@system_bp.route('/shutdown', methods=['POST'])
+def trigger_shutdown():
+    """Shutdown tmux sessions and stop agents"""
+    try:
+        config = request.json or {}
+        session_name = config.get("session", "hcom-dashboard")
+
+        # Kill tmux session if running
+        tmux_killed = False
+        try:
+            result = subprocess.run(
+                ["tmux", "kill-session", "-t", session_name],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            if result.returncode == 0:
+                tmux_killed = True
+                current_app.logger.info(f"Tmux session '{session_name}' killed")
+        except subprocess.TimeoutExpired:
+            current_app.logger.warning(f"Timeout killing tmux session '{session_name}'")
+        except Exception as e:
+            current_app.logger.warning(f"Could not kill tmux session: {e}")
+
+        # Kill any orphaned agent processes
+        processes_killed = 0
+        for pattern in ["agent-wrapper.sh", "conductor-workflow.sh", "hcom send"]:
+            try:
+                result = subprocess.run(
+                    ["pkill", "-f", pattern],
+                    capture_output=True,
+                    timeout=5
+                )
+                if result.returncode == 0:
+                    processes_killed += 1
+            except:
+                pass
+
+        current_app.logger.info(f"Shutdown complete. Tmux killed: {tmux_killed}, Process patterns: {processes_killed}")
+
+        return jsonify({
+            "status": "success",
+            "message": "Shutdown complete",
+            "details": {
+                "tmux_session_killed": tmux_killed,
+                "process_patterns_killed": processes_killed
+            }
+        })
+
+    except Exception as e:
+        current_app.logger.error(f"Error during shutdown: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
 @system_bp.route('/status', methods=['GET'])
 def get_status():
     """Get system status"""

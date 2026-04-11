@@ -349,53 +349,75 @@ create_dashboard() {
         local console_idx=$(tmux display-message -p -t "$console_id" "#{pane_index}")
         local user_name="user_$(whoami)"
         print_info "Initializing Console in pane $console_idx..."
-        
-        # Send hcom initialization commands with proper error handling
-        tmux send-keys -t "$console_id" "export HCOM_NAME=$user_name" C-m
-        tmux send-keys -t "$console_id" "set +H  # Disable history expansion to avoid ! issues" C-m
-        tmux send-keys -t "$console_id" "sleep 1" C-m
-        # Register user with hcom without blocking the shell
-        tmux send-keys -t "$console_id" "if command -v hcom >/dev/null 2>&1; then hcom status --name \$HCOM_NAME >/dev/null 2>&1; else echo 'hcom not found, please run ./install.sh'; fi" C-m
-        tmux send-keys -t "$console_id" "sleep 2" C-m
-        tmux send-keys -t "$console_id" "alias s='hcom send --name \$HCOM_NAME @conductor -- \"!status\"'" C-m
-        tmux send-keys -t "$console_id" "alias t='hcom send --name \$HCOM_NAME @conductor -- \"!test\"'" C-m
-        tmux send-keys -t "$console_id" "alias b='hcom send --name \$HCOM_NAME @conductor -- \"!build\"'" C-m
-        tmux send-keys -t "$console_id" "clear" C-m
-        tmux send-keys -t "$console_id" "echo -e \"${BLUE}╔══════════════════════════════════════════════╗${NC}\"" C-m
-        tmux send-keys -t "$console_id" "echo -e \"${BLUE}║           ai-colab HCOM User Console         ║${NC}\"" C-m
-        tmux send-keys -t "$console_id" "echo -e \"${BLUE}╚══════════════════════════════════════════════╝${NC}\"" C-m
-        tmux send-keys -t "$console_id" "echo -e \"Logged in as: ${GREEN}$user_name${NC}\"" C-m
-        tmux send-keys -t "$console_id" "echo -e \\\"\\\"" C-m
-        tmux send-keys -t "$console_id" "echo -e \"${YELLOW}Available Conductor Commands:${NC}\"" C-m
-        tmux send-keys -t "$console_id" "echo -e \"  ${GREEN}s${NC} (!status)      - Get project health & progress\"" C-m
-        tmux send-keys -t "$console_id" "echo -e \"  ${GREEN}t${NC} (!test)        - Run all automated tests\"" C-m
-        tmux send-keys -t "$console_id" "echo -e \"  ${GREEN}b${NC} (!build)       - Build project and integrated apps\"" C-m
-        tmux send-keys -t "$console_id" "echo -e \"  !kb <query>      - Search architectural knowledge base\"" C-m
-        tmux send-keys -t "$console_id" "echo -e \"  !git-sync        - Pull latest changes from remote\"" C-m
 
-        # Dynamically list module-specific commands
+        # Send hcom initialization commands with proper error handling
+        # Use longer delays to ensure shell is ready
+        tmux send-keys -t "$console_id" "export HCOM_NAME=\"$user_name\"" C-m
+        sleep 0.3
+        tmux send-keys -t "$console_id" "set +H  # Disable history expansion to avoid ! issues" C-m
+        sleep 0.3
+
+        # Register user with hcom without blocking the shell
+        tmux send-keys -t "$console_id" "if command -v hcom >/dev/null 2>&1; then hcom status --name \"\$HCOM_NAME\" >/dev/null 2>&1; else echo 'hcom not found, please run ./install.sh'; fi" C-m
+        sleep 0.5
+
+        # Create a script file to avoid echo command injection issues
+        local console_script=$(mktemp /tmp/console-init-XXXXXX.sh)
+        cat > "$console_script" << CONSOLE_EOF
+#!/usr/bin/env bash
+echo -e "\\033[0;34m╔══════════════════════════════════════════════╗\\033[0m"
+echo -e "\\033[0;34m║           ai-colab HCOM User Console         ║\\033[0m"
+echo -e "\\033[0;34m╚══════════════════════════════════════════════╝\\033[0m"
+echo -e "Logged in as: \\033[0;32m\${HCOM_NAME}\\033[0m"
+echo ""
+echo -e "\\033[1;33mAvailable Conductor Commands:\\033[0m"
+echo -e "  \\033[0;32ms\\033[0m (!status)      - Get project health & progress"
+echo -e "  \\033[0;32mt\\033[0m (!test)        - Run all automated tests"
+echo -e "  \\033[0;32mb\\033[0m (!build)       - Build project and integrated apps"
+echo -e "  !kb <query>      - Search architectural knowledge base"
+echo -e "  !git-sync        - Pull latest changes from remote"
+CONSOLE_EOF
+
+        # Add module commands dynamically
         while IFS= read -r module_id; do
             if [ -n "$module_id" ]; then
                 local mod_name=$(bash "$SCRIPT_DIR/module-manager.sh" info "$module_id" 2>/dev/null | grep "^name=" | cut -d'=' -f2)
-                tmux send-keys -t "$console_id" "echo -e \"${YELLOW}${mod_name} Commands:${NC}\"" C-m
-                bash "$SCRIPT_DIR/module-manager.sh" commands --raw "$module_id" 2>/dev/null | while IFS='|' read -r trigger script; do
-                    if [ -n "$trigger" ]; then
-                        # Clean up script path for display (relative to project root)
-                        local display_script=${script#$PROJECT_ROOT/}
-                        tmux send-keys -t "$console_id" "echo -e \"  ${GREEN}${trigger}${NC} - Module task\"" C-m
-                    fi
-                done
+                if [ -n "$mod_name" ]; then
+                    echo "echo -e \"\\033[1;33m${mod_name} Commands:\\033[0m\"" >> "$console_script"
+                    bash "$SCRIPT_DIR/module-manager.sh" commands --raw "$module_id" 2>/dev/null | while IFS='|' read -r trigger script; do
+                        if [ -n "$trigger" ]; then
+                            echo "echo -e \"  \\033[0;32m${trigger}\\033[0m - Module task\"" >> "$console_script"
+                        fi
+                    done
+                fi
             fi
         done < <(bash "$SCRIPT_DIR/module-manager.sh" active 2>/dev/null)
 
-        tmux send-keys -t "$console_id" "echo -e '  !help            - Show all available commands'" C-m
-        tmux send-keys -t "$console_id" "echo \\\"\\\"" C-m
-        tmux send-keys -t "$console_id" "echo -e \"${GREEN}HCOM Status:\${NC} \$(hcom status --name \$HCOM_NAME 2>&1 | head -1 || echo 'Not connected')\"" C-m
+        cat >> "$console_script" << 'CONSOLE_EOF'
+echo -e "  !help            - Show all available commands"
+echo ""
+CONSOLE_EOF
+
+        chmod +x "$console_script"
+
+        # Send clear command first
+        tmux send-keys -t "$console_id" "clear" C-m
+        sleep 0.5
+
+        # Execute the console script and keep it available
+        tmux send-keys -t "$console_id" "bash \"$console_script\"" C-m
+        sleep 1.5
+
+        # Set up aliases after the script output
+        tmux send-keys -t "$console_id" "alias s='hcom send --name \$HCOM_NAME @conductor -- \"!status\"'" C-m
+        tmux send-keys -t "$console_id" "alias t='hcom send --name \$HCOM_NAME @conductor -- \"!test\"'" C-m
+        tmux send-keys -t "$console_id" "alias b='hcom send --name \$HCOM_NAME @conductor -- \"!build\"'" C-m
+        sleep 0.5
 
         # Add an interactive command prompt loop
-        tmux send-keys -t "$console_id" 'echo ""' C-m
-        tmux send-keys -t "$console_id" 'echo -e "${CYAN}Type a command (e.g., !status, !help, !kb <query>) or press Enter to refresh status.${NC}"' C-m
-        tmux send-keys -t "$console_id" 'while true; do read -p "> " cmd; case "$cmd" in "" ) echo -e "${GREEN}HCOM Status:${NC} $(hcom status --name $HCOM_NAME 2>&1 | head -1 || echo \"Not connected\")";; "!status" ) hcom send --name $HCOM_NAME @conductor -- "!status";; "!test" ) hcom send --name $HCOM_NAME @conductor -- "!test";; "!build" ) hcom send --name $HCOM_NAME @conductor -- "!build";; "!help" ) hcom send --name $HCOM_NAME @conductor -- "!help";; "!kb "* ) hcom send --name $HCOM_NAME @conductor -- "$cmd";; "!git-sync" ) hcom send --name $HCOM_NAME @conductor -- "!git-sync";; "exit"|"quit" ) break;; * ) echo -e "${YELLOW}Unknown command. Type !help for available commands.${NC}";; esac; done' C-m
+        tmux send-keys -t "$console_id" "echo \"\"" C-m
+        tmux send-keys -t "$console_id" 'echo -e "\033[0;36mType a command (e.g., !status, !help, !kb <query>) or press Enter to refresh status.\033[0m"' C-m
+        tmux send-keys -t "$console_id" 'while true; do read -p "> " cmd; case "$cmd" in "" ) echo -e "\033[0;32mHCOM Status:\033[0m $(hcom status --name $HCOM_NAME 2>&1 | head -1 || echo "Not connected")";; "!status" ) hcom send --name $HCOM_NAME @conductor -- "!status";; "!test" ) hcom send --name $HCOM_NAME @conductor -- "!test";; "!build" ) hcom send --name $HCOM_NAME @conductor -- "!build";; "!help" ) hcom send --name $HCOM_NAME @conductor -- "!help";; "!kb "* ) hcom send --name $HCOM_NAME @conductor -- "$cmd";; "!git-sync" ) hcom send --name $HCOM_NAME @conductor -- "!git-sync";; "exit"|"quit" ) break;; * ) echo -e "\033[1;33mUnknown command. Type !help for available commands.\033[0m";; esac; done' C-m
 
         tmux set-option -t "$console_id" -p @agent_name "CONSOLE"
         tmux select-pane -t "$console_id" -T "User Console ($user_name)"
@@ -412,55 +434,80 @@ create_dashboard() {
 
         case $component in
             conductor)
-                cmd="bash $SCRIPT_DIR/conductor-workflow.sh; echo ''; echo '=== Conductor Status Display (Read-Only) ==='; echo 'Press Ctrl+B to navigate away.'; echo 'Waiting for conductor restart...'; while true; do sleep 60; done"
+                cmd="bash '$SCRIPT_DIR/conductor-workflow.sh'; echo ''; echo '=== Conductor Status Display (Read-Only) ==='; echo 'Press Ctrl+B to navigate away.'; echo 'Conductor workflow completed. Waiting for restart...'; while true; do sleep 60; done"
                 agent_name="conductor_dev"
                 title="Conductor"
                 ;;
             qwen)
-                cmd="bash $SCRIPT_DIR/qwen-hcom.sh"
+                cmd="bash '$SCRIPT_DIR/qwen-hcom.sh'"
                 agent_name="qwen_dev"
                 title="Qwen"
                 ;;
             gemini)
-                cmd="bash $SCRIPT_DIR/gemini-hcom.sh"
+                cmd="bash '$SCRIPT_DIR/gemini-hcom.sh'"
                 agent_name="gemini_dev"
                 title="Gemini"
                 ;;
             vllm)
-                cmd="bash $SCRIPT_DIR/vllm-hcom.sh"
+                cmd="bash '$SCRIPT_DIR/vllm-hcom.sh'"
                 agent_name="vllm_dev"
                 title="vLLM"
                 ;;
             deepseek)
-                cmd="bash $SCRIPT_DIR/deepseek-hcom.sh"
+                cmd="bash '$SCRIPT_DIR/deepseek-hcom.sh'"
                 agent_name="deepseek_dev"
                 title="DeepSeek"
                 ;;
             claude)
-                cmd="bash $SCRIPT_DIR/claude-hcom.sh"
+                cmd="bash '$SCRIPT_DIR/claude-hcom.sh'"
                 agent_name="claude_dev"
                 title="Claude"
                 ;;
             nemo)
-                cmd="bash $SCRIPT_DIR/nemo-hcom.sh"
+                cmd="bash '$SCRIPT_DIR/nemo-hcom.sh'"
                 agent_name="nemo_dev"
                 title="NeMo"
                 ;;
             nemoclaw)
-                cmd="bash $SCRIPT_DIR/nemoclaw-hcom.sh"
+                cmd="bash '$SCRIPT_DIR/nemoclaw-hcom.sh'"
                 agent_name="nemoclaw"
                 title="nemoclaw"
                 ;;
         esac
 
         print_info "Launching $title in pane $pane_idx..."
+
+        # Tag the agent
         $hcom_bin config -i "$agent_name" tag "$component" > /dev/null 2>&1 || true
 
+        # Wait for pane to be ready
         sleep 1.0
-        tmux send-keys -t "$pane_id" "export HCOM_NAME=$agent_name && $cmd" C-m
-        
+
+        # Export HCOM_NAME first
+        tmux send-keys -t "$pane_id" "export HCOM_NAME=\"$agent_name\"" C-m
+        sleep 0.5
+
+        # Create a wrapper script for the command to handle paths with spaces properly
+        local wrapper_script=$(mktemp /tmp/agent-launch-XXXXXX.sh)
+        cat > "$wrapper_script" << AGENT_EOF
+#!/usr/bin/env bash
+# Agent wrapper for $title
+exec $cmd
+AGENT_EOF
+        chmod +x "$wrapper_script"
+
+        # Send the wrapper script execution
+        tmux send-keys -t "$pane_id" "bash '$wrapper_script'" C-m
+
+        # Clean up wrapper after a delay (the script will have been loaded into memory)
+        sleep 0.5
+
+        # Set pane metadata and title
         tmux set-option -t "$pane_id" -p @agent_name "$(tr '[:lower:]' '[:upper:]' <<< ${title})"
+        tmux set-option -t "$pane_id" -p @wrapper_script "$wrapper_script"
         tmux select-pane -t "$pane_id" -T "$title"
+
+        # Verify pane title was set after a brief delay
         (sleep 2.0 && tmux select-pane -t "$pane_id" -T "$title") &
     done
 

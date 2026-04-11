@@ -39,13 +39,15 @@ else:
     logger = logging.getLogger(__name__)
 
 # App configuration
-APP_DIR = Path(__file__).parent.parent
-CONFIG_DIR = APP_DIR / "config"
+WEBUI_DIR = Path(__file__).parent
+PROJECT_ROOT = WEBUI_DIR.parent
+APP_DIR = WEBUI_DIR  # Alias for compatibility with old code if needed
+
+CONFIG_DIR = PROJECT_ROOT / "config"
 CONFIG_FILE = CONFIG_DIR / "config.toml"
-STATE_FILE = APP_DIR / ".ai-colab-state.json"
-SCRIPTS_DIR = APP_DIR / "scripts"
-LOGS_DIR = APP_DIR / "logs"
-PROJECT_ROOT = APP_DIR  # Root of the project
+STATE_FILE = PROJECT_ROOT / ".ai-colab-state.json"
+SCRIPTS_DIR = PROJECT_ROOT / "scripts"
+LOGS_DIR = PROJECT_ROOT / "logs"
 
 # Configuration constants
 MIN_DISK_SPACE_MB = 100

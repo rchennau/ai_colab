@@ -9,9 +9,10 @@ export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
 # ============================================
 
 # Source centralized logging
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [[ -f "$SCRIPT_DIR/logging.sh" ]]; then
-    source "$SCRIPT_DIR/logging.sh"
+# Use UTILS_DIR to avoid overwriting SCRIPT_DIR from calling script
+UTILS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -f "$UTILS_DIR/logging.sh" ]]; then
+    source "$UTILS_DIR/logging.sh"
 fi
 
 # Initialize logging for scripts that source utils

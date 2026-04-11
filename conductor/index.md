@@ -8,9 +8,9 @@ This track focuses on the comprehensive redesign and refactoring of the Web UI t
 - [Metadata](./metadata.json)
 
 ## Progress
-- [ ] Phase 1: Modular Backend (v3.0)
-- [ ] Phase 2: Frontend UX Overhaul
-- [ ] Phase 3: Final Switch & Validation
+- [x] Phase 1: Modular Backend (v3.0)
+- [x] Phase 2: Frontend UX Overhaul
+- [x] Phase 3: Final Switch & Validation
 
 ## Related Issues
 - Milestone 17 in `conductor/tracks.md`
