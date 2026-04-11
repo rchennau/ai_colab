@@ -473,6 +473,10 @@ AGENT_EOF
     STATUS_BAR_PID=$!
     print_info "Started status bar updater (PID: $STATUS_BAR_PID)"
 
+    # Step 7.7: Save Layout for Session Persistence (P17.5)
+    tmux_save_layout "$SESSION" "default"
+    print_info "Layout saved as 'default' preset"
+
     # Step 8: Optional Bridge window
     if [ "${WITH_BRIDGE:-false}" == "true" ]; then
         print_step "Starting Google Chat bridge..."

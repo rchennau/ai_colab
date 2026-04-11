@@ -1306,3 +1306,80 @@ tmux_generate_status_bar() {
 
     echo "$status"
 }
+
+# ============================================================
+# Session Persistence (P17.5)
+# ============================================================
+
+# Layout storage directory
+TMUX_LAYOUT_DIR="${TMUX_LAYOUT_DIR:-$PROJECT_ROOT/.ai-colab/layouts}"
+
+# Save current tmux layout to JSON
+# Usage: tmux_save_layout <session> <preset_name>
+tmux_save_layout() {
+    local session="${1:-hcom-dashboard}"
+    local preset="${2:-default}"
+
+    mkdir -p "$TMUX_LAYOUT_DIR"
+
+    local layout_file="$TMUX_LAYOUT_DIR/${preset}.json"
+
+    python3 -c "
+import json, subprocess, os
+session = '$session'
+layout = {'preset': '$preset', 'session': session, 'timestamp': subprocess.run(['date', '+%Y-%m-%dT%H:%M:%S'], capture_output=True, text=True).stdout.strip(), 'windows': [], 'panes': []}
+windows = subprocess.run(['tmux', 'list-windows', '-t', session, '-F', '#{window_index} #{window_name} #{window_layout}'], capture_output=True, text=True).stdout.strip().split('\n')
+for w in windows:
+    if w.strip():
+        parts = w.split(' ', 2)
+        if len(parts) >= 3: layout['windows'].append({'index': parts[0], 'name': parts[1], 'layout': parts[2]})
+panes = subprocess.run(['tmux', 'list-panes', '-t', session, '-F', '#{window_index} #{pane_index} #{pane_title} #{pane_current_command}'], capture_output=True, text=True).stdout.strip().split('\n')
+for p in panes:
+    if p.strip():
+        parts = p.split(' ', 3)
+        if len(parts) >= 4: layout['panes'].append({'window_index': parts[0], 'pane_index': parts[1], 'title': parts[2], 'command': parts[3]})
+os.makedirs(os.path.dirname('$layout_file'), exist_ok=True)
+with open('$layout_file', 'w') as f: json.dump(layout, f, indent=2)
+print('saved')
+" 2>/dev/null
+}
+
+# Restore tmux layout from JSON
+# Usage: tmux_restore_layout <session> <preset_name>
+tmux_restore_layout() {
+    local session="${1:-hcom-dashboard}"
+    local preset="${2:-default}"
+
+    local layout_file="$TMUX_LAYOUT_DIR/${preset}.json"
+
+    if [[ ! -f "$layout_file" ]]; then
+        echo "Layout not found: $preset"
+        return 1
+    fi
+
+    python3 -c "
+import json, subprocess, sys, time
+session = '$session'
+with open('$layout_file') as f: layout = json.load(f)
+result = subprocess.run(['tmux', 'has-session', '-t', session], capture_output=True)
+if result.returncode != 0: print('Session not found'); sys.exit(1)
+for window in layout.get('windows', []):
+    subprocess.run(['tmux', 'select-window', '-t', f'{session}:{window[\"index\"]}'], capture_output=True)
+    subprocess.run(['tmux', 'select-layout', '-t', f'{session}:{window[\"index\"]}', window['layout']], capture_output=True)
+    time.sleep(0.1)
+for pane in layout.get('panes', []):
+    subprocess.run(['tmux', 'select-pane', '-t', f'{session}:{pane[\"window_index\"]}.{pane[\"pane_index\"]}', '-T', pane['title']], capture_output=True)
+    time.sleep(0.05)
+print('restored')
+" 2>/dev/null
+}
+
+# List available layout presets
+# Usage: tmux_list_layouts
+tmux_list_layouts() {
+    if [[ -d "$TMUX_LAYOUT_DIR" ]]; then
+        ls -1 "$TMUX_LAYOUT_DIR"/*.json 2>/dev/null | while read -r f; do
+            basename "$f" .json
+        done
+    fi
+}
