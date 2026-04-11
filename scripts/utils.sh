@@ -1130,6 +1130,54 @@ get_ms() {
     fi
 }
 
+# Report agent progress to the Blackboard
+# Usage: report_progress "percentage" "current_step" ["blockers_csv"]
+report_progress() {
+    local progress="${1:-0}"
+    local step="${2:-working}"
+    local blockers="${3:-}"
+    
+    if [ -n "${HCOM_NAME:-}" ]; then
+        local timestamp=$(date +%s)
+        local progress_data="{\"pct\":$progress,\"step\":\"$step\",\"blockers\":\"$blockers\",\"ts\":$timestamp}"
+        blackboard_set "agent_progress_${HCOM_NAME}" "$progress_data"
+        return 0
+    fi
+    return 1
+}
+
+# Log agent performance analytics
+# Usage: log_agent_analytics "event_type" "duration_ms" "success_bool" "details"
+log_agent_analytics() {
+    local event_type="${1:-task}"
+    local duration="${2:-0}"
+    local success="${3:-true}"
+    local details="${4:-}"
+    
+    if [ -n "${HCOM_NAME:-}" ]; then
+        local db_path="$(_bb_get_db_path)"
+        local timestamp=$(date -Iseconds)
+        
+        # Ensure analytics table exists
+        sqlite3 "$db_path" "CREATE TABLE IF NOT EXISTS agent_analytics (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            agent_name TEXT,
+            event_type TEXT,
+            timestamp TEXT,
+            duration_ms INTEGER,
+            success INTEGER,
+            details TEXT
+        );" || return 1
+        
+        local success_val=1
+        [[ "$success" == "false" || "$success" == "0" ]] && success_val=0
+        
+        sqlite3 "$db_path" ".timeout 5000" "INSERT INTO agent_analytics 
+            (agent_name, event_type, timestamp, duration_ms, success, details)
+            VALUES ('$HCOM_NAME', '$event_type', '$timestamp', $duration, $success_val, '$details');"
+    fi
+}
+
 start_heartbeat() {
     local tool_name="${1:-agent}"
     if [ -n "${HCOM_NAME:-}" ]; then
@@ -1145,10 +1193,10 @@ start_heartbeat() {
                 blackboard_get "fleet_health_${HCOM_NAME}" > /dev/null 2>&1 || true
                 local end_time=$(get_ms)
                 local latency=$((end_time - start_time))
-                
+
                 # 3. Report health metrics
                 report_health "ready" "$latency" "0"
-                
+
                 sleep 20
             done
         ) &
@@ -1156,4 +1204,50 @@ start_heartbeat() {
         return 0
     fi
     return 1
+}
+
+# ============================================================
+# Dynamic tmux Layouts (P17.1)
+# ============================================================
+
+# Get layout name based on agent count
+# Usage: tmux_get_layout_name <agent_count>
+# Returns: layout name (side-by-side, grid, tabbed, compact)
+tmux_get_layout_name() {
+    local agent_count="${1:-0}"
+
+    if [[ $agent_count -le 2 ]]; then
+        echo "side-by-side"
+    elif [[ $agent_count -le 4 ]]; then
+        echo "grid"
+    elif [[ $agent_count -le 7 ]]; then
+        echo "tabbed"
+    else
+        echo "compact"
+    fi
+}
+
+# Get human-readable description for a layout
+# Usage: tmux_get_layout_description <layout_name>
+# Returns: description string
+tmux_get_layout_description() {
+    local layout_name="$1"
+
+    case "$layout_name" in
+        side-by-side)
+            echo "HCOM left, agents side-by-side on right"
+            ;;
+        grid)
+            echo "HCOM left, agents in 2x2 grid on right"
+            ;;
+        tabbed)
+            echo "HCOM left, agents in tabbed windows by team"
+            ;;
+        compact)
+            echo "HCOM left, agents in compact vertical list"
+            ;;
+        *)
+            echo "Unknown layout: $layout_name"
+            ;;
+    esac
 }

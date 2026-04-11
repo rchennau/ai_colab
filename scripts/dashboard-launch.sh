@@ -311,72 +311,31 @@ create_dashboard() {
     [ "${WITH_NEMOCLAW:-false}" == "true" ] && right_panes+=("nemoclaw")
 
     local num_right_panes=${#right_panes[@]}
-    
-    # Step 4: Layout Creation
-    local max_main_agents=4
-    local main_agents=("${right_panes[@]:0:$max_main_agents}")
-    local overflow_agents=()
-    if [ ${#right_panes[@]} -gt $max_main_agents ]; then
-        overflow_agents=("${right_panes[@]:$max_main_agents}")
-    fi
 
-    # 4a. Create Right Column first by splitting HCOM pane horizontally
-    tmux split-window -h -t "$SESSION:dashboard.0" -c "$PROJECT_ROOT"
-    local right_col_id=$(tmux display-message -p "#{pane_id}")
-    print_info "Created right column pane: $right_col_id"
+    # Step 4: Dynamic Layout Creation (P17.1)
+    # Determine layout based on agent count
+    local layout_name
+    layout_name=$(tmux_get_layout_name "$num_right_panes")
+    local layout_desc
+    layout_desc=$(tmux_get_layout_description "$layout_name")
+    print_info "Selected layout: $layout_name — $layout_desc ($num_right_panes agents)"
 
-    # 4b. Split Right Column vertically for main agent components
-    local agent_pane_ids=("$right_col_id")
-    local num_main_agents=${#main_agents[@]}
-    if [ $num_main_agents -gt 1 ]; then
-        local current_pane_id="$right_col_id"
-        for ((i=1; i<num_main_agents; i++)); do
-            tmux split-window -v -t "$current_pane_id" -c "$PROJECT_ROOT"
-            current_pane_id=$(tmux display-message -p "#{pane_id}")
-            agent_pane_ids+=("$current_pane_id")
-            
-            # Rebalance after each split
-            tmux select-layout -t "$SESSION:dashboard" tiled >/dev/null 2>&1 || true
-        done
-    fi
+    # Apply layout-specific pane creation
+    tmux_apply_layout "$layout_name" "$SESSION" "$PROJECT_ROOT" "$num_right_panes" right_panes
 
-    # 4c. Create Console Pane (Bottom)
+    # Capture all pane IDs from the session (skip HCOM pane 0)
+    local agent_pane_ids=()
+    while IFS= read -r pane_id; do
+        agent_pane_ids+=("$pane_id")
+    done < <(tmux list-panes -t "$SESSION:dashboard" -F "#{pane_id}" | tail -n +2)
+
+    # Capture console pane ID (last pane in dashboard window)
     local console_id=""
     if [ "${WITH_CONSOLE:-true}" == "true" ]; then
-        tmux split-window -v -t "$SESSION:dashboard.0" -l 8 -c "$PROJECT_ROOT"
-        console_id=$(tmux display-message -p "#{pane_id}")
-        print_info "Created console pane: $console_id"
-        tmux resize-pane -t "$console_id" -y 8
+        console_id=$(tmux list-panes -t "$SESSION:dashboard" -F "#{pane_id}" | tail -1)
     fi
 
-    # 4d. Handle Overflow Agents (New Window)
-    local overflow_pane_ids=()
-    if [ ${#overflow_agents[@]} -gt 0 ]; then
-        print_step "Creating Fleet Window for overflow agents..."
-        tmux new-window -t $SESSION -n "fleet" -c "$PROJECT_ROOT"
-        
-        # Initialize first overflow pane
-        local first_overflow_id=$(tmux display-message -p "#{pane_id}")
-        overflow_pane_ids+=("$first_overflow_id")
-        
-        # Split vertically/grid for remaining overflow
-        local current_p_id="$first_overflow_id"
-        for ((i=1; i<${#overflow_agents[@]}; i++)); do
-            tmux split-window -v -t "$current_p_id" -c "$PROJECT_ROOT"
-            current_p_id=$(tmux display-message -p "#{pane_id}")
-            overflow_pane_ids+=("$current_p_id")
-            tmux select-layout -t "$SESSION:fleet" tiled >/dev/null 2>&1 || true
-        done
-    fi
-
-    # Combine all pane IDs for launching
-    local all_agent_panes=("${agent_pane_ids[@]}" "${overflow_pane_ids[@]}")
-    local all_agents=("${main_agents[@]}" "${overflow_agents[@]}")
-
-    # 4e. Finalize Geometry
-    tmux resize-pane -t "$SESSION:dashboard.0" -x 85
-
-    print_info "Layout creation complete. Main panes: ${#agent_pane_ids[@]}, Overflow: ${#overflow_pane_ids[@]}"
+    print_info "Layout creation complete. Agent panes: ${#agent_pane_ids[@]}"
 
     # Step 5: Launch Console
     if [ -n "$console_id" ]; then
@@ -390,10 +349,10 @@ create_dashboard() {
         tmux select-pane -t "$console_id" -T "User Console ($user_name)"
     fi
 
-    # Step 6: Launch Right Column Components
-    for i in "${!all_agents[@]}"; do
-        local component="${all_agents[$i]}"
-        local pane_id="${all_agent_panes[$i]}"
+    # Step 6: Launch Agent Components
+    for i in "${!right_panes[@]}"; do
+        local component="${right_panes[$i]}"
+        local pane_id="${agent_pane_ids[$i]}"
         local pane_idx=$(tmux display-message -p -t "$pane_id" "#{pane_index}")
         local cmd=""
         local agent_name=""
@@ -563,6 +522,166 @@ load_session_config() {
         return 0
     fi
     return 1
+}
+
+# ============================================================
+# Dynamic tmux Layouts (P17.1)
+# ============================================================
+
+# Get layout name based on agent count
+# Usage: tmux_get_layout_name <agent_count>
+# Returns: layout name (side-by-side, grid, tabbed, compact)
+tmux_get_layout_name() {
+    local agent_count="${1:-0}"
+
+    if [[ $agent_count -le 2 ]]; then
+        echo "side-by-side"
+    elif [[ $agent_count -le 4 ]]; then
+        echo "grid"
+    elif [[ $agent_count -le 7 ]]; then
+        echo "tabbed"
+    else
+        echo "compact"
+    fi
+}
+
+# Get human-readable description for a layout
+# Usage: tmux_get_layout_description <layout_name>
+# Returns: description string
+tmux_get_layout_description() {
+    local layout_name="$1"
+
+    case "$layout_name" in
+        side-by-side)
+            echo "HCOM left, agents side-by-side on right"
+            ;;
+        grid)
+            echo "HCOM left, agents in 2x2 grid on right"
+            ;;
+        tabbed)
+            echo "HCOM left, agents in tabbed windows by team"
+            ;;
+        compact)
+            echo "HCOM left, agents in compact vertical list"
+            ;;
+        *)
+            echo "Unknown layout: $layout_name"
+            ;;
+    esac
+}
+
+# Apply a specific layout to the tmux session
+# Usage: tmux_apply_layout <layout_name> <session> <project_root> <agent_count> <agents_array_name>
+tmux_apply_layout() {
+    local layout_name="$1"
+    local session="$2"
+    local project_root="$3"
+    local agent_count="$4"
+    local -n agents_ref=$5
+
+    case "$layout_name" in
+        side-by-side)
+            # 2 agents or fewer: HCOM left, agents side-by-side on right
+            tmux split-window -h -t "$session:dashboard.0" -c "$project_root"
+            local right_col_id=$(tmux display-message -p "#{pane_id}")
+            print_info "Created right column pane: $right_col_id"
+
+            # Split right column for second agent if needed
+            if [[ $agent_count -gt 1 ]]; then
+                tmux split-window -v -t "$right_col_id" -c "$project_root"
+                tmux select-layout -t "$session:dashboard" tiled >/dev/null 2>&1 || true
+            fi
+
+            # Console at bottom
+            if [ "${WITH_CONSOLE:-true}" == "true" ]; then
+                tmux split-window -v -t "$session:dashboard.0" -l 8 -c "$project_root"
+                tmux resize-pane -t "$session:dashboard" -y 8 2>/dev/null || true
+            fi
+
+            tmux resize-pane -t "$session:dashboard.0" -x 85
+            ;;
+
+        grid)
+            # 3-4 agents: HCOM left, agents in 2x2 grid on right
+            tmux split-window -h -t "$session:dashboard.0" -c "$project_root"
+            local right_col_id=$(tmux display-message -p "#{pane_id}")
+            print_info "Created right column pane: $right_col_id"
+
+            # Split right column into grid
+            local current_pane_id="$right_col_id"
+            for ((i=1; i<agent_count; i++)); do
+                tmux split-window -v -t "$current_pane_id" -c "$project_root"
+                current_pane_id=$(tmux display-message -p "#{pane_id}")
+                tmux select-layout -t "$session:dashboard" tiled >/dev/null 2>&1 || true
+            done
+
+            # Console at bottom
+            if [ "${WITH_CONSOLE:-true}" == "true" ]; then
+                tmux split-window -v -t "$session:dashboard.0" -l 8 -c "$project_root"
+            fi
+
+            tmux resize-pane -t "$session:dashboard.0" -x 85
+            ;;
+
+        tabbed)
+            # 5-7 agents: HCOM left, agents in tabbed windows by team
+            tmux split-window -h -t "$session:dashboard.0" -c "$project_root"
+            local right_col_id=$(tmux display-message -p "#{pane_id}")
+
+            # Split right column vertically for primary agents
+            local current_pane_id="$right_col_id"
+            local primary_count=4
+            if [[ $agent_count -lt $primary_count ]]; then
+                primary_count=$agent_count
+            fi
+
+            for ((i=1; i<primary_count; i++)); do
+                tmux split-window -v -t "$current_pane_id" -c "$project_root"
+                current_pane_id=$(tmux display-message -p "#{pane_id}")
+                tmux select-layout -t "$session:dashboard" tiled >/dev/null 2>&1 || true
+            done
+
+            # Create fleet window for overflow agents
+            if [[ $agent_count -gt $primary_count ]]; then
+                tmux new-window -t "$session" -n "fleet" -c "$project_root"
+                local fleet_pane_id=$(tmux display-message -p "#{pane_id}")
+                local overflow_count=$((agent_count - primary_count))
+                for ((i=1; i<overflow_count; i++)); do
+                    tmux split-window -v -t "$fleet_pane_id" -c "$project_root"
+                    fleet_pane_id=$(tmux display-message -p "#{pane_id}")
+                    tmux select-layout -t "$session:fleet" tiled >/dev/null 2>&1 || true
+                done
+            fi
+
+            # Console at bottom
+            if [ "${WITH_CONSOLE:-true}" == "true" ]; then
+                tmux split-window -v -t "$session:dashboard.0" -l 8 -c "$project_root"
+            fi
+
+            tmux resize-pane -t "$session:dashboard.0" -x 85
+            ;;
+
+        compact)
+            # 8+ agents: HCOM left, agents in compact vertical list
+            tmux split-window -h -t "$session:dashboard.0" -c "$project_root"
+            local right_col_id=$(tmux display-message -p "#{pane_id}")
+
+            # Split right column into compact vertical list
+            local current_pane_id="$right_col_id"
+            for ((i=1; i<agent_count; i++)); do
+                tmux split-window -v -t "$current_pane_id" -c "$project_root"
+                current_pane_id=$(tmux display-message -p "#{pane_id}")
+                tmux select-layout -t "$session:dashboard" tiled >/dev/null 2>&1 || true
+            done
+
+            # Console at bottom
+            if [ "${WITH_CONSOLE:-true}" == "true" ]; then
+                tmux split-window -v -t "$session:dashboard.0" -l 6 -c "$project_root"
+            fi
+
+            tmux resize-pane -t "$session:dashboard.0" -x 90
+            ;;
+    esac
 }
 
 main() {
