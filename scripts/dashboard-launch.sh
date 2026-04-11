@@ -440,13 +440,32 @@ AGENT_EOF
     # Step 7: Finalize HCOM Pane
     tmux set-option -t "$SESSION:dashboard.0" -p @agent_name "HCOM"
     tmux select-pane -t "$SESSION:dashboard.0" -T "hcom TUI"
-    
+
     # Always focus the Console if it exists, otherwise HCOM
     if [ -n "$console_id" ]; then
         tmux select-pane -t "$console_id"
     else
         tmux select-pane -t "$SESSION:dashboard.0"
     fi
+
+    # Step 7.5: Focus Mode & Status Bar Integration (P17.2)
+    # Configure pane border format to show agent status
+    tmux set-option -g pane-border-status top
+    tmux set-option -g pane-border-format "#P: #{pane_title}"
+
+    # Generate and display fleet status bar
+    local fleet_status
+    fleet_status=$(tmux_generate_status_bar)
+    print_info "Fleet Status: $fleet_status"
+
+    # Set up focus mode key bindings
+    # Ctrl+b f - Toggle focus mode (zoom/unzoom current pane)
+    tmux bind-key f run-shell "tmux resize-pane -Z; tmux set-option -g pane-border-format '#P: #{pane_title}'"
+
+    # Ctrl+b 1-9 - Quick switch to pane by index
+    for i in {1..9}; do
+        tmux bind-key "$i" select-pane -t "$i"
+    done
 
     # Step 8: Optional Bridge window
     if [ "${WITH_BRIDGE:-false}" == "true" ]; then
@@ -474,10 +493,18 @@ AGENT_EOF
     echo -e "${BLUE}Navigation:${NC}"
     echo "  • Ctrl+b Arrow Keys - Move between panes"
     echo "  • Ctrl+b z - Zoom current pane"
+    echo "  • Ctrl+b f - Focus mode (toggle zoom on current pane)"
+    echo "  • Ctrl+b 1-9 - Quick switch to pane by index"
     echo "  • Ctrl+b d - Detach from session"
     echo "  • Ctrl+b ? - Show all tmux shortcuts"
     echo ""
-    
+    echo -e "${BLUE}Focus Mode:${NC}"
+    echo "  • Press Ctrl+b f to focus on current agent pane"
+    echo "  • Fleet status bar remains visible at all times"
+    echo "  • Press Ctrl+b 1-9 to switch focus between agents"
+    echo "  • Press Ctrl+b z or Ctrl+b f again to return to fleet view"
+    echo ""
+
     sleep 1
 }
 
@@ -490,6 +517,8 @@ attach() {
     echo -e "${CYAN}+======================================================+${NC}"
     echo "  Ctrl+b ->/<-/Up/Down : Navigate between panes"
     echo "  Ctrl+b z        : Zoom/unzoom current pane"
+    echo "  Ctrl+b f        : Focus mode (toggle zoom)"
+    echo "  Ctrl+b 1-9      : Quick switch to pane by index"
     echo "  Ctrl+b d        : Detach (keep running)"
     echo "  Ctrl+b %        : Split vertically"
     echo "  Ctrl+b \"       : Split horizontally"

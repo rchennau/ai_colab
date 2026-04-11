@@ -1251,3 +1251,58 @@ tmux_get_layout_description() {
             ;;
     esac
 }
+
+# ============================================================
+# Focus Mode (P17.2)
+# ============================================================
+
+# Focus on a single agent pane (zoom + hide others)
+# Usage: tmux_focus_agent <pane_index>
+tmux_focus_agent() {
+    local pane_idx="$1"
+    local session="${2:-hcom-dashboard}"
+
+    echo "tmux select-pane -t $session:dashboard.$pane_idx"
+    echo "tmux resize-pane -t $session:dashboard.$pane_idx -Z"
+    echo "tmux set-option -g pane-border-format 'Focus: #{pane_title} (Ctrl+b f to return)'"
+}
+
+# Return to fleet view (unzoom all panes)
+# Usage: tmux_return_to_fleet
+tmux_return_to_fleet() {
+    local session="${1:-hcom-dashboard}"
+
+    echo "tmux resize-pane -t $session -U -Z"
+    echo "tmux select-layout -t $session:dashboard tiled"
+    echo "tmux set-option -g pane-border-format '#P: #{pane_title}'"
+}
+
+# Generate fleet status bar content for tmux status line
+# Usage: tmux_generate_status_bar
+tmux_generate_status_bar() {
+    local status=""
+
+    # Get agent health from blackboard
+    local agents=("gemini" "qwen" "claude" "deepseek")
+
+    for agent in "${agents[@]}"; do
+        local health
+        health=$(blackboard_get "fleet_health_$agent" 2>/dev/null || echo "")
+
+        if [[ -z "$health" ]]; then
+            status+="[? $agent] "
+        elif echo "$health" | grep -q '"status":"ready"'; then
+            status+="[✓ $agent] "
+        elif echo "$health" | grep -q '"status":"busy"'; then
+            status+="[⏳ $agent] "
+        elif echo "$health" | grep -q '"status":"crashed"'; then
+            status+="[✗ $agent] "
+        elif echo "$health" | grep -q '"status":"unhealthy"'; then
+            status+="[✗ $agent] "
+        else
+            status+="[? $agent] "
+        fi
+    done
+
+    echo "$status"
+}
