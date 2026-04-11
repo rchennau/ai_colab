@@ -443,6 +443,14 @@
     <!-- Header -->
     <header>
         <div class="logo">🚀 ai-colab Web UI</div>
+        
+        <!-- Project Switcher -->
+        <div style="flex-grow: 1; margin: 0 2rem; max-width: 400px;">
+            <select id="projectSwitcher" onchange="switchProject(this.value)" style="background: var(--bg-tertiary); color: white; border: 1px solid var(--accent-blue); padding: 0.4rem; border-radius: 4px; font-size: 0.9rem;">
+                <option value="">Loading projects...</option>
+            </select>
+        </div>
+
         <div class="status-indicator">
             <div class="status-dot" id="statusDot"></div>
             <span id="statusText">Connecting...</span>
@@ -1011,6 +1019,7 @@
             initWebSocket();
             initNavigation();
             showPage('dashboard');
+            loadWorkspaces(); // Load project list
             setInterval(refreshStatus, 30000); // Refresh every 30 seconds
         });
 
@@ -3152,6 +3161,52 @@
             const apiKeyGroup = document.getElementById('cfg-api-key-group');
             apiKeyGroup.style.display = (e.target.value === 'nvidia' || e.target.value === 'runpod') ? 'block' : 'none';
         });
+
+        // Workspace Management
+        async function loadWorkspaces() {
+            try {
+                const response = await fetch(`${API_BASE}/api/workspace/list`);
+                const projects = await response.json();
+                const switcher = document.getElementById('projectSwitcher');
+                
+                // Get current status to see active project
+                const statusResponse = await fetch(`${API_BASE}/api/status`);
+                const status = await statusResponse.json();
+                const currentRoot = status.project_root;
+
+                let html = '';
+                projects.forEach(p => {
+                    const selected = p.path === currentRoot ? 'selected' : '';
+                    html += `<option value="${p.path}" ${selected}>${p.name} (${p.path})</option>`;
+                });
+                switcher.innerHTML = html;
+            } catch (error) {
+                console.error('Failed to load workspaces:', error);
+            }
+        }
+
+        async function switchProject(path) {
+            if (!path) return;
+            try {
+                const response = await fetch(`${API_BASE}/api/workspace/switch`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: path })
+                });
+
+                if (response.ok) {
+                    showToast('Switching project context...', 'info');
+                    // Reload page after a short delay to reflect new project state
+                    setTimeout(() => window.location.reload(), 2000);
+                } else {
+                    const error = await response.json();
+                    showToast('Switch failed: ' + error.error, 'error');
+                }
+            } catch (error) {
+                console.error('Failed to switch project:', error);
+                showToast('Error switching project', 'error');
+            }
+        }
     </script>
 </body>
 </html>

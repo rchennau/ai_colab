@@ -38,6 +38,13 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - [x] Integrate environment manager with `launch.sh`
   - [x] Fallback to `uv` when no other manager is present
   - [x] Verify environment consistency across project tools
+- [x] **Milestone 19: Multi-Project Workspaces & Portable Environment** (Done ✅)
+  *Link: [./multi-project-workspace.md](./multi-project-workspace.md)*
+  - [x] Global CLI installation via `install.sh --global`
+  - [x] Automatic git repository discovery and registration
+  - [x] Context switching between projects in CLI and WebUI
+  - [x] OS-independent portable Python distribution via `uv`
+  - [x] Comprehensive QA harness (Unit, Feature, System, E2E)
 
 ---
 
@@ -265,6 +272,11 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   *Link: [./tracks/python_env_optimization_20260411/](./tracks/python_env_optimization_20260411/)*
   - **Assigned:** @architect
   - **Description:** Intelligent Python environment detection and management with uv fallback.
+
+- [x] **Track: Multi-Project Workspaces & Portable Environment** (Done ✅)
+  *Link: [./multi-project-workspace.md](./multi-project-workspace.md)*
+  - **Assigned:** @architect
+  - **Description:** Global CLI, git discovery, project switching, and portable Python isolation.
 
 ---
 

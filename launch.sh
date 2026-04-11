@@ -321,21 +321,80 @@ if [[ "$RAG_AVAILABLE" == "false" && "$INTERACTIVE" == "true" ]]; then
     echo ""
 fi
 
-# 1. Project Detection
-# Ensure PROJECT_ROOT is set correctly (launch.sh is in project root)
-if [[ -f "$SCRIPT_DIR/install.sh" ]]; then
-    PROJECT_ROOT="$SCRIPT_DIR"
+# 1. Project & Workspace Detection
+# AI_COLAB_HOME is where the tool itself is installed
+AI_COLAB_HOME="$SCRIPT_DIR"
+WORKSPACE_MANAGER="$AI_COLAB_HOME/scripts/workspace_manager.py"
+WORKSPACE_CONFIG="$HOME/.ai-colab/config/workspace.json"
+
+# Auto-register ai_colab itself as a project
+$PYTHON_CMD "$WORKSPACE_MANAGER" register --path "$AI_COLAB_HOME" --config "$WORKSPACE_CONFIG" >/dev/null 2>&1
+
+# Discover and Select Project
+if [[ "$INTERACTIVE" = true ]]; then
+    ui_banner "Workspace Discovery" "${BLUE}"
+    
+    # 1.1 List existing projects
+    PROJECTS_JSON=$($PYTHON_CMD "$WORKSPACE_MANAGER" list --config "$WORKSPACE_CONFIG")
+    
+    # 1.2 Scan for new git repos in current directory
+    echo -e "  ${BLUE}Scanning for software projects in $(pwd)...${NC}"
+    DISCOVERED_JSON=$($PYTHON_CMD "$WORKSPACE_MANAGER" scan --path "$(pwd)")
+    
+    # Merge and present menu
+    echo -e "\nSelect a project to manage:"
+    
+    # Use python to format the list for selection
+    MAP_FILE=$(mktemp)
+    $PYTHON_CMD -c "
+import json, sys
+projects = json.loads(sys.argv[1])
+discovered = json.loads(sys.argv[2])
+all_p = {p['path']: p for p in projects}
+for d in discovered:
+    if d['path'] not in all_p:
+        all_p[d['path']] = d
+sorted_p = sorted(all_p.values(), key=lambda x: x['name'])
+for i, p in enumerate(sorted_p):
+    print(f\"{i+1}) {p['name']} ({p['path']})|{p['path']}\")
+" "$PROJECTS_JSON" "$DISCOVERED_JSON" > "$MAP_FILE"
+
+    while read -r line; do
+        echo -e "  ${CYAN}${line%%|*}${NC}"
+    done < "$MAP_FILE"
+    
+    echo -e "  ${CYAN}n) Add a new project path manually${NC}"
+    echo ""
+    read -p "  Choice [default 1]: " WORKSPACE_CHOICE
+    WORKSPACE_CHOICE=${WORKSPACE_CHOICE:-1}
+    
+    if [[ "$WORKSPACE_CHOICE" == "n" ]]; then
+        read -p "  Enter absolute path to project: " MANUAL_PATH
+        PROJECT_ROOT="$MANUAL_PATH"
+    else
+        PROJECT_ROOT=$(sed -n "${WORKSPACE_CHOICE}p" "$MAP_FILE" | cut -d'|' -f2)
+    fi
+    rm "$MAP_FILE"
+    
+    # Register the choice
+    $PYTHON_CMD "$WORKSPACE_MANAGER" register --path "$PROJECT_ROOT" --config "$WORKSPACE_CONFIG" >/dev/null 2>&1
 else
-    PROJECT_ROOT=$(detect_project_root 2>/dev/null || echo "$SCRIPT_DIR")
+    # Non-interactive: use current directory if it's a project, or default to AI_COLAB_HOME
+    if [[ -d ".git" ]]; then
+        PROJECT_ROOT="$(pwd)"
+    else
+        PROJECT_ROOT="$AI_COLAB_HOME"
+    fi
 fi
+
 export PROJECT_ROOT
 ui_status "Project Root" "$PROJECT_ROOT" "${GREEN}"
 
 # 1.1 Project Artifact Detection & Migration
-if [[ -f "$SCRIPT_DIR/scripts/migrate-project.sh" ]]; then
+if [[ -f "$AI_COLAB_HOME/scripts/migrate-project.sh" ]]; then
     echo -ne "  ${BLUE}Scanning for project artifacts...${NC}\r"
     # Run detection (non-interactive mode first)
-    bash "$SCRIPT_DIR/scripts/migrate-project.sh" "$PROJECT_ROOT" --detect-only 2>/dev/null || true
+    bash "$AI_COLAB_HOME/scripts/migrate-project.sh" "$PROJECT_ROOT" --detect-only 2>/dev/null || true
     echo -e "  ${GREEN}✓ Project scan complete            ${NC}"
     
     # Check if migration is needed
@@ -345,7 +404,7 @@ if [[ -f "$SCRIPT_DIR/scripts/migrate-project.sh" ]]; then
             echo -e "${YELLOW}  Existing AI/LLM integrations detected!${NC}"
             echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
             echo ""
-            echo -e "Found existing MCP configurations, product plans, or knowledge base artifacts."
+            echo -e "Found existing MCP configurations, product plans, or knowledge base artifacts in ${PROJECT_ROOT}."
             echo -e "${BLUE}Would you like to migrate these to ai-colab?${NC}"
             echo ""
             read -p "  Run migration now? [Y/n]: " -n 1 -r
@@ -354,7 +413,7 @@ if [[ -f "$SCRIPT_DIR/scripts/migrate-project.sh" ]]; then
             if [[ $REPLY =~ ^[Yy]$ || -z $REPLY ]]; then
                 echo -e "\n${BLUE}Starting migration...${NC}"
                 export AI_COLAB_LAUNCHER=true
-                bash "$SCRIPT_DIR/scripts/migrate-project.sh" "$PROJECT_ROOT"
+                bash "$AI_COLAB_HOME/scripts/migrate-project.sh" "$PROJECT_ROOT"
                 rm -f "$PROJECT_ROOT/.ai-colab-migration-pending"
                 echo -e "\n${GREEN}✓ Migration complete. Continuing to launch...${NC}"
             else
@@ -369,11 +428,10 @@ if [[ -f "$SCRIPT_DIR/scripts/migrate-project.sh" ]]; then
 fi
 
 # Configuration Manager
+# Use PROJECT_ROOT if it has a config, otherwise fallback to global hub config
 CONFIG_MGR="$PROJECT_ROOT/scripts/config-manager.sh"
-
 if [[ ! -f "$CONFIG_MGR" ]]; then
-    # Fallback to current directory scripts if PROJECT_ROOT/scripts/config-manager.sh not found
-    CONFIG_MGR="$SCRIPT_DIR/scripts/config-manager.sh"
+    CONFIG_MGR="$AI_COLAB_HOME/scripts/config-manager.sh"
 fi
 
 # Final check

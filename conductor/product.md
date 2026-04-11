@@ -78,11 +78,15 @@ The Hub connects to various backends for specialized agent deployment:
     *   8 comprehensive Web UI API tests
     *   Real-time test feedback during development
     *   Test status badges and artifact upload
-*   **Phase 14:** Python Environment Optimization (Pending)
+*   **Phase 14:** Python Environment Optimization (Done ✅)
     *   Intelligent detection of Python environment managers (uv, conda, mamba, poetry, pixi, pyenv)
     *   Automatic fallback to `uv` for high-performance environment creation
-    *   Seamless integration with existing user environments
     *   Consistent environment activation across `install.sh` and `launch.sh`
+*   **Phase 15:** Multi-Project Workspaces & Portable Environment (Pending)
+    *   Global CLI installation (`ai-colab` command)
+    *   Automatic git repository discovery and project registration
+    *   Project context switching in both CLI and WebUI
+    *   OS-independent Python distributions via `uv python install`
 
 ## Future Considerations
 - Native IDE Integration (VS Code / Cursor Extension).

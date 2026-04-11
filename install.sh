@@ -77,6 +77,7 @@ show_guide() {
 # Parse command line arguments first
 INSTALL_MODE="interactive"
 RECONFIGURE_MODE=false
+GLOBAL_INSTALL=false
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -93,7 +94,11 @@ while [[ $# -gt 0 ]]; do
             INSTALL_MODE="auto"
             shift
             ;;
-        --guide|-g)
+        --global|-g)
+            GLOBAL_INSTALL=true
+            shift
+            ;;
+        --guide)
             show_guide
             ;;
         --help|-h)
@@ -105,7 +110,8 @@ while [[ $# -gt 0 ]]; do
             echo "  --wizard, -w      Run interactive installation wizard"
             echo "  --reconfigure, -r Reconfigure existing installation"
             echo "  --auto, -a        Non-interactive auto-install (uses defaults)"
-            echo "  --guide, -g       Show detailed installation guide"
+            echo "  --global, -g      Install globally into ~/.ai-colab"
+            echo "  --guide           Show detailed installation guide"
             echo "  --help, -h        Show this help message"
             echo ""
             echo "Installation Pathways:"
@@ -120,6 +126,43 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+# Handle global installation
+if [[ "$GLOBAL_INSTALL" == "true" ]]; then
+    AI_COLAB_HOME="$HOME/.ai-colab"
+    echo -e "${BLUE}Installing ai-colab globally into $AI_COLAB_HOME...${NC}"
+    mkdir -p "$AI_COLAB_HOME"
+    
+    # Copy current repo to AI_COLAB_HOME (excluding .venv)
+    rsync -av --exclude='.venv' --exclude='node_modules' "$PROJECT_ROOT/" "$AI_COLAB_HOME/"
+    
+    # Update PROJECT_ROOT for the rest of this script
+    PROJECT_ROOT="$AI_COLAB_HOME"
+    SCRIPT_DIR="$AI_COLAB_HOME"
+    cd "$PROJECT_ROOT"
+    
+    # Create PATH wrapper
+    BIN_DIR="$HOME/.local/bin"
+    mkdir -p "$BIN_DIR"
+    WRAPPER="$BIN_DIR/ai-colab"
+    
+    echo -e "${BLUE}Creating PATH wrapper at $WRAPPER...${NC}"
+    printf '#!/usr/bin/env bash\nexport AI_COLAB_HOME="%s"\nexec bash "$AI_COLAB_HOME/launch.sh" "$@"\n' "$AI_COLAB_HOME" > "$WRAPPER"
+    chmod +x "$WRAPPER"
+    
+    # Add to shell config if not present
+    SHELL_CONFIG=""
+    case "$SHELL" in
+        */zsh) SHELL_CONFIG="$HOME/.zshrc" ;;
+        */bash) SHELL_CONFIG="$HOME/.bashrc" ;;
+        *) SHELL_CONFIG="$HOME/.profile" ;;
+    esac
+    
+    if [[ -f "$SHELL_CONFIG" ]] && ! grep -q "$BIN_DIR" "$SHELL_CONFIG"; then
+        echo -e "${YELLOW}Adding $BIN_DIR to PATH in $SHELL_CONFIG...${NC}"
+        echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$SHELL_CONFIG"
+    fi
+fi
 
 # Handle wizard mode
 if [[ "$INSTALL_MODE" == "wizard" ]]; then

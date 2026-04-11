@@ -281,7 +281,8 @@ def get_status():
         status = {
             "installation": {"status": "unknown", "pathway": "unknown"},
             "agents": [],
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
+            "project_root": str(project_root)
         }
 
         # Read state file
@@ -314,6 +315,61 @@ def get_status():
 
     except Exception as e:
         current_app.logger.error(f"Status failed: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@system_bp.route('/workspace/list', methods=['GET'])
+def list_workspaces():
+    """List all registered projects"""
+    hub_root = current_app.config.get('PROJECT_ROOT')
+    # Since PROJECT_ROOT is dynamic now, we need to find where AI_COLAB_HOME is.
+    # In the refactored app, WEBUI_DIR.parent is AI_COLAB_HOME.
+    from pathlib import Path
+    ai_colab_home = Path(__file__).parent.parent.parent
+    workspace_mgr = ai_colab_home / "scripts" / "workspace_manager.py"
+    
+    try:
+        result = subprocess.run(
+            [sys.executable, str(workspace_mgr), "list"],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        if result.returncode == 0:
+            return Response(result.stdout, mimetype='application/json')
+        else:
+            return jsonify({"error": "Failed to list workspaces"}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@system_bp.route('/workspace/switch', methods=['POST'])
+def switch_workspace():
+    """Switch project context"""
+    data = request.json
+    new_path = data.get('path')
+    if not new_path:
+        return jsonify({"error": "No path provided"}), 400
+    
+    # Verify path exists
+    if not os.path.isdir(new_path):
+        return jsonify({"error": "Project path does not exist"}), 404
+        
+    try:
+        # Update current app config
+        from pathlib import Path
+        current_app.config['PROJECT_ROOT'] = Path(new_path)
+        
+        # In a real scenario, we might need to persist this switch
+        # and potentially restart agents.
+        # For now, we return success and the frontend will reload.
+        current_app.logger.info(f"Switched project context to: {new_path}")
+        
+        # Shutdown existing dashboard if any
+        trigger_shutdown()
+        
+        return jsonify({"status": "success", "message": f"Switched to {new_path}"})
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 

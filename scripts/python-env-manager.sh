@@ -11,7 +11,7 @@ NC='\033[0m'
 
 # Find project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 
 has_command() {
     command -v "$1" >/dev/null 2>&1
@@ -54,12 +54,20 @@ detect_manager() {
 create_env() {
     local manager="$1"
     local env_name="${2:-ai-colab}"
+    local portable="${PORTABLE:-false}"
     local venv_path="$PROJECT_ROOT/.venv"
 
     case "$manager" in
         uv)
-            echo -e "${BLUE}Creating environment with uv...${NC}"
-            uv venv "$venv_path"
+            if [[ "$portable" == "true" ]]; then
+                echo -e "${BLUE}Installing portable Python 3.11 with uv...${NC}"
+                uv python install 3.11
+                echo -e "${BLUE}Creating isolated virtual environment with uv...${NC}"
+                uv venv "$venv_path" --python 3.11
+            else
+                echo -e "${BLUE}Creating environment with uv...${NC}"
+                uv venv "$venv_path"
+            fi
             ;;
         pixi)
             echo -e "${BLUE}Creating environment with pixi...${NC}"
@@ -86,9 +94,13 @@ create_env() {
                 echo -e "${BLUE}Installing uv via curl...${NC}"
                 curl -LsSf https://astral.sh/uv/install.sh | sh
             fi
+            
             # Re-detect after install
             if has_command uv; then
-                uv venv "$venv_path"
+                echo -e "${BLUE}Installing portable Python 3.11 with uv...${NC}"
+                uv python install 3.11
+                echo -e "${BLUE}Creating isolated virtual environment with uv...${NC}"
+                uv venv "$venv_path" --python 3.11
             else
                 echo -e "${RED}Failed to install uv. Falling back to system python (not recommended).${NC}"
             fi
