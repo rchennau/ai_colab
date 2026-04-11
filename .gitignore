@@ -21,3 +21,4 @@ __pycache__/
 # Ignore virtual environments
 .venv/
 venv/
+.ai-colab/mq/

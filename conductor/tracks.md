@@ -48,127 +48,232 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 
 ---
 
-## 📋 Engineering Plan - Phase 1 (Q2 2026)
+## 📋 Engineering Plan - Phase 16: Foundation Hardening (Q2 2026)
 
-### Phase 1.1: Core Infrastructure Stabilization
-- [ ] **Task: PTY Session Management**
-  - Improve terminal session lifecycle management
-  - Add session persistence across page refreshes
-  - Implement terminal session recovery
-  
-- [ ] **Task: Agent Health Monitoring**
-  - Real-time agent status via WebSocket
-  - Automatic agent restart on failure
-  - Agent log aggregation and display
+**Theme: "Make it unbreakable"**
 
-- [ ] **Task: Configuration Management**
-  - Atomic config writes with rollback
-  - Config validation before apply
-  - Config diff and preview before save
+### P16.1: Message Queue Layer
+- [ ] **Task: P1.1 — Reliable Message Delivery**
+  - Implement SQLite-based message queue with acknowledgment
+  - Queue messages for offline agents, deliver on reconnection
+  - Retry logic with configurable max attempts
+  - Message TTL and dead-letter queue for failed deliveries
+  - *Files:* `scripts/message-queue.sh`, `scripts/utils.sh` (add `mq_*` functions)
 
-### Phase 1.2: User Experience Improvements
-- [ ] **Task: Dashboard Enhancements**
-  - Real-time KB search results
-  - Project progress visualization
-  - Track completion timeline
+### P16.2: Event Processing Resilience
+- [ ] **Task: P1.2 — Cursor-Based Event Processing**
+  - Replace fragile `hcom events --sql "id > $LAST"` with persistent cursor
+  - Store last-processed event ID in blackboard (`conductor_event_cursor`)
+  - On restart, conductor resumes from persisted cursor
+  - Deduplication: track processed event IDs to prevent double-processing
+  - *Files:* `scripts/conductor-workflow.sh`
 
-- [ ] **Task: AI Command Console**
-  - Command history and autocomplete
-  - Multi-conductor support
-  - Command output streaming
+### P16.3: Blackboard Integrity
+- [ ] **Task: P1.3 — Schema Validation and Atomic Operations**
+  - Add JSON schema validation for blackboard writes
+  - Implement TTL enforcement (cleanup expired keys on read/write)
+  - Atomic multi-key operations via SQLite transactions
+  - Key namespace validation (prevent writes to reserved namespaces)
+  - *Files:* `scripts/hcom-kv.sh`, `scripts/utils.sh`
 
-- [ ] **Task: System Monitoring**
-  - Resource usage graphs (CPU, memory, disk)
-  - Log filtering and search
-  - Alerting for critical events
+### P16.4: Intelligent Agent Selection
+- [ ] **Task: P1.4 — Capability Registry**
+  - Define capability schema: `reasoning`, `coding`, `architecture`, `documentation`, `optimization`, `review`
+  - Register agent capabilities in blackboard (`agent_caps_<name>`)
+  - Conductor analyzes task requirements, selects best-matching agent
+  - Fallback to available agent if optimal is unavailable
+  - *Files:* `scripts/conductor-workflow.sh`, `scripts/utils.sh`
 
-### Phase 1.3: Developer Experience
-- [ ] **Task: Module Development Kit**
-  - Module template generator
-  - Module testing framework
-  - Module documentation generator
+### P16.5: Agent Recovery Improvements
+- [ ] **Task: P1.5 — Exponential Backoff and Circuit Breaker**
+  - Replace count-based restart with exponential backoff (10s→30s→60s→120s)
+  - Circuit breaker: after 5 failures in 10 minutes, mark agent "unhealthy"
+  - Auto-reroute tasks from unhealthy agents to healthy alternatives
+  - Recovery attempt tracking in blackboard (`recovery_attempt_<agent>`)
+  - *Files:* `scripts/agent-wrapper.sh`, `scripts/conductor-workflow.sh`
 
-- [ ] **Task: Debug Mode Enhancements**
-  - Integrated debugger for agents
-  - Step-through execution
-  - Variable inspection
-
-- [ ] **Task: Testing Infrastructure**
-  - Automated UI testing
-  - Integration test suite
-  - Performance benchmarking
-
----
-
-## 📋 Engineering Plan - Phase 2 (Q3 2026)
-
-### Phase 2.1: Advanced Features
-- [ ] **Task: Multi-Project Support**
-  - Project switching
-  - Project templates
-  - Cross-project dependencies
-
-- [ ] **Task: Enhanced RAG System**
-  - Multi-modal embeddings (code + docs)
-  - Context-aware search
-  - RAG-powered code suggestions
-
-- [ ] **Task: Collaboration Features**
-  - Shared sessions
-  - Team workspaces
-  - Role-based access control
-
-### Phase 2.2: Performance & Scalability
-- [ ] **Task: Backend Optimization**
-  - Async task processing
-  - Result caching
-  - Database optimization
-
-- [ ] **Task: Frontend Optimization**
-  - Code splitting
-  - Lazy loading
-  - Service worker caching
-
-- [ ] **Task: Deployment Improvements**
-  - One-click deploy
-  - Blue-green deployments
-  - Rollback automation
+### P16.6: MQTT Security
+- [ ] **Task: P1.6 — Self-Hosted Broker**
+  - Replace public emqx.io broker with self-hosted Mosquitto/EMQX
+  - Add TLS encryption and username/password authentication
+  - Document deployment options (Docker Compose profile: `mqtt`)
+  - Update `config.toml` with secure defaults
+  - *Files:* `config.toml`, `docker-compose.yml`, `docs/mqtt-setup.md`
 
 ---
 
-## 📋 Engineering Plan - Phase 3 (Q4 2026)
+## 📋 Engineering Plan - Phase 17: Console UX Revolution (Q3 2026)
 
-### Phase 3.1: AI Capabilities
-- [ ] **Task: Agent Autonomy**
-  - Self-healing agents
-  - Autonomous task prioritization
-  - Agent-to-agent negotiation
+**Theme: "Make it usable at scale"**
 
-- [ ] **Task: Knowledge Management**
-  - Auto-documentation
-  - Architecture decision records
-  - Knowledge graph visualization
+### P17.1: Dynamic Layouts
+- [ ] **Task: P2.1 — Adaptive tmux Layouts**
+  - 2 agents: side-by-side split
+  - 3-4 agents: 2x2 grid
+  - 5-8 agents: tabbed windows by team (coding, review, ops)
+  - 8+ agents: compact list with focus mode
+  - User can pin agents to specific panes
+  - *Files:* `scripts/dashboard-launch.sh`
 
-- [ ] **Task: Code Intelligence**
-  - Static analysis integration
-  - Automated refactoring
-  - Security scanning
+### P17.2: Focus Mode
+- [ ] **Task: P2.2 — Single-Agent Focus**
+  - Zoom single pane, hide others
+  - Persistent status bar shows fleet health
+  - Keyboard shortcuts: Ctrl+b 1, 2, 3... to switch focus
+  - Quick-return to fleet view
+  - *Files:* `scripts/dashboard-launch.sh`
 
-### Phase 3.2: Enterprise Features
-- [ ] **Task: Audit & Compliance**
-  - Audit logging
-  - Compliance reporting
-  - Data retention policies
+### P17.3: Enhanced Console
+- [ ] **Task: P2.3 — Readline-Based Command Interface**
+  - Replace `while true; read` loop with proper readline console
+  - Command history (up/down arrows)
+  - Tab completion for commands
+  - Inline help (`!help <command>`)
+  - Multi-line input support
+  - Output paging for long responses
+  - *Files:* `scripts/console.py` (Python readline wrapper)
 
-- [ ] **Task: Integration Ecosystem**
-  - GitHub/GitLab integration
-  - CI/CD pipeline integration
-  - Issue tracker integration
+### P17.4: Status Bar
+- [ ] **Task: P2.4 — Real-Time Fleet Status**
+  - tmux status line: `[✓ Gemini] [⏳ Qwen: coding] [✗ Claude: stale]`
+  - Updates every 20s via heartbeat data
+  - Color-coded: green=healthy, yellow=busy, red=stale
+  - *Files:* `scripts/dashboard-launch.sh`, `scripts/agent-wrapper.sh`
 
-- [ ] **Task: Monitoring & Observability**
-  - Distributed tracing
-  - Metrics dashboard
-  - Anomaly detection
+### P17.5: Session Persistence
+- [ ] **Task: P2.5 — Layout Save/Restore**
+  - Save tmux layout to `.ai-colab/tmux-layout.json`
+  - On reconnect, restore exact pane layout and assignments
+  - Named layout presets (default, coding, review)
+  - *Files:* `scripts/dashboard-launch.sh`
+
+---
+
+## 📋 Engineering Plan - Phase 18: Task Orchestration Intelligence (Q3-Q4 2026)
+
+**Theme: "Make it smart"**
+
+### P18.1: Task Routing Engine
+- [ ] **Task: P3.1 — Capability-Based Routing**
+  - Analyze track requirements automatically
+  - Match tasks to agents by capability scores
+  - Code-heavy → Qwen/Claude
+  - Architecture → Gemini/nemoclaw
+  - Optimization → DeepSeek
+  - Documentation → Claude
+  - *Files:* `scripts/conductor-workflow.sh`
+
+### P18.2: Collaboration Patterns
+- [ ] **Task: P3.2 — Multi-Agent Workflows**
+  - **Review Pattern:** Agent A produces → Agent B reviews → Agent A fixes → Conductor approves
+  - **Pair Pattern:** Two agents work in parallel, merge via git
+  - **Chain Pattern:** Agent A analyzes → Agent B implements → Agent C tests
+  - Pattern selection based on task complexity
+  - *Files:* `scripts/conductor-workflow.sh`, `scripts/collaboration-patterns.sh`
+
+### P18.3: Progress Tracking
+- [ ] **Task: P3.3 — Structured Agent Updates**
+  - Agents report: `% complete`, `current step`, `blockers`, `ETA`
+  - Conductor aggregates and displays in dashboard
+  - Progress alerts for stalled tasks (>30 min no update)
+  - *Files:* `scripts/conductor-workflow.sh`, `scripts/agent-wrapper.sh`
+
+### P18.4: Quality Gates
+- [ ] **Task: P3.4 — Automated Pre-Merge Checks**
+  - Before merging track: linting, test suite, security scan, dependency audit
+  - If checks fail: route back to agent with specific feedback
+  - Quality score tracking per track
+  - *Files:* `scripts/conductor-workflow.sh`, `scripts/quality-gates.sh`
+
+### P18.5: Performance Metrics
+- [ ] **Task: P3.5 — Agent Analytics**
+  - Track: completion rate, avg time per track, quality score, error rate
+  - Display in dashboard and Web UI
+  - Use metrics for intelligent routing optimization
+  - Monthly performance reports
+  - *Files:* `scripts/agent-analytics.sh`, `webui/api/agents.py`
+
+---
+
+## 📋 Engineering Plan - Phase 19: Ecosystem Expansion (Q4 2026-Q1 2027)
+
+**Theme: "Make it extensible"**
+
+### P19.1: Containerized Agents
+- [ ] **Task: P4.1 — Docker Agent Images**
+  - Docker image per LLM CLI with pre-configured system prompts
+  - Consistent environment across machines
+  - Health checks and resource limits
+  - *Files:* `docker/agents/*/Dockerfile`
+
+### P19.2: Cloud Deployment
+- [ ] **Task: P4.2 — Cloud VM Deployment**
+  - Deploy full stack on AWS/GCP/Azure
+  - Web UI + MQTT + agents on single VM
+  - Terraform/IaC templates
+  - *Files:* `terraform/`, `docs/cloud-deploy.md`
+
+### P19.3: IDE Integration
+- [ ] **Task: P4.3 — VS Code Extension**
+  - View fleet status, send commands, review tracks
+  - Approve merges, search KB — all from IDE
+  - Real-time notifications via WebSocket
+  - *Files:* `ide/vscode-extension/`
+
+### P19.4: Module Marketplace
+- [ ] **Task: P4.4 — Community Modules**
+  - Standardized module format with validation
+  - `ai-colab module install <name>` downloads and configures
+  - Module registry and discovery
+  - *Files:* `scripts/module-marketplace.sh`
+
+### P19.5: Agent Evaluation
+- [ ] **Task: P4.5 — Benchmarking Framework**
+  - Standard task suite for all agents
+  - Compare quality, speed, cost
+  - Generate reports, inform routing decisions
+  - *Files:* `scripts/agent-benchmark.sh`, `tests/agent-evaluation/`
+
+---
+
+## 📋 Engineering Plan - Phase 20: Strategic Moats (Q1-Q2 2027)
+
+**Theme: "Make it irreplaceable"**
+
+### P20.1: Local Models
+- [ ] **Task: P5.1 — Full Local LLM Support**
+  - Ollama, llama.cpp, vLLM integration
+  - Zero cloud API dependency option
+  - Model download and management
+  - *Files:* `scripts/local-models.sh`
+
+### P20.2: Agent Memory
+- [ ] **Task: P5.2 — Persistent Context**
+  - Conversation history per agent across sessions
+  - Configurable context window management
+  - Memory compression for long-running agents
+  - *Files:* `scripts/agent-memory.sh`
+
+### P20.3: Cost Optimization
+- [ ] **Task: P5.3 — Budget Engine**
+  - Track per-agent token usage and cost
+  - Route tasks to minimize cost while maintaining quality
+  - Budget alerts and spending caps
+  - *Files:* `scripts/cost-tracker.sh`
+
+### P20.4: Audit Trail
+- [ ] **Task: P5.4 — Compliance Export**
+  - Complete audit trail of all agent actions
+  - Exportable for compliance reviews (JSON, CSV, PDF)
+  - Tamper-proof logging
+  - *Files:* `scripts/audit-log.sh`
+
+### P20.5: Self-Healing
+- [ ] **Task: P5.5 — Conductor Failover**
+  - Conductor detects own degradation and auto-restarts
+  - Healthy agent promotes to temporary conductor
+  - Automatic state recovery after failover
+  - *Files:* `scripts/conductor-failover.sh`
 
 ---
 

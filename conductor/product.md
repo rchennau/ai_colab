@@ -62,35 +62,49 @@ The Hub connects to various backends for specialized agent deployment:
 *   **Phase 9:** Dynamic Plugin System & Fleet Orchestration (Done ✅)
 *   **Phase 10:** Multi-Backend Compute & CI/CD Automation (Done ✅)
 *   **Phase 11:** Enhanced Installation & Launch Experience (Done ✅)
-    *   Interactive CLI Wizard with step-by-step guidance
-    *   Web UI for browser-based management (Flask backend)
-    *   Docker Compose deployment with persistent volumes
-    *   Configuration schema validation and atomic writes
-    *   Reconfiguration mode (--reconfigure flag)
-    *   Pre-flight checks for system readiness
-    *   Session recovery and health monitoring
-    *   **Project Migration Tool:** Automated import of existing AI configurations
-    *   **80-Column ANSI UI:** Professional CLI graphics and status reporting
 *   **Phase 12:** NVIDIA NIM nemoclaw Integration (Done ✅)
 *   **Phase 13:** Automated Testing & CI/CD Integration (Done ✅)
-    *   GitHub Actions workflow for Web UI testing
-    *   Local file watcher for automated test execution
-    *   8 comprehensive Web UI API tests
-    *   Real-time test feedback during development
-    *   Test status badges and artifact upload
 *   **Phase 14:** Python Environment Optimization (Done ✅)
-    *   Intelligent detection of Python environment managers (uv, conda, mamba, poetry, pixi, pyenv)
-    *   Automatic fallback to `uv` for high-performance environment creation
-    *   Consistent environment activation across `install.sh` and `launch.sh`
-*   **Phase 15:** Multi-Project Workspaces & Portable Environment (Pending)
-    *   Global CLI installation (`ai-colab` command)
-    *   Automatic git repository discovery and project registration
-    *   Project context switching in both CLI and WebUI
-    *   OS-independent Python distributions via `uv python install`
+*   **Phase 15:** Multi-Project Workspaces & Portable Environment (Done ✅)
+*   **Phase 16: Foundation Hardening** (In Progress 🔄)
+    *   **Theme:** "Make it unbreakable"
+    *   Message queue layer with delivery guarantees (P1.1)
+    *   Event processing resilience with cursor persistence (P1.2)
+    *   Blackboard schema validation and atomic operations (P1.3)
+    *   Intelligent capability-based agent selection (P1.4)
+    *   Exponential backoff and circuit breaker for agent recovery (P1.5)
+    *   MQTT security hardening with self-hosted broker (P1.6)
+*   **Phase 17: Console UX Revolution** (Planned)
+    *   **Theme:** "Make it usable at scale"
+    *   Dynamic tmux layouts based on active agent count (P2.1)
+    *   Focused agent mode with fleet status bar (P2.2)
+    *   Enhanced readline-based user console (P2.3)
+    *   Real-time per-agent status in tmux status line (P2.4)
+    *   Dashboard session persistence and restore (P2.5)
+*   **Phase 18: Task Orchestration Intelligence** (Planned)
+    *   **Theme:** "Make it smart"
+    *   Capability-based task routing engine (P3.1)
+    *   Multi-agent collaboration patterns (Review, Pair, Chain) (P3.2)
+    *   Structured progress tracking from agents (P3.3)
+    *   Automated quality gates before merge (P3.4)
+    *   Agent performance metrics and optimization (P3.5)
+*   **Phase 19: Ecosystem Expansion** (Planned)
+    *   **Theme:** "Make it extensible"
+    *   Containerized agents with pre-configured environments (P4.1)
+    *   Cloud deployment on AWS/GCP/Azure (P4.2)
+    *   IDE integration (VS Code / Cursor extension) (P4.3)
+    *   Community module marketplace (P4.4)
+    *   Agent evaluation and benchmarking framework (P4.5)
+*   **Phase 20: Strategic Moats** (Planned)
+    *   **Theme:** "Make it irreplaceable"
+    *   Full local model integration (Ollama, llama.cpp, vLLM) (P5.1)
+    *   Persistent agent memory and context management (P5.2)
+    *   Cost optimization engine with budget alerts (P5.3)
+    *   Complete audit trail and compliance export (P5.4)
+    *   Self-healing orchestration with conductor failover (P5.5)
 
 ## Future Considerations
-- Native IDE Integration (VS Code / Cursor Extension).
-- Advanced Fleet Autonomy (Self-healing remote workers).
+- Federated Agent Learning (Skill-sharing across distributed fleets).
 - Voice & Vision Interaction (Whisper/Vision-aware Conductor).
 - Mobile Dashboards for remote monitoring.
-- Federated Agent Learning (Skill-sharing across distributed fleets).
+- Multi-modal output generation (diagrams, reports, presentations).
