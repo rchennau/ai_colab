@@ -161,7 +161,72 @@ networks:
   ai-colab-network:
     driver: bridge
 
+  mqtt-network:
+    driver: bridge
+
 # Volumes
 volumes:
   redis-data:
     driver: local
+  mqtt-data:
+    driver: local
+  mqtt-certs:
+    driver: local
+
+  # MQTT Broker Service (P16.6: Self-Hosted Secure MQTT)
+  mqtt:
+    image: eclipse-mosquitto:2.0
+    container_name: ai-colab-mqtt
+    restart: unless-stopped
+    profiles:
+      - mqtt  # Start with: docker compose --profile mqtt up -d
+
+    # Port mapping (TLS only)
+    ports:
+      - "8883:8883"  # TLS listener
+
+    # Volume mounts
+    volumes:
+      # Configuration
+      - ./docker/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      # Entrypoint script
+      - ./docker/mosquitto/entrypoint.sh:/mosquitto/config/entrypoint.sh:ro
+      # Certificates (auto-generated on first run)
+      - mqtt-certs:/mosquitto/certs
+      # Password file (auto-generated on first run)
+      - ./docker/mosquitto/passwd:/mosquitto/config/passwd
+      # Data persistence
+      - mqtt-data:/mosquitto/data
+
+    # Entrypoint for first-run setup
+    entrypoint: ["/mosquitto/config/entrypoint.sh"]
+
+    # Health check
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -p 8883 -t '\$SYS/#' -C 1 -W 5 --cafile /mosquitto/certs/ca.crt -u ai-colab-admin -P $MQTT_PASSWORD || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 64M
+          cpus: '0.1'
+
+    # Network
+    networks:
+      - mqtt-network
+      - ai-colab-network
+
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"

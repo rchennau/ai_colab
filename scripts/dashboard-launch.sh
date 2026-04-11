@@ -290,7 +290,12 @@ create_dashboard() {
     tmux set-option -g pane-border-status top
     tmux set-option -g pane-border-format "#P: #{pane_title}"
     tmux set-option -g allow-rename off
-
+    
+    # Custom Bindings for UX Revolution
+    tmux bind-key f resize-pane -Z
+    tmux bind-key h select-window -t :0  # Quick return to dashboard
+    tmux bind-key l select-window -t :1  # Quick jump to fleet
+    
     # Step 3: Setup pane list for Right Column
     local right_panes=()
     if [ "${WITH_CONDUCTOR:-false}" == "true" ]; then
@@ -308,129 +313,87 @@ create_dashboard() {
     local num_right_panes=${#right_panes[@]}
     
     # Step 4: Layout Creation
+    local max_main_agents=4
+    local main_agents=("${right_panes[@]:0:$max_main_agents}")
+    local overflow_agents=()
+    if [ ${#right_panes[@]} -gt $max_main_agents ]; then
+        overflow_agents=("${right_panes[@]:$max_main_agents}")
+    fi
 
     # 4a. Create Right Column first by splitting HCOM pane horizontally
     tmux split-window -h -t "$SESSION:dashboard.0" -c "$PROJECT_ROOT"
     local right_col_id=$(tmux display-message -p "#{pane_id}")
     print_info "Created right column pane: $right_col_id"
 
-    # 4b. Split Right Column vertically for all agent components
+    # 4b. Split Right Column vertically for main agent components
     local agent_pane_ids=("$right_col_id")
-    if [ $num_right_panes -gt 1 ]; then
+    local num_main_agents=${#main_agents[@]}
+    if [ $num_main_agents -gt 1 ]; then
         local current_pane_id="$right_col_id"
-        for ((i=1; i<num_right_panes; i++)); do
-            # Split the current pane vertically to create a new pane below it
+        for ((i=1; i<num_main_agents; i++)); do
             tmux split-window -v -t "$current_pane_id" -c "$PROJECT_ROOT"
             current_pane_id=$(tmux display-message -p "#{pane_id}")
             agent_pane_ids+=("$current_pane_id")
-
-            # Rebalance after each split to ensure equal sizing
+            
+            # Rebalance after each split
             tmux select-layout -t "$SESSION:dashboard" tiled >/dev/null 2>&1 || true
-            print_info "Added agent pane $i: $current_pane_id"
         done
     fi
 
-    # 4c. Create Console Pane (Bottom) - after right column is set up
+    # 4c. Create Console Pane (Bottom)
     local console_id=""
     if [ "${WITH_CONSOLE:-true}" == "true" ]; then
-        # Split the HCOM pane vertically at the bottom with fixed height
         tmux split-window -v -t "$SESSION:dashboard.0" -l 8 -c "$PROJECT_ROOT"
         console_id=$(tmux display-message -p "#{pane_id}")
         print_info "Created console pane: $console_id"
-
-        # Resize console to ensure it has adequate height
         tmux resize-pane -t "$console_id" -y 8
     fi
 
-    # 4d. Finalize Geometry
-    # Resize HCOM pane to ensure it has adequate width
+    # 4d. Handle Overflow Agents (New Window)
+    local overflow_pane_ids=()
+    if [ ${#overflow_agents[@]} -gt 0 ]; then
+        print_step "Creating Fleet Window for overflow agents..."
+        tmux new-window -t $SESSION -n "fleet" -c "$PROJECT_ROOT"
+        
+        # Initialize first overflow pane
+        local first_overflow_id=$(tmux display-message -p "#{pane_id}")
+        overflow_pane_ids+=("$first_overflow_id")
+        
+        # Split vertically/grid for remaining overflow
+        local current_p_id="$first_overflow_id"
+        for ((i=1; i<${#overflow_agents[@]}; i++)); do
+            tmux split-window -v -t "$current_p_id" -c "$PROJECT_ROOT"
+            current_p_id=$(tmux display-message -p "#{pane_id}")
+            overflow_pane_ids+=("$current_p_id")
+            tmux select-layout -t "$SESSION:fleet" tiled >/dev/null 2>&1 || true
+        done
+    fi
+
+    # Combine all pane IDs for launching
+    local all_agent_panes=("${agent_pane_ids[@]}" "${overflow_pane_ids[@]}")
+    local all_agents=("${main_agents[@]}" "${overflow_agents[@]}")
+
+    # 4e. Finalize Geometry
     tmux resize-pane -t "$SESSION:dashboard.0" -x 85
 
-    print_info "Layout creation complete. Total agent panes: ${#agent_pane_ids[@]}"
+    print_info "Layout creation complete. Main panes: ${#agent_pane_ids[@]}, Overflow: ${#overflow_pane_ids[@]}"
 
     # Step 5: Launch Console
     if [ -n "$console_id" ]; then
-        local console_idx=$(tmux display-message -p -t "$console_id" "#{pane_index}")
         local user_name="user_$(whoami)"
-        print_info "Initializing Console in pane $console_idx..."
+        print_info "Initializing Enhanced Console in pane..."
 
-        # Send hcom initialization commands with proper error handling
-        # Use longer delays to ensure shell is ready
-        tmux send-keys -t "$console_id" "export HCOM_NAME=\"$user_name\"" C-m
-        sleep 0.3
-        tmux send-keys -t "$console_id" "set +H  # Disable history expansion to avoid ! issues" C-m
-        sleep 0.3
-
-        # Register user with hcom without blocking the shell
-        tmux send-keys -t "$console_id" "if command -v hcom >/dev/null 2>&1; then hcom status --name \"\$HCOM_NAME\" >/dev/null 2>&1; else echo 'hcom not found, please run ./install.sh'; fi" C-m
-        sleep 0.5
-
-        # Create a script file to avoid echo command injection issues
-        local console_script=$(mktemp /tmp/console-init-XXXXXX.sh)
-        cat > "$console_script" << CONSOLE_EOF
-#!/usr/bin/env bash
-echo -e "\\033[0;34m╔══════════════════════════════════════════════╗\\033[0m"
-echo -e "\\033[0;34m║           ai-colab HCOM User Console         ║\\033[0m"
-echo -e "\\033[0;34m╚══════════════════════════════════════════════╝\\033[0m"
-echo -e "Logged in as: \\033[0;32m\${HCOM_NAME}\\033[0m"
-echo ""
-echo -e "\\033[1;33mAvailable Conductor Commands:\\033[0m"
-echo -e "  \\033[0;32ms\\033[0m (!status)      - Get project health & progress"
-echo -e "  \\033[0;32mt\\033[0m (!test)        - Run all automated tests"
-echo -e "  \\033[0;32mb\\033[0m (!build)       - Build project and integrated apps"
-echo -e "  !kb <query>      - Search architectural knowledge base"
-echo -e "  !git-sync        - Pull latest changes from remote"
-CONSOLE_EOF
-
-        # Add module commands dynamically
-        while IFS= read -r module_id; do
-            if [ -n "$module_id" ]; then
-                local mod_name=$(bash "$SCRIPT_DIR/module-manager.sh" info "$module_id" 2>/dev/null | grep "^name=" | cut -d'=' -f2)
-                if [ -n "$mod_name" ]; then
-                    echo "echo -e \"\\033[1;33m${mod_name} Commands:\\033[0m\"" >> "$console_script"
-                    bash "$SCRIPT_DIR/module-manager.sh" commands --raw "$module_id" 2>/dev/null | while IFS='|' read -r trigger script; do
-                        if [ -n "$trigger" ]; then
-                            echo "echo -e \"  \\033[0;32m${trigger}\\033[0m - Module task\"" >> "$console_script"
-                        fi
-                    done
-                fi
-            fi
-        done < <(bash "$SCRIPT_DIR/module-manager.sh" active 2>/dev/null)
-
-        cat >> "$console_script" << 'CONSOLE_EOF'
-echo -e "  !help            - Show all available commands"
-echo ""
-CONSOLE_EOF
-
-        chmod +x "$console_script"
-
-        # Send clear command first
-        tmux send-keys -t "$console_id" "clear" C-m
-        sleep 0.5
-
-        # Execute the console script and keep it available
-        tmux send-keys -t "$console_id" "bash \"$console_script\"" C-m
-        sleep 1.5
-
-        # Set up aliases after the script output
-        tmux send-keys -t "$console_id" "alias s='hcom send --name \$HCOM_NAME @conductor -- \"!status\"'" C-m
-        tmux send-keys -t "$console_id" "alias t='hcom send --name \$HCOM_NAME @conductor -- \"!test\"'" C-m
-        tmux send-keys -t "$console_id" "alias b='hcom send --name \$HCOM_NAME @conductor -- \"!build\"'" C-m
-        sleep 0.5
-
-        # Add an interactive command prompt loop
-        tmux send-keys -t "$console_id" "echo \"\"" C-m
-        tmux send-keys -t "$console_id" 'echo -e "\033[0;36mType a command (e.g., !status, !help, !kb <query>) or press Enter to refresh status.\033[0m"' C-m
-        tmux send-keys -t "$console_id" 'while true; do read -p "> " cmd; case "$cmd" in "" ) echo -e "\033[0;32mHCOM Status:\033[0m $(hcom status --name $HCOM_NAME 2>&1 | head -1 || echo "Not connected")";; "!status" ) hcom send --name $HCOM_NAME @conductor -- "!status";; "!test" ) hcom send --name $HCOM_NAME @conductor -- "!test";; "!build" ) hcom send --name $HCOM_NAME @conductor -- "!build";; "!help" ) hcom send --name $HCOM_NAME @conductor -- "!help";; "!kb "* ) hcom send --name $HCOM_NAME @conductor -- "$cmd";; "!git-sync" ) hcom send --name $HCOM_NAME @conductor -- "!git-sync";; "exit"|"quit" ) break;; * ) echo -e "\033[1;33mUnknown command. Type !help for available commands.\033[0m";; esac; done' C-m
+        # Use the new python console
+        tmux send-keys -t "$console_id" "python3 '$SCRIPT_DIR/console.py' --name '$user_name'" C-m
 
         tmux set-option -t "$console_id" -p @agent_name "CONSOLE"
         tmux select-pane -t "$console_id" -T "User Console ($user_name)"
     fi
 
     # Step 6: Launch Right Column Components
-    for i in "${!right_panes[@]}"; do
-        local component="${right_panes[$i]}"
-        local pane_id="${agent_pane_ids[$i]}"
+    for i in "${!all_agents[@]}"; do
+        local component="${all_agents[$i]}"
+        local pane_id="${all_agent_panes[$i]}"
         local pane_idx=$(tmux display-message -p -t "$pane_id" "#{pane_index}")
         local cmd=""
         local agent_name=""
@@ -580,6 +543,28 @@ attach() {
     tmux attach -t $SESSION
 }
 
+# Session Configuration Persistence
+SESSION_CONFIG_KEY="dashboard_session_config"
+
+save_session_config() {
+    local config="WITH_QWEN=$WITH_QWEN|WITH_GEMINI=$WITH_GEMINI|WITH_VLLM=$WITH_VLLM|WITH_DEEPSEEK=$WITH_DEEPSEEK|WITH_CLAUDE=$WITH_CLAUDE|WITH_NEMO=$WITH_NEMO|WITH_NEMOCLAW=$WITH_NEMOCLAW|WITH_CONDUCTOR=$WITH_CONDUCTOR|WITH_BRIDGE=$WITH_BRIDGE|WITH_CONSOLE=$WITH_CONSOLE"
+    blackboard_set "$SESSION_CONFIG_KEY" "$config"
+    print_info "Session configuration saved to blackboard"
+}
+
+load_session_config() {
+    local config=$(blackboard_get "$SESSION_CONFIG_KEY")
+    if [[ -n "$config" && "$config" != "None" ]]; then
+        print_info "Loading last active session configuration..."
+        IFS='|' read -ra parts <<< "$config"
+        for part in "${parts[@]}"; do
+            eval "export $part"
+        done
+        return 0
+    fi
+    return 1
+}
+
 main() {
     echo ""
     echo -e "${BLUE}+======================================================+${NC}"
@@ -607,6 +592,11 @@ main() {
     WITH_CONDUCTOR=true   # Conductor is now recommended for project management
     WITH_BRIDGE=false
     WITH_CONSOLE=true
+
+    # Try to load saved config if no arguments provided
+    if [[ $# -eq 0 ]]; then
+        load_session_config || true
+    fi
 
     # Parse command line flags
     while [[ $# -gt 0 ]]; do
@@ -641,6 +631,9 @@ main() {
             *) shift ;;
         esac
     done
+
+    # Save current config for next time
+    save_session_config
 
     check_prereqs
     

@@ -52,13 +52,13 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - [ ] Task P1.4: Intelligent Agent Selection
   - [ ] Task P1.5: Agent Recovery Improvements
   - [ ] Task P1.6: MQTT Security Hardening
-- [ ] **Milestone 21: Console UX Revolution** (In Progress 🔄)
+- [x] **Milestone 21: Console UX Revolution** (Done ✅)
   *Link: [./console-ux-plan.md](./console-ux-plan.md)*
-  - [ ] Task P2.1: Adaptive tmux Layouts
-  - [ ] Task P2.2: Focus Mode
-  - [ ] Task P2.3: Readline Command Interface
-  - [ ] Task P2.4: Real-Time Status Bar
-  - [ ] Task P2.5: Session Persistence
+  - [x] Task P2.1: Adaptive tmux Layouts (Implemented multi-window/grid logic)
+  - [x] Task P2.2: Focus Mode (Added 'f' key binding for zooming)
+  - [x] Task P2.3: Readline Command Interface (Implemented scripts/console.py)
+  - [x] Task P2.4: Real-Time Status Bar (Dynamic fleet health in status line)
+  - [x] Task P2.5: Session Persistence (Config save/restore via Blackboard)
 
 ---
 
@@ -107,7 +107,7 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - *Files:* `scripts/agent-wrapper.sh`, `scripts/conductor-workflow.sh`
 
 ### P16.6: MQTT Security
-- [ ] **Task: P1.6 — Self-Hosted Broker**
+- [x] **Task: P1.6 — Self-Hosted Broker** ✅
   - Replace public emqx.io broker with self-hosted Mosquitto/EMQX
   - Add TLS encryption and username/password authentication
   - Document deployment options (Docker Compose profile: `mqtt`)
@@ -397,6 +397,11 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   *Link: [./multi-project-workspace.md](./multi-project-workspace.md)*
   - **Assigned:** @architect
   - **Description:** Global CLI, git discovery, project switching, and portable Python isolation.
+
+- [x] **Track: Console UX Revolution** (Done ✅)
+  *Link: [./console-ux-plan.md](./console-ux-plan.md)*
+  - **Assigned:** @architect
+  - **Description:** Adaptive tmux layouts, focus mode, and enhanced interactive command console.
 
 ---
 

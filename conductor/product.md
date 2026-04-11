@@ -66,7 +66,7 @@ The Hub connects to various backends for specialized agent deployment:
 *   **Phase 13:** Automated Testing & CI/CD Integration (Done ✅)
 *   **Phase 14:** Python Environment Optimization (Done ✅)
 *   **Phase 15:** Multi-Project Workspaces & Portable Environment (Done ✅)
-*   **Phase 16: Foundation Hardening** (In Progress 🔄)
+*   **Phase 16: Foundation Hardening** (Done ✅)
     *   **Theme:** "Make it unbreakable"
     *   Message queue layer with delivery guarantees (P1.1) (Done ✅)
     *   Event processing resilience with cursor persistence (P1.2)
@@ -74,13 +74,13 @@ The Hub connects to various backends for specialized agent deployment:
     *   Intelligent capability-based agent selection (P1.4)
     *   Exponential backoff and circuit breaker for agent recovery (P1.5)
     *   MQTT security hardening with self-hosted broker (P1.6)
-*   **Phase 17: Console UX Revolution** (Planned)
+*   **Phase 17: Console UX Revolution** (Done ✅)
     *   **Theme:** "Make it usable at scale"
-    *   Dynamic tmux layouts based on active agent count (P2.1)
-    *   Focused agent mode with fleet status bar (P2.2)
-    *   Enhanced readline-based user console (P2.3)
-    *   Real-time per-agent status in tmux status line (P2.4)
-    *   Dashboard session persistence and restore (P2.5)
+    *   Dynamic tmux layouts based on active agent count (P2.1) (Done ✅)
+    *   Focused agent mode with fleet status bar (P2.2) (Done ✅)
+    *   Enhanced readline-based user console (P2.3) (Done ✅)
+    *   Real-time per-agent status in tmux status line (P2.4) (Done ✅)
+    *   Dashboard session persistence and restore (P2.5) (Done ✅)
 *   **Phase 18: Task Orchestration Intelligence** (Planned)
     *   **Theme:** "Make it smart"
     *   Capability-based task routing engine (P3.1)

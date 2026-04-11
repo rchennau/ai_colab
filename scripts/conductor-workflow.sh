@@ -625,10 +625,46 @@ process_commands() {
     fi
 }
 
+update_tmux_status_bar() {
+    if [[ -z "${TMUX:-}" ]]; then return 0; fi
+    
+    local status_str=""
+    local current_time=$(date +%s)
+    
+    # Get all health keys
+    while IFS='|' read -r key health_json; do
+        if [[ -n "$key" ]]; then
+            local agent_name=${key#fleet_health_}
+            local status=$(parse_json_value "$health_json" "status")
+            local last_ts=$(parse_json_value "$health_json" "ts")
+            
+            # Truncate/Shorten name
+            local short_name=$(echo "$agent_name" | cut -c1-3 | tr '[:lower:]' '[:upper:]')
+            
+            local icon="✓"
+            [[ "$status" == "busy" || "$status" == "coding" ]] && icon="⏳"
+            
+            # Check for staleness
+            if (( current_time - last_ts > 60 )); then
+                icon="✗"
+            fi
+            
+            status_str="$status_str [$icon $short_name]"
+        fi
+    done < <(blackboard_list "fleet_health_")
+    
+    if [[ -n "$status_str" ]]; then
+        tmux set-option -g status-right "$status_str" > /dev/null 2>&1 || true
+    fi
+}
+
 main() {
     while true; do
         # Render high-density dashboard
         bash "$SCRIPT_DIR/conductor-dashboard.sh"
+
+        # Update tmux status bar with fleet health
+        update_tmux_status_bar
 
         log_info "Syncing project status..."
         sync_blackboard_status "$TRACKS_FILE"

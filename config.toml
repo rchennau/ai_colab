@@ -18,10 +18,21 @@ args = "-m qwen3-next-80b-a3b-instruct"
 args = ""
 
 [relay]
-url = "mqtts://broker.emqx.io:8883"
-id = "a8cc9080-4338-4678-825f-55bf5a5a861f"
-token = ""
+# Self-hosted Mosquitto broker (recommended for production)
+# Start with: docker compose --profile mqtt up -d
+url = "mqtts://localhost:8883"
 enabled = true
+tls_enabled = true
+ca_cert = "./docker/mosquitto/certs/ca.crt"
+client_cert = ""
+client_key = ""
+username = ""  # Auto-generated on first MQTT broker start
+password = ""  # Auto-generated on first MQTT broker start
+
+# Legacy public broker (deprecated - use for migration only)
+# url = "mqtts://broker.emqx.io:8883"
+# id = "a8cc9080-4338-4678-825f-55bf5a5a861f"
+# token = ""
 # User Preferences
 [preferences]
 timeout = 86400
