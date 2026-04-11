@@ -467,6 +467,12 @@ AGENT_EOF
         tmux bind-key "$i" select-pane -t "$i"
     done
 
+    # Step 7.6: Start Real-Time Status Bar Updater (P17.4)
+    # Launch background process to update tmux status line every 20s
+    bash "$SCRIPT_DIR/update-status-bar.sh" "$SESSION" &
+    STATUS_BAR_PID=$!
+    print_info "Started status bar updater (PID: $STATUS_BAR_PID)"
+
     # Step 8: Optional Bridge window
     if [ "${WITH_BRIDGE:-false}" == "true" ]; then
         print_step "Starting Google Chat bridge..."
