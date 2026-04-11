@@ -45,13 +45,13 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - [x] Context switching between projects in CLI and WebUI
   - [x] OS-independent portable Python distribution via `uv`
   - [x] Comprehensive QA harness (Unit, Feature, System, E2E)
-- [ ] **Milestone 20: Foundation Hardening** (In Progress 🔄)
-  - [x] **Task P1.1: Reliable Message Delivery** (Implemented in `scripts/message-queue.sh`)
-  - [ ] Task P1.2: Cursor-Based Event Processing
-  - [ ] Task P1.3: Blackboard Schema Validation
-  - [ ] Task P1.4: Intelligent Agent Selection
-  - [ ] Task P1.5: Agent Recovery Improvements
-  - [ ] Task P1.6: MQTT Security Hardening
+- [x] **Milestone 20: Foundation Hardening** (Done ✅)
+  - [x] Task P1.1: Reliable Message Delivery
+  - [x] Task P1.2: Cursor-Based Event Processing
+  - [x] Task P1.3: Blackboard Schema Validation
+  - [x] Task P1.4: Intelligent Agent Selection
+  - [x] Task P1.5: Agent Recovery Improvements
+  - [x] Task P1.6: MQTT Security Hardening
 - [x] **Milestone 21: Console UX Revolution** (Done ✅)
   *Link: [./console-ux-plan.md](./console-ux-plan.md)*
   - [x] Task P2.1: Adaptive tmux Layouts (Implemented multi-window/grid logic)
@@ -66,6 +66,13 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - [x] Task P3.3: Structured Progress Tracking (Real-time stdout parsing in Agent Wrapper)
   - [x] Task P3.4: Automated Quality Gates (Created `scripts/quality-gates.sh` and integrated into merge)
   - [x] Task P3.5: Agent Analytics (Performance logging to SQLite blackboard)
+- [ ] **Milestone 23: Ecosystem Expansion** (In Progress 🔄)
+  *Link: [./ecosystem-expansion-plan.md](./ecosystem-expansion-plan.md)*
+  - [ ] Task P4.1: Containerized Agents
+  - [ ] Task P4.2: Cloud Deployment templates
+  - [ ] Task P4.3: IDE Integration (VS Code / Cursor)
+  - [ ] Task P4.4: Community Module Marketplace
+  - [ ] Task P4.5: Agent Benchmarking framework
 
 ---
 
@@ -82,7 +89,7 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - *Files:* `scripts/message-queue.sh`, `scripts/utils.sh` (add `mq_*` functions)
 
 ### P16.2: Event Processing Resilience
-- [ ] **Task: P1.2 — Cursor-Based Event Processing**
+- [x] **Task: P1.2 — Cursor-Based Event Processing** ✅
   - Replace fragile `hcom events --sql "id > $LAST"` with persistent cursor
   - Store last-processed event ID in blackboard (`conductor_event_cursor`)
   - On restart, conductor resumes from persisted cursor
@@ -90,7 +97,7 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - *Files:* `scripts/conductor-workflow.sh`
 
 ### P16.3: Blackboard Integrity
-- [ ] **Task: P1.3 — Schema Validation and Atomic Operations**
+- [x] **Task: P1.3 — Schema Validation and Atomic Operations** ✅
   - Add JSON schema validation for blackboard writes
   - Implement TTL enforcement (cleanup expired keys on read/write)
   - Atomic multi-key operations via SQLite transactions
@@ -98,7 +105,7 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - *Files:* `scripts/hcom-kv.sh`, `scripts/utils.sh`
 
 ### P16.4: Intelligent Agent Selection
-- [ ] **Task: P1.4 — Capability Registry**
+- [x] **Task: P1.4 — Capability Registry** ✅
   - Define capability schema: `reasoning`, `coding`, `architecture`, `documentation`, `optimization`, `review`
   - Register agent capabilities in blackboard (`agent_caps_<name>`)
   - Conductor analyzes task requirements, selects best-matching agent
@@ -106,7 +113,7 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - *Files:* `scripts/conductor-workflow.sh`, `scripts/utils.sh`
 
 ### P16.5: Agent Recovery Improvements
-- [ ] **Task: P1.5 — Exponential Backoff and Circuit Breaker**
+- [x] **Task: P1.5 — Exponential Backoff and Circuit Breaker** ✅
   - Replace count-based restart with exponential backoff (10s→30s→60s→120s)
   - Circuit breaker: after 5 failures in 10 minutes, mark agent "unhealthy"
   - Auto-reroute tasks from unhealthy agents to healthy alternatives
@@ -124,12 +131,12 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 
 ---
 
-## 📋 Engineering Plan - Phase 17: Console UX Revolution (Q3 2026)
+## 📋 Engineering Plan - Phase 17: Console UX Revolution (Done ✅)
 
 **Theme: "Make it usable at scale"**
 
 ### P17.1: Dynamic Layouts
-- [ ] **Task: P2.1 — Adaptive tmux Layouts**
+- [x] **Task: P2.1 — Adaptive tmux Layouts** ✅
   - 2 agents: side-by-side split
   - 3-4 agents: 2x2 grid
   - 5-8 agents: tabbed windows by team (coding, review, ops)
@@ -138,7 +145,7 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - *Files:* `scripts/dashboard-launch.sh`
 
 ### P17.2: Focus Mode
-- [ ] **Task: P2.2 — Single-Agent Focus**
+- [x] **Task: P2.2 — Single-Agent Focus** ✅
   - Zoom single pane, hide others
   - Persistent status bar shows fleet health
   - Keyboard shortcuts: Ctrl+b 1, 2, 3... to switch focus
@@ -146,7 +153,7 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - *Files:* `scripts/dashboard-launch.sh`
 
 ### P17.3: Enhanced Console
-- [ ] **Task: P2.3 — Readline-Based Command Interface**
+- [x] **Task: P2.3 — Readline-Based Command Interface** ✅
   - Replace `while true; read` loop with proper readline console
   - Command history (up/down arrows)
   - Tab completion for commands
@@ -156,14 +163,14 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - *Files:* `scripts/console.py` (Python readline wrapper)
 
 ### P17.4: Status Bar
-- [ ] **Task: P2.4 — Real-Time Fleet Status**
+- [x] **Task: P2.4 — Real-Time Fleet Status** ✅
   - tmux status line: `[✓ Gemini] [⏳ Qwen: coding] [✗ Claude: stale]`
   - Updates every 20s via heartbeat data
   - Color-coded: green=healthy, yellow=busy, red=stale
   - *Files:* `scripts/dashboard-launch.sh`, `scripts/agent-wrapper.sh`
 
 ### P17.5: Session Persistence
-- [ ] **Task: P2.5 — Layout Save/Restore**
+- [x] **Task: P2.5 — Layout Save/Restore** ✅
   - Save tmux layout to `.ai-colab/tmux-layout.json`
   - On reconnect, restore exact pane layout and assignments
   - Named layout presets (default, coding, review)
@@ -171,12 +178,12 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 
 ---
 
-## 📋 Engineering Plan - Phase 18: Task Orchestration Intelligence (Q3-Q4 2026)
+## 📋 Engineering Plan - Phase 18: Task Orchestration Intelligence (Done ✅)
 
 **Theme: "Make it smart"**
 
 ### P18.1: Task Routing Engine
-- [ ] **Task: P3.1 — Capability-Based Routing**
+- [x] **Task: P3.1 — Capability-Based Routing** ✅
   - Analyze track requirements automatically
   - Match tasks to agents by capability scores
   - Code-heavy → Qwen/Claude
@@ -186,7 +193,7 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - *Files:* `scripts/conductor-workflow.sh`
 
 ### P18.2: Collaboration Patterns
-- [ ] **Task: P3.2 — Multi-Agent Workflows**
+- [x] **Task: P3.2 — Multi-Agent Workflows** ✅
   - **Review Pattern:** Agent A produces → Agent B reviews → Agent A fixes → Conductor approves
   - **Pair Pattern:** Two agents work in parallel, merge via git
   - **Chain Pattern:** Agent A analyzes → Agent B implements → Agent C tests
@@ -194,21 +201,21 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - *Files:* `scripts/conductor-workflow.sh`, `scripts/collaboration-patterns.sh`
 
 ### P18.3: Progress Tracking
-- [ ] **Task: P3.3 — Structured Agent Updates**
+- [x] **Task: P3.3 — Structured Agent Updates** ✅
   - Agents report: `% complete`, `current step`, `blockers`, `ETA`
   - Conductor aggregates and displays in dashboard
   - Progress alerts for stalled tasks (>30 min no update)
   - *Files:* `scripts/conductor-workflow.sh`, `scripts/agent-wrapper.sh`
 
 ### P18.4: Quality Gates
-- [ ] **Task: P3.4 — Automated Pre-Merge Checks**
+- [x] **Task: P3.4 — Automated Pre-Merge Checks** ✅
   - Before merging track: linting, test suite, security scan, dependency audit
   - If checks fail: route back to agent with specific feedback
   - Quality score tracking per track
   - *Files:* `scripts/conductor-workflow.sh`, `scripts/quality-gates.sh`
 
 ### P18.5: Performance Metrics
-- [ ] **Task: P3.5 — Agent Analytics**
+- [x] **Task: P3.5 — Agent Analytics** ✅
   - Track: completion rate, avg time per track, quality score, error rate
   - Display in dashboard and Web UI
   - Use metrics for intelligent routing optimization
@@ -409,6 +416,11 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   *Link: [./console-ux-plan.md](./console-ux-plan.md)*
   - **Assigned:** @architect
   - **Description:** Adaptive tmux layouts, focus mode, and enhanced interactive command console.
+
+- [x] **Track: Task Orchestration Intelligence** (Done ✅)
+  *Link: [./task-orchestration-plan.md](./task-orchestration-plan.md)*
+  - **Assigned:** @architect
+  - **Description:** Multi-agent collaboration patterns, quality gates, and performance analytics.
 
 ---
 

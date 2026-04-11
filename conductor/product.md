@@ -69,11 +69,11 @@ The Hub connects to various backends for specialized agent deployment:
 *   **Phase 16: Foundation Hardening** (Done ✅)
     *   **Theme:** "Make it unbreakable"
     *   Message queue layer with delivery guarantees (P1.1) (Done ✅)
-    *   Event processing resilience with cursor persistence (P1.2)
-    *   Blackboard schema validation and atomic operations (P1.3)
-    *   Intelligent capability-based agent selection (P1.4)
-    *   Exponential backoff and circuit breaker for agent recovery (P1.5)
-    *   MQTT security hardening with self-hosted broker (P1.6)
+    *   Event processing resilience with cursor persistence (P1.2) (Done ✅)
+    *   Blackboard schema validation and atomic operations (P1.3) (Done ✅)
+    *   Intelligent capability-based agent selection (P1.4) (Done ✅)
+    *   Exponential backoff and circuit breaker for agent recovery (P1.5) (Done ✅)
+    *   MQTT security hardening with self-hosted broker (P1.6) (Done ✅)
 *   **Phase 17: Console UX Revolution** (Done ✅)
     *   **Theme:** "Make it usable at scale"
     *   Dynamic tmux layouts based on active agent count (P2.1) (Done ✅)
@@ -88,7 +88,7 @@ The Hub connects to various backends for specialized agent deployment:
     *   Structured progress tracking from agents (P3.3) (Done ✅)
     *   Automated quality gates before merge (P3.4) (Done ✅)
     *   Agent performance metrics and optimization (P3.5) (Done ✅)
-*   **Phase 19: Ecosystem Expansion** (Planned)
+*   **Phase 19: Ecosystem Expansion** (In Progress 🔄)
     *   **Theme:** "Make it extensible"
     *   Containerized agents with pre-configured environments (P4.1)
     *   Cloud deployment on AWS/GCP/Azure (P4.2)

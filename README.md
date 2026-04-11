@@ -2,6 +2,8 @@
 
 A unified, **project-agnostic** environment for coordinating multiple AI agents (Gemini, Claude, Qwen, DeepSeek, NeMo, etc.) on complex engineering tasks.
 
+**Latest Release:** Phase 17 Complete ✅ — Console UX Revolution with adaptive layouts, focus mode, enhanced console, real-time status bar, and session persistence.
+
 ## 🌟 Vision
 To provide a seamless development experience where human oversight and AI autonomy work in harmony. ai-colab handles the "plumbing" of multi-agent systems—messaging, state synchronization, task tracking, and lifecycle management—allowing you to focus on the engineering.
 
@@ -11,132 +13,90 @@ To provide a seamless development experience where human oversight and AI autono
 
 ai-colab supports multiple installation pathways to suit your workflow:
 
-#### **Option 1: Interactive CLI Wizard (Recommended)**
+#### **Option 1: Global CLI (Recommended)**
 
-Guided terminal-based setup for your native environment:
+Install ai-colab globally to manage any project on your system:
 
 ```bash
 git clone https://github.com/ai-colab/ai-colab.git
 cd ai-colab
+./install.sh --global
+```
+
+This creates a global `ai-colab` command. You can now run `ai-colab` in any git repository to start managing it.
+
+#### **Option 2: Native/Local Install**
+
+Guided terminal-based setup for the current directory:
+
+```bash
 ./install.sh --wizard
 ```
 
-#### **Option 2: Docker & Web UI**
+#### **Option 3: Docker & Web UI**
 
 Browser-based setup and containerized management:
 
 ```bash
-git clone https://github.com/ai-colab/ai-colab.git
-cd ai-colab
 docker-compose up -d
 ```
 
 Then open: http://localhost:8080
 
-#### **Option 3: Quick/Auto Install**
+### Portable Python & Isolation
 
-Automated installation with sensible defaults (for CI/CD):
-
-```bash
-./install.sh --auto
-```
-
-### Python Environment
-
-The installer automatically detects and configures the best Python environment manager:
-- **uv** (preferred) → **conda** → **venv** → system pip
-
-A virtual environment is created in `.venv/` and auto-activated by all project scripts.
-
-**Manual activation:**
-```bash
-source .venv/bin/activate
-```
+ai-colab ensures true portability and zero interference with your system:
+- **Zero OS Dependency**: Uses `uv` to download standalone Python 3.11 distributions.
+- **Intelligent Detection**: Automatically detects **uv**, **conda**, **pixi**, or **venv**.
+- **Isolated Runtimes**: Every project runs in its own dedicated, high-performance environment.
 
 📖 **Full Details:** See [`docs/INSTALLATION.md`](docs/INSTALLATION.md) and [`PYTHON_ENV_SETUP.md`](PYTHON_ENV_SETUP.md)
 
-### Launch the Dashboard
+### Launch the Command Center
 
-After installation:
+After installation, simply run:
 
 ```bash
-./launch.sh
+ai-colab
 ```
 
 **Choose your launch mode:**
 
-1. **Dashboard (tmux-based)** - Traditional terminal layout with hcom TUI, agents, and conductor in separate panes
-2. **WebUI (Browser-based)** - Web interface with embedded xterm.js terminals for browser-only workflow
-3. **Debug Mode** - Single LLM CLI session with KB/RAG integration for troubleshooting
+1. **Dashboard (v3.0)** - Adaptive tmux layout with real-time status bar and focus mode.
+2. **WebUI (v3.0)** - Modular blueprint-based interface with project switcher and persistent logs.
+3. **Debug Mode** - Specialized troubleshooting environment with deep KB/RAG context.
 
-**Module Options:**
+**Dashboard Features (Phase 17 Complete ✅):**
+- **Dynamic Layouts:** Auto-adapts to agent count (1-2: side-by-side, 3-4: grid, 5-7: tabbed, 8+: compact)
+- **Focus Mode:** `Ctrl+b f` to zoom single agent pane, `Ctrl+b 1-9` to switch between agents
+- **Real-Time Status Bar:** Color-coded fleet status in tmux status line (✓ ready, ⏳ busy, ✗ crashed)
+- **Enhanced Console:** Python readline-based interface with command history, tab completion, and help
+- **Session Persistence:** Auto-saves layout on creation, restore with `bash scripts/restore-layout.sh`
+- **Named Layout Presets:** Save/restore layouts as `default`, `coding`, `review`, or custom names
+
+**Multi-Project Support:**
+Running `ai-colab` will scan for local git repositories and allow you to register and switch between them seamlessly.
+
+### Testing & Quality Gates
+
+Ensure code integrity with the built-in quality assurance framework:
 
 ```bash
-./launch.sh -m atari-8bit        # Enable Atari module
-./launch.sh --module mock-test   # Enable Mock module
-./launch.sh -m atari-8bit --auto # Enable module in auto mode
-```
+# Run all quality gates (Linting, Security, Syntax)
+./scripts/quality-gates.sh
 
-### Testing
-
-Run the comprehensive test harness to verify all launch options:
-
-```bash
+# Run comprehensive test suite
 ./scripts/test-launch-options.sh
 ```
 
-**Test Coverage:** 58 automated tests
-- Prerequisites (tmux, hcom, Python, dependencies)
-- Dashboard (tmux) tests
-- WebUI server and API tests
-- Debug Mode tests
-- Integration tests
-- Performance tests
+**Quality Gates:**
+- ✅ **Python Syntax**: Recursive validation across all project files.
+- ✅ **Linting**: Strict `flake8` enforcement for clean code.
+- ✅ **Security**: `bandit` scanning for potential vulnerabilities.
+- ✅ **Functional**: Conductor-integrated test runs before any merge.
 
 📖 **Full Documentation:** See [`docs/INSTALLATION.md`](docs/INSTALLATION.md) for detailed installation guide.
 📖 **Web Terminal Guide:** See [`docs/WEB_TERMINAL_GUIDE.md`](docs/WEB_TERMINAL_GUIDE.md) for browser-based workflow.
-
-## 🆕 New: MCP Server & RAG System
-
-ai-colab now includes a **hybrid intelligence layer** for enhanced LLM integration and semantic search:
-
-### **MCP Server (Model Context Protocol)**
-Standardized tool access for LLM-CLIs and IDE integration:
-- **12 MCP Tools**: blackboard, tracks, knowledge, agents, DevOps
-- **Transports**: stdio (LLM-CLI) + SSE (web clients)
-- **IDE Support**: VS Code, Cursor, gemini-cli, qwen-code
-
-```bash
-# Setup LLM-CLI integration
-./scripts/setup-mcp-clients.sh --all
-
-# Start MCP server
-python -m mcp.ai_colab_server
-```
-
-### **RAG System (Semantic Search)**
-Retrieval-Augmented Generation for codebase understanding:
-- **Semantic Search**: Find relevant docs by meaning, not keywords
-- **Auto-Refresh**: File watcher for automatic re-indexing
-- **Query Caching**: Fast repeated searches
-
-```bash
-# Search knowledge base
-./scripts/hcom-kb-search.sh "How does the blackboard work?"
-
-# Launch with auto-indexing
-./launch.sh --rag-watcher
-```
-
-### **Web UI Knowledge Base**
-Browser-based semantic search interface:
-- Search with relevance scores
-- Filter by source (conductor, tracks, docs)
-- Index management and statistics
-
-Access at: http://localhost:8080 → Knowledge Base tab
-
-📖 **Guide:** See [`docs/MCP_RAG_USER_GUIDE.md`](docs/MCP_RAG_USER_GUIDE.md)
 
 ## 🏗️ Core Architecture
 
@@ -144,11 +104,9 @@ ai-colab follows a **'Hub and Spoke'** model to separate orchestration from comp
 
 ### **Orchestration Hub (Self-Hosted)**
 The **Hub** is the central controller. It is designed to be **self-hosted** (locally or via Docker).
-> **⚠️ Important:** The `ai-colab-core` Docker image contains **ONLY** the orchestration components (hcom relay, Conductor, Blackboard, Web UI) and remote connectors (client CLIs). It does **NOT** run LLM models or agent logic internally; these run externally as 'Spokes'.
-
 - **hcom Relay**: The messaging backbone for the entire fleet.
 - **Conductor**: The project orchestrator and task manager.
-- **Shared Blackboard**: Real-time state synchronization (hcom-kv).
+- **Shared Blackboard**: Real-time state synchronization (hcom-kv) with **schema validation**.
 - **Remote Connectors**: Client CLIs used to communicate with remote models.
 
 ### **Remote Spokes (Agents & Compute)**
@@ -158,12 +116,12 @@ High-power agents and models run **externally** to the Hub:
 - **Fleet Workers**: Specialized agents running on distributed hardware.
 
 ### **Intelligent Orchestration**
-*   **Fleet Autonomy & Self-Healing:** Autonomous watchdog that monitors agent health and recovers from crashes.
-*   **Automated Git Lifecycle:** Isolated branches, auto-commits, and pseudo-PRs.
+*   **Adaptive Layouts:** tmux dashboard automatically scales from single agent to massive fleets.
+*   **Capability-Based Routing:** Conductor selects agents based on their strengths (Coding, Architecture, etc.).
+*   **Automated Git Lifecycle:** Isolated branches, auto-commits, and **Review-Pattern** workflows.
 *   **Semantic Knowledge Base:** LLM-powered architectural search (`!kb`).
-*   **Unified Dashboard (v3.0):** High-density real-time TUI featuring **Fleet Health** monitoring.
-*   **80-Column ANSI UI:** Professional CLI graphics and status reporting across all core scripts.
-*   **Project Migration Tool:** Automated detection and import of existing AI integrations.
+*   **Unified Dashboard (v3.0):** High-density real-time TUI featuring **Fleet Status** and agent progress.
+*   **Enhanced Console:** Python-based interactive shell with history and tab-completion.
 
 ### **hcom (Hook-Comms)**
 The backbone of ai-colab. All agents communicate via [hcom](https://github.com/aannoo/hcom):
@@ -176,168 +134,58 @@ The backbone of ai-colab. All agents communicate via [hcom](https://github.com/a
     *   `!kb <query>`: Semantic search for architectural guidance.
     *   `!build`: Triggers the project's local build system.
 
-## 🧩 Addon Modules (Examples)
-
-ai-colab is designed to be project-agnostic. Specialized functionality is provided via modular addons:
-
-### **Atari-8bit Development**
-Example module for 6502 assembly and Atari 8-bit hardware.
-- ✅ Visual Memory Map Generator (`!memory-map`)
-- ✅ Historical Performance Trending (`!perf-trend`)
-- ✅ Automated Screen Capture & Sync (`!screenshot`)
-- ✅ Technical Debate Mode for optimizations.
-
-📖 **See:** [`modules/atari-8bit/README.md`](modules/atari-8bit/README.md)
-
----
-
-## 💻 Terminal Setup
-
-ai-colab includes **automatic terminal detection and optimization** for the best multi-agent experience.
-
-### **macOS + iTerm2 (Recommended)**
-iTerm2 provides superior pane management and shell integration.
-📖 **Guide:** [`docs/ITERM2_SETUP.md`](docs/ITERM2_SETUP.md)
-
-### **WSL2 Ubuntu + Windows Terminal**
-Full support for WSL2 with Windows Terminal optimizations.
-📖 **Guide:** [`docs/WSL_SETUP.md`](docs/WSL_SETUP.md)
-
 ---
 
 ## 🛠️ Key Scripts
 
 | Script | Purpose |
 |--------|---------|
-| `./install.sh` | Master installer with `--wizard`, `--reconfigure`, and `--auto` modes. Auto-detects Python environment |
-| `./install.sh --wizard` | Interactive CLI installation wizard (5-step guided setup) |
-| `./install.sh --reconfigure` | Modify existing installation without reinstalling |
-| `./launch.sh` | Unified launcher with interactive module and agent selection. Auto-activates `.venv` |
-| `./launch.sh --rag-watcher` | Launch with RAG file watcher for auto-indexing |
-| `./scripts/migrate-project.sh` | Project Detection & Migration Tool (automated AI import) |
-| `./scripts/setup-mcp-clients.sh` | MCP client setup for gemini-cli, qwen-code, claude-code |
-| `./scripts/hcom-kb-search.sh` | Enhanced !kb command with semantic search |
-| `./scripts/run-tests.sh` | Test runner for MCP, RAG, integration, security |
-| `./scripts/verify-integration.sh` | Integration verification script |
-| `scripts/config-manager.sh` | Central configuration management and schema validation |
-| `scripts/install-wizard.sh` | Interactive terminal-based configuration wizard |
-| `scripts/utils.sh` | Shared utilities and 80-column ANSI UI helpers |
-| `scripts/agent-wrapper.sh` | Unified registration, heartbeats, and role injection |
-| `scripts/conductor-workflow.sh`| The orchestration heart (Git, KB, Tasking) |
-| `scripts/hcom-test-runner.sh` | Unified test execution and blackboard reporting |
-| `scripts/hcom-kb-index.sh` | Generates the semantic project map for `!kb` |
-| `scripts/conductor-dashboard.sh`| Renders the high-density terminal dashboard (v2.4) |
-| `scripts/dashboard-launch.sh` | Enhanced dashboard launcher (v2.4) with pre-flight checks and cross-version tmux compatibility |
-| `webui/app.py` | Flask-based Web UI and API backend (v2.1 with KB endpoints) |
-| `tests/test_webui.sh` | Automated Web UI test suite (8 tests) |
-| `scripts/webui-test-watch.sh` | Local file watcher for automated testing |
-| `mcp/ai_colab_server/` | MCP server with 12 tools for LLM-CLI integration |
-| `rag/` | RAG system for semantic search and auto-indexing |
-| `.venv/` | **Auto-created** virtual environment for Python dependencies |
+| `./install.sh --global` | **NEW** - Installs ai-colab globally and adds `ai-colab` command to PATH |
+| `scripts/python-env-manager.sh`| **NEW** - Universal environment manager with portable Python support |
+| `scripts/workspace_manager.py` | **NEW** - Multi-project Git discovery and registration logic |
+| `scripts/console.py` | **NEW** - Enhanced Python-based interactive command console |
+| `scripts/quality-gates.sh` | **NEW** - Automated code quality validation (Linting, Security, Syntax) |
+| `./launch.sh` | Unified launcher with interactive project and agent selection |
+| `scripts/conductor-workflow.sh`| The orchestration heart (Git, KB, Tasking, Capability Routing) |
+| `webui/app_refactored.py` | **NEW** - Modular Web UI backend (v3.0) using Flask Blueprints |
+| `scripts/message-queue.sh` | **NEW** - SQLite-based message queue with delivery guarantees |
 
 ---
 
-## 🌐 Web UI
+## 🌐 Web UI v3.0
 
-ai-colab includes a comprehensive Web UI for browser-based management:
+ai-colab includes a modular Web UI for professional browser-based management:
 
 ### Features
-- **Setup Wizard**: Interactive 5-step configuration via browser
-- **Dashboard**: Real-time system status with health monitoring
-- **Fleet Health**: Real-time latency and status for distributed spokes (NEW!)
-- **Knowledge Base**: Semantic search with relevance scores
-- **Pre-flight Checks**: System readiness verification
-- **Session Management**: View and recover tmux sessions
-- **Agent Monitoring**: Real-time agent list from hcom
-- **Configuration Editor**: Visual config management with validation
-- **Logs Viewer**: Real-time log streaming and filtering
+- **Project Switcher**: Seamlessly switch between managed projects from the header.
+- **Modular Blueprints**: Decoupled API services for terminal, system, config, and KB.
+- **Fleet Health**: Real-time latency, status, and **task progress** for all agents.
+- **Knowledge Base**: Semantic search with relevance scores and auto-indexing.
+- **Session Persistence**: Automatic recovery of tmux sessions and active configurations.
 
-### Quick Start
-```bash
-# Docker deployment
-docker-compose up -d
-
-# Access at
-http://localhost:8080
-```
-
-### New API Endpoints (v2.1)
-- `GET /health` - Enhanced health with tmux/hcom/disk checks
-- `GET /api/preflight` - Pre-flight checks (mirrors CLI)
-- `GET /api/session/status` - tmux session monitoring
-- `POST /api/session/recover` - Session recovery
-- `GET /api/agents` - Real-time agent list
-- `POST /api/dashboard/launch` - Launch dashboard from browser
-- **`GET /api/kb/search`** - Semantic knowledge base search (NEW!)
-- **`POST /api/kb/index`** - Trigger document indexing (NEW!)
-- **`GET /api/kb/stats`** - Get index statistics (NEW!)
-
-### Knowledge Base Page
-Access at: http://localhost:8080 → Knowledge Base tab
-- Search by semantic meaning (not just keywords)
-- Filter by source (conductor, tracks, docs, etc.)
-- View relevance scores and excerpts
-- Trigger re-indexing and view statistics
-
-**Access**: http://localhost:8080 (when running via Docker)
-
-📖 **Guide:** See [`docs/WEBUI_GUIDE.md`](docs/WEBUI_GUIDE.md)
-📖 **Testing:** See [`docs/AUTOMATED_WEBUI_TESTING.md`](docs/AUTOMATED_WEBUI_TESTING.md)
-📖 **MCP/RAG:** See [`docs/MCP_RAG_USER_GUIDE.md`](docs/MCP_RAG_USER_GUIDE.md)
+### New API Endpoints (v3.0)
+- `GET /api/workspace/list` - List all registered projects.
+- `POST /api/workspace/switch` - Switch active project context.
+- `GET /api/status` - Enhanced status including project root and agent progress.
+- `POST /api/shutdown` - Graceful shutdown of all agent sessions.
 
 ---
 
 ## 🧪 Automated Testing
 
-### Web UI Test Suite
-- **8 automated tests** covering all API endpoints
-- **GitHub Actions** CI/CD integration
-- **Local file watcher** for real-time feedback during development
-- **Test status badges** for visibility
+### Quality Gates
+The system now enforces strict quality standards before any code is merged:
+- ✅ **Python Syntax**: Recursive check via `compileall`.
+- ✅ **Linting**: `flake8` verification of coding standards.
+- ✅ **Security**: `bandit` scan for common vulnerabilities.
+- ✅ **Integration**: Automated merge-validation via `hcom-test-runner.sh`.
 
-### Run Tests
-```bash
-# Manual test run
-./tests/test_webui.sh
+### Web UI & Core
+- **8 automated tests** covering all v3.0 modular blueprints.
+- **Unit tests** for workspace discovery and portable python logic.
+- **Real-time feedback** via local file watcher.
 
-# Start file watcher (auto-runs on changes)
-./scripts/webui-test-watch.sh
-```
-
-### Test Coverage
-- ✅ Health endpoint with system checks
-- ✅ Pre-flight checks API
-- ✅ Session status monitoring
-- ✅ Agent list from hcom
-- ✅ Configuration management
-- ✅ System status endpoint
-- ✅ Dashboard launch endpoint
-- ✅ Fleet Autonomy & Recovery (Watchdog)
-- ✅ Frontend HTML verification
-
-### MCP & RAG Test Suite (NEW!)
-- **Unit tests** for all 12 MCP tools
-- **Unit tests** for RAG components (chunker, embedder, retriever)
-- **Integration tests** for end-to-end functionality
-- **Security audit** for vulnerabilities
-- **Performance benchmarks** for latency and throughput
-
-### Run MCP & RAG Tests
-```bash
-# Run all tests
-./scripts/run-tests.sh --all
-
-# Run specific test suites
-./scripts/run-tests.sh --unit        # Unit tests
-./scripts/run-tests.sh --integration # Integration tests
-./scripts/run-tests.sh --security    # Security audit
-./scripts/run-tests.sh --benchmarks  # Performance benchmarks
-
-# Verify integration
-./scripts/verify-integration.sh
-```
-
-**Status:** 8/8 Web UI tests passing ✅ | MCP & RAG tests available ✅
+**Status:** 8/8 Web UI tests passing ✅ | Quality Gates available ✅ | Multi-Project tests available ✅
 
 ---
 
