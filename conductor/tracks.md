@@ -52,6 +52,13 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - [ ] Task P1.4: Intelligent Agent Selection
   - [ ] Task P1.5: Agent Recovery Improvements
   - [ ] Task P1.6: MQTT Security Hardening
+- [ ] **Milestone 21: Console UX Revolution** (In Progress 🔄)
+  *Link: [./console-ux-plan.md](./console-ux-plan.md)*
+  - [ ] Task P2.1: Adaptive tmux Layouts
+  - [ ] Task P2.2: Focus Mode
+  - [ ] Task P2.3: Readline Command Interface
+  - [ ] Task P2.4: Real-Time Status Bar
+  - [ ] Task P2.5: Session Persistence
 
 ---
 
@@ -105,7 +112,8 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - Add TLS encryption and username/password authentication
   - Document deployment options (Docker Compose profile: `mqtt`)
   - Update `config.toml` with secure defaults
-  - *Files:* `config.toml`, `docker-compose.yml`, `docs/mqtt-setup.md`
+  - *Files:* `config.toml`, `docker-compose.yml`, `docker/mosquitto/`, `docs/mqtt-security-setup.md`
+  - *Track:* [./tracks/mqtt_security_20260410/](./tracks/mqtt_security_20260410/)
 
 ---
 
