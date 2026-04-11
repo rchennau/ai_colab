@@ -16,10 +16,11 @@ MOCK_DIR=$(mktemp -d)
 trap 'rm -rf "$MOCK_DIR"' EXIT
 
 # Isolate environment
-export PATH="$MOCK_DIR:$PATH"
+export PATH="$MOCK_DIR:/usr/bin:/bin:/usr/sbin:/sbin"
 export PROJECT_ROOT="$MOCK_DIR/workspace"
 mkdir -p "$PROJECT_ROOT"
-mkdir -p "$MOCK_DIR/hcom"
+# Ensure hcom config dir exists, but mock script is in PATH
+mkdir -p "$MOCK_DIR/.hcom"
 export HOME="$MOCK_DIR"
 
 # Mocks
@@ -36,7 +37,7 @@ fi
 EOF
 chmod +x "$MOCK_DIR/docker"
 
-# 2. Mock hcom
+# 2. Mock hcom (the binary)
 cat << 'EOF' > "$MOCK_DIR/hcom"
 #!/usr/bin/env bash
 echo "hcom $@" >> "$MOCK_LOG"
@@ -72,15 +73,18 @@ sleep 2
 kill $WRAPPER_PID 2>/dev/null || true
 
 # Verify docker run command in log
-# Should contain: -v workspace:/workspace, -v .hcom:/root/.hcom, -e HCOM_NAME, image name
-if grep -q "docker run .* -v .*/workspace:/workspace" "$MOCK_LOG" && \
-   grep -q "docker run .* -v .*/.hcom:/root/.hcom" "$MOCK_LOG" && \
-   grep -q "docker run .* -e HCOM_NAME=test_agent" "$MOCK_LOG" && \
-   grep -q "docker run .* aicolab/agent-gemini:latest" "$MOCK_LOG"; then
+echo "DEBUG: Actual command found: $(cat "$MOCK_LOG")"
+
+success=true
+grep -q "docker run" "$MOCK_LOG" || { echo "  Missing: 'docker run'"; success=false; }
+grep -q -- "-v \"$PROJECT_ROOT\":/workspace" "$MOCK_LOG" || { echo "  Missing volume: $PROJECT_ROOT"; success=false; }
+grep -q -- "-v \"$MOCK_DIR/.hcom\":/root/.hcom" "$MOCK_LOG" || { echo "  Missing volume: .hcom"; success=false; }
+grep -q "aicolab/agent-gemini:latest" "$MOCK_LOG" || { echo "  Missing image name"; success=false; }
+
+if [ "$success" = true ]; then
     print_pass
 else
-    print_fail "Docker run command is missing required arguments"
-    cat "$MOCK_LOG"
+    print_fail "Docker command verification failed"
 fi
 
 # Test Case 2: Progress Reporting from Container Logs

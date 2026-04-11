@@ -1,24 +1,15 @@
 {
   "version": "1.0.0",
-  "created": "2026-04-11T16:32:18-07:00",
+  "created": "2026-04-11T16:45:33-07:00",
   "installation": {
     "status": "in-progress",
     "pathway": "unknown"
   },
   "config_history": [
     {
-      "timestamp": "2026-04-11T16:32:19.405343",
+      "timestamp": "2026-04-11T16:45:33.655307",
       "description": "Loaded profile: minimal"
-    },
-    {
-      "timestamp": "2026-04-11T16:32:51.178354",
-      "description": "Loaded profile: minimal"
-    },
-    {
-      "timestamp": "2026-04-11T16:32:51.375769",
-      "description": "Loaded profile: standard"
     }
   ],
-  "last_modified": "2026-04-11T16:32:19.113108",
-  "config_changed": "2026-04-11T16:32:18-07:00"
+  "last_modified": "2026-04-11T16:45:33.415441"
 }

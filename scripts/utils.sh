@@ -360,10 +360,27 @@ _bb_get_db_path() {
 }
 
 # Ensure kv table exists with expires_at column
+# Handles schema migration for existing tables
 _bb_ensure_table() {
     local db_path="$(_bb_get_db_path)"
     mkdir -p "$(dirname "$db_path")"
-    sqlite3 "$db_path" "CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT, expires_at INTEGER DEFAULT 0);"
+
+    # Create table if it doesn't exist
+    sqlite3 "$db_path" "CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT, expires_at INTEGER DEFAULT 0);" 2>/dev/null || true
+
+    # Add expires_at column if it doesn't exist (schema migration)
+    # Use python for reliable column detection
+    python3 -c "
+import sqlite3
+conn = sqlite3.connect('$db_path')
+cursor = conn.cursor()
+cursor.execute('PRAGMA table_info(kv)')
+columns = [row[1] for row in cursor.fetchall()]
+if 'expires_at' not in columns:
+    cursor.execute('ALTER TABLE kv ADD COLUMN expires_at INTEGER DEFAULT 0')
+    conn.commit()
+conn.close()
+" 2>/dev/null || true
 }
 
 # Validate a key against the schema namespaces

@@ -235,14 +235,15 @@ run_agent() {
         
         # Build Docker Run command
         # Note: We map PROJECT_ROOT to /workspace and hcom config to /root/.hcom
+        # Use proper quoting for paths with spaces
         agent_cmd="docker run --rm -i \
-            -v \"$PROJECT_ROOT:/workspace\" \
-            -v \"$HOME/.hcom:/root/.hcom\" \
+            -v \"$PROJECT_ROOT\":/workspace \
+            -v \"$HOME/.hcom\":/root/.hcom \
             -e HCOM_NAME=\"$HCOM_NAME\" \
             -e GOOGLE_API_KEY=\"${GOOGLE_API_KEY:-}\" \
             -e ANTHROPIC_API_KEY=\"${ANTHROPIC_API_KEY:-}\" \
             --name \"agent_${HCOM_NAME}_$(date +%s)\" \
-            $image"
+            $image $(printf " %q" "${VALID_ARGS[@]}")"
     else
         # Local Execution
         if [[ "$CMD" == *" "* ]]; then
