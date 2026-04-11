@@ -45,6 +45,13 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - [x] Context switching between projects in CLI and WebUI
   - [x] OS-independent portable Python distribution via `uv`
   - [x] Comprehensive QA harness (Unit, Feature, System, E2E)
+- [ ] **Milestone 20: Foundation Hardening** (In Progress 🔄)
+  - [x] **Task P1.1: Reliable Message Delivery** (Implemented in `scripts/message-queue.sh`)
+  - [ ] Task P1.2: Cursor-Based Event Processing
+  - [ ] Task P1.3: Blackboard Schema Validation
+  - [ ] Task P1.4: Intelligent Agent Selection
+  - [ ] Task P1.5: Agent Recovery Improvements
+  - [ ] Task P1.6: MQTT Security Hardening
 
 ---
 
@@ -53,7 +60,7 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 **Theme: "Make it unbreakable"**
 
 ### P16.1: Message Queue Layer
-- [ ] **Task: P1.1 — Reliable Message Delivery**
+- [x] **Task: P1.1 — Reliable Message Delivery**
   - Implement SQLite-based message queue with acknowledgment
   - Queue messages for offline agents, deliver on reconnection
   - Retry logic with configurable max attempts

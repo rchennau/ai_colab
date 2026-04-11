@@ -1,0 +1,157 @@
+{
+  "_comment": "Agent Capability Definitions — P16.4: Intelligent Agent Selection",
+  "_version": "1.0.0",
+  "_description": "Default capability scores (0.0-1.0) for each LLM CLI agent. Used by the conductor to match tasks to the best available agent.",
+
+  "agents": {
+    "gemini": {
+      "display_name": "Gemini",
+      "cli_command": "gemini",
+      "fallback_cli_command": "gemini-cli",
+      "capabilities": {
+        "reasoning": 0.9,
+        "coding": 0.7,
+        "architecture": 0.9,
+        "documentation": 0.8,
+        "optimization": 0.6,
+        "review": 0.7
+      },
+      "default_model": "gemini-2.5-pro",
+      "max_context_window": 1000000,
+      "cost_per_1m_tokens": 3.50
+    },
+    "qwen": {
+      "display_name": "Qwen",
+      "cli_command": "qwen-code",
+      "fallback_cli_command": "qwen",
+      "capabilities": {
+        "reasoning": 0.7,
+        "coding": 0.9,
+        "architecture": 0.6,
+        "documentation": 0.5,
+        "optimization": 0.8,
+        "review": 0.7
+      },
+      "default_model": "qwen3-coder",
+      "max_context_window": 256000,
+      "cost_per_1m_tokens": 0.50
+    },
+    "claude": {
+      "display_name": "Claude",
+      "cli_command": "claude-code",
+      "fallback_cli_command": "claude",
+      "capabilities": {
+        "reasoning": 0.8,
+        "coding": 0.85,
+        "architecture": 0.7,
+        "documentation": 0.9,
+        "optimization": 0.6,
+        "review": 0.85
+      },
+      "default_model": "claude-sonnet-4-20250514",
+      "max_context_window": 200000,
+      "cost_per_1m_tokens": 3.00
+    },
+    "deepseek": {
+      "display_name": "DeepSeek",
+      "cli_command": "deepseek-cli",
+      "fallback_cli_command": "deepseek",
+      "capabilities": {
+        "reasoning": 0.8,
+        "coding": 0.8,
+        "architecture": 0.6,
+        "documentation": 0.5,
+        "optimization": 0.9,
+        "review": 0.7
+      },
+      "default_model": "deepseek-chat",
+      "max_context_window": 128000,
+      "cost_per_1m_tokens": 0.27
+    },
+    "nemoclaw": {
+      "display_name": "NVIDIA nemoclaw",
+      "cli_command": "nemo-cli.py",
+      "fallback_cli_command": "nemoclaw",
+      "capabilities": {
+        "reasoning": 0.8,
+        "coding": 0.6,
+        "architecture": 0.95,
+        "documentation": 0.5,
+        "optimization": 0.7,
+        "review": 0.6
+      },
+      "default_model": "nemotron-4-340b",
+      "max_context_window": 32768,
+      "cost_per_1m_tokens": 0.00
+    },
+    "vllm": {
+      "display_name": "vLLM (Local)",
+      "cli_command": "elc",
+      "fallback_cli_command": "vllm",
+      "capabilities": {
+        "reasoning": 0.6,
+        "coding": 0.6,
+        "architecture": 0.5,
+        "documentation": 0.5,
+        "optimization": 0.5,
+        "review": 0.5
+      },
+      "default_model": "local-model",
+      "max_context_window": 8192,
+      "cost_per_1m_tokens": 0.00
+    }
+  },
+
+  "capability_weights": {
+    "_comment": "Default weights for task analysis. Can be overridden per-task type.",
+    "default": {
+      "reasoning": 0.2,
+      "coding": 0.3,
+      "architecture": 0.2,
+      "documentation": 0.1,
+      "optimization": 0.1,
+      "review": 0.1
+    },
+    "code_heavy": {
+      "reasoning": 0.15,
+      "coding": 0.5,
+      "architecture": 0.1,
+      "documentation": 0.05,
+      "optimization": 0.1,
+      "review": 0.1
+    },
+    "architecture": {
+      "reasoning": 0.25,
+      "coding": 0.1,
+      "architecture": 0.4,
+      "documentation": 0.1,
+      "optimization": 0.1,
+      "review": 0.05
+    },
+    "documentation": {
+      "reasoning": 0.15,
+      "coding": 0.1,
+      "architecture": 0.15,
+      "documentation": 0.4,
+      "optimization": 0.05,
+      "review": 0.15
+    }
+  },
+
+  "task_keywords": {
+    "code_heavy": [
+      "implement", "code", "function", "class", "refactor", "debug",
+      "fix bug", "unit test", "integration test", "script", "API",
+      "endpoint", "handler", "middleware", "algorithm"
+    ],
+    "architecture": [
+      "design", "architecture", "pattern", "structure", "framework",
+      "infrastructure", "pipeline", "workflow", "system", "component",
+      "interface", "protocol", "specification", "roadmap"
+    ],
+    "documentation": [
+      "document", "README", "guide", "tutorial", "manual", "reference",
+      "spec", "changelog", "release notes", "API docs"
+    ]
+  }
+}

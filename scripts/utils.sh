@@ -596,6 +596,253 @@ blackboard_atomic_set() {
     bb_cleanup_expired
 }
 
+# ============================================================
+# Intelligent Agent Selection (P16.4)
+# ============================================================
+
+# Agent capabilities config path (respects test override)
+AGENT_CAPABILITIES_PATH="${CAPABILITIES_FILE:-$PROJECT_ROOT/config/agent-capabilities.json}"
+
+# Get a specific capability score for an agent
+# Usage: agent_get_capability <agent_name> <capability>
+# Returns: score (0.0-1.0) or empty if not found
+agent_get_capability() {
+    local agent_name="$1"
+    local capability="$2"
+    local config_path="${3:-$AGENT_CAPABILITIES_PATH}"
+
+    if [[ ! -f "$config_path" ]]; then
+        echo "0"
+        return
+    fi
+
+    python3 -c "
+import json, sys
+try:
+    config = json.load(open('$config_path'))
+    agents = config.get('agents', {})
+    # Try exact match first
+    if '$agent_name' in agents:
+        cap = agents['$agent_name'].get('capabilities', {}).get('$capability', 0)
+        print(cap)
+    else:
+        # Try case-insensitive match
+        for name, data in agents.items():
+            if name.lower() == '$agent_name'.lower():
+                cap = data.get('capabilities', {}).get('$capability', 0)
+                print(cap)
+                sys.exit(0)
+        # Try matching by CLI command
+        for name, data in agents.items():
+            cli = data.get('cli_command', '')
+            fallback = data.get('fallback_cli_command', '')
+            if '$agent_name'.lower() in [cli.lower(), fallback.lower()]:
+                cap = data.get('capabilities', {}).get('$capability', 0)
+                print(cap)
+                sys.exit(0)
+        print(0)
+except Exception as e:
+    print(0)
+" 2>/dev/null
+}
+
+# Analyze a task description to determine required capabilities
+# Usage: agent_analyze_task <task_description>
+# Returns: task_type,primary_capability (e.g., "code_heavy,coding")
+agent_analyze_task() {
+    local task_description="$1"
+    local config_path="${2:-$AGENT_CAPABILITIES_PATH}"
+
+    if [[ ! -f "$config_path" ]]; then
+        echo "default,coding"
+        return
+    fi
+
+    python3 -c "
+import json, sys
+
+config = json.load(open('$config_path'))
+task = '$task_description'.lower()
+keywords = config.get('task_keywords', {})
+
+# Score each task type by keyword matches
+scores = {}
+for task_type, words in keywords.items():
+    score = sum(1 for w in words if w in task)
+    scores[task_type] = score
+
+if not scores or max(scores.values()) == 0:
+    print('default,coding')
+    sys.exit(0)
+
+# Get the best-matching task type
+best_type = max(scores, key=scores.get)
+
+# Map task type to primary capability
+capability_map = {
+    'code_heavy': 'coding',
+    'architecture': 'architecture',
+    'documentation': 'documentation'
+}
+primary = capability_map.get(best_type, 'coding')
+
+print(f'{best_type},{primary}')
+" 2>/dev/null
+}
+
+# Select the best agent for a task based on capabilities
+# Usage: agent_select_best <task_description> <available_agents_csv>
+# Returns: selected agent name or empty if none available
+agent_select_best() {
+    local task_description="$1"
+    local available_agents_csv="$2"
+    local config_path="${3:-$AGENT_CAPABILITIES_PATH}"
+
+    # Handle empty available agents
+    if [[ -z "$available_agents_csv" ]]; then
+        return 0
+    fi
+
+    # Handle single agent
+    if [[ "$available_agents_csv" != *","* ]]; then
+        echo "$available_agents_csv"
+        return 0
+    fi
+
+    # Analyze task to get required capability
+    local analysis
+    analysis=$(agent_analyze_task "$task_description" "$config_path")
+    local task_type="${analysis%%,*}"
+    local primary_cap="${analysis##*,}"
+
+    # Get capability weights for this task type
+    local weights_json
+    weights_json=$(python3 -c "
+import json
+config = json.load(open('$config_path'))
+weights = config.get('capability_weights', {}).get('$task_type', config.get('capability_weights', {}).get('default', {}))
+print(json.dumps(weights))
+" 2>/dev/null)
+
+    # Select best agent
+    local best_agent
+    best_agent=$(python3 -c "
+import json, sys
+
+config = json.load(open('$config_path'))
+agents_config = config.get('agents', {})
+weights = json.loads('$weights_json')
+primary_cap = '$primary_cap'
+available = '$available_agents_csv'.split(',')
+
+# Build available agents list
+available_lower = [a.lower().strip() for a in available]
+
+# Score each available agent
+best_score = -1
+best_agent = ''
+
+for agent_name, agent_data in agents_config.items():
+    # Check if this agent is available
+    agent_match = False
+    if agent_name.lower() in available_lower:
+        agent_match = True
+    elif agent_data.get('cli_command', '').lower() in available_lower:
+        agent_match = True
+    elif agent_data.get('fallback_cli_command', '').lower() in available_lower:
+        agent_match = True
+
+    if not agent_match:
+        continue
+
+    # Calculate weighted score
+    caps = agent_data.get('capabilities', {})
+    score = 0
+    total_weight = 0
+    for cap, weight in weights.items():
+        cap_score = caps.get(cap, 0)
+        score += cap_score * weight
+        total_weight += weight
+
+    if total_weight > 0:
+        score /= total_weight
+
+    if score > best_score:
+        best_score = score
+        best_agent = agent_name
+
+print(best_agent)
+" 2>/dev/null)
+
+    echo "$best_agent"
+}
+
+# Get all registered agents with their capabilities from blackboard
+# Usage: agent_get_registered_agents
+# Returns: CSV of agent names that are currently online
+agent_get_registered_agents() {
+    if ! command -v hcom >/dev/null 2>&1; then
+        echo ""
+        return
+    fi
+
+    # Get list of online agents
+    hcom list --names 2>/dev/null | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v "^$" | tr '\n' ',' | sed 's/,$//'
+}
+
+# Register agent capabilities in blackboard
+# Usage: agent_register_capabilities <agent_name>
+# Stores capabilities from config file to blackboard
+agent_register_capabilities() {
+    local agent_name="$1"
+    local config_path="${2:-$AGENT_CAPABILITIES_PATH}"
+
+    if [[ ! -f "$config_path" ]]; then
+        return 1
+    fi
+
+    # Get all capabilities for this agent
+    local caps_json
+    caps_json=$(python3 -c "
+import json
+config = json.load(open('$config_path'))
+agents = config.get('agents', {})
+if '$agent_name' in agents:
+    print(json.dumps(agents['$agent_name'].get('capabilities', {})))
+else:
+    print('{}')
+" 2>/dev/null)
+
+    if [[ -n "$caps_json" && "$caps_json" != "{}" ]]; then
+        blackboard_set "agent_caps_$agent_name" "$caps_json"
+        return 0
+    fi
+    return 1
+}
+
+# Check if an agent is healthy (online and not in circuit breaker)
+# Usage: agent_is_healthy <agent_name>
+# Returns: 0 if healthy, 1 if unhealthy
+agent_is_healthy() {
+    local agent_name="$1"
+
+    # Check if agent is online
+    if command -v hcom >/dev/null 2>&1; then
+        if ! hcom list --names 2>/dev/null | grep -qi "$agent_name"; then
+            return 1
+        fi
+    fi
+
+    # Check circuit breaker status
+    local circuit_status
+    circuit_status=$(blackboard_get "circuit_$agent_name")
+    if [[ "$circuit_status" == *"OPEN"* ]]; then
+        return 1
+    fi
+
+    return 0
+}
+
 # Get current timestamp in milliseconds
 get_ms() {
     if [[ "$OSTYPE" == "darwin"* ]]; then

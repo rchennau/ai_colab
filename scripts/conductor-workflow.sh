@@ -280,28 +280,35 @@ create_track_branch() {
 
 spawn_workers() {
     local tracks_file="$1"
-    
+
     local max_workers=$(blackboard_get "conductor_max_workers")
     [[ -z "$max_workers" || "$max_workers" == "None" ]] && max_workers=1
-    
+
+    # Build list of available agents (check which CLI tools are installed)
+    local available_agents=""
+    [[ -n "$(command -v gemini 2>/dev/null || command -v gemini-cli 2>/dev/null)" ]] && available_agents="gemini"
+    [[ -n "$(command -v qwen-code 2>/dev/null || command -v qwen 2>/dev/null)" ]] && available_agents="${available_agents:+$available_agents,}qwen"
+    [[ -n "$(command -v claude-code 2>/dev/null || command -v claude 2>/dev/null)" ]] && available_agents="${available_agents:+$available_agents,}claude"
+    [[ -n "$(command -v deepseek-cli 2>/dev/null || command -v deepseek 2>/dev/null)" ]] && available_agents="${available_agents:+$available_agents,}deepseek"
+    [[ -n "$(command -v nemo-cli.py 2>/dev/null || command -v nemoclaw 2>/dev/null)" ]] && available_agents="${available_agents:+$available_agents,}nemoclaw"
+    [[ -n "$(command -v elc 2>/dev/null || command -v vllm 2>/dev/null)" ]] && available_agents="${available_agents:+$available_agents,}vllm"
+
     # Find all tracks marked as [ ]
     grep "^\- \[ \] \*\*Track:" "$tracks_file" | while read -r line; do
         # Stop if we already have max workers
-        local current_workers=$(hcom list --names | grep -c "worker_" || true) # Check for our worker prefix
+        local current_workers=$(hcom list --names | grep -c "worker_" || true)
         if [[ "$current_workers" -ge "$max_workers" ]]; then
-            # echo "[$(date +%T)] Max workers ($max_workers) reached. Skipping further spawns."
             break
         fi
 
         # Check dependencies
         if ! check_track_dependencies "$line" "$tracks_file"; then
-            # echo "[$(date +%T)] Skipping track due to unmet dependency: $line"
             continue
         fi
 
         local next_track=$(echo "$line" | sed 's/^- \[ \] \*\*Track: //;s/\*\*.*//')
         local track_slug=$(echo "$next_track" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g;s/--\+/-/g;s/^-//;s/-$//')
-        
+
         local assigned_agent=$(blackboard_get "track_assigned_$track_slug")
         local agent_alive=false
         if [[ -n "$assigned_agent" ]]; then
@@ -312,24 +319,57 @@ spawn_workers() {
 
         if [[ "$agent_alive" == false ]]; then
             log_info "Assigning new worker for track: $next_track"
-            
+
             # 1. Create Git Branch for the track
             create_track_branch "$track_slug" || true
             local branch=$(blackboard_get "track_branch_$track_slug")
 
-            # 2. Spawn Agent
+            # 2. Select best agent for this task using capability-based routing
+            local selected_agent="gemini"  # Default fallback
+            if [[ -n "$available_agents" ]]; then
+                selected_agent=$(agent_select_best "$next_track" "$available_agents")
+                # If selection returned empty, fall back to first available
+                if [[ -z "$selected_agent" ]]; then
+                    selected_agent="${available_agents%%,*}"
+                fi
+                log_info "Selected agent '$selected_agent' for track '$next_track' (available: $available_agents)"
+            fi
+
+            # Get the CLI command for the selected agent
+            local cli_cmd
+            cli_cmd=$(python3 -c "
+import json
+config = json.load(open('$PROJECT_ROOT/config/agent-capabilities.json'))
+agents = config.get('agents', {})
+agent = agents.get('$selected_agent', {})
+cli = agent.get('cli_command', 'gemini')
+fallback = agent.get('fallback_cli_command', '')
+import shutil
+if shutil.which(cli):
+    print(cli)
+elif fallback and shutil.which(fallback):
+    print(fallback)
+else:
+    print('gemini')
+" 2>/dev/null)
+
+            # 3. Spawn Agent
             local new_worker_name="worker_$(date +%s)_$RANDOM"
-            local spawn_out=$(hcom 1 gemini --as "$new_worker_name" --tag worker --headless --go 2>&1 || true)
+            local spawn_out
+            spawn_out=$(hcom 1 "$cli_cmd" --as "$new_worker_name" --tag worker --headless --go 2>&1 || true)
             local new_agent=$(echo "$spawn_out" | grep "^Names: " | awk '{print $2}' || true)
 
             if [[ -n "$new_agent" ]]; then
-                log_success "Spawned agent $new_agent for $track_slug (Branch: ${branch:-None})"
+                log_success "Spawned agent $new_agent ($selected_agent via $cli_cmd) for $track_slug (Branch: ${branch:-None})"
                 blackboard_set "track_assigned_$track_slug" "$new_agent"
                 blackboard_set "agent_task_$new_agent" "$next_track"
-                
+
+                # Register agent capabilities in blackboard
+                agent_register_capabilities "$selected_agent" 2>/dev/null || true
+
                 local msg="Your task is to implement the following track: $next_track. Please review conductor/tracks.md for specifications and report progress via the blackboard (hcom-kv)."
                 [[ -n "$branch" ]] && msg="$msg Note: You should work in the git branch: $branch"
-                
+
                 hcom send "@$new_agent" --name "$HCOM_NAME" --intent request --thread "task-handoff" -- "$msg"
             fi
         fi

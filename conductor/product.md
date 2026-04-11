@@ -68,7 +68,7 @@ The Hub connects to various backends for specialized agent deployment:
 *   **Phase 15:** Multi-Project Workspaces & Portable Environment (Done ✅)
 *   **Phase 16: Foundation Hardening** (In Progress 🔄)
     *   **Theme:** "Make it unbreakable"
-    *   Message queue layer with delivery guarantees (P1.1)
+    *   Message queue layer with delivery guarantees (P1.1) (Done ✅)
     *   Event processing resilience with cursor persistence (P1.2)
     *   Blackboard schema validation and atomic operations (P1.3)
     *   Intelligent capability-based agent selection (P1.4)
