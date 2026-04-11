@@ -23,8 +23,8 @@ LAST_TEST_RUN=0
 LAST_BROADCAST_PCT=""
 LAST_BROADCAST_TRACK=""
 LAST_BROADCAST_TIME=0
-# Initialize last event ID to avoid processing old messages
-LAST_EVENT_ID=$(hcom events --last 1 | sed -n 's/.*"id":[[:space:]]*\([0-9]*\).*/\1/p' || echo "0")
+# Initialize last event ID from persistent cursor (resilient to restart)
+LAST_EVENT_ID=$(conductor_get_event_cursor)
 
 # Agent registration
 export HCOM_NAME="conductor_$(hostname | tr "[:upper:]" "[:lower:]" | tr "." "_")_$$"
@@ -710,23 +710,30 @@ main() {
             blackboard_set "kb_last_indexed_ts" "$CURRENT_TIME"
         fi
 
-        # Process new hcom events (commands)        local TMP_ID_FILE="/tmp/conductor_last_event_id_$$"
-        echo "$LAST_EVENT_ID" > "$TMP_ID_FILE"
-        
-        # hcom events --all returns one JSON object per line for multiple events
-        # We want to be quiet here unless we actually process something
-        hcom events --all --sql "id > $LAST_EVENT_ID AND type='message'" --last 5 | while read -r line; do
+        # Process new hcom events (commands) using cursor-based system with deduplication
+        # Fetch events since last cursor position
+        local events_processed=0
+        hcom events --all --sql "id > $LAST_EVENT_ID AND type='message'" --last 10 | while read -r line; do
             if [[ -n "$line" && "$line" == \{* ]]; then
                 local event_id=$(extract_json_value "$line" "id")
-                if [[ -n "$event_id" && "$event_id" -gt "$(cat "$TMP_ID_FILE")" ]]; then
-                    echo -e "[$(date +%T)] ${GREEN}Processing event $event_id...${NC}"
-                    process_commands "$line"
-                    echo "$event_id" > "$TMP_ID_FILE"
+                if [[ -n "$event_id" ]]; then
+                    # Check for deduplication
+                    local already_processed=$(conductor_is_event_processed "$event_id")
+                    if [[ "$already_processed" != "true" && "$event_id" -gt "$LAST_EVENT_ID" ]]; then
+                        log_info "Processing event $event_id..."
+                        process_commands "$line"
+                        # Mark as processed
+                        conductor_mark_event_processed "$event_id"
+                        # Update cursor
+                        conductor_set_event_cursor "$event_id"
+                        ((events_processed++)) || true
+                    fi
                 fi
             fi
         done
-        LAST_EVENT_ID=$(cat "$TMP_ID_FILE")
-        rm -f "$TMP_ID_FILE"
+
+        # Update local cursor from blackboard (in case it was updated in subshell)
+        LAST_EVENT_ID=$(conductor_get_event_cursor)
 
         # Wait for next interval or interrupt
         echo -n -e "[$(date +%T)] ${BLUE}Listening for events...${NC}\r"

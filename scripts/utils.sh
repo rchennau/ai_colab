@@ -1040,6 +1040,82 @@ print(data.get('state', 'CLOSED'))
     return 0
 }
 
+# ============================================================
+# Event Processing Resilience (P16.2)
+# ============================================================
+
+# Event cursor key in blackboard
+CONDUCTOR_EVENT_CURSOR_KEY="conductor_event_cursor"
+# Deduplication window size (number of event IDs to track)
+CONDUCTOR_DEDUP_WINDOW=100
+
+# Get the current event cursor from blackboard
+# Usage: conductor_get_event_cursor
+# Returns: last processed event ID (defaults to 0)
+conductor_get_event_cursor() {
+    local cursor
+    cursor=$(blackboard_get "$CONDUCTOR_EVENT_CURSOR_KEY")
+    echo "${cursor:-0}"
+}
+
+# Set the event cursor in blackboard
+# Usage: conductor_set_event_cursor <event_id>
+conductor_set_event_cursor() {
+    local event_id="$1"
+    blackboard_set "$CONDUCTOR_EVENT_CURSOR_KEY" "$event_id"
+}
+
+# Check if an event has already been processed (deduplication)
+# Usage: conductor_is_event_processed <event_id>
+# Returns: "true" or "false"
+conductor_is_event_processed() {
+    local event_id="$1"
+    local processed_list
+    processed_list=$(blackboard_get "conductor_processed_events")
+
+    if [[ -z "$processed_list" ]]; then
+        echo "false"
+        return
+    fi
+
+    # Check if event_id is in the comma-separated list
+    IFS=',' read -ra ids <<< "$processed_list"
+    for id in "${ids[@]}"; do
+        if [[ "$id" == "$event_id" ]]; then
+            echo "true"
+            return
+        fi
+    done
+    echo "false"
+}
+
+# Mark an event as processed (add to deduplication window)
+# Usage: conductor_mark_event_processed <event_id>
+conductor_mark_event_processed() {
+    local event_id="$1"
+    local processed_list
+    processed_list=$(blackboard_get "conductor_processed_events")
+
+    if [[ -z "$processed_list" ]]; then
+        processed_list="$event_id"
+    else
+        # Check if already in list
+        if [[ ",$processed_list," != *",$event_id,"* ]]; then
+            processed_list="${processed_list},${event_id}"
+        fi
+    fi
+
+    # Trim to deduplication window size (keep last N entries)
+    IFS=',' read -ra ids <<< "$processed_list"
+    local total=${#ids[@]}
+    if [[ $total -gt $CONDUCTOR_DEDUP_WINDOW ]]; then
+        local start=$((total - CONDUCTOR_DEDUP_WINDOW))
+        processed_list=$(IFS=','; echo "${ids[*]:$start}")
+    fi
+
+    blackboard_set "conductor_processed_events" "$processed_list"
+}
+
 # Get current timestamp in milliseconds
 get_ms() {
     if [[ "$OSTYPE" == "darwin"* ]]; then
