@@ -392,6 +392,11 @@ create_dashboard() {
         tmux send-keys -t "$console_id" "echo \\\"\\\"" C-m
         tmux send-keys -t "$console_id" "echo -e \"${GREEN}HCOM Status:\${NC} \$(hcom status --name \$HCOM_NAME 2>&1 | head -1 || echo 'Not connected')\"" C-m
 
+        # Add an interactive command prompt loop
+        tmux send-keys -t "$console_id" 'echo ""' C-m
+        tmux send-keys -t "$console_id" 'echo -e "${CYAN}Type a command (e.g., !status, !help, !kb <query>) or press Enter to refresh status.${NC}"' C-m
+        tmux send-keys -t "$console_id" 'while true; do read -p "> " cmd; case "$cmd" in "" ) echo -e "${GREEN}HCOM Status:${NC} $(hcom status --name $HCOM_NAME 2>&1 | head -1 || echo \"Not connected\")";; "!status" ) hcom send --name $HCOM_NAME @conductor -- "!status";; "!test" ) hcom send --name $HCOM_NAME @conductor -- "!test";; "!build" ) hcom send --name $HCOM_NAME @conductor -- "!build";; "!help" ) hcom send --name $HCOM_NAME @conductor -- "!help";; "!kb "* ) hcom send --name $HCOM_NAME @conductor -- "$cmd";; "!git-sync" ) hcom send --name $HCOM_NAME @conductor -- "!git-sync";; "exit"|"quit" ) break;; * ) echo -e "${YELLOW}Unknown command. Type !help for available commands.${NC}";; esac; done' C-m
+
         tmux set-option -t "$console_id" -p @agent_name "CONSOLE"
         tmux select-pane -t "$console_id" -T "User Console ($user_name)"
     fi

@@ -44,12 +44,12 @@ esac
 CMD=""
 case "$TOOL" in
     gemini)
-        if has_command gemini-cli; then CMD="gemini-cli";
-        elif has_command gemini; then CMD="gemini"; fi
+        if has_command gemini; then CMD="gemini";
+        elif has_command gemini-cli; then CMD="gemini-cli"; fi
         ;;
     qwen)
-        if has_command qwen-code; then CMD="qwen-code";
-        elif has_command qwen; then CMD="qwen";
+        if has_command qwen; then CMD="qwen";
+        elif has_command qwen-code; then CMD="qwen-code";
         elif has_command qwen-cli; then CMD="qwen-cli"; fi
         ;;
     vllm) CMD="elc" ;;
