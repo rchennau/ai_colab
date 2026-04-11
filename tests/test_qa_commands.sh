@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Test conductor-workflow.sh command handling
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 set -euo pipefail
 

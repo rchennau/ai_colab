@@ -60,7 +60,7 @@ render_modular_sections() {
 }
 
 render_fleet_health() {
-    echo -e "\n${BLUE}--- Fleet Health (Spoke Agents) ---${NC}"
+    echo -e "\n${BLUE}--- Fleet Status (Spoke Agents) ---${NC}"
     local health_keys=$(blackboard_list "fleet_health_")
     
     if [[ -z "$health_keys" ]]; then
@@ -73,24 +73,29 @@ render_fleet_health() {
     while IFS='|' read -r key health_json; do
         if [[ -n "$key" ]]; then
             local name=${key#fleet_health_}
-            # Truncate long agent names
-            local display_name=$(echo "$name" | cut -c1-20)
+            local display_name=$(echo "$name" | cut -c1-15)
             
             local status=$(extract_json_value "$health_json" "status")
-            local latency=$(extract_json_value "$health_json" "latency")
             local last_ts=$(extract_json_value "$health_json" "ts")
             
+            # Fetch Progress
+            local progress_json=$(blackboard_get "agent_progress_${name}")
+            local pct="0"
+            local step="idle"
+            if [[ -n "$progress_json" && "$progress_json" != "None" ]]; then
+                pct=$(extract_json_value "$progress_json" "pct")
+                step=$(extract_json_value "$progress_json" "step" | cut -c1-20)
+            fi
+
             local status_color="${GREEN}"
             [[ "$status" == "error" || "$status" == "crashed" || "$status" == "stale" ]] && status_color="${RED}"
-            
-            # Additional staleness check for UI
             if (( current_time - last_ts > 60 )); then
                 status="stale"
                 status_color="${RED}"
             fi
             
-            # Format output
-            printf "  %-20s [%b%-8s%b] %4sms\n" "$display_name" "$status_color" "$status" "${NC}" "$latency"
+            # Format output: Name [Status] Progress% | Current Step
+            printf "  %-15s [%b%-8s%b] %3s%% | %s\n" "$display_name" "$status_color" "$status" "${NC}" "$pct" "$step"
         fi
     done <<< "$health_keys"
 }

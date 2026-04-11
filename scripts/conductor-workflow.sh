@@ -151,28 +151,38 @@ update_tracks_from_blackboard() {
         fi
         
         if [[ "$status" == "complete" ]]; then
-            log_info "Track reported complete: $track_name. Validating..."
+            log_info "Track reported complete: $track_name. Running Quality Gates..."
             
-            # 1. Run Automated Tests before committing
-            if bash "$SCRIPT_DIR/hcom-test-runner.sh" > /dev/null 2>&1; then
-                log_success "Validation passed for $track_name."
+            # 1. Run Automated Quality Gates (Linting, Security, Syntax)
+            if bash "$SCRIPT_DIR/quality-gates.sh"; then
+                log_success "Quality gates passed for $track_name."
                 
-                # 2. Commit changes to branch
-                commit_track_changes "$track_slug" "$track_name" || true
-                
-                # 3. Create Pseudo-PR
-                local commit_sha=$(blackboard_get "track_commit_$track_slug")
-                local branch=$(blackboard_get "track_branch_$track_slug")
-                
-                blackboard_set "track_status_$track_slug" "pr_ready"
-                blackboard_set "pr_$track_slug" "pending_approval"
-                
-                # Broadcast the PR
-                hcom send @all --intent inform --thread "plan-sync" -- "PULL REQUEST READY: $track_name. Branch: ${branch:-main}. Commit: ${commit_sha:-no-commit}. Use '!approve $track_slug' to merge."
+                # 2. Run Functional Tests
+                log_info "Running functional tests..."
+                if bash "$SCRIPT_DIR/hcom-test-runner.sh" > /dev/null 2>&1; then
+                    log_success "Validation passed for $track_name."
+                    
+                    # 3. Commit changes to branch
+                    commit_track_changes "$track_slug" "$track_name" || true
+                    
+                    # 4. Create Pseudo-PR
+                    local commit_sha=$(blackboard_get "track_commit_$track_slug")
+                    local branch=$(blackboard_get "track_branch_$track_slug")
+                    
+                    blackboard_set "track_status_$track_slug" "pr_ready"
+                    blackboard_set "pr_$track_slug" "pending_approval"
+                    
+                    # Broadcast the PR
+                    hcom send @all --intent inform --thread "plan-sync" -- "PULL REQUEST READY: $track_name. Branch: ${branch:-main}. Commit: ${commit_sha:-no-commit}. Use '!approve $track_slug' to merge."
+                else
+                    log_error "Functional tests FAILED for $track_name."
+                    hcom send @all --intent inform --thread "plan-sync" -- "Validation FAILED for track: $track_name. Functional tests failed."
+                    blackboard_set "track_status_$track_slug" "failed_validation"
+                fi
             else
-                log_error "Validation FAILED for $track_name. Commit aborted."
-                hcom send @all --intent inform --thread "plan-sync" -- "Validation FAILED for track: $track_name. Manual intervention required."
-                blackboard_set "track_status_$track_slug" "failed_validation"
+                log_error "Quality gates FAILED for $track_name."
+                hcom send @all --intent inform --thread "plan-sync" -- "Quality Gates FAILED for track: $track_name. Please check linting/security errors."
+                blackboard_set "track_status_$track_slug" "failed_quality_gate"
             fi
         fi
     done
@@ -310,6 +320,43 @@ spawn_workers() {
         local track_slug=$(echo "$next_track" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g;s/--\+/-/g;s/^-//;s/-$//')
 
         local assigned_agent=$(blackboard_get "track_assigned_$track_slug")
+        local track_status=$(blackboard_get "track_status_$track_slug")
+        
+        # --- Handle Review Assignment (Review Pattern) ---
+        if [[ "$track_status" == "pr_ready" ]]; then
+            local reviewer=$(blackboard_get "track_reviewer_$track_slug")
+            local reviewer_alive=false
+            if [[ -n "$reviewer" && "$reviewer" != "None" ]]; then
+                if hcom list --names | grep -q "\b$reviewer\b"; then
+                    reviewer_alive=true
+                fi
+            fi
+            
+            if [[ "$reviewer_alive" == false ]]; then
+                log_info "Assigning reviewer for track: $next_track"
+                
+                # Select best reviewer (Gemini/Claude preferred for review)
+                local selected_reviewer=$(agent_select_healthy_best "review this code changes for track $next_track" "$available_agents")
+                
+                # Spawn Reviewer
+                local new_reviewer_name="reviewer_$(date +%s)_$RANDOM"
+                hcom 1 "$selected_reviewer" --as "$new_reviewer_name" --tag reviewer --headless --go > /dev/null 2>&1 || true
+                
+                blackboard_set "track_reviewer_$track_slug" "$new_reviewer_name"
+                local branch=$(blackboard_get "track_branch_$track_slug")
+                
+                local msg="Your task is to REVIEW the changes for track: $next_track.
+                1. Checkout branch: $branch
+                2. Review the diff and run tests.
+                3. If good, send '!approve $track_slug'.
+                4. If bad, provide feedback to the implementer."
+                
+                hcom send "@$new_reviewer_name" --name "$HCOM_NAME" --intent request --thread "code-review" -- "$msg"
+                log_success "Assigned reviewer $new_reviewer_name ($selected_reviewer) to $track_slug"
+            fi
+            continue # Move to next track, implementer is done
+        fi
+
         local agent_alive=false
         if [[ -n "$assigned_agent" ]]; then
             if hcom list --names | grep -q "\b$assigned_agent\b"; then
@@ -369,7 +416,17 @@ else:
             # 3. Spawn Agent
             local new_worker_name="worker_$(date +%s)_$RANDOM"
             local spawn_out
-            spawn_out=$(hcom 1 "$cli_cmd" --as "$new_worker_name" --tag worker --headless --go 2>&1 || true)
+            
+            local wrapper_args=("--as" "$new_worker_name" "--tag" "worker" "--headless" "--go")
+            
+            # Check for Container Mode (P4.1)
+            local container_mode=$(blackboard_get "conductor_container_mode")
+            if [[ "$container_mode" == "true" ]] && command -v docker >/dev/null 2>&1; then
+                wrapper_args+=("--docker")
+                log_info "Container mode enabled. Spawning $selected_agent in Docker..."
+            fi
+
+            spawn_out=$(hcom 1 "$cli_cmd" "${wrapper_args[@]}" 2>&1 || true)
             local new_agent=$(echo "$spawn_out" | grep "^Names: " | awk '{print $2}' || true)
 
             if [[ -n "$new_agent" ]]; then

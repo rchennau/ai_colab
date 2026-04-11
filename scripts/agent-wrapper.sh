@@ -212,14 +212,71 @@ if [ "$SYSTEM_PROMPT_SET" = true ]; then
     esac
 fi
 
-# Run the command with automatic restart to maintain persistent presence
-# This ensures the agent stays registered with hcom even if the LLM CLI exits
+# Flags
+RESTART_COUNT=0
+MAX_RESTARTS=20
+USE_DOCKER=false
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --docker) USE_DOCKER=true; shift ;;
+        *) VALID_ARGS+=("$1"); shift ;;
+    esac
+done
+
+# Run the command with automatic restart and real-time output parsing for progress
 run_agent() {
-    if [[ "$CMD" == *" "* ]]; then
-        eval "$CMD" '"${VALID_ARGS[@]}"'
+    local agent_cmd=""
+    
+    if [[ "$USE_DOCKER" == "true" ]]; then
+        # Containerized Execution
+        local image="aicolab/agent-${TOOL}:latest"
+        print_info "Spawning containerized agent: $image"
+        
+        # Build Docker Run command
+        # Note: We map PROJECT_ROOT to /workspace and hcom config to /root/.hcom
+        agent_cmd="docker run --rm -i \
+            -v \"$PROJECT_ROOT:/workspace\" \
+            -v \"$HOME/.hcom:/root/.hcom\" \
+            -e HCOM_NAME=\"$HCOM_NAME\" \
+            -e GOOGLE_API_KEY=\"${GOOGLE_API_KEY:-}\" \
+            -e ANTHROPIC_API_KEY=\"${ANTHROPIC_API_KEY:-}\" \
+            --name \"agent_${HCOM_NAME}_$(date +%s)\" \
+            $image"
     else
-        "$CMD" "${VALID_ARGS[@]}"
+        # Local Execution
+        if [[ "$CMD" == *" "* ]]; then
+            agent_cmd="$CMD $(printf " %q" "${VALID_ARGS[@]}")"
+        else
+            agent_cmd="$CMD $(printf " %q" "${VALID_ARGS[@]}")"
+        fi
     fi
+
+    # Execute and pipe stdout to a parser loop while preserving stderr
+    # Pattern: PROGRESS: 50% | Step Name
+    local line
+    local exit_code=0
+    
+    # We use a named pipe to capture the exit code from the subshell
+    local pipe=$(mktemp -u)
+    mkfifo "$pipe"
+    exec 3<> "$pipe"
+    rm "$pipe"
+
+    (
+        eval "$agent_cmd" 2>&1
+        echo $? >&3
+    ) | while read -r line; do
+        echo "$line"
+        if [[ "$line" =~ PROGRESS:[[:space:]]*([0-9]+)%[[:space:]]*\|[[:space:]]*(.*) ]]; then
+            local pct="${BASH_REMATCH[1]}"
+            local step="${BASH_REMATCH[2]}"
+            report_progress "$pct" "$step" 2>/dev/null || true
+        fi
+    done
+
+    read -u 3 exit_code
+    return $exit_code
 }
 
 # Main loop: restart agent if it exits with exponential backoff and circuit breaker
@@ -228,14 +285,23 @@ MAX_RESTARTS=20  # Higher limit since backoff increases
 
 while true; do
     echo "[$(date '+%H:%M:%S')] Starting $TOOL agent (attempt $((RESTART_COUNT + 1)))..."
+    local start_ts=$(get_ms)
 
     # Run the agent command
     set +e  # Don't exit on error - we want to restart
     run_agent
     EXIT_CODE=$?
     set -e
+    
+    local end_ts=$(get_ms)
+    local duration=$((end_ts - start_ts))
 
     echo "[$(date '+%H:%M:%S')] $TOOL agent exited with code $EXIT_CODE"
+    
+    # Log analytics
+    local success="true"
+    [[ $EXIT_CODE -ne 0 ]] && success="false"
+    log_agent_analytics "session" "$duration" "$success" "Exit code: $EXIT_CODE, Tool: $TOOL"
 
     # Report exit to Blackboard for Fleet Autonomy
     if [ $EXIT_CODE -ne 0 ]; then

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Test blackboard functions in scripts/utils.sh
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 set -euo pipefail
 

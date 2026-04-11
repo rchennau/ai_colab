@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Test track dependency resolution in conductor-workflow.sh
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 set -euo pipefail
 

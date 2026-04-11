@@ -336,8 +336,19 @@ report_health() {
 # ============================================================
 
 # Schema and DB path overrides (for testing)
-BLACKBOARD_SCHEMA_PATH="${BLACKBOARD_SCHEMA_PATH:-$PROJECT_ROOT/config/blackboard-schema.json}"
+# Note: These are lazily evaluated in _bb_get_schema_path to avoid
+# unbound variable errors when PROJECT_ROOT isn't set at module load time
+BLACKBOARD_SCHEMA_PATH="${BLACKBOARD_SCHEMA_PATH:-}"
 BLACKBOARD_DB_PATH="${BLACKBOARD_DB_PATH:-}"
+
+# Get schema path (lazy evaluation to avoid unbound variable errors)
+_bb_get_schema_path() {
+    if [[ -n "$BLACKBOARD_SCHEMA_PATH" ]]; then
+        echo "$BLACKBOARD_SCHEMA_PATH"
+    else
+        echo "${PROJECT_ROOT:-.}/config/blackboard-schema.json"
+    fi
+}
 
 # Get the blackboard database path (respects test override)
 _bb_get_db_path() {
@@ -359,7 +370,7 @@ _bb_ensure_table() {
 # Returns 0 if valid, 1 if invalid, outputs error message to stderr
 bb_validate_key() {
     local key="$1"
-    local schema_path="${2:-$BLACKBOARD_SCHEMA_PATH}"
+    local schema_path="${2:-$(_bb_get_schema_path)}"
 
     # Check key length
     if [[ ${#key} -gt 256 ]]; then
@@ -417,7 +428,7 @@ except:
 # Get TTL for a key from schema
 bb_get_ttl_for_key() {
     local key="$1"
-    local schema_path="${2:-$BLACKBOARD_SCHEMA_PATH}"
+    local schema_path="${2:-$(_bb_get_schema_path)}"
 
     if [[ ! -f "$schema_path" ]]; then
         echo "0"
@@ -468,7 +479,7 @@ bb_cleanup_expired() {
 blackboard_set_validated() {
     local key="$1"
     local value="$2"
-    local schema_path="${3:-$BLACKBOARD_SCHEMA_PATH}"
+    local schema_path="${3:-$(_bb_get_schema_path)}"
 
     # Validate key
     if ! bb_validate_key "$key" "$schema_path"; then
@@ -602,8 +613,17 @@ blackboard_atomic_set() {
 # Intelligent Agent Selection (P16.4)
 # ============================================================
 
-# Agent capabilities config path (respects test override)
-AGENT_CAPABILITIES_PATH="${CAPABILITIES_FILE:-$PROJECT_ROOT/config/agent-capabilities.json}"
+# Agent capabilities config path (lazy eval to avoid unbound variable)
+AGENT_CAPABILITIES_PATH="${CAPABILITIES_FILE:-}"
+
+# Get capabilities path (lazy evaluation)
+_bb_get_capabilities_path() {
+    if [[ -n "$AGENT_CAPABILITIES_PATH" ]]; then
+        echo "$AGENT_CAPABILITIES_PATH"
+    else
+        echo "${PROJECT_ROOT:-.}/config/agent-capabilities.json"
+    fi
+}
 
 # Get a specific capability score for an agent
 # Usage: agent_get_capability <agent_name> <capability>
@@ -611,7 +631,7 @@ AGENT_CAPABILITIES_PATH="${CAPABILITIES_FILE:-$PROJECT_ROOT/config/agent-capabil
 agent_get_capability() {
     local agent_name="$1"
     local capability="$2"
-    local config_path="${3:-$AGENT_CAPABILITIES_PATH}"
+    local config_path="${3:-$(_bb_get_capabilities_path)}"
 
     if [[ ! -f "$config_path" ]]; then
         echo "0"
@@ -653,7 +673,7 @@ except Exception as e:
 # Returns: task_type,primary_capability (e.g., "code_heavy,coding")
 agent_analyze_task() {
     local task_description="$1"
-    local config_path="${2:-$AGENT_CAPABILITIES_PATH}"
+    local config_path="${2:-$(_bb_get_capabilities_path)}"
 
     if [[ ! -f "$config_path" ]]; then
         echo "default,coding"
@@ -698,7 +718,7 @@ print(f'{best_type},{primary}')
 agent_select_best() {
     local task_description="$1"
     local available_agents_csv="$2"
-    local config_path="${3:-$AGENT_CAPABILITIES_PATH}"
+    local config_path="${3:-$(_bb_get_capabilities_path)}"
 
     # Handle empty available agents
     if [[ -z "$available_agents_csv" ]]; then
@@ -1311,18 +1331,28 @@ tmux_generate_status_bar() {
 # Session Persistence (P17.5)
 # ============================================================
 
-# Layout storage directory
-TMUX_LAYOUT_DIR="${TMUX_LAYOUT_DIR:-$PROJECT_ROOT/.ai-colab/layouts}"
+# Layout storage directory (lazy eval to avoid unbound variable)
+TMUX_LAYOUT_DIR="${TMUX_LAYOUT_DIR:-}"
+
+# Get layout dir path (lazy evaluation)
+_bb_get_layout_dir() {
+    if [[ -n "$TMUX_LAYOUT_DIR" ]]; then
+        echo "$TMUX_LAYOUT_DIR"
+    else
+        echo "${PROJECT_ROOT:-.}/.ai-colab/layouts"
+    fi
+}
 
 # Save current tmux layout to JSON
 # Usage: tmux_save_layout <session> <preset_name>
 tmux_save_layout() {
     local session="${1:-hcom-dashboard}"
     local preset="${2:-default}"
+    local layout_dir="$(_bb_get_layout_dir)"
 
-    mkdir -p "$TMUX_LAYOUT_DIR"
+    mkdir -p "$layout_dir"
 
-    local layout_file="$TMUX_LAYOUT_DIR/${preset}.json"
+    local layout_file="$layout_dir/${preset}.json"
 
     python3 -c "
 import json, subprocess, os
@@ -1349,8 +1379,8 @@ print('saved')
 tmux_restore_layout() {
     local session="${1:-hcom-dashboard}"
     local preset="${2:-default}"
-
-    local layout_file="$TMUX_LAYOUT_DIR/${preset}.json"
+    local layout_dir="$(_bb_get_layout_dir)"
+    local layout_file="$layout_dir/${preset}.json"
 
     if [[ ! -f "$layout_file" ]]; then
         echo "Layout not found: $preset"
@@ -1377,8 +1407,9 @@ print('restored')
 # List available layout presets
 # Usage: tmux_list_layouts
 tmux_list_layouts() {
-    if [[ -d "$TMUX_LAYOUT_DIR" ]]; then
-        ls -1 "$TMUX_LAYOUT_DIR"/*.json 2>/dev/null | while read -r f; do
+    local layout_dir="$(_bb_get_layout_dir)"
+    if [[ -d "$layout_dir" ]]; then
+        ls -1 "$layout_dir"/*.json 2>/dev/null | while read -r f; do
             basename "$f" .json
         done
     fi

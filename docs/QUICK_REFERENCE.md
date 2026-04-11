@@ -2,49 +2,26 @@
 
 ## 🚀 Quick Start
 
-### macOS (iTerm2) - Recommended
+### Global CLI (Recommended)
+```bash
+# Install ai-colab globally
+./install.sh --global
+
+# Start managing any git project
+cd ~/my-project
+ai-colab
+```
+
+### macOS (iTerm2)
 ```bash
 # Install iTerm2
 brew install --cask iterm2
 
 # Install ai-colab with optimizations
-./install.sh  # Accept iTerm2 tmux config prompt
+./install.sh
 
 # Launch dashboard
 ./launch.sh
-```
-
-### Project Migration (v3.0)
-If you have an existing project with AI configurations, use the automated migration tool:
-```bash
-# Interactive migration
-./scripts/migrate-project.sh
-
-# Or just run launch.sh and it will detect existing configs
-./launch.sh
-```
-
-### WSL2 Ubuntu (Windows Terminal)
-```bash
-# In WSL2 terminal
-./install.sh  # Accept Windows Terminal tmux config prompt
-
-# Launch dashboard
-./launch.sh
-```
-
----
-
-## 🎯 Terminal Detection
-
-```bash
-# Check your terminal
-./scripts/terminal-detect.sh
-
-# Expected output:
-# Terminal: iterm2 (macos)
-# OR
-# Terminal: windows_terminal (wsl)
 ```
 
 ---
@@ -53,16 +30,18 @@ If you have an existing project with AI configurations, use the automated migrat
 
 | Action | Keys |
 |--------|------|
-| **Prefix** | `Ctrl-a` |
+| **Prefix** | `Ctrl-a` (or `Ctrl-b` depending on config) |
+| **Focus Mode** | `Prefix + f` (Zoom/Unzoom current pane) |
+| **Go to Dashboard**| `Prefix + h` |
+| **Go to Fleet** | `Prefix + l` |
 | **Reload config** | `Prefix + r` |
 | **Split vertical** | `Prefix + \|` |
 | **Split horizontal** | `Prefix + -` |
-| **Navigate panes** | `Prefix + h/j/k/l` |
+| **Navigate panes** | `Prefix + Arrow Keys` |
 | **Resize panes** | `Prefix + H/J/K/L` |
 | **Copy to clipboard** | `Prefix + y` |
 | **Next window** | `Prefix + n` |
 | **Previous window** | `Prefix + p` |
-| **List windows** | `Prefix + w` |
 
 ---
 
@@ -72,15 +51,16 @@ These commands can be sent from any agent chat or the **User Command Console**.
 
 | Command | Category | Purpose |
 |---------|----------|---------|
-| `!status` | Core | Summarize progress and active tracks. |
-| `!test` | Core | Run the full automated test suite. |
+| `s` or `!status` | Core | Summarize progress and active tracks. |
+| `t` or `!test` | Core | Run the full automated test suite. |
+| `b` or `!build` | Core | Run the project build system. |
 | `!approve <slug>` | Core | Merge a completed task branch into main. |
 | `!kb <query>` | Core | Semantic search for architectural guidance. |
 | `!kb-refresh` | Core | Re-index the codebase for semantic search. |
-| `!build` | Core | Run the project build system. |
+| `!quality` | QA | Run manual quality gates (Linting, Security). |
 | `!git-sync` | Core | Pull latest changes from remote. |
-| !fleet | Core | Show real-time health and latency for all agents. |
-| !switch <path> | Core | Change conductor focus to another project. |
+| `!fleet` | Core | Show real-time health and progress for all agents. |
+| `!switch <path>` | Core | Change conductor focus to another project. |
 
 | `!screenshot` | Atari-8bit | Capture current emulator state. |
 | `!memory-map` | Atari-8bit | View visual memory allocation. |
