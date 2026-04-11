@@ -1,0 +1,119 @@
+{
+  "_comment": "Blackboard Schema Definition — P16.3: Schema Validation",
+  "_version": "1.0.0",
+  "_description": "Defines valid key namespaces, value types, TTL defaults, and reserved namespaces for the hcom shared blackboard.",
+
+  "namespaces": {
+    "project_": {
+      "description": "Project-level state (progress, active track, etc.)",
+      "value_type": "string|json",
+      "default_ttl": 0,
+      "examples": [
+        "project_progress",
+        "active_track",
+        "conductor_last_run"
+      ]
+    },
+    "track_": {
+      "description": "Track-specific state (status, branch, assignment, etc.)",
+      "value_type": "string|json",
+      "default_ttl": 0,
+      "examples": [
+        "track_status_my-feature",
+        "track_branch_my-feature",
+        "track_commit_my-feature",
+        "track_assigned_my-feature"
+      ]
+    },
+    "agent_": {
+      "description": "Agent-specific state (health, task, capabilities)",
+      "value_type": "string|json",
+      "default_ttl": 300,
+      "examples": [
+        "fleet_health_gemini",
+        "agent_task_qwen",
+        "agent_caps_gemini"
+      ]
+    },
+    "test_": {
+      "description": "Test execution state",
+      "value_type": "string|json",
+      "default_ttl": 86400,
+      "examples": [
+        "test_last_status",
+        "test_last_run_at",
+        "test_fail_count",
+        "test_total_count"
+      ]
+    },
+    "hook_": {
+      "description": "Module hook execution state",
+      "value_type": "string|json",
+      "default_ttl": 86400,
+      "examples": [
+        "hook_last_run_atari-8bit_screenshot"
+      ]
+    },
+    "recovery_": {
+      "description": "Agent recovery attempt tracking",
+      "value_type": "string|json",
+      "default_ttl": 3600,
+      "examples": [
+        "recovery_attempt_gemini"
+      ]
+    },
+    "failover_": {
+      "description": "Failover routing state",
+      "value_type": "string",
+      "default_ttl": 600,
+      "examples": [
+        "failover_architect"
+      ]
+    },
+    "mq_": {
+      "description": "Message queue cursor and state",
+      "value_type": "string|json",
+      "default_ttl": 0,
+      "examples": [
+        "mq_ack_msg_12345",
+        "conductor_event_cursor"
+      ]
+    },
+    "rag_": {
+      "description": "RAG system state",
+      "value_type": "string|json",
+      "default_ttl": 0,
+      "examples": [
+        "rag.installed",
+        "rag.prompted"
+      ]
+    },
+    "circuit_": {
+      "description": "Circuit breaker state for agents",
+      "value_type": "json",
+      "default_ttl": 600,
+      "examples": [
+        "circuit_gemini"
+      ]
+    }
+  },
+
+  "reserved_namespaces": [
+    "conductor_internal_",
+    "system_",
+    "hcom_internal_"
+  ],
+
+  "value_constraints": {
+    "max_value_length": 65536,
+    "max_key_length": 256,
+    "json_validation": "basic"
+  },
+
+  "ttl_policy": {
+    "max_ttl": 604800,
+    "zero_means_persistent": true,
+    "cleanup_on_read": true,
+    "cleanup_on_write": true
+  }
+}

@@ -329,6 +329,273 @@ report_health() {
     return 1
 }
 
+# ============================================================
+# Blackboard Schema Validation (P16.3)
+# ============================================================
+
+# Schema and DB path overrides (for testing)
+BLACKBOARD_SCHEMA_PATH="${BLACKBOARD_SCHEMA_PATH:-$PROJECT_ROOT/config/blackboard-schema.json}"
+BLACKBOARD_DB_PATH="${BLACKBOARD_DB_PATH:-}"
+
+# Get the blackboard database path (respects test override)
+_bb_get_db_path() {
+    if [[ -n "$BLACKBOARD_DB_PATH" ]]; then
+        echo "$BLACKBOARD_DB_PATH"
+    else
+        get_hcom_db_path
+    fi
+}
+
+# Ensure kv table exists with expires_at column
+_bb_ensure_table() {
+    local db_path="$(_bb_get_db_path)"
+    mkdir -p "$(dirname "$db_path")"
+    sqlite3 "$db_path" "CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT, expires_at INTEGER DEFAULT 0);"
+}
+
+# Validate a key against the schema namespaces
+# Returns 0 if valid, 1 if invalid, outputs error message to stderr
+bb_validate_key() {
+    local key="$1"
+    local schema_path="${2:-$BLACKBOARD_SCHEMA_PATH}"
+
+    # Check key length
+    if [[ ${#key} -gt 256 ]]; then
+        echo "Error: Key exceeds max length (256 chars)" >&2
+        return 1
+    fi
+
+    # If schema not available, allow all writes with warning
+    if [[ ! -f "$schema_path" ]]; then
+        return 0
+    fi
+
+    # Check reserved namespaces first
+    while IFS= read -r prefix; do
+        prefix=$(echo "$prefix" | sed 's/[" ,]//g')
+        if [[ -n "$prefix" && "$key" == "$prefix"* ]]; then
+            echo "Error: Key '$key' uses reserved namespace '$prefix'" >&2
+            return 1
+        fi
+    done < <(python3 -c "
+import json, sys
+try:
+    schema = json.load(open('$schema_path'))
+    for ns in schema.get('reserved_namespaces', []):
+        print(ns)
+except:
+    pass
+" 2>/dev/null)
+
+    # Check against valid namespaces
+    local key_valid
+    key_valid=$(python3 -c "
+import json, sys
+try:
+    schema = json.load(open('$schema_path'))
+    key = '$key'
+    valid = False
+    for ns, config in schema.get('namespaces', {}).items():
+        if key.startswith(ns):
+            valid = True
+            break
+    print('valid' if valid else 'invalid')
+except:
+    print('valid')  # If schema parsing fails, allow all
+" 2>/dev/null)
+
+    if [[ "$key_valid" != "valid" ]]; then
+        echo "Error: Key '$key' does not match any valid namespace" >&2
+        return 1
+    fi
+
+    return 0
+}
+
+# Get TTL for a key from schema
+bb_get_ttl_for_key() {
+    local key="$1"
+    local schema_path="${2:-$BLACKBOARD_SCHEMA_PATH}"
+
+    if [[ ! -f "$schema_path" ]]; then
+        echo "0"
+        return
+    fi
+
+    local ttl
+    ttl=$(python3 -c "
+import json, sys
+try:
+    schema = json.load(open('$schema_path'))
+    key = '$key'
+    for ns, config in schema.get('namespaces', {}).items():
+        if key.startswith(ns):
+            print(config.get('default_ttl', 0))
+            sys.exit(0)
+    print(0)
+except:
+    print(0)
+" 2>/dev/null)
+
+    echo "${ttl:-0}"
+}
+
+# Validate value length
+bb_validate_value_length() {
+    local value="$1"
+    local max_len="${2:-65536}"
+
+    if [[ ${#value} -gt $max_len ]]; then
+        echo "Error: Value exceeds max length ($max_len chars)" >&2
+        return 1
+    fi
+    return 0
+}
+
+# Clean up expired keys
+bb_cleanup_expired() {
+    local db_path="$(_bb_get_db_path)"
+    local now
+    now=$(date +%s)
+
+    sqlite3 "$db_path" "DELETE FROM kv WHERE expires_at > 0 AND expires_at < $now;"
+}
+
+# Set a value with schema validation
+# Usage: blackboard_set_validated <key> <value>
+blackboard_set_validated() {
+    local key="$1"
+    local value="$2"
+    local schema_path="${3:-$BLACKBOARD_SCHEMA_PATH}"
+
+    # Validate key
+    if ! bb_validate_key "$key" "$schema_path"; then
+        return 1
+    fi
+
+    # Validate value length
+    if ! bb_validate_value_length "$value"; then
+        return 1
+    fi
+
+    # Get TTL
+    local ttl
+    ttl=$(bb_get_ttl_for_key "$key" "$schema_path")
+
+    # Calculate expiration time
+    local expires_at=0
+    if [[ "$ttl" -gt 0 ]]; then
+        expires_at=$(( $(date +%s) + ttl ))
+    fi
+
+    # Ensure table exists and write
+    _bb_ensure_table
+
+    local db_path="$(_bb_get_db_path)"
+    # Escape single quotes in value
+    local escaped_value="${value//\'/\'\'}"
+    local escaped_key="${key//\'/\'\'}"
+
+    sqlite3 "$db_path" ".timeout 5000" \
+        "INSERT OR REPLACE INTO kv (key, value, expires_at) VALUES ('$escaped_key', '$escaped_value', $expires_at);"
+
+    # Cleanup expired keys on write
+    if [[ "${BLACKBOARD_TTL_CLEANUP_ON_WRITE:-true}" == "true" ]]; then
+        bb_cleanup_expired
+    fi
+}
+
+# Get a value with TTL cleanup
+# Usage: blackboard_get <key>
+blackboard_get() {
+    local key="$1"
+    local db_path="$(_bb_get_db_path)"
+
+    if [[ ! -f "$db_path" ]]; then
+        return 0
+    fi
+
+    # Ensure table exists
+    _bb_ensure_table
+
+    # Cleanup expired keys on read
+    if [[ "${BLACKBOARD_TTL_CLEANUP_ON_READ:-true}" == "true" ]]; then
+        bb_cleanup_expired
+    fi
+
+    # Escape single quotes in key
+    local escaped_key="${key//\'/\'\'}"
+
+    # Get value, checking expiration
+    local now
+    now=$(date +%s)
+    sqlite3 "$db_path" ".timeout 5000" \
+        "SELECT value FROM kv WHERE key = '$escaped_key' AND (expires_at = 0 OR expires_at > $now);"
+}
+
+# Atomic multi-key set (all-or-nothing via SQLite transaction)
+# Usage: blackboard_atomic_set key1 value1 key2 value2 ...
+# All keys are validated first. If any fails, none are set.
+blackboard_atomic_set() {
+    local schema_path="${BLACKBOARD_SCHEMA_PATH:-$PROJECT_ROOT/config/blackboard-schema.json}"
+    local db_path="$(_bb_get_db_path)"
+    local now
+    now=$(date +%s)
+
+    # Ensure table exists
+    _bb_ensure_table
+
+    # Parse key-value pairs into arrays
+    local -a keys=()
+    local -a values=()
+    local -a ttls=()
+    local idx=1
+
+    while [[ $idx -le $# ]]; do
+        local key="${!idx}"
+        local next_idx=$((idx + 1))
+        local value="${!next_idx:-}"
+
+        # Validate key
+        if ! bb_validate_key "$key" "$schema_path" 2>/dev/null; then
+            return 1
+        fi
+
+        # Validate value length
+        if ! bb_validate_value_length "$value" 2>/dev/null; then
+            return 1
+        fi
+
+        keys+=("$key")
+        values+=("$value")
+
+        # Get TTL
+        local ttl
+        ttl=$(bb_get_ttl_for_key "$key" "$schema_path")
+        local expires_at=0
+        if [[ "$ttl" -gt 0 ]]; then
+            expires_at=$(( now + ttl ))
+        fi
+        ttls+=("$expires_at")
+
+        idx=$((idx + 2))
+    done
+
+    # All validations passed, now execute in a transaction
+    local sql="BEGIN TRANSACTION;"
+    for i in "${!keys[@]}"; do
+        local escaped_key="${keys[$i]//\'/\'\'}"
+        local escaped_value="${values[$i]//\'/\'\'}"
+        sql+="INSERT OR REPLACE INTO kv (key, value, expires_at) VALUES ('$escaped_key', '$escaped_value', ${ttls[$i]});"
+    done
+    sql+="COMMIT;"
+
+    sqlite3 "$db_path" ".timeout 5000" "$sql"
+
+    # Cleanup expired
+    bb_cleanup_expired
+}
+
 # Get current timestamp in milliseconds
 get_ms() {
     if [[ "$OSTYPE" == "darwin"* ]]; then
