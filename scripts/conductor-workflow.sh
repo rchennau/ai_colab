@@ -325,14 +325,27 @@ spawn_workers() {
             local branch=$(blackboard_get "track_branch_$track_slug")
 
             # 2. Select best agent for this task using capability-based routing
+            # Only consider healthy agents (respects circuit breaker)
             local selected_agent="gemini"  # Default fallback
             if [[ -n "$available_agents" ]]; then
-                selected_agent=$(agent_select_best "$next_track" "$available_agents")
-                # If selection returned empty, fall back to first available
+                selected_agent=$(agent_select_healthy_best "$next_track" "$available_agents")
+                # If selection returned empty, fall back to first healthy available
                 if [[ -z "$selected_agent" ]]; then
-                    selected_agent="${available_agents%%,*}"
+                    # Find first healthy agent
+                    IFS=',' read -ra avail_arr <<< "$available_agents"
+                    for avail_agent in "${avail_arr[@]}"; do
+                        if agent_is_healthy "$avail_agent" 2>/dev/null; then
+                            selected_agent="$avail_agent"
+                            break
+                        fi
+                    done
                 fi
-                log_info "Selected agent '$selected_agent' for track '$next_track' (available: $available_agents)"
+                # If still no healthy agent, skip this track
+                if [[ -z "$selected_agent" ]]; then
+                    log_warn "No healthy agents available for track: $next_track (skipping)"
+                    continue
+                fi
+                log_info "Selected agent '$selected_agent' for track '$next_track' (healthy agents from: $available_agents)"
             fi
 
             # Get the CLI command for the selected agent

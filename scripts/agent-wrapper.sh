@@ -222,37 +222,53 @@ run_agent() {
     fi
 }
 
-# Main loop: restart agent if it exits (but not on normal exit)
+# Main loop: restart agent if it exits with exponential backoff and circuit breaker
 RESTART_COUNT=0
-MAX_RESTARTS=10
-RESTART_DELAY=10
+MAX_RESTARTS=20  # Higher limit since backoff increases
 
 while true; do
     echo "[$(date '+%H:%M:%S')] Starting $TOOL agent (attempt $((RESTART_COUNT + 1)))..."
-    
+
     # Run the agent command
     set +e  # Don't exit on error - we want to restart
     run_agent
     EXIT_CODE=$?
     set -e
-    
+
     echo "[$(date '+%H:%M:%S')] $TOOL agent exited with code $EXIT_CODE"
-    
+
     # Report exit to Blackboard for Fleet Autonomy
     if [ $EXIT_CODE -ne 0 ]; then
         report_health "crashed" "0" "$EXIT_CODE"
+
+        # Record failure for circuit breaker (only for crashes, not normal exits)
+        if [ -n "${HCOM_NAME:-}" ]; then
+            agent_record_failure "$HCOM_NAME" 2>/dev/null || true
+        fi
     else
         report_health "exited" "0" "0"
     fi
-    
-    # Check if we should restart
+
+    # Check circuit breaker before retrying
+    if [ -n "${HCOM_NAME:-}" ]; then
+        if ! agent_should_retry "$HCOM_NAME" 2>/dev/null; then
+            echo "[$(date '+%H:%M:%S')] Circuit breaker OPEN for $HCOM_NAME, stopping restarts"
+            exit $EXIT_CODE
+        fi
+    fi
+
+    # Check if we've exceeded max restarts
     if [ $RESTART_COUNT -ge $MAX_RESTARTS ]; then
         echo "[$(date '+%H:%M:%S')] Max restarts ($MAX_RESTARTS) reached, exiting"
         exit $EXIT_CODE
     fi
-    
+
+    # Calculate backoff delay using exponential backoff
+    local backoff_delay
+    backoff_delay=$(agent_calc_backoff $RESTART_COUNT 2>/dev/null || echo "10")
+
     # Increment restart counter and wait before restarting
     RESTART_COUNT=$((RESTART_COUNT + 1))
-    echo "[$(date '+%H:%M:%S')] Restarting in ${RESTART_DELAY}s... (Ctrl+C to stop)"
-    sleep $RESTART_DELAY
+    echo "[$(date '+%H:%M:%S')] Restarting in ${backoff_delay}s (attempt $RESTART_COUNT/$MAX_RESTARTS)... (Ctrl+C to stop)"
+    sleep "$backoff_delay"
 done

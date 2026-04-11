@@ -253,29 +253,31 @@ extract_json_value() {
 blackboard_set() {
     local key="$1"
     local value="$2"
-    local db_path=$(get_hcom_db_path)
+    local db_path="$(_bb_get_db_path)"
 
     # Ensure directory exists
     mkdir -p "$(dirname "$db_path")"
-    
+
     # Create basic structure if it doesn't exist
-    sqlite3 "$db_path" "CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT);" || {
+    sqlite3 "$db_path" "CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT, expires_at INTEGER DEFAULT 0);" || {
         echo -e "${RED}Error: Failed to access blackboard at $db_path${NC}" >&2
         return 1
     }
 
-    sqlite3 "$db_path" ".timeout 5000" "INSERT OR REPLACE INTO kv (key, value) VALUES ('$key', '$value');"
+    sqlite3 "$db_path" ".timeout 5000" "INSERT OR REPLACE INTO kv (key, value, expires_at) VALUES ('$key', '$value', 0);"
 }
 
 blackboard_get() {
     local key="$1"
-    local db_path=$(get_hcom_db_path)
+    local db_path="$(_bb_get_db_path)"
 
     if [[ ! -f "$db_path" ]]; then
         return 0
     fi
 
-    sqlite3 "$db_path" ".timeout 5000" "SELECT value FROM kv WHERE key = '$key';"
+    local now
+    now=$(date +%s)
+    sqlite3 "$db_path" ".timeout 5000" "SELECT value FROM kv WHERE key = '$key' AND (expires_at = 0 OR expires_at > $now);"
 }
 
 # Usage: blackboard_list "pattern" (e.g. "fleet_health_")
@@ -837,6 +839,201 @@ agent_is_healthy() {
     local circuit_status
     circuit_status=$(blackboard_get "circuit_$agent_name")
     if [[ "$circuit_status" == *"OPEN"* ]]; then
+        return 1
+    fi
+
+    return 0
+}
+
+# ============================================================
+# Agent Recovery & Circuit Breaker (P16.5)
+# ============================================================
+
+# Exponential backoff delays (seconds)
+AGENT_BACKOFF_DELAYS=(10 30 60 120)
+AGENT_BACKOFF_MAX=120
+AGENT_CIRCUIT_FAILURE_WINDOW=600  # 10 minutes in seconds
+AGENT_CIRCUIT_FAILURE_THRESHOLD=5
+AGENT_CIRCUIT_COOLDOWN=300  # 5 minutes before HALF_OPEN
+
+# Calculate backoff delay for a given restart count
+# Usage: agent_calc_backoff <restart_count>
+# Returns: delay in seconds
+agent_calc_backoff() {
+    local restart_count="$1"
+
+    if [[ $restart_count -lt ${#AGENT_BACKOFF_DELAYS[@]} ]]; then
+        echo "${AGENT_BACKOFF_DELAYS[$restart_count]}"
+    else
+        echo "$AGENT_BACKOFF_MAX"
+    fi
+}
+
+# Record a failure for an agent (with timestamp tracking)
+# Usage: agent_record_failure <agent_name>
+agent_record_failure() {
+    local agent_name="$1"
+    local now
+    now=$(date +%s)
+
+    # Get existing failure timestamps
+    local existing
+    existing=$(blackboard_get "recovery_failures_$agent_name")
+
+    if [[ -n "$existing" ]]; then
+        # Append new timestamp
+        existing="${existing},${now}"
+    else
+        existing="$now"
+    fi
+
+    # Store failure timestamps
+    blackboard_set "recovery_failures_$agent_name" "$existing"
+
+    # Update last recovery attempt
+    blackboard_set "recovery_attempt_$agent_name" "$now"
+
+    # Check if we should open the circuit
+    local failures_in_window=0
+    local cutoff=$((now - AGENT_CIRCUIT_FAILURE_WINDOW))
+
+    # Count failures within the window
+    IFS=',' read -ra timestamps <<< "$existing"
+    for ts in "${timestamps[@]}"; do
+        if [[ $ts -ge $cutoff ]]; then
+            ((failures_in_window++))
+        fi
+    done
+
+    # Open circuit if threshold exceeded
+    if [[ $failures_in_window -ge $AGENT_CIRCUIT_FAILURE_THRESHOLD ]]; then
+        agent_open_circuit "$agent_name"
+    fi
+}
+
+# Open the circuit breaker for an agent
+# Usage: agent_open_circuit <agent_name>
+agent_open_circuit() {
+    local agent_name="$1"
+    local now
+    now=$(date +%s)
+
+    local circuit_data="{\"state\":\"OPEN\",\"opened_at\":$now,\"cooldown\":$AGENT_CIRCUIT_COOLDOWN,\"failures\":$AGENT_CIRCUIT_FAILURE_THRESHOLD}"
+    blackboard_set "circuit_$agent_name" "$circuit_data"
+    blackboard_set "agent_status_$agent_name" "unhealthy"
+}
+
+# Get circuit breaker state for an agent
+# Usage: agent_get_circuit_state <agent_name>
+# Returns: JSON with state, opened_at, etc.
+agent_get_circuit_state() {
+    local agent_name="$1"
+    local now
+    now=$(date +%s)
+
+    local circuit_data
+    circuit_data=$(blackboard_get "circuit_$agent_name")
+
+    if [[ -z "$circuit_data" ]]; then
+        # No circuit data, default to CLOSED
+        echo "{\"state\":\"CLOSED\",\"opened_at\":0,\"cooldown\":0}"
+        return
+    fi
+
+    # Parse state and check for transition to HALF_OPEN
+    local state
+    state=$(python3 -c "
+import json
+data = json.loads('$circuit_data')
+now = $now
+if data.get('state') == 'OPEN':
+    opened_at = data.get('opened_at', 0)
+    cooldown = data.get('cooldown', 300)
+    if now - opened_at >= cooldown:
+        data['state'] = 'HALF_OPEN'
+        data['transitioned_at'] = now
+        print(json.dumps(data))
+    else:
+        print(json.dumps(data))
+else:
+    print(json.dumps(data))
+" 2>/dev/null)
+
+    # Update blackboard if state changed to HALF_OPEN
+    if echo "$state" | grep -q "HALF_OPEN"; then
+        blackboard_set "circuit_$agent_name" "$state"
+    fi
+
+    echo "$state"
+}
+
+# Reset circuit breaker for an agent
+# Usage: agent_reset_circuit <agent_name>
+agent_reset_circuit() {
+    local agent_name="$1"
+    local now
+    now=$(date +%s)
+
+    local circuit_data="{\"state\":\"CLOSED\",\"opened_at\":0,\"cooldown\":0,\"reset_at\":$now}"
+    blackboard_set "circuit_$agent_name" "$circuit_data"
+    blackboard_set "agent_status_$agent_name" "healthy"
+    blackboard_set "recovery_failures_$agent_name" ""
+}
+
+# Select the best healthy agent for a task (excludes unhealthy agents)
+# Usage: agent_select_healthy_best <task_description> <available_agents_csv>
+# Returns: selected agent name or empty if none healthy
+agent_select_healthy_best() {
+    local task_description="$1"
+    local available_agents_csv="$2"
+
+    if [[ -z "$available_agents_csv" ]]; then
+        return 0
+    fi
+
+    # Handle single agent
+    if [[ "$available_agents_csv" != *","* ]]; then
+        if agent_is_healthy "$available_agents_csv"; then
+            echo "$available_agents_csv"
+        fi
+        return 0
+    fi
+
+    # Filter to only healthy agents
+    local healthy_agents=""
+    IFS=',' read -ra agents <<< "$available_agents_csv"
+    for agent in "${agents[@]}"; do
+        agent=$(echo "$agent" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+        if agent_is_healthy "$agent"; then
+            healthy_agents="${healthy_agents:+$healthy_agents,}$agent"
+        fi
+    done
+
+    if [[ -z "$healthy_agents" ]]; then
+        return 0
+    fi
+
+    # Select best from healthy agents
+    agent_select_best "$task_description" "$healthy_agents"
+}
+
+# Check if an agent should be retried (respects circuit breaker)
+# Usage: agent_should_retry <agent_name>
+# Returns: 0 if should retry, 1 if circuit is open
+agent_should_retry() {
+    local agent_name="$1"
+
+    local circuit_state
+    circuit_state=$(agent_get_circuit_state "$agent_name")
+
+    local state
+    state=$(python3 -c "
+import json
+data = json.loads('$circuit_state')
+print(data.get('state', 'CLOSED'))
+" 2>/dev/null)
+
+    if [[ "$state" == "OPEN" ]]; then
         return 1
     fi
 
