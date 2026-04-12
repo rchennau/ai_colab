@@ -1,0 +1,12 @@
+{
+  "_comment": "Agent Memory Configuration — P5.2",
+  "_version": "1.0.0",
+  "_description": "Configuration for persistent conversation history management",
+
+  "max_messages": 200,
+  "max_bytes": 50000,
+  "compression_threshold": 150,
+  "compression_target": 50,
+  "save_interval_seconds": 60,
+  "context_priority": ["system", "assistant", "user"]
+}

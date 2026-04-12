@@ -224,48 +224,48 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 
 ---
 
-## 📋 Engineering Plan - Phase 19: Ecosystem Expansion (Q4 2026-Q1 2027)
+## 📋 Engineering Plan - Phase 19: Ecosystem Expansion (Done ✅)
 
 **Theme: "Make it extensible"**
 
 ### P19.1: Containerized Agents
-- [ ] **Task: P4.1 — Docker Agent Images**
+- [x] **Task: P4.1 — Docker Agent Images** ✅
   - Docker image per LLM CLI with pre-configured system prompts
   - Consistent environment across machines
   - Health checks and resource limits
-  - *Files:* `docker/agents/*/Dockerfile`
+  - *Files:* `docker/agents/*/Dockerfile`, `scripts/build-agent-images.sh`
 
 ### P19.2: Cloud Deployment
-- [ ] **Task: P4.2 — Cloud VM Deployment**
+- [~] **Task: P4.2 — Cloud VM Deployment** → **Moved to Backlog**
   - Deploy full stack on AWS/GCP/Azure
   - Web UI + MQTT + agents on single VM
   - Terraform/IaC templates
   - *Files:* `terraform/`, `docs/cloud-deploy.md`
 
 ### P19.3: IDE Integration
-- [ ] **Task: P4.3 — VS Code Extension**
+- [~] **Task: P4.3 — VS Code Extension** → **Moved to Backlog**
   - View fleet status, send commands, review tracks
   - Approve merges, search KB — all from IDE
   - Real-time notifications via WebSocket
   - *Files:* `ide/vscode-extension/`
 
 ### P19.4: Module Marketplace
-- [ ] **Task: P4.4 — Community Modules**
+- [~] **Task: P4.4 — Community Modules** → **Moved to Backlog**
   - Standardized module format with validation
   - `ai-colab module install <name>` downloads and configures
   - Module registry and discovery
   - *Files:* `scripts/module-marketplace.sh`
 
 ### P19.5: Agent Evaluation
-- [ ] **Task: P4.5 — Benchmarking Framework**
+- [x] **Task: P4.5 — Benchmarking Framework** ✅
   - Standard task suite for all agents
   - Compare quality, speed, cost
   - Generate reports, inform routing decisions
-  - *Files:* `scripts/agent-benchmark.sh`, `tests/agent-evaluation/`
+  - *Files:* `scripts/agent-benchmark.sh`, `scripts/benchmark-runner.py`, `config/benchmark-tasks.json`
 
 ---
 
-## 📋 Engineering Plan - Phase 20: Strategic Moats (Q1-Q2 2027)
+## 📋 Engineering Plan - Phase 20: Strategic Moats (In Progress 🔄)
 
 **Theme: "Make it irreplaceable"**
 
@@ -281,14 +281,14 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - Conversation history per agent across sessions
   - Configurable context window management
   - Memory compression for long-running agents
-  - *Files:* `scripts/agent-memory.sh`
+  - *Files:* `scripts/agent-memory.sh`, `scripts/memory-manager.py`
 
 ### P20.3: Cost Optimization
 - [ ] **Task: P5.3 — Budget Engine**
   - Track per-agent token usage and cost
   - Route tasks to minimize cost while maintaining quality
   - Budget alerts and spending caps
-  - *Files:* `scripts/cost-tracker.sh`
+  - *Files:* `scripts/cost-tracker.sh`, `scripts/budget-manager.py`
 
 ### P20.4: Audit Trail
 - [ ] **Task: P5.4 — Compliance Export**
