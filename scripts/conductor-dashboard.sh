@@ -60,29 +60,54 @@ render_modular_sections() {
 }
 
 render_fleet_health() {
-    echo -e "\n${BLUE}--- Fleet Status (Spoke Agents) ---${NC}"
+    # Check verbose mode (P6.4)
+    local verbose_mode
+    verbose_mode=$(blackboard_get "dashboard_verbose_mode" 2>/dev/null || echo "compact")
+
+    if [[ "$verbose_mode" == "verbose" ]]; then
+        # Verbose mode: show full protocol messages
+        echo -e "\n${BLUE}--- Fleet Status (Verbose Mode) ---${NC}"
+        echo -e "  Showing structured protocol messages from agents"
+        echo -e "  [${GREEN}Press Ctrl+b v to switch to compact mode${NC}]"
+    else
+        # Compact mode: show structured summaries
+        echo -e "\n${BLUE}--- Fleet Status (Compact Mode) ---${NC}"
+    fi
+
     local health_keys=$(blackboard_list "fleet_health_")
-    
+
     if [[ -z "$health_keys" ]]; then
         echo -e "  ${YELLOW}No active agents detected.${NC}"
         return
     fi
-    
+
     local current_time=$(date +%s)
-    
+
     while IFS='|' read -r key health_json; do
         if [[ -n "$key" ]]; then
             local name=${key#fleet_health_}
             local display_name=$(echo "$name" | cut -c1-15)
-            
+
             local status=$(extract_json_value "$health_json" "status")
             local last_ts=$(extract_json_value "$health_json" "ts")
-            
-            # Fetch Progress
+
+            # Fetch Protocol Message (P6.3)
+            local protocol_json=$(blackboard_get "agent_protocol_${name}")
             local progress_json=$(blackboard_get "agent_progress_${name}")
+
             local pct="0"
             local step="idle"
-            if [[ -n "$progress_json" && "$progress_json" != "None" ]]; then
+            local track=""
+            local phase=""
+            local err=""
+
+            if [[ -n "$protocol_json" && "$protocol_json" != "None" ]]; then
+                pct=$(extract_json_value "$protocol_json" "pct")
+                step=$(extract_json_value "$protocol_json" "step" | cut -c1-20)
+                track=$(extract_json_value "$protocol_json" "track")
+                phase=$(extract_json_value "$protocol_json" "phase")
+                err=$(extract_json_value "$protocol_json" "err")
+            elif [[ -n "$progress_json" && "$progress_json" != "None" ]]; then
                 pct=$(extract_json_value "$progress_json" "pct")
                 step=$(extract_json_value "$progress_json" "step" | cut -c1-20)
             fi
@@ -93,9 +118,31 @@ render_fleet_health() {
                 status="stale"
                 status_color="${RED}"
             fi
-            
-            # Format output: Name [Status] Progress% | Current Step
-            printf "  %-15s [%b%-8s%b] %3s%% | %s\n" "$display_name" "$status_color" "$status" "${NC}" "$pct" "$step"
+
+            if [[ "$verbose_mode" == "verbose" ]]; then
+                # Verbose: show full protocol message
+                echo -e "\n  ${YELLOW}--- $name [${status_color}${status}${NC}] ---${NC}"
+                if [[ -n "$protocol_json" ]]; then
+                    echo "$protocol_json" | python3 -m json.tool 2>/dev/null | while read -r line; do
+                        echo "    $line"
+                    done
+                else
+                    echo "    No protocol messages received"
+                fi
+            else
+                # Compact: show structured summary
+                local summary="$display_name [${status_color}${status}${NC}] ${pct}%"
+                if [[ -n "$track" ]]; then
+                    summary+=" on $track"
+                fi
+                if [[ -n "$step" && "$step" != "idle" ]]; then
+                    summary+=" — $step"
+                fi
+                if [[ -n "$err" ]]; then
+                    summary+=" (error: $err)"
+                fi
+                echo "  $summary"
+            fi
         fi
     done <<< "$health_keys"
 }

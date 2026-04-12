@@ -319,6 +319,9 @@ TMUX_CONF
     tmux bind-key f resize-pane -Z
     tmux bind-key h select-window -t :0  # Quick return to dashboard
     tmux bind-key l select-window -t :1  # Quick jump to fleet
+
+    # Verbose Toggle (P6.4) - Ctrl+b v to switch between compact/verbose mode
+    tmux bind-key v run-shell "bash '$SCRIPT_DIR/verbose-toggle.sh' toggle"
     
     # Step 3: Setup pane list for Right Column
     local right_panes=()

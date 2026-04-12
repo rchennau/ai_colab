@@ -620,6 +620,17 @@ process_commands() {
                         hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Usage: !approve <track_slug_or_name>"
                     fi
                     ;;
+                "!smoke")
+                    hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Running system smoke test..."
+                    if [[ -f "$PROJECT_ROOT/hello_world.sh" ]]; then
+                        local output=$(bash "$PROJECT_ROOT/hello_world.sh" 2>&1)
+                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Smoke Test Output: $output"
+                        blackboard_set "smoke_test_last_run" "$(date +%s)"
+                        blackboard_set "smoke_test_last_output" "$output"
+                    else
+                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: hello_world.sh not found in $PROJECT_ROOT"
+                    fi
+                    ;;
                 "!status")
                     local progress=$(blackboard_get "project_progress")
                     local active=$(blackboard_get "active_track")
