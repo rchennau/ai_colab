@@ -272,29 +272,34 @@ create_dashboard() {
     # Step 2: Create session with hcom TUI
     print_step "Creating tmux session..."
 
-    # Create a minimal tmux config to avoid loading user's incompatible ~/.tmux.conf
-    # This prevents "unknown flag" errors from user config while preserving our bindings
-    local tmux_conf_file="/tmp/ai-colab-tmux-$$.conf"
-    cat > "$tmux_conf_file" << 'TMUX_CONF'
-# ai-colab minimal tmux config
+    # Use ai-colab's local tmux config to ensure consistent behavior
+    # This prevents conflicts with user's ~/.tmux.conf and ensures
+    # ai-colab is fully self-contained and portable.
+    local tmux_conf_file=""
+    local ai_colab_conf="$PROJECT_ROOT/.ai-colab/tmux.conf"
+
+    if [[ -f "$ai_colab_conf" ]]; then
+        tmux_conf_file="$ai_colab_conf"
+        print_info "Using ai-colab tmux config: $tmux_conf_file"
+    else
+        # Fallback: create minimal inline config
+        tmux_conf_file="/tmp/ai-colab-tmux-$$.conf"
+        cat > "$tmux_conf_file" << 'TMUX_CONF'
 set -g mouse on
 set -g pane-border-status top
 set -g pane-border-format "#P: #{pane_title}"
 set -g allow-rename off
 TMUX_CONF
-
-    # Start tmux with our minimal config to avoid user config conflicts
-    if ! tmux -f "$tmux_conf_file" new-session -d -s "$SESSION" -n "dashboard" "$hcom_bin" 2>&1; then
-        # Fallback: try without custom config (user config may be compatible)
-        if ! tmux new-session -d -s "$SESSION" -n "dashboard" "$hcom_bin" >/dev/null 2>&1; then
-            print_error "Failed to create tmux session"
-            rm -f "$SESSION_LOCK" "$tmux_conf_file"
-            return 1
-        fi
+        print_info "Created temporary tmux config: $tmux_conf_file"
     fi
 
-    # Clean up temp config
-    rm -f "$tmux_conf_file"
+    # Start tmux with our config to avoid user config conflicts
+    if ! tmux -f "$tmux_conf_file" new-session -d -s "$SESSION" -n "dashboard" "$hcom_bin" 2>&1; then
+        print_error "Failed to create tmux session"
+        rm -f "$SESSION_LOCK"
+        [[ -f "$tmux_conf_file" && "$tmux_conf_file" == /tmp/* ]] && rm -f "$tmux_conf_file"
+        return 1
+    fi
 
     if ! tmux has-session -t $SESSION 2>/dev/null; then
         print_error "Session creation failed"
@@ -391,9 +396,16 @@ TMUX_CONF
 
         print_info "Launching $title in pane $pane_idx..."
 
-        # Export HCOM_NAME first for the wrapper
+        # Source ai-colab environment for clean, self-contained execution
+        # This ensures agents run in a consistent environment regardless
+        # of user's shell configuration.
+        local env_cmd="source '$SCRIPT_DIR/ai-colab-env.sh' 2>/dev/null || true"
+        tmux send-keys -t "$pane_id" "$env_cmd" C-m
+        sleep 0.3
+
+        # Export HCOM_NAME for the wrapper
         tmux send-keys -t "$pane_id" "export HCOM_NAME=\"$agent_name\"" C-m
-        sleep 0.5
+        sleep 0.3
 
         # Launch using agent-wrapper.sh (Standardized)
         local wrapper_cmd="bash '$SCRIPT_DIR/agent-wrapper.sh' '$component' --name '$agent_name'"

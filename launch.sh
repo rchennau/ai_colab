@@ -88,6 +88,12 @@ SCRIPT_DIR="$(get_script_dir)"
 PROJECT_ROOT="$SCRIPT_DIR"
 export PROJECT_ROOT
 
+# Initialize logging
+if [[ -f "$SCRIPT_DIR/scripts/install-log.sh" ]]; then
+    source "$SCRIPT_DIR/scripts/install-log.sh"
+    log_launch_info "Launcher started from $SCRIPT_DIR"
+fi
+
 # Python Environment Activation
 PYTHON_ENV_MGR="$PROJECT_ROOT/scripts/python-env-manager.sh"
 if [[ -f "$PYTHON_ENV_MGR" ]]; then
