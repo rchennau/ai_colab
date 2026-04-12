@@ -2,7 +2,7 @@
 
 A unified, **project-agnostic** environment for coordinating multiple AI agents (Gemini, Claude, Qwen, DeepSeek, NeMo, etc.) on complex engineering tasks.
 
-**Latest Release:** Phase 17 Complete ✅ — Console UX Revolution with adaptive layouts, focus mode, enhanced console, real-time status bar, and session persistence.
+**Latest Release:** Phase 20 In Progress 🔄 — Strategic Moats with Agent Memory, Cost Optimization, and Conductor Failover.
 
 ## 🌟 Vision
 To provide a seamless development experience where human oversight and AI autonomy work in harmony. ai-colab handles the "plumbing" of multi-agent systems—messaging, state synchronization, task tracking, and lifecycle management—allowing you to focus on the engineering.
@@ -66,13 +66,31 @@ ai-colab
 2. **WebUI (v3.0)** - Modular blueprint-based interface with project switcher and persistent logs.
 3. **Debug Mode** - Specialized troubleshooting environment with deep KB/RAG context.
 
-**Dashboard Features (Phase 17 Complete ✅):**
+**Dashboard Features:**
 - **Dynamic Layouts:** Auto-adapts to agent count (1-2: side-by-side, 3-4: grid, 5-7: tabbed, 8+: compact)
 - **Focus Mode:** `Ctrl+b f` to zoom single agent pane, `Ctrl+b 1-9` to switch between agents
 - **Real-Time Status Bar:** Color-coded fleet status in tmux status line (✓ ready, ⏳ busy, ✗ crashed)
 - **Enhanced Console:** Python readline-based interface with command history, tab completion, and help
 - **Session Persistence:** Auto-saves layout on creation, restore with `bash scripts/restore-layout.sh`
 - **Named Layout Presets:** Save/restore layouts as `default`, `coding`, `review`, or custom names
+
+**Agent Memory (P5.2):**
+- Persistent conversation history across agent restarts
+- Configurable context window (max messages or bytes)
+- Automatic compression of old conversations into summaries
+- Usage: `bash scripts/agent-memory.sh save/load/compress/status --agent gemini`
+
+**Cost Optimization (P5.3):**
+- Per-agent token tracking with cost estimation
+- Monthly budget caps with automatic alerts (50%, 75%, 90%, 100%)
+- Cost efficiency ranking for intelligent routing
+- Usage: `bash scripts/cost-tracker.sh record/status/report/set-budget --agent gemini`
+
+**Conductor Failover (P5.5):**
+- Automatic health monitoring and restart on failure
+- Exponential backoff (10s → 30s → 60s → 120s) with max 5 attempts
+- Agent promotion to temporary conductor when restart fails
+- Usage: `bash scripts/conductor-failover.sh monitor/check/restart/promote/status`
 
 **Multi-Project Support:**
 Running `ai-colab` will scan for local git repositories and allow you to register and switch between them seamlessly.
@@ -147,8 +165,15 @@ The backbone of ai-colab. All agents communicate via [hcom](https://github.com/a
 | `scripts/quality-gates.sh` | **NEW** - Automated code quality validation (Linting, Security, Syntax) |
 | `./launch.sh` | Unified launcher with interactive project and agent selection |
 | `scripts/conductor-workflow.sh`| The orchestration heart (Git, KB, Tasking, Capability Routing) |
-| `webui/app_refactored.py` | **NEW** - Modular Web UI backend (v3.0) using Flask Blueprints |
 | `scripts/message-queue.sh` | **NEW** - SQLite-based message queue with delivery guarantees |
+| `scripts/memory-manager.py` | **NEW** - Agent conversation history with compression |
+| `scripts/agent-memory.sh` | **NEW** - Shell wrapper for agent memory management |
+| `scripts/budget-manager.py` | **NEW** - Token tracking and cost estimation |
+| `scripts/cost-tracker.sh` | **NEW** - Shell wrapper for budget management |
+| `scripts/conductor-failover.sh` | **NEW** - Conductor health monitoring and auto-restart |
+| `scripts/agent-benchmark.sh` | **NEW** - Agent performance benchmarking framework |
+| `scripts/benchmark-runner.py` | **NEW** - Python benchmark execution engine |
+| `webui/app_refactored.py` | **NEW** - Modular Web UI backend (v3.0) using Flask Blueprints |
 
 ---
 

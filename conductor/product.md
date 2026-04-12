@@ -88,20 +88,20 @@ The Hub connects to various backends for specialized agent deployment:
     *   Structured progress tracking from agents (P3.3) (Done ✅)
     *   Automated quality gates before merge (P3.4) (Done ✅)
     *   Agent performance metrics and optimization (P3.5) (Done ✅)
-*   **Phase 19: Ecosystem Expansion** (In Progress 🔄)
+*   **Phase 19: Ecosystem Expansion** (Done ✅)
     *   **Theme:** "Make it extensible"
     *   Containerized agents with pre-configured environments (P4.1) (Done ✅)
-    *   Cloud deployment on AWS/GCP/Azure (P4.2)
-    *   IDE integration (VS Code / Cursor extension) (P4.3)
-    *   Community module marketplace (P4.4)
-    *   Agent evaluation and benchmarking framework (P4.5)
-*   **Phase 20: Strategic Moats** (Planned)
+    *   Cloud deployment on AWS/GCP/Azure (P4.2) → (Backlog)
+    *   IDE integration (VS Code / Cursor extension) (P4.3) → (Backlog)
+    *   Community module marketplace (P4.4) → (Backlog)
+    *   Agent evaluation and benchmarking framework (P4.5) (Done ✅)
+*   **Phase 20: Strategic Moats** (In Progress 🔄 — 3/5 tasks complete)
     *   **Theme:** "Make it irreplaceable"
+    *   Persistent agent memory and context management (P5.2) (Done ✅)
+    *   Cost optimization engine with budget alerts (P5.3) (Done ✅)
+    *   Self-healing orchestration with conductor failover (P5.5) (Done ✅)
     *   Full local model integration (Ollama, llama.cpp, vLLM) (P5.1)
-    *   Persistent agent memory and context management (P5.2)
-    *   Cost optimization engine with budget alerts (P5.3)
     *   Complete audit trail and compliance export (P5.4)
-    *   Self-healing orchestration with conductor failover (P5.5)
 
 ## Future Considerations
 - Federated Agent Learning (Skill-sharing across distributed fleets).
