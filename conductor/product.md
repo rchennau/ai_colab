@@ -95,12 +95,12 @@ The Hub connects to various backends for specialized agent deployment:
     *   IDE integration (VS Code / Cursor extension) (P4.3) → (Backlog)
     *   Community module marketplace (P4.4) → (Backlog)
     *   Agent evaluation and benchmarking framework (P4.5) (Done ✅)
-*   **Phase 20: Strategic Moats** (In Progress 🔄 — 3/5 tasks complete)
+*   **Phase 20: Strategic Moats** (In Progress 🔄 — 4/5 tasks complete)
     *   **Theme:** "Make it irreplaceable"
     *   Persistent agent memory and context management (P5.2) (Done ✅)
     *   Cost optimization engine with budget alerts (P5.3) (Done ✅)
+    *   Full local model integration (Ollama, llama.cpp, vLLM) (P5.1) (Done ✅)
     *   Self-healing orchestration with conductor failover (P5.5) (Done ✅)
-    *   Full local model integration (Ollama, llama.cpp, vLLM) (P5.1)
     *   Complete audit trail and compliance export (P5.4)
 
 ## Future Considerations

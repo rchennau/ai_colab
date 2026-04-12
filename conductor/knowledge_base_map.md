@@ -1,11 +1,13 @@
 # ai-colab Project Map (Semantic Knowledge Base)
-Last Updated: 2026-04-11 (Phase 20: Strategic Moats In Progress 🔄 — Agent Memory ✅, Cost Optimization ✅, Conductor Failover ✅)
+Last Updated: 2026-04-11 (Phase 20: Strategic Moats In Progress 🔄 — 4/5 tasks complete: Agent Memory ✅, Cost Optimization ✅, Conductor Failover ✅, Local LLM Support ✅)
 
 ## Orchestration Core (Hub)
 - `launch.sh`: Unified launcher with **three launch modes** (Dashboard, WebUI, Debug) and **module enablement** (`-m/--module` flag). Auto-activates virtual environment. Supports **multi-project discovery** and global CLI model.
 - `install.sh`: Master installer for project dependencies. Supports `--wizard`, `--reconfigure`, `--auto`, and **`--global`** modes. **Auto-detects Python environment** (uv → conda → venv → system) and creates virtual environment in `.venv/`.
 - `scripts/console.py`: Enhanced Python-based interactive command console with history, tab-completion, and multi-line support.
 - `scripts/quality-gates.sh`: Automated code quality validation framework (Linting, Security, Syntax) integrated into the merge workflow.
+- `scripts/local-models.sh`: **NEW (P5.1)** - Local LLM model management shell wrapper.
+- `scripts/model-manager.py`: **NEW (P5.1)** - Local model registry, download, and recommendation engine with 8 pre-configured models.
 - `scripts/agent-benchmark.sh`: **NEW (P19.5)** - Standardized agent evaluation framework. Compares LLM performance across coding, reasoning, and architecture tasks.
 - `scripts/python-env-manager.sh`: Universal Python environment manager. Detects uv, conda, venv, pixi, and pyenv. Supports **standalone portable Python distributions** via `uv python install`.
 - `scripts/workspace_manager.py`: Logic for scanning directories for Git repositories and managing the global `workspace.json` registry.

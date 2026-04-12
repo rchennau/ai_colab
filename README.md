@@ -2,10 +2,10 @@
 
 A unified, **project-agnostic** environment for coordinating multiple AI agents (Gemini, Claude, Qwen, DeepSeek, NeMo, etc.) on complex engineering tasks.
 
-**Latest Release:** Phase 20 In Progress 🔄 — Strategic Moats with Agent Memory, Cost Optimization, and Conductor Failover.
+**Latest Release:** Phase 20 In Progress 🔄 — 4/5 Strategic Moats complete (Agent Memory, Cost Optimization, Conductor Failover, Local LLM Support).
 
 ## 🌟 Vision
-To provide a seamless development experience where human oversight and AI autonomy work in harmony. ai-colab handles the "plumbing" of multi-agent systems—messaging, state synchronization, task tracking, and lifecycle management—allowing you to focus on the engineering.
+To provide a seamless development experience where human oversight and AI autonomy work in harmony. ai-colab handles the "plumbing" of multi-agent systems—messaging, state synchronization, task tracking, and lifecycle management—allowing you to focus on the engineering. **Now with full local LLM support for zero-cloud deployments.**
 
 ## 🚀 Quick Start
 
@@ -92,6 +92,12 @@ ai-colab
 - Agent promotion to temporary conductor when restart fails
 - Usage: `bash scripts/conductor-failover.sh monitor/check/restart/promote/status`
 
+**Local LLM Support (P5.1):**
+- 8 pre-configured models across 3 runtimes (Ollama, llama.cpp, local vLLM)
+- Model download, health checks, and task-based recommendations
+- Zero-cloud deployment — run ai-colab with no external API keys
+- Usage: `bash scripts/local-models.sh list/download/health/recommend --task coding`
+
 **Multi-Project Support:**
 Running `ai-colab` will scan for local git repositories and allow you to register and switch between them seamlessly.
 
@@ -173,6 +179,8 @@ The backbone of ai-colab. All agents communicate via [hcom](https://github.com/a
 | `scripts/conductor-failover.sh` | **NEW** - Conductor health monitoring and auto-restart |
 | `scripts/agent-benchmark.sh` | **NEW** - Agent performance benchmarking framework |
 | `scripts/benchmark-runner.py` | **NEW** - Python benchmark execution engine |
+| `scripts/local-models.sh` | **NEW** - Local LLM model management shell wrapper |
+| `scripts/model-manager.py` | **NEW** - Local model registry, download, and recommendation engine |
 | `webui/app_refactored.py` | **NEW** - Modular Web UI backend (v3.0) using Flask Blueprints |
 
 ---
