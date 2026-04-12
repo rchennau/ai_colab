@@ -81,6 +81,8 @@ services:
     image: eclipse-mosquitto:2.0
     container_name: ai-colab-mqtt
     restart: unless-stopped
+    profiles:
+      - mqtt  # Start with: docker compose --profile mqtt up -d
 
     ports:
       - "8883:8883"  # TLS listener

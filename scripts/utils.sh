@@ -1138,9 +1138,10 @@ start_heartbeat() {
                 hcom status --name "$HCOM_NAME" > /dev/null 2>&1 || true
 
                 # 2. Measure latency (Blackboard round-trip)
-                sb_time=$(date +%s%3N)
+                # Use get_ms() for cross-platform millisecond timestamps
+                sb_time=$(get_ms)
                 blackboard_get "fleet_health_${HCOM_NAME}" > /dev/null 2>&1 || true
-                eb_time=$(date +%s%3N)
+                eb_time=$(get_ms)
                 lat=$((eb_time - sb_time))
 
                 # 3. Report health metrics

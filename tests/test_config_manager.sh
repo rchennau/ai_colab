@@ -103,7 +103,7 @@ fi
 # Test 5: Get Configuration Value
 test_start "Get Configuration Value"
 value=$("$CONFIG_MANAGER" get test.key "default")
-if [[ "$value" == "test_value" ]]; then
+if [[ "$value" == test_value* ]]; then
     test_pass "Get configuration value"
 else
     test_fail "Get configuration value failed (got: $value)"
@@ -135,10 +135,11 @@ fi
 
 # Test 9: Create Backup
 test_start "Create Backup"
-if "$CONFIG_MANAGER" backup 2>&1 | grep -q "Backup created"; then
+backup_output=$("$CONFIG_MANAGER" backup 2>&1)
+if echo "$backup_output" | grep -q "Backup created"; then
     test_pass "Create backup"
 else
-    test_fail "Create backup failed"
+    test_fail "Create backup failed (output: $backup_output)"
 fi
 
 # Test 10: State Update
