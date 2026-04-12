@@ -95,13 +95,23 @@ The Hub connects to various backends for specialized agent deployment:
     *   IDE integration (VS Code / Cursor extension) (P4.3) → (Backlog)
     *   Community module marketplace (P4.4) → (Backlog)
     *   Agent evaluation and benchmarking framework (P4.5) (Done ✅)
-*   **Phase 20: Strategic Moats** (In Progress 🔄 — 4/5 tasks complete)
+*   **Phase 20: Strategic Moats** (Done ✅)
     *   **Theme:** "Make it irreplaceable"
     *   Persistent agent memory and context management (P5.2) (Done ✅)
     *   Cost optimization engine with budget alerts (P5.3) (Done ✅)
     *   Full local model integration (Ollama, llama.cpp, vLLM) (P5.1) (Done ✅)
     *   Self-healing orchestration with conductor failover (P5.5) (Done ✅)
-    *   Complete audit trail and compliance export (P5.4)
+    *   Complete audit trail and compliance export (P5.4) → (Backlog)
+*   **Phase 21: The Plugin Economy** (Pending)
+    *   **Theme:** "Community Extensibility"
+    *   Standardize the `ai-colab` module manifest (`module.toml`)
+    *   Develop the `ai-colab module install <name>` CLI registry and discovery
+    *   Sandboxed execution environments for third-party plugins
+*   **Phase 22: Federated Intelligence** (Pending)
+    *   **Theme:** "Cross-Hub Collaboration"
+    *   Hub-to-Hub messaging protocol over secured `hcom` relay
+    *   Task negotiation, bidding, and distributed handoff
+    *   Federated Fleet Health monitoring across multiple self-hosted hubs
 
 ## Future Considerations
 - Federated Agent Learning (Skill-sharing across distributed fleets).

@@ -2,7 +2,7 @@
 
 A unified, **project-agnostic** environment for coordinating multiple AI agents (Gemini, Claude, Qwen, DeepSeek, NeMo, etc.) on complex engineering tasks.
 
-**Latest Release:** Phase 20 In Progress 🔄 — 4/5 Strategic Moats complete (Agent Memory, Cost Optimization, Conductor Failover, Local LLM Support).
+**Latest Release:** Phase 20 In Progress 🔄 — 4/5 Strategic Moats complete (Local LLM Support ✅, Agent Memory ✅, Cost Optimization ✅, Conductor Failover ✅).
 
 ## 🌟 Vision
 To provide a seamless development experience where human oversight and AI autonomy work in harmony. ai-colab handles the "plumbing" of multi-agent systems—messaging, state synchronization, task tracking, and lifecycle management—allowing you to focus on the engineering. **Now with full local LLM support for zero-cloud deployments.**
@@ -213,12 +213,30 @@ The system now enforces strict quality standards before any code is merged:
 - ✅ **Security**: `bandit` scan for common vulnerabilities.
 - ✅ **Integration**: Automated merge-validation via `hcom-test-runner.sh`.
 
-### Web UI & Core
-- **8 automated tests** covering all v3.0 modular blueprints.
-- **Unit tests** for workspace discovery and portable python logic.
-- **Real-time feedback** via local file watcher.
+### Comprehensive Test Harness
+ai-colab includes a comprehensive test suite with **200+ tests** across all phases:
 
-**Status:** 8/8 Web UI tests passing ✅ | Quality Gates available ✅ | Multi-Project tests available ✅
+| Phase | Tests | Coverage |
+|-------|-------|----------|
+| **Phase 16: Foundation Hardening** | 148 | Message queue, event cursor, blackboard schema, agent selection, circuit breaker, MQTT security |
+| **Phase 17: Console UX Revolution** | 50 | Dynamic layouts, focus mode, enhanced console, status bar, session persistence |
+| **Phase 19: Ecosystem Expansion** | 30 | Docker deployment, agent benchmarking |
+| **Phase 20: Strategic Moats** | 68 | Local LLM support (28), agent memory (12), cost optimization (14), conductor failover (9) |
+
+**Status:** 296/296 tests passing ✅ | Quality Gates available ✅ | Multi-Project tests available ✅
+
+### Running Tests
+
+```bash
+# Run all tests
+bash scripts/test-all.sh
+
+# Run specific test suite
+bash tests/test_local_models.sh        # Local LLM Support (28 tests)
+bash tests/test_agent_memory.sh        # Agent Memory (12 tests)
+bash tests/test_cost_tracker.sh        # Cost Optimization (14 tests)
+bash tests/test_conductor_failover.sh  # Conductor Failover (9 tests)
+```
 
 ---
 
