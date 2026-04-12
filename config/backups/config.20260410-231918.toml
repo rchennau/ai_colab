@@ -1,0 +1,10 @@
+version = "1.0.0"
+llms = []
+modules = []
+
+[installation]
+status = "complete"
+pathway = "webui"
+
+[compute]
+backend = "local"

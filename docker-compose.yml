@@ -1,20 +1,24 @@
-version: '3.8'
+# ai-colab Unified Docker Compose
+# All services in a single deployment: Web UI, API, MQTT, Conductor, and Agents
+# Usage: docker compose up -d
+# With agents: docker compose --profile agents up -d
 
 services:
-  ai-colab:
+  # ============================================================
+  # Core Hub: Web UI + API
+  # ============================================================
+  hub:
     build:
       context: .
       dockerfile: Dockerfile
     image: ai-colab:latest
-    container_name: ai-colab
+    container_name: ai-colab-hub
     restart: unless-stopped
 
-    # Port mappings
     ports:
       - "8080:8080"  # Web UI
       - "8081:8081"  # API
 
-    # Environment variables
     environment:
       - TZ=${TZ:-UTC}
       - COMPUTE_BACKEND=${COMPUTE_BACKEND:-local}
@@ -24,34 +28,21 @@ services:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - MQTT_BROKER_URL=mqtts://mqtt:8883
+      - MQTT_USERNAME=${MQTT_USERNAME:-ai-colab-admin}
+      - MQTT_PASSWORD=${MQTT_PASSWORD:-}
 
-    # Volume mounts for persistence
     volumes:
-      # Configuration persistence
-      - ~/.ai-colab/config:/app/config
-      - ~/.ai-colab/state:/app/.ai-colab-state.json
-      - ~/.ai-colab/prefs:/app/.ai-colab-prefs
-      - ~/.ai-colab/env:/home/ai-colab/.ai-colab-env
+      - ai-colab-config:/app/config
+      - ai-colab-state:/app/.ai-colab-state.json
+      - ai-colab-prefs:/app/.ai-colab-prefs
+      - ai-colab-env:/home/ai-colab/.ai-colab-env
+      - ai-colab-modules:/app/modules
+      - ai-colab-logs:/app/logs
+      - hcom-data:/home/ai-colab/.hcom
 
-      # Project access (optional, for development)
-      - ~/projects:/home/ai-colab/projects
-
-      # Module persistence
-      - ./modules:/app/modules:ro
-
-      # hcom data
-      - ~/.hcom:/home/ai-colab/.hcom
-
-      # Logs
-      - ./logs:/app/logs
-
-    # Working directory
     working_dir: /app
 
-    # Enable inter-process communication
-    ipc: shareable
-
-    # Resource limits
     deploy:
       resources:
         limits:
@@ -61,7 +52,6 @@ services:
           cpus: '1.0'
           memory: 1G
 
-    # Health check
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
@@ -69,147 +59,48 @@ services:
       retries: 3
       start_period: 40s
 
-    # Logging configuration
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
 
-    # Network mode
-    network_mode: bridge
+    networks:
+      - ai-colab-network
 
-    # Init process for proper signal handling
+    depends_on:
+      mqtt:
+        condition: service_healthy
+
     init: true
 
-  # Optional: vLLM service for local model serving
-  vllm:
-    image: vllm/vllm-openai:latest
-    container_name: ai-colab-vllm
-    restart: unless-stopped
-    profiles:
-      - vllm  # Only start with: docker-compose --profile vllm up
-
-    # GPU access (requires NVIDIA Container Toolkit)
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-
-    # Port mapping
-    ports:
-      - "8000:8000"
-
-    # Volume for model cache
-    volumes:
-      - ~/.vllm/models:/models
-
-    # Environment
-    environment:
-      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN:-}
-
-    # Command
-    command: >
-      --model DeepSeek-Coder-V2-Lite-Instruct
-      --served-model-name local-model
-      --host 0.0.0.0
-      --port 8000
-      --gpu-memory-utilization 0.9
-
-    # Resource limits
-    deploy:
-      resources:
-        limits:
-          memory: 16G
-
-    # Network
-    networks:
-      - ai-colab-network
-
-  # Optional: Redis for caching (if needed for Web UI scaling)
-  redis:
-    image: redis:7-alpine
-    container_name: ai-colab-redis
-    restart: unless-stopped
-    profiles:
-      - scaling
-
-    # Port mapping
-    ports:
-      - "6379:6379"
-
-    # Volume for persistence
-    volumes:
-      - redis-data:/data
-
-    # Health check
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-    # Network
-    networks:
-      - ai-colab-network
-
-# Networks
-networks:
-  ai-colab-network:
-    driver: bridge
-
-  mqtt-network:
-    driver: bridge
-
-# Volumes
-volumes:
-  redis-data:
-    driver: local
-  mqtt-data:
-    driver: local
-  mqtt-certs:
-    driver: local
-
-  # MQTT Broker Service (P16.6: Self-Hosted Secure MQTT)
+  # ============================================================
+  # MQTT Broker: Secure messaging backbone
+  # ============================================================
   mqtt:
     image: eclipse-mosquitto:2.0
     container_name: ai-colab-mqtt
     restart: unless-stopped
-    profiles:
-      - mqtt  # Start with: docker compose --profile mqtt up -d
 
-    # Port mapping (TLS only)
     ports:
       - "8883:8883"  # TLS listener
 
-    # Volume mounts
     volumes:
-      # Configuration
       - ./docker/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
-      # Entrypoint script
       - ./docker/mosquitto/entrypoint.sh:/mosquitto/config/entrypoint.sh:ro
-      # Certificates (auto-generated on first run)
       - mqtt-certs:/mosquitto/certs
-      # Password file (auto-generated on first run)
       - ./docker/mosquitto/passwd:/mosquitto/config/passwd
-      # Data persistence
       - mqtt-data:/mosquitto/data
 
-    # Entrypoint for first-run setup
     entrypoint: ["/mosquitto/config/entrypoint.sh"]
 
-    # Health check
     healthcheck:
-      test: ["CMD-SHELL", "mosquitto_sub -p 8883 -t '\$SYS/#' -C 1 -W 5 --cafile /mosquitto/certs/ca.crt -u ai-colab-admin -P $MQTT_PASSWORD || exit 1"]
+      test: ["CMD-SHELL", "mosquitto_sub -p 8883 -t '$$SYS/#' -C 1 -W 5 --cafile /mosquitto/certs/ca.crt -u ai-colab-admin -P $${MQTT_PASSWORD:-admin} || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 30s
 
-    # Resource limits
     deploy:
       resources:
         limits:
@@ -219,14 +110,302 @@ volumes:
           memory: 64M
           cpus: '0.1'
 
-    # Network
     networks:
-      - mqtt-network
       - ai-colab-network
 
-    # Logging
     logging:
       driver: "json-file"
       options:
         max-size: "5m"
         max-file: "2"
+
+  # ============================================================
+  # Agent: Gemini (Architect & Orchestrator)
+  # ============================================================
+  agent-gemini:
+    build:
+      context: .
+      dockerfile: docker/agents/gemini/Dockerfile
+    image: ai-colab-agent-gemini:latest
+    container_name: ai-colab-agent-gemini
+    restart: unless-stopped
+    profiles:
+      - agents
+
+    environment:
+      - HCOM_BROKER_URL=mqtts://mqtt:8883
+      - HCOM_USERNAME=${MQTT_USERNAME:-ai-colab-admin}
+      - HCOM_PASSWORD=${MQTT_PASSWORD:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - PROJECT_ROOT=/workspace
+      - GOOGLE_APPLICATION_CREDENTIALS=/workspace/.google-auth.json
+
+    volumes:
+      - ai-colab-config:/workspace/config:ro
+      - ai-colab-state:/workspace/.ai-colab-state.json:ro
+      - ai-colab-logs:/workspace/logs
+      - hcom-data:/home/agent/.hcom
+      - ./conductor:/workspace/conductor:ro
+      - ./scripts:/workspace/scripts:ro
+
+    working_dir: /workspace
+
+    networks:
+      - ai-colab-network
+
+    depends_on:
+      mqtt:
+        condition: service_healthy
+      hub:
+        condition: service_healthy
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ============================================================
+  # Agent: Qwen (Assembly & Hardware Expert)
+  # ============================================================
+  agent-qwen:
+    build:
+      context: .
+      dockerfile: docker/agents/qwen/Dockerfile
+    image: ai-colab-agent-qwen:latest
+    container_name: ai-colab-agent-qwen
+    restart: unless-stopped
+    profiles:
+      - agents
+
+    environment:
+      - HCOM_BROKER_URL=mqtts://mqtt:8883
+      - HCOM_USERNAME=${MQTT_USERNAME:-ai-colab-admin}
+      - HCOM_PASSWORD=${MQTT_PASSWORD:-}
+      - PROJECT_ROOT=/workspace
+      - QWEN_API_KEY=${QWEN_API_KEY:-}
+
+    volumes:
+      - ai-colab-config:/workspace/config:ro
+      - ai-colab-state:/workspace/.ai-colab-state.json:ro
+      - ai-colab-logs:/workspace/logs
+      - hcom-data:/home/agent/.hcom
+      - ./conductor:/workspace/conductor:ro
+      - ./scripts:/workspace/scripts:ro
+
+    working_dir: /workspace
+
+    networks:
+      - ai-colab-network
+
+    depends_on:
+      mqtt:
+        condition: service_healthy
+      hub:
+        condition: service_healthy
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ============================================================
+  # Agent: Claude (Generalist & Documentation)
+  # ============================================================
+  agent-claude:
+    build:
+      context: .
+      dockerfile: docker/agents/claude/Dockerfile
+    image: ai-colab-agent-claude:latest
+    container_name: ai-colab-agent-claude
+    restart: unless-stopped
+    profiles:
+      - agents
+
+    environment:
+      - HCOM_BROKER_URL=mqtts://mqtt:8883
+      - HCOM_USERNAME=${MQTT_USERNAME:-ai-colab-admin}
+      - HCOM_PASSWORD=${MQTT_PASSWORD:-}
+      - PROJECT_ROOT=/workspace
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+
+    volumes:
+      - ai-colab-config:/workspace/config:ro
+      - ai-colab-state:/workspace/.ai-colab-state.json:ro
+      - ai-colab-logs:/workspace/logs
+      - hcom-data:/home/agent/.hcom
+      - ./conductor:/workspace/conductor:ro
+      - ./scripts:/workspace/scripts:ro
+
+    working_dir: /workspace
+
+    networks:
+      - ai-colab-network
+
+    depends_on:
+      mqtt:
+        condition: service_healthy
+      hub:
+        condition: service_healthy
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ============================================================
+  # Agent: DeepSeek (Logic & Optimization)
+  # ============================================================
+  agent-deepseek:
+    build:
+      context: .
+      dockerfile: docker/agents/deepseek/Dockerfile
+    image: ai-colab-agent-deepseek:latest
+    container_name: ai-colab-agent-deepseek
+    restart: unless-stopped
+    profiles:
+      - agents
+
+    environment:
+      - HCOM_BROKER_URL=mqtts://mqtt:8883
+      - HCOM_USERNAME=${MQTT_USERNAME:-ai-colab-admin}
+      - HCOM_PASSWORD=${MQTT_PASSWORD:-}
+      - PROJECT_ROOT=/workspace
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+
+    volumes:
+      - ai-colab-config:/workspace/config:ro
+      - ai-colab-state:/workspace/.ai-colab-state.json:ro
+      - ai-colab-logs:/workspace/logs
+      - hcom-data:/home/agent/.hcom
+      - ./conductor:/workspace/conductor:ro
+      - ./scripts:/workspace/scripts:ro
+
+    working_dir: /workspace
+
+    networks:
+      - ai-colab-network
+
+    depends_on:
+      mqtt:
+        condition: service_healthy
+      hub:
+        condition: service_healthy
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ============================================================
+  # Agent: Conductor (Orchestrator)
+  # ============================================================
+  conductor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ai-colab:latest
+    container_name: ai-colab-conductor
+    restart: unless-stopped
+    profiles:
+      - agents
+
+    environment:
+      - HCOM_BROKER_URL=mqtts://mqtt:8883
+      - HCOM_USERNAME=${MQTT_USERNAME:-ai-colab-admin}
+      - HCOM_PASSWORD=${MQTT_PASSWORD:-}
+      - PROJECT_ROOT=/workspace
+      - CONDUCTOR_INTERVAL=${CONDUCTOR_INTERVAL:-60}
+
+    volumes:
+      - ai-colab-config:/workspace/config
+      - ai-colab-state:/workspace/.ai-colab-state.json
+      - ai-colab-prefs:/workspace/.ai-colab-prefs
+      - ai-colab-logs:/workspace/logs
+      - hcom-data:/home/ai-colab/.hcom
+      - ./conductor:/workspace/conductor
+      - ./scripts:/workspace/scripts
+      - ./modules:/workspace/modules
+      - /var/run/docker.sock:/var/run/docker.sock:ro  # For Docker-based agent management
+
+    working_dir: /workspace
+
+    command: ["bash", "scripts/conductor-workflow.sh"]
+
+    networks:
+      - ai-colab-network
+
+    depends_on:
+      mqtt:
+        condition: service_healthy
+      hub:
+        condition: service_healthy
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# ============================================================
+# Networks
+# ============================================================
+networks:
+  ai-colab-network:
+    driver: bridge
+
+# ============================================================
+# Volumes
+# ============================================================
+volumes:
+  ai-colab-config:
+    driver: local
+  ai-colab-state:
+    driver: local
+  ai-colab-prefs:
+    driver: local
+  ai-colab-env:
+    driver: local
+  ai-colab-modules:
+    driver: local
+  ai-colab-logs:
+    driver: local
+  hcom-data:
+    driver: local
+  mqtt-data:
+    driver: local
+  mqtt-certs:
+    driver: local

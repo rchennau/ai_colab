@@ -1,9 +1,10 @@
 # ai-colab Qwen Agent Image
 FROM aicolab/agent-base:latest
 
-# Install Qwen Agent CLI
-RUN pip3 install --break-system-packages qwen-agent
+# Install Qwen CLI (via uv for fast installation)
+RUN uv pip install qwen-code --system 2>/dev/null || \
+    pip3 install --break-system-packages qwen-code 2>/dev/null || true
 
-# Entrypoint script to handle hcom registration and tool launch
-ENTRYPOINT ["hcom", "start", "--headless", "--as", "qwen_worker", "--"]
-CMD ["qwen-code"]
+# Entrypoint uses agent wrapper
+ENTRYPOINT ["/usr/local/bin/agent-wrapper.sh", "qwen"]
+CMD []
