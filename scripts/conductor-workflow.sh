@@ -943,7 +943,13 @@ main() {
                     local already_processed=$(conductor_is_event_processed "$event_id")
                     if [[ "$already_processed" != "true" && "$event_id" -gt "$LAST_EVENT_ID" ]]; then
                         log_info "Processing event $event_id..."
+
+                        # First, try to process as structured protocol message (P6.3)
+                        process_protocol_message "$line"
+
+                        # Then, process as command if it starts with !
                         process_commands "$line"
+
                         # Mark as processed
                         conductor_mark_event_processed "$event_id"
                         # Update cursor
