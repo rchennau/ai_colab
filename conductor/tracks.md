@@ -66,13 +66,16 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - [x] Task P3.3: Structured Progress Tracking (Real-time stdout parsing in Agent Wrapper)
   - [x] Task P3.4: Automated Quality Gates (Created `scripts/quality-gates.sh` and integrated into merge)
   - [x] Task P3.5: Agent Analytics (Performance logging to SQLite blackboard)
-- [ ] **Milestone 23: Ecosystem Expansion** (Complete ✅ — 2/3 active tasks done)
+- [ ] **Milestone 23: Ecosystem Expansion** (Active — 5/8 tasks done)
   *Link: [./ecosystem-expansion-plan.md](./ecosystem-expansion-plan.md)*
   - [x] Task P4.1: Containerized Agents (Dockerfiles and build script implemented)
   - [x] Task P4.5: Agent Benchmarking framework (Task suite, runner, report generator)
   - [~] Task P4.2: Cloud Deployment templates → **Moved to Backlog** (Docker-first approach already covers deployment)
   - [~] Task P4.3: IDE Integration → **Moved to Backlog** (Requires audience evaluation — see rationale)
   - [~] Task P4.4: Community Module Marketplace → **Moved to Backlog** (Module system functional, marketplace is future enhancement)
+  - [x] Task P5.2: Agent Memory (Persistent context across sessions)
+  - [x] Task P5.3: Cost Optimization (Budget engine and token tracking)
+  - [x] Task P5.5: Conductor Failover (Self-healing orchestration)
 
 ---
 
@@ -277,14 +280,14 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - *Files:* `scripts/local-models.sh`
 
 ### P20.2: Agent Memory
-- [ ] **Task: P5.2 — Persistent Context**
+- [x] **Task: P5.2 — Persistent Context** ✅
   - Conversation history per agent across sessions
   - Configurable context window management
   - Memory compression for long-running agents
   - *Files:* `scripts/agent-memory.sh`, `scripts/memory-manager.py`
 
 ### P20.3: Cost Optimization
-- [ ] **Task: P5.3 — Budget Engine**
+- [x] **Task: P5.3 — Budget Engine** ✅
   - Track per-agent token usage and cost
   - Route tasks to minimize cost while maintaining quality
   - Budget alerts and spending caps
@@ -298,7 +301,7 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - *Files:* `scripts/audit-log.sh`
 
 ### P20.5: Self-Healing
-- [ ] **Task: P5.5 — Conductor Failover**
+- [x] **Task: P5.5 — Conductor Failover** ✅
   - Conductor detects own degradation and auto-restarts
   - Healthy agent promotes to temporary conductor
   - Automatic state recovery after failover
