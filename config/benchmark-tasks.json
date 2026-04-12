@@ -1,0 +1,170 @@
+{
+  "_comment": "Agent Benchmarking Task Suite — P4.5",
+  "_version": "1.0.0",
+  "_description": "Standard tasks for comparing LLM CLI agents across capability dimensions",
+
+  "tasks": {
+    "coding_generate": {
+      "name": "Code Generation",
+      "category": "coding",
+      "description": "Generate a working Python function from specifications",
+      "prompt": "Write a Python function `def fibonacci(n: int) -> list[int]` that returns the first n Fibonacci numbers. Include type hints, docstring, and handle edge cases (n <= 0). Do not use recursion.",
+      "evaluation": {
+        "type": "automated",
+        "criteria": [
+          "Function signature matches specification",
+          "Returns correct sequence for n=10: [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]",
+          "Handles n=0 returning empty list",
+          "Handles n=-1 returning empty list",
+          "No recursive implementation",
+          "Has type hints and docstring"
+        ],
+        "max_score": 6
+      },
+      "timeout_seconds": 120
+    },
+
+    "coding_debug": {
+      "name": "Debugging",
+      "category": "coding",
+      "description": "Find and fix bugs in provided code",
+      "prompt": "The following Python function has 3 bugs. Identify and fix all of them. Explain each fix.\\n\\ndef find_max_subarray_sum(arr):\\n    '''Find the maximum sum of a contiguous subarray.'''\\n    max_sum = 0\\n    current_sum = 0\\n    for num in arr:\\n        current_sum = current_sum + num\\n        if current_sum < 0:\\n            current_sum = 0\\n        max_sum = max(current_sum, max_sum)\\n    return max_sum\\n\\nTest cases: find_max_subarray_sum([-2,1,-3,4,-1,2,1,-5,4]) should return 6. find_max_subarray_sum([-1,-2,-3]) should return -1.",
+      "evaluation": {
+        "type": "automated",
+        "criteria": [
+          "Correctly identifies all-negative array case",
+          "Returns 6 for [-2,1,-3,4,-1,2,1,-5,4]",
+          "Returns -1 for [-1,-2,-3]",
+          "Provides explanation for each fix"
+        ],
+        "max_score": 4
+      },
+      "timeout_seconds": 180
+    },
+
+    "coding_refactor": {
+      "name": "Code Refactoring",
+      "category": "coding",
+      "description": "Refactor code to improve readability and performance",
+      "prompt": "Refactor the following code to: (1) use list comprehensions where appropriate, (2) add type hints, (3) extract a helper function for the filtering logic.\\n\\ndef process_data(data_list):\\n    result = []\\n    for item in data_list:\\n        if item > 0:\\n            if item % 2 == 0:\\n                result.append(item * item)\\n    return result",
+      "evaluation": {
+        "type": "automated",
+        "criteria": [
+          "Uses list comprehension or generator expression",
+          "Has type hints on function signature",
+          "Extracts filtering logic into helper function",
+          "Produces same output as original for test input [1,2,3,4,5,6]",
+          "Produces same output for test input [-1,0,2,-3,4]"
+        ],
+        "max_score": 5
+      },
+      "timeout_seconds": 120
+    },
+
+    "reasoning_logic": {
+      "name": "Logic Puzzle",
+      "category": "reasoning",
+      "description": "Solve a logic puzzle with step-by-step reasoning",
+      "prompt": "Alice, Bob, and Charlie each wear a hat that is either red or blue. They can see everyone else's hat but not their own. Alice says: 'I don't know my hat color.' Bob says: 'I don't know my hat color either.' Charlie says: 'I know my hat color!' What color is Charlie's hat and how does he know? Explain step by step.",
+      "evaluation": {
+        "type": "automated",
+        "criteria": [
+          "Identifies that the puzzle requires additional information (or states it's underdetermined)",
+          "OR correctly analyzes what Charlie can deduce from Alice and Bob's statements",
+          "Provides logical step-by-step reasoning",
+          "Acknowledges assumptions made"
+        ],
+        "max_score": 4
+      },
+      "timeout_seconds": 180
+    },
+
+    "reasoning_math": {
+      "name": "Mathematical Analysis",
+      "category": "reasoning",
+      "description": "Solve a mathematical problem with explanation",
+      "prompt": "A train travels 120 km at 60 km/h, then returns the same 120 km at 40 km/h. What is the average speed for the entire trip? Show your work and explain why the answer is NOT 50 km/h.",
+      "evaluation": {
+        "type": "automated",
+        "criteria": [
+          "Correctly calculates total distance = 240 km",
+          "Correctly calculates total time = 2h + 3h = 5h",
+          "Correctly calculates average speed = 240/5 = 48 km/h",
+          "Explains why arithmetic mean (50 km/h) is incorrect (harmonic mean needed)"
+        ],
+        "max_score": 4
+      },
+      "timeout_seconds": 120
+    },
+
+    "architecture_design": {
+      "name": "System Design",
+      "category": "architecture",
+      "description": "Design a system architecture for a given requirement",
+      "prompt": "Design a rate-limited API gateway for a multi-tenant SaaS platform. Describe: (1) key components, (2) how rate limiting works per tenant, (3) how you handle traffic spikes, (4) data storage choices. Keep it under 500 words.",
+      "evaluation": {
+        "type": "keyword",
+        "criteria": [
+          "Mentions API gateway/proxy component",
+          "Describes per-tenant rate limiting mechanism (token bucket, sliding window, etc.)",
+          "Addresses traffic spike handling (queueing, autoscaling, caching)",
+          "Specifies data storage choice (Redis, etc.)",
+          "Mentions multi-tenant isolation",
+          "Response under 500 words"
+        ],
+        "max_score": 6
+      },
+      "timeout_seconds": 180
+    },
+
+    "documentation_write": {
+      "name": "Technical Documentation",
+      "category": "documentation",
+      "description": "Write clear technical documentation for a function",
+      "prompt": "Write API documentation for a REST endpoint: POST /api/v1/users that creates a new user. Request body: {\"email\": string, \"name\": string, \"role\": string}. Response: 201 with user object, 400 for validation errors, 409 for duplicate email. Include: description, request schema, response schema, error codes, and one curl example.",
+      "evaluation": {
+        "type": "keyword",
+        "criteria": [
+          "Includes endpoint description",
+          "Documents request body schema (email, name, role)",
+          "Documents response schema (201 with user object)",
+          "Documents error codes (400, 409)",
+          "Includes curl example",
+          "Uses proper formatting (markdown)"
+        ],
+        "max_score": 6
+      },
+      "timeout_seconds": 120
+    },
+
+    "documentation_summarize": {
+      "name": "Code Summarization",
+      "category": "documentation",
+      "description": "Summarize code functionality concisely",
+      "prompt": "Summarize what this code does in 2-3 sentences:\\n\\nclass LRUCache:\\n    def __init__(self, capacity: int):\\n        self.cache = {}\\n        self.order = []\\n        self.capacity = capacity\\n    def get(self, key: int) -> int:\\n        if key in self.cache:\\n            self.order.remove(key)\\n            self.order.append(key)\\n            return self.cache[key]\\n        return -1\\n    def put(self, key: int, value: int) -> None:\\n        if key in self.cache:\\n            self.order.remove(key)\\n        elif len(self.cache) >= self.capacity:\\n            oldest = self.order.pop(0)\\n            del self.cache[oldest]\\n        self.cache[key] = value\\n        self.order.append(key)",
+      "evaluation": {
+        "type": "keyword",
+        "criteria": [
+          "Identifies it as LRU (Least Recently Used) Cache",
+          "Mentions get operation returns value or -1",
+          "Mentions put operation evicts least recently used when at capacity",
+          "Response is 2-3 sentences",
+          "Mentions O(n) time complexity of list.remove (or performance implication)"
+        ],
+        "max_score": 5
+      },
+      "timeout_seconds": 120
+    }
+  },
+
+  "reporting": {
+    "score_weights": {
+      "coding": 0.35,
+      "reasoning": 0.25,
+      "architecture": 0.20,
+      "documentation": 0.20
+    },
+    "time_weight": 0.1,
+    "cost_weight": 0.1
+  }
+}
