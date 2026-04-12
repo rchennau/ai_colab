@@ -66,13 +66,14 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - [x] Task P3.3: Structured Progress Tracking (Real-time stdout parsing in Agent Wrapper)
   - [x] Task P3.4: Automated Quality Gates (Created `scripts/quality-gates.sh` and integrated into merge)
   - [x] Task P3.5: Agent Analytics (Performance logging to SQLite blackboard)
-- [ ] **Milestone 23: Ecosystem Expansion** (Active — 5/8 tasks done)
+- [ ] **Milestone 23: Ecosystem Expansion** (Active — 6/8 tasks done)
   *Link: [./ecosystem-expansion-plan.md](./ecosystem-expansion-plan.md)*
   - [x] Task P4.1: Containerized Agents (Dockerfiles and build script implemented)
   - [x] Task P4.5: Agent Benchmarking framework (Task suite, runner, report generator)
   - [~] Task P4.2: Cloud Deployment templates → **Moved to Backlog** (Docker-first approach already covers deployment)
   - [~] Task P4.3: IDE Integration → **Moved to Backlog** (Requires audience evaluation — see rationale)
   - [~] Task P4.4: Community Module Marketplace → **Moved to Backlog** (Module system functional, marketplace is future enhancement)
+  - [x] Task P5.1: Full Local LLM Support (Ollama, llama.cpp, local vLLM)
   - [x] Task P5.2: Agent Memory (Persistent context across sessions)
   - [x] Task P5.3: Cost Optimization (Budget engine and token tracking)
   - [x] Task P5.5: Conductor Failover (Self-healing orchestration)
@@ -273,11 +274,11 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 **Theme: "Make it irreplaceable"**
 
 ### P20.1: Local Models
-- [ ] **Task: P5.1 — Full Local LLM Support**
+- [x] **Task: P5.1 — Full Local LLM Support** ✅
   - Ollama, llama.cpp, vLLM integration
   - Zero cloud API dependency option
   - Model download and management
-  - *Files:* `scripts/local-models.sh`
+  - *Files:* `scripts/local-models.sh`, `scripts/model-manager.py`, `config/local-models.json`
 
 ### P20.2: Agent Memory
 - [x] **Task: P5.2 — Persistent Context** ✅
