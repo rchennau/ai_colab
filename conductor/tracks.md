@@ -569,3 +569,10 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 - [x] **Track: HCOM Telemetry Fix** (Done ✅)
   - **Assigned:** @conductor
   - [x] Implemented continuous background heartbeat loop via `start_heartbeat()`.
+
+- [x] **Track: Bash 3.2 Compatibility Fix** (Done ✅)
+  - **Assigned:** @architect
+  - [x] Refactored `scripts/install-wizard.sh` to remove associative arrays (`declare -A`).
+  - [x] Implemented case-based lookup functions for cross-platform Bash compatibility.
+  - [x] Created `tests/test_bash_compatibility.sh` regression test suite.
+  - [x] Verified fix on macOS (Bash 3.2) and Linux.

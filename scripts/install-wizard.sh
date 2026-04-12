@@ -41,32 +41,40 @@ draw_step() {
 # API Key Detection & Management
 # ============================================
 
-# Define all API keys used in ai-colab with metadata and auth methods
-declare -A API_KEY_META
-declare -A AUTH_METHODS
-
-# API key metadata
-API_KEY_META=(
-    ["GEMINI_API_KEY"]="Google Gemini (Architect & Orchestrator)"
-    ["ANTHROPIC_API_KEY"]="Anthropic Claude (Generalist & Documentation)"
-    ["OPENAI_API_KEY"]="OpenAI (Codex)"
-    ["DEEPSEEK_API_KEY"]="DeepSeek (Logic & Optimization)"
-    ["QWEN_API_KEY"]="Alibaba Qwen (Assembly & Hardware)"
-    ["NVIDIA_API_KEY"]="NVIDIA NIM (nemoclaw Architect)"
-    ["RUNPOD_API_KEY"]="RunPod (Cloud GPU Deployment)"
+# List of all supported API keys
+API_KEYS_LIST=(
+    "GEMINI_API_KEY"
+    "ANTHROPIC_API_KEY"
+    "OPENAI_API_KEY"
+    "DEEPSEEK_API_KEY"
+    "QWEN_API_KEY"
+    "NVIDIA_API_KEY"
+    "RUNPOD_API_KEY"
 )
 
-# Authentication methods per agent
+# Lookup function for API key descriptions (replacing API_KEY_META)
+get_api_key_desc() {
+    case "$1" in
+        "GEMINI_API_KEY") echo "Google Gemini (Architect & Orchestrator)" ;;
+        "ANTHROPIC_API_KEY") echo "Anthropic Claude (Generalist & Documentation)" ;;
+        "OPENAI_API_KEY") echo "OpenAI (Codex)" ;;
+        "DEEPSEEK_API_KEY") echo "DeepSeek (Logic & Optimization)" ;;
+        "QWEN_API_KEY") echo "Alibaba Qwen (Assembly & Hardware)" ;;
+        "NVIDIA_API_KEY") echo "NVIDIA NIM (nemoclaw Architect)" ;;
+        "RUNPOD_API_KEY") echo "RunPod (Cloud GPU Deployment)" ;;
+        *) echo "Unknown API Key" ;;
+    esac
+}
+
+# Lookup function for authentication methods (replacing AUTH_METHODS)
 # Values: "api_key", "web_auth", "both"
-AUTH_METHODS=(
-    ["GEMINI"]="both"           # Supports API key AND OAuth/browser auth
-    ["ANTHROPIC"]="api_key"     # API key only
-    ["OPENAI"]="api_key"        # API key only
-    ["DEEPSEEK"]="api_key"      # API key only
-    ["QWEN"]="both"             # Supports API key AND OAuth/browser auth
-    ["NVIDIA"]="api_key"        # API key only
-    ["RUNPOD"]="api_key"        # API key only
-)
+get_auth_method() {
+    case "$1" in
+        "GEMINI") echo "both" ;;
+        "QWEN") echo "both" ;;
+        *) echo "api_key" ;;
+    esac
+}
 
 # Detect an API key from environment and config files
 # Returns the key value if found, empty otherwise
@@ -74,7 +82,7 @@ detect_api_key() {
     local key_name="$1"
 
     # Check environment variable
-    local env_value="${!key_name:-}"
+    local env_value=$(eval echo "\${$key_name:-}")
     if [[ -n "$env_value" ]]; then
         echo "$env_value"
         return 0
@@ -169,19 +177,19 @@ mask_key() {
     fi
 }
 
-# Detect all API keys and store in associative array
+# Detect all API keys and store in individual variables
 detect_all_api_keys() {
     local key_name
-
-    for key_name in "${!API_KEY_META[@]}"; do
+    for key_name in "${API_KEYS_LIST[@]}"; do
         local detected_value
         detected_value=$(detect_api_key "$key_name" 2>/dev/null || echo "")
-        API_KEYS_DETECTED["$key_name"]="$detected_value"
+        # Use eval to set dynamic variable name
+        eval "DETECTED_$key_name=\"$detected_value\""
     done
 }
 
 # Prompt user about detected API key
-# Returns 0 if user wants to keep existing, 1 if they want to enter new
+# Returns 0 if user wants to keep existing, 1 if they want to enter new, 2 if skip
 prompt_existing_api_key() {
     local key_name="$1"
     local key_description="$2"
@@ -274,13 +282,13 @@ collect_api_keys() {
     local key_name
 
     # Detect existing keys
-    declare -gA API_KEYS_DETECTED
     detect_all_api_keys
 
     # Count detected keys
     local detected_count=0
-    for key_name in "${!API_KEYS_DETECTED[@]}"; do
-        if [[ -n "${API_KEYS_DETECTED[$key_name]}" ]]; then
+    for key_name in "${API_KEYS_LIST[@]}"; do
+        local det_val=$(eval echo "\$DETECTED_$key_name")
+        if [[ -n "$det_val" ]]; then
             ((detected_count++))
         fi
     done
@@ -294,9 +302,9 @@ collect_api_keys() {
         echo ""
     fi
 
-    for key_name in "${!API_KEY_META[@]}"; do
-        local description="${API_KEY_META[$key_name]}"
-        local existing_value="${API_KEYS_DETECTED[$key_name]:-}"
+    for key_name in "${API_KEYS_LIST[@]}"; do
+        local description=$(get_api_key_desc "$key_name")
+        local existing_value=$(eval echo "\$DETECTED_$key_name")
 
         if [[ -n "$existing_value" ]]; then
             # Key detected — ask user what to do
@@ -305,11 +313,11 @@ collect_api_keys() {
 
             if [[ $user_choice -eq 0 ]]; then
                 # Keep existing
-                COLLECTED_API_KEYS["$key_name"]="$existing_value"
+                eval "COLLECTED_$key_name=\"$existing_value\""
                 continue
             elif [[ $user_choice -eq 2 ]]; then
                 # Skip
-                COLLECTED_API_KEYS["$key_name"]=""
+                eval "COLLECTED_$key_name=\"\""
                 continue
             fi
             # If choice 1 (enter new), fall through to prompt
@@ -317,7 +325,7 @@ collect_api_keys() {
 
         # Check if this agent supports web authentication
         local agent_base="${key_name%%_API_KEY}"
-        local auth_method="${AUTH_METHODS[$agent_base]:-api_key}"
+        local auth_method=$(get_auth_method "$agent_base")
 
         if [[ "$auth_method" == "both" ]]; then
             # Check for existing web auth
@@ -331,8 +339,8 @@ collect_api_keys() {
 
                 if [[ $web_choice -eq 0 ]]; then
                     # Use existing web auth
-                    COLLECTED_API_KEYS["$key_name"]=""
-                    COLLECTED_WEB_AUTH["$agent_base"]="existing"
+                    eval "COLLECTED_$key_name=\"\""
+                    eval "AUTH_STATUS_$agent_base=\"existing\""
                     continue
                 fi
             else
@@ -342,8 +350,8 @@ collect_api_keys() {
 
                 if [[ $web_choice -eq 0 ]]; then
                     # Use web auth
-                    COLLECTED_API_KEYS["$key_name"]=""
-                    COLLECTED_WEB_AUTH["$agent_base"]="new"
+                    eval "COLLECTED_$key_name=\"\""
+                    eval "AUTH_STATUS_$agent_base=\"new\""
                     continue
                 fi
             fi
@@ -356,7 +364,7 @@ collect_api_keys() {
         echo -e "  ${YELLOW}(Leave empty to skip)${NC}"
         read -p "  Enter ${key_name}: " key_value
 
-        COLLECTED_API_KEYS["$key_name"]="${key_value:-}"
+        eval "COLLECTED_$key_name=\"${key_value:-}\""
 
         if [[ -n "$key_value" ]]; then
             echo -e "  ${GREEN}✓${NC} Configured ${key_name}"
@@ -370,8 +378,8 @@ collect_api_keys() {
 save_api_keys() {
     local key_name
 
-    for key_name in "${!COLLECTED_API_KEYS[@]}"; do
-        local key_value="${COLLECTED_API_KEYS[$key_name]}"
+    for key_name in "${API_KEYS_LIST[@]}"; do
+        local key_value=$(eval echo "\$COLLECTED_$key_name")
 
         if [[ -n "$key_value" ]]; then
             # Store via config-manager
@@ -391,9 +399,13 @@ save_api_keys() {
     done
 
     # Save web auth preferences
-    for agent_name in "${!COLLECTED_WEB_AUTH[@]}"; do
-        local auth_status="${COLLECTED_WEB_AUTH[$agent_name]}"
-        bash "$CONFIG_MGR" set "auth.${agent_name,,}" "$auth_status" >/dev/null 2>&1 || true
+    local agents=("GEMINI" "QWEN")
+    for agent_name in "${agents[@]}"; do
+        local auth_status=$(eval echo "\$AUTH_STATUS_$agent_name")
+        if [[ -n "$auth_status" ]]; then
+            local agent_lower=$(echo "$agent_name" | tr '[:upper:]' '[:lower:]')
+            bash "$CONFIG_MGR" set "auth.$agent_lower" "$auth_status" >/dev/null 2>&1 || true
+        fi
     done
 }
 
