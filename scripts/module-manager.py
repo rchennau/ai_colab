@@ -224,6 +224,18 @@ if __name__ == "__main__":
                     valid, msg = validate_module(root, mod_id)
                     results[mod_id] = {"valid": valid, "message": msg}
         print(json.dumps(results))
+    elif cmd == "info":
+        module_id = sys.argv[3] if len(sys.argv) > 3 else None
+        if not module_id:
+            print(json.dumps({"status": "error", "message": "Module ID required"}))
+            sys.exit(1)
+        manifest_path = os.path.join(root, "modules", module_id, "module.toml")
+        manifest = load_module_manifest(manifest_path)
+        if manifest:
+            print(json.dumps(manifest))
+        else:
+            print(json.dumps({"status": "error", "message": "Module not found"}))
+            sys.exit(1)
     elif cmd == "status":
         all_modules = load_modules(root)
         enabled_ids = get_enabled_module_ids(root)

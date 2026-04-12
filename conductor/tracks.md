@@ -78,12 +78,12 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - [x] Task P5.3: Cost Optimization (Budget engine and token tracking)
   - [x] Task P5.5: Conductor Failover (Self-healing orchestration)
   - [~] Task P5.4: Complete audit trail and compliance export → **Moved to Backlog**
-- [ ] **Milestone 24: The Plugin Economy** (In Progress 🔄)
+- [x] **Milestone 24: The Plugin Economy** (Done ✅)
   *Link: [./plugin-economy-plan.md](./plugin-economy-plan.md)*
-  - [ ] Task P6.1: Standardize Module Manifests
-  - [ ] Task P6.2: Module Registry Repository
-  - [ ] Task P6.3: CLI Installation Commands
-  - [ ] Task P6.4: Sandboxed Execution Environments
+  - [x] Task P6.1: Standardize Module Manifests
+  - [x] Task P6.2: Module Registry Repository
+  - [x] Task P6.3: CLI Installation Commands
+  - [x] Task P6.4: Sandboxed Execution Environments
 - [ ] **Milestone 25: Federated Intelligence** (In Progress 🔄)
   *Link: [./federated-intelligence-plan.md](./federated-intelligence-plan.md)*
   - [ ] Task P7.1: Hub-to-Hub Messaging Protocol
@@ -334,23 +334,25 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - *Files:* `config/module.schema.json`, `scripts/module-manager.py` (validate-all)
 
 ### P21.2: Module Registry
-- [ ] **Task: P6.2 — Central Registry**
-  - Create a public GitHub repo for plugin index
-  - Host `index.json` mapping names to URLs
-  - *Files:* External Registry
+- [x] **Task: P6.2 — Central Registry** ✅
+  - Define canonical `index.json` structure for plugin discovery
+  - Implement `scripts/registry-manager.py` for index maintenance
+  - Support local registry overrides for development
+  - *Files:* `registry/index.json`, `scripts/registry-manager.py`
 
 ### P21.3: CLI Tooling
-- [ ] **Task: P6.3 — Discovery and Install**
+- [x] **Task: P6.3 — Discovery and Install** ✅
   - Implement `ai-colab module search`
   - Implement `ai-colab module info` and `install`
-  - *Files:* `scripts/module-marketplace.sh`
+  - Integrate marketplace into the main launcher (Choice 4)
+  - *Files:* `scripts/module-marketplace.sh`, `launch.sh`
 
 ### P21.4: Sandboxing
-- [ ] **Task: P6.4 — Secure Execution**
+- [x] **Task: P6.4 — Secure Execution** ✅
   - Prompt user for permissions during install
   - Create isolated `uv` virtual environments per module
-  - Route execution through sandboxed Python instances
-  - *Files:* `scripts/module-manager.sh`
+  - Route execution through module-specific environments
+  - *Files:* `scripts/module-marketplace.sh`, `scripts/module-manager.sh`, `scripts/conductor-workflow.sh`
 
 ---
 

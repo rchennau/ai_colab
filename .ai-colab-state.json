@@ -1,10 +1,16 @@
 {
   "version": "1.0.0",
-  "created": "2026-04-11T21:41:14-07:00",
+  "created": "2026-04-11T21:56:44-07:00",
   "installation": {
-    "status": "pending",
+    "status": "in-progress",
     "pathway": "unknown"
   },
-  "config_history": [],
-  "last_modified": "2026-04-11T21:41:14-07:00"
+  "config_history": [
+    {
+      "timestamp": "2026-04-11T21:56:44.927893",
+      "description": "Loaded profile: minimal"
+    }
+  ],
+  "last_modified": "2026-04-11T21:56:44.748682",
+  "config_changed": "2026-04-11T21:56:44-07:00"
 }

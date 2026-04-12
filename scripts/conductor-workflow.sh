@@ -666,7 +666,7 @@ process_commands() {
                             
                             if [[ -n "$script_path" ]]; then
                                 hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Executing module command: $cmd (from $module_id)"
-                                bash "$PROJECT_ROOT/$script_path" "$@" > /dev/null 2>&1 || true
+                                bash "$SCRIPT_DIR/module-manager.sh" run "$module_id" "$script_path" "$@" > /dev/null 2>&1 || true
                             else
                                 hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: Command script not found: $cmd"
                             fi
@@ -787,8 +787,8 @@ main() {
                             
                             if (( CURRENT_TIME - last_run > interval )); then
                                 log_info "Executing periodic hook: $hook_name ($module_id)..."
-                                # Execute relative to project root
-                                bash "$PROJECT_ROOT/$script" > /dev/null 2>&1 || true
+                                # Execute using module manager to handle venv
+                                bash "$SCRIPT_DIR/module-manager.sh" run "$module_id" "$script" > /dev/null 2>&1 || true
                                 blackboard_set "$bb_key" "$CURRENT_TIME"
                             fi
                         fi

@@ -464,8 +464,10 @@ if [ "$INTERACTIVE" = true ]; then
     echo -e "      Web interface with embedded terminal panels"
     echo -e "  ${CYAN}3)${NC} Debug Mode (Single Agent)"
     echo -e "      Dedicated LLM CLI with KB/RAG for troubleshooting"
+    echo -e "  ${CYAN}4)${NC} Manage Modules & Marketplace"
+    echo -e "      Discover and install community plugins"
     echo ""
-    read -p "  Choice [1-3, default $LAST_LAUNCH_CHOICE]: " LAUNCH_CHOICE
+    read -p "  Choice [1-4, default $LAST_LAUNCH_CHOICE]: " LAUNCH_CHOICE
     LAUNCH_CHOICE=${LAUNCH_CHOICE:-$LAST_LAUNCH_CHOICE}
 else
     LAUNCH_CHOICE=$LAST_LAUNCH_CHOICE
@@ -481,6 +483,12 @@ case "$LAUNCH_CHOICE" in
     1) DASHBOARD=true; CONDUCTOR=true ;;
     2) WEBUI=true ;;
     3) DEBUG=true ;;
+    4)
+        bash "$AI_COLAB_HOME/scripts/module-marketplace.sh"
+        echo -e "\n${BLUE}Management complete. Refreshing launcher...${NC}"
+        sleep 1
+        exec bash "$0" "$@"
+        ;;
     *) echo "Invalid choice"; exit 1 ;;
 esac
 

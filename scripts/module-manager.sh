@@ -518,6 +518,40 @@ main() {
     shift || true
     
     case "$command" in
+        run)
+            local mod_id="$1"
+            local script_path="$2"
+            shift 2 || true
+            
+            if [[ -z "$mod_id" || -z "$script_path" ]]; then
+                echo -e "${RED}Error: Module ID and script path required${NC}"
+                exit 1
+            fi
+            
+            local mod_dir=$(get_module_dir "$mod_id")
+            local venv_path="$mod_dir/.venv"
+            local full_script_path="$PROJECT_ROOT/$script_path"
+            
+            if [[ ! -f "$full_script_path" ]]; then
+                # Try relative to module dir if not found relative to project root
+                if [[ -f "$mod_dir/$script_path" ]]; then
+                    full_script_path="$mod_dir/$script_path"
+                else
+                    echo -e "${RED}Error: Script not found: $script_path${NC}"
+                    exit 1
+                fi
+            fi
+            
+            # Check for module-specific venv
+            if [[ -d "$venv_path" ]]; then
+                # Run with module venv
+                source "$venv_path/bin/activate"
+                bash "$full_script_path" "$@"
+            else
+                # Fallback to main project environment
+                bash "$full_script_path" "$@"
+            fi
+            ;;
         list)
             echo -e "${BLUE}Available Modules:${NC}"
             discover_modules | while read -r module_id; do

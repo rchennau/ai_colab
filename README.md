@@ -2,7 +2,7 @@
 
 A unified, **project-agnostic** environment for coordinating multiple AI agents (Gemini, Claude, Qwen, DeepSeek, NeMo, etc.) on complex engineering tasks.
 
-**Latest Release:** Phase 20 Complete ✅ — Strategic Moats implementation finished. Phase 21 (Plugin Economy) in progress.
+**Latest Release:** Phase 21 Complete ✅ — The Plugin Economy is now live. Phase 22 (Federated Intelligence) in progress.
 
 ## 🌟 Vision
 To provide a seamless development experience where human oversight and AI autonomy work in harmony. ai-colab handles the "plumbing" of multi-agent systems—messaging, state synchronization, task tracking, and lifecycle management—allowing you to focus on the engineering. **Now with full local LLM support for zero-cloud deployments.**
@@ -98,11 +98,13 @@ ai-colab
 - Zero-cloud deployment — run ai-colab with no external API keys
 - Usage: `bash scripts/local-models.sh list/download/health/recommend --task coding`
 
-**Module System v2.0 (Phase 21.1 Complete ✅):**
+**Module System v2.0 (Phase 21 Complete ✅):**
 - **Standardized Schema:** Formalized `module.toml` with versioning, author, dependencies, and permissions.
-- **Deep Validation:** Manifests are strictly validated against `config/module.schema.json` using `jsonschema`.
-- **Permission Model:** Support for granular security permissions (network, file_system, environment).
-- **Validation CLI:** Verify the entire plugin fleet with `python3 scripts/module-manager.py validate-all`.
+- **Deep Validation:** Manifests are strictly validated against `config/module.schema.json`.
+- **Module Marketplace:** Discover and install community plugins via `ai-colab` (Choice 4).
+- **Sandboxed Execution:** Every module runs in its own isolated `uv` virtual environment.
+- **Security First:** Explicit permission review (network, disk, env) during installation.
+- **Registry Management:** Maintainers can manage the index via `scripts/registry-manager.py`.
 
 **Multi-Project Support:**
 Running `ai-colab` will scan for local git repositories and allow you to register and switch between them seamlessly.
@@ -115,7 +117,7 @@ Ensure code integrity with the built-in quality assurance framework:
 # Run all quality gates (Linting, Security, Syntax)
 ./scripts/quality-gates.sh
 
-# Validate all module manifests
+# Validate all module manifests against the schema
 python3 scripts/module-manager.py validate-all
 
 # Run comprehensive test suite

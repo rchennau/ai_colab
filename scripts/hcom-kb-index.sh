@@ -45,8 +45,16 @@ else
     exit 1
 fi
 
-# 4. Save the map
-cat << EOF > "$MAP_FILE"
+# 4. Save the map (Append summary to keep manual enhancements)
+if grep -q "## Orchestration Core (Hub)" "$MAP_FILE"; then
+    log_info "Manual project map detected. Appending automated summary..."
+    cat << EOF >> "$MAP_FILE"
+
+## Automated Discovery Update ($(date '+%Y-%m-%d %H:%M:%S'))
+$SUMMARY
+EOF
+else
+    cat << EOF > "$MAP_FILE"
 # ai-colab Project Map (Semantic Knowledge Base)
 Generated: $(date '+%Y-%m-%d %H:%M:%S')
 
@@ -56,6 +64,7 @@ $SUMMARY
 - Status: Active
 - Source: Automated Indexer (hcom-kb-index.sh)
 EOF
+fi
 
 log_success "Project Map saved to: $MAP_FILE"
 blackboard_set "kb_last_indexed" "$(date '+%Y-%m-%dT%H:%M:%S%z')"

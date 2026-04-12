@@ -1,0 +1,30 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2026-04-11T22:00:00Z",
+  "modules": [
+    {
+      "id": "atari-8bit",
+      "name": "Atari 8-Bit Development",
+      "description": "Specialized tools for 6502 assembly and Atari 8-bit hardware development.",
+      "url": "https://github.com/ai-colab/module-atari-8bit",
+      "author": "ai-colab",
+      "version": "1.0.0"
+    },
+    {
+      "id": "mock-test",
+      "name": "Mock Test Module",
+      "description": "Verification module for plugin system testing.",
+      "url": "https://github.com/ai-colab/module-mock-test",
+      "author": "ai-colab",
+      "version": "1.0.0"
+    },
+    {
+      "id": "nemoclaw",
+      "name": "nemoclaw NVIDIA Architect",
+      "description": "High-power architectural reasoning via NVIDIA NIM API.",
+      "url": "https://github.com/ai-colab/module-nemoclaw",
+      "author": "ai-colab",
+      "version": "1.0.0"
+    }
+  ]
+}
