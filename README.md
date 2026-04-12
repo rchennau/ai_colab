@@ -2,7 +2,7 @@
 
 A unified, **project-agnostic** environment for coordinating multiple AI agents (Gemini, Claude, Qwen, DeepSeek, NeMo, etc.) on complex engineering tasks.
 
-**Latest Release:** Phase 22 In Progress 🔄 — Communication Protocol Optimization (90% message size reduction) + Environment Portability (fully self-contained, zero user environment dependency).
+**Latest Release:** Phase 22 In Progress 🔄 — Conductor Protocol Handler (P6.3) delivering structured message processing, instant error detection, and automated workflow triggers.
 
 ## 🌟 Vision
 To provide a seamless development experience where human oversight and AI autonomy work in harmony. ai-colab handles the "plumbing" of multi-agent systems—messaging, state synchronization, task tracking, and lifecycle management—allowing you to focus on the engineering. **Now with full local LLM support for zero-cloud deployments.**
@@ -107,6 +107,13 @@ ai-colab
 - Local tmux config at `.ai-colab/tmux.conf` with clean shell (`bash --norc --noprofile`)
 - Environment setup script (`scripts/ai-colab-env.sh`) for consistent agent execution
 - RAG installation now uses correct Python version (`$PYTHON_CMD -m pip install`)
+
+**Conductor Protocol Handler (P6.3):**
+- Processes structured JSON messages from agents (status, error, complete, heartbeat)
+- Instant error detection via `err` field — no text scanning needed
+- Automated workflow triggers on task completion
+- Updates blackboard with progress data for dashboard display
+- Backward compatible — English commands still work alongside structured messages
 
 **Structured Communication Protocol (P6.1):**
 - 6 message types: status, heartbeat, request, response, error, complete

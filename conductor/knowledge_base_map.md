@@ -1,5 +1,5 @@
 # ai-colab Project Map (Semantic Knowledge Base)
-Last Updated: 2026-04-11 (Phase 22 In Progress 🔄 — Communication Protocol + Environment Portability: fully self-contained, zero user dependency)
+Last Updated: 2026-04-11 (Phase 22 In Progress 🔄 — Conductor Protocol Handler P6.3: structured message processing, instant error detection)
 
 ## Orchestration Core (Hub)
 - `launch.sh`: Unified launcher with **three launch modes** (Dashboard, WebUI, Debug) and **module enablement** (`-m/--module` flag). Auto-activates virtual environment. Supports **multi-project discovery**, global CLI model, and **modular marketplace access**.
@@ -17,7 +17,8 @@ Last Updated: 2026-04-11 (Phase 22 In Progress 🔄 — Communication Protocol +
 - `scripts/workspace_manager.py`: Logic for scanning directories for Git repositories and managing the global `workspace.json` registry.
 - `scripts/message-queue.sh`: SQLite-based message queue layer providing **reliable message delivery**, offline queuing, and exponential backoff retry.
 - `scripts/utils.sh`: Shared utilities including 80-column ANSI UI helpers, **Health 2.0** reporting, **blackboard schema validation**, **intelligent agent selection**, **agent analytics logging**, and **progress reporting**.
-- `scripts/conductor-workflow.sh`: The heart of the orchestration logic. Includes **capability-based routing**, **multi-agent collaboration patterns (Review Pattern)**, **real-time tmux status bar updates**, and an **Autonomous Fleet Watchdog**.
+- `scripts/conductor-workflow.sh`: The heart of the orchestration logic. Includes **capability-based routing**, **multi-agent collaboration patterns (Review Pattern)**, **real-time tmux status bar updates**, **Autonomous Fleet Watchdog**, and **structured protocol message handling (P6.3)**.
+- `scripts/protocol-handler.py`: **NEW (P6.3)** - Standalone protocol handler for efficient message parsing and blackboard updates. Handles status, error, complete, heartbeat messages.
 - `scripts/conductor-dashboard.sh`: High-density TUI for real-time project monitoring. Features a **Fleet Status** section with **real-time agent progress and task steps**.
 - `scripts/dashboard-launch.sh`: Enhanced dashboard launcher (v3.0) with **adaptive tmux layouts (grid/overflow)**, **focus mode**, and **session configuration persistence**.
 - `webui/app_refactored.py`: Modular Flask-based API server (v3.0) using blueprints for core services (terminal, system, config, kb, models).
@@ -39,6 +40,7 @@ Last Updated: 2026-04-11 (Phase 22 In Progress 🔄 — Communication Protocol +
 
 ## Testing & Quality Assurance
 - `tests/test_protocol.sh`: **NEW (P6.1)** - Communication protocol tests (44 tests: encoder, decoder, validation, summaries, tmux status line).
+- `tests/test_conductor_protocol.sh`: **NEW (P6.3)** - Conductor protocol handler tests (15 tests: message parsing, validation, blackboard updates, conductor integration).
 - `tests/test_environment_portability.sh`: **NEW (P6.2)** - Environment portability tests (14 tests: local tmux config, no user references, clean shell, alias cleaning, dashboard integration).
 - `conductor/agent-analytics-plan.md`: **NEW** - Detailed implementation plan for surfaced agent performance metrics in the Web UI.
 - `tests/test_container_agents.sh`: Verification harness for the containerized agent isolation system.
