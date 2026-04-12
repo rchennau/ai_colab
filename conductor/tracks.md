@@ -66,13 +66,13 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - [x] Task P3.3: Structured Progress Tracking (Real-time stdout parsing in Agent Wrapper)
   - [x] Task P3.4: Automated Quality Gates (Created `scripts/quality-gates.sh` and integrated into merge)
   - [x] Task P3.5: Agent Analytics (Performance logging to SQLite blackboard)
-- [ ] **Milestone 23: Ecosystem Expansion** (In Progress 🔄)
+- [ ] **Milestone 23: Ecosystem Expansion** (Complete ✅ — 2/3 active tasks done)
   *Link: [./ecosystem-expansion-plan.md](./ecosystem-expansion-plan.md)*
   - [x] Task P4.1: Containerized Agents (Dockerfiles and build script implemented)
-  - [ ] Task P4.2: Cloud Deployment templates
-  - [ ] Task P4.3: IDE Integration (VS Code / Cursor)
-  - [ ] Task P4.4: Community Module Marketplace
-  - [x] Task P4.5: Agent Benchmarking framework
+  - [x] Task P4.5: Agent Benchmarking framework (Task suite, runner, report generator)
+  - [~] Task P4.2: Cloud Deployment templates → **Moved to Backlog** (Docker-first approach already covers deployment)
+  - [~] Task P4.3: IDE Integration → **Moved to Backlog** (Requires audience evaluation — see rationale)
+  - [~] Task P4.4: Community Module Marketplace → **Moved to Backlog** (Module system functional, marketplace is future enhancement)
 
 ---
 
@@ -429,6 +429,18 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 - [ ] **Native IDE Integration**
   - **Description:** Develop MCP connectors and extensions for native IDE support (VS Code, Cursor).
   - **Status:** Postponed
+
+- [ ] **P4.2: Cloud Deployment Templates (Terraform/IaC)**
+  - **Description:** Infrastructure-as-Code templates for AWS, GCP, Azure deployment.
+  - **Status:** Moved to backlog. **Rationale:** The unified `docker compose` deployment (Phase 19.1) already covers all deployment targets — any cloud VM with Docker runs the full stack identically. Cloud-specific Terraform/IaC provides no functional advantage over the Docker-first approach and would fragment maintenance across cloud providers. Re-evaluate if users explicitly request cloud-native deployment features (auto-scaling groups, managed databases, etc.).
+
+- [ ] **P4.3: IDE Integration (VS Code / Cursor Extension)**
+  - **Description:** View fleet status, send conductor commands, review tracks, approve merges from IDE.
+  - **Status:** Moved to backlog. **Rationale:** ai-colab's target audience is mid-to-senior-level software product and engineering managers who orchestrate AI agent fleets rather than day-to-day coders. IDE integration provides value primarily to developers writing code, but ai-colab's primary value proposition is fleet orchestration and multi-agent coordination — activities that happen at the project management level, not the code editor level. The tmux dashboard and Web UI already serve the orchestration use case well. Re-evaluate if: (a) user research shows a significant portion of the audience uses IDEs for orchestration tasks, or (b) IDE extensions could provide unique orchestration capabilities not available through existing interfaces.
+
+- [ ] **P4.4: Community Module Marketplace**
+  - **Description:** Centralized registry for discovering, downloading, and installing community-contributed modules.
+  - **Status:** Moved to backlog. **Rationale:** The module system is fully functional (manifest-based, conductor commands, periodic hooks, dashboard sections, MCP integration). What's missing is the distribution layer — a central registry and `ai-colab module install <name>` command. This is valuable but not blocking: modules can already be shared via git repositories and installed by cloning into `modules/`. A marketplace adds discoverability and convenience but no new capabilities. Re-evaluate when there is sufficient community module demand (3+ third-party modules available to distribute).
 
 ## 🛠️ Infrastructure & Maintenance
 
