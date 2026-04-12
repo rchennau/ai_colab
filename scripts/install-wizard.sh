@@ -38,6 +38,366 @@ draw_step() {
 }
 
 # ============================================
+# API Key Detection & Management
+# ============================================
+
+# Define all API keys used in ai-colab with metadata and auth methods
+declare -A API_KEY_META
+declare -A AUTH_METHODS
+
+# API key metadata
+API_KEY_META=(
+    ["GEMINI_API_KEY"]="Google Gemini (Architect & Orchestrator)"
+    ["ANTHROPIC_API_KEY"]="Anthropic Claude (Generalist & Documentation)"
+    ["OPENAI_API_KEY"]="OpenAI (Codex)"
+    ["DEEPSEEK_API_KEY"]="DeepSeek (Logic & Optimization)"
+    ["QWEN_API_KEY"]="Alibaba Qwen (Assembly & Hardware)"
+    ["NVIDIA_API_KEY"]="NVIDIA NIM (nemoclaw Architect)"
+    ["RUNPOD_API_KEY"]="RunPod (Cloud GPU Deployment)"
+)
+
+# Authentication methods per agent
+# Values: "api_key", "web_auth", "both"
+AUTH_METHODS=(
+    ["GEMINI"]="both"           # Supports API key AND OAuth/browser auth
+    ["ANTHROPIC"]="api_key"     # API key only
+    ["OPENAI"]="api_key"        # API key only
+    ["DEEPSEEK"]="api_key"      # API key only
+    ["QWEN"]="both"             # Supports API key AND OAuth/browser auth
+    ["NVIDIA"]="api_key"        # API key only
+    ["RUNPOD"]="api_key"        # API key only
+)
+
+# Detect an API key from environment and config files
+# Returns the key value if found, empty otherwise
+detect_api_key() {
+    local key_name="$1"
+
+    # Check environment variable
+    local env_value="${!key_name:-}"
+    if [[ -n "$env_value" ]]; then
+        echo "$env_value"
+        return 0
+    fi
+
+    # Check .env file in project root
+    local env_file="$PROJECT_ROOT/.env"
+    if [[ -f "$env_file" ]]; then
+        local file_value
+        file_value=$(grep "^${key_name}=" "$env_file" 2>/dev/null | cut -d'=' -f2- | sed 's/^"//;s/"$//;s/^'"'"'//;s/'"'"'$//')
+        if [[ -n "$file_value" ]]; then
+            echo "$file_value"
+            return 0
+        fi
+    fi
+
+    # Check config-manager stored value
+    local config_value
+    config_value=$(bash "$CONFIG_MGR" get "api_keys.$key_name" "" 2>/dev/null || echo "")
+    if [[ -n "$config_value" ]]; then
+        echo "$config_value"
+        return 0
+    fi
+
+    # Check common config locations
+    local config_file="$PROJECT_ROOT/config/config.toml"
+    if [[ -f "$config_file" ]]; then
+        local toml_value
+        toml_value=$(grep "${key_name}" "$config_file" 2>/dev/null | cut -d'=' -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/^"//;s/"$//')
+        if [[ -n "$toml_value" ]]; then
+            echo "$toml_value"
+            return 0
+        fi
+    fi
+
+    return 1
+}
+
+# Detect if web auth credentials exist for an agent
+detect_web_auth() {
+    local agent_name="$1"
+
+    case "$agent_name" in
+        GEMINI)
+            # Check for Google application credentials or OAuth tokens
+            if [[ -n "${GOOGLE_APPLICATION_CREDENTIALS:-}" ]] && [[ -f "${GOOGLE_APPLICATION_CREDENTIALS}" ]]; then
+                echo "GOOGLE_APPLICATION_CREDENTIALS"
+                return 0
+            fi
+            # Check default Google auth location
+            if [[ -f "$HOME/.config/gcloud/application_default_credentials.json" ]]; then
+                echo "gcloud_adc"
+                return 0
+            fi
+            # Check for Gemini CLI auth tokens
+            if [[ -d "$HOME/.gemini" ]] || [[ -f "$HOME/.config/gemini/credentials.json" ]]; then
+                echo "gemini_cli_auth"
+                return 0
+            fi
+            ;;
+        QWEN)
+            # Check for DashScope or Alibaba Cloud credentials
+            if [[ -n "${DASHSCOPE_API_KEY:-}" ]]; then
+                echo "DASHSCOPE_API_KEY"
+                return 0
+            fi
+            # Check for aliyun CLI credentials
+            if [[ -f "$HOME/.aliyun/config.json" ]] || [[ -n "${ALIBABACLOUD_ACCESS_KEY_ID:-}" ]]; then
+                echo "aliyun_cli"
+                return 0
+            fi
+            # Check for Qwen CLI auth
+            if [[ -d "$HOME/.qwen" ]] || [[ -f "$HOME/.config/qwen/credentials.json" ]]; then
+                echo "qwen_cli_auth"
+                return 0
+            fi
+            ;;
+    esac
+
+    return 1
+}
+
+# Mask a key value for display (show first/last 4 chars)
+mask_key() {
+    local key="$1"
+    local len=${#key}
+
+    if [[ $len -le 8 ]]; then
+        echo "****"
+    else
+        echo "${key:0:4}...${key:$((len-4)):4}"
+    fi
+}
+
+# Detect all API keys and store in associative array
+detect_all_api_keys() {
+    local key_name
+
+    for key_name in "${!API_KEY_META[@]}"; do
+        local detected_value
+        detected_value=$(detect_api_key "$key_name" 2>/dev/null || echo "")
+        API_KEYS_DETECTED["$key_name"]="$detected_value"
+    done
+}
+
+# Prompt user about detected API key
+# Returns 0 if user wants to keep existing, 1 if they want to enter new
+prompt_existing_api_key() {
+    local key_name="$1"
+    local key_description="$2"
+    local existing_value="$3"
+
+    echo -e ""
+    echo -e "  ${CYAN}Detected existing ${key_description}:${NC}"
+    echo -e "    Key: ${key_name}"
+    echo -e "    Value: $(mask_key "$existing_value")"
+    echo ""
+
+    while true; do
+        echo -e "  ${CYAN}Options:${NC}"
+        echo -e "    1) Use existing key"
+        echo -e "    2) Enter new key"
+        echo -e "    3) Skip (leave empty)"
+        echo ""
+        read -p "  Choice [1-3]: " choice
+
+        case "$choice" in
+            1|"")
+                # Keep existing
+                echo -e "  ${GREEN}✓${NC} Using existing key for ${key_name}"
+                return 0
+                ;;
+            2)
+                # Enter new
+                echo -e "  ${YELLOW}Enter new key for ${key_name}:${NC}"
+                return 1
+                ;;
+            3)
+                # Skip
+                echo -e "  ${YELLOW}○${NC} Skipping ${key_name}"
+                return 2
+                ;;
+            *)
+                echo -e "  ${RED}Invalid choice. Please enter 1, 2, or 3.${NC}"
+                ;;
+        esac
+    done
+}
+
+# Prompt user for web authentication
+# Returns 0 if user wants to use web auth, 1 if they want to skip
+prompt_web_auth() {
+    local agent_name="$1"
+    local auth_type="$2"
+
+    echo -e ""
+    echo -e "  ${CYAN}Web Authentication for ${agent_name}${NC}"
+    echo -e "  ${BLUE}This agent supports browser-based OAuth.${NC}"
+
+    if [[ "$auth_type" == "existing" ]]; then
+        echo -e ""
+        echo -e "  ${GREEN}✓${NC} Existing web auth credentials detected."
+        echo -e "  ${BLUE}You will be prompted to authenticate in your browser when the agent starts.${NC}"
+        return 0
+    fi
+
+    echo -e ""
+    echo -e "  ${CYAN}Options:${NC}"
+    echo -e "    1) Use web authentication (OAuth)"
+    echo -e "    2) Use API key instead"
+    echo -e "    3) Skip for now"
+    echo ""
+    read -p "  Choice [1-3]: " choice
+
+    case "$choice" in
+        1|"")
+            echo -e "  ${GREEN}✓${NC} Web authentication selected for ${agent_name}"
+            echo -e "  ${BLUE}You'll be prompted to authenticate in your browser on first use.${NC}"
+            return 0
+            ;;
+        2)
+            echo -e "  ${YELLOW}○${NC} Will use API key for ${agent_name}"
+            return 1
+            ;;
+        3)
+            echo -e "  ${YELLOW}○${NC} Skipping ${agent_name} for now"
+            return 2
+            ;;
+        *)
+            echo -e "  ${RED}Invalid choice. Please enter 1, 2, or 3.${NC}"
+            ;;
+    esac
+}
+
+# Collect all API keys from user
+collect_api_keys() {
+    local key_name
+
+    # Detect existing keys
+    declare -gA API_KEYS_DETECTED
+    detect_all_api_keys
+
+    # Count detected keys
+    local detected_count=0
+    for key_name in "${!API_KEYS_DETECTED[@]}"; do
+        if [[ -n "${API_KEYS_DETECTED[$key_name]}" ]]; then
+            ((detected_count++))
+        fi
+    done
+
+    if [[ $detected_count -gt 0 ]]; then
+        draw_header
+        draw_step 4 5 "API Key Configuration"
+        echo ""
+        echo -e "  ${GREEN}Detected $detected_count existing API key(s) in your environment.${NC}"
+        echo -e "  ${BLUE}Would you like to review and configure them?${NC}"
+        echo ""
+    fi
+
+    for key_name in "${!API_KEY_META[@]}"; do
+        local description="${API_KEY_META[$key_name]}"
+        local existing_value="${API_KEYS_DETECTED[$key_name]:-}"
+
+        if [[ -n "$existing_value" ]]; then
+            # Key detected — ask user what to do
+            prompt_existing_api_key "$key_name" "$description" "$existing_value"
+            local user_choice=$?
+
+            if [[ $user_choice -eq 0 ]]; then
+                # Keep existing
+                COLLECTED_API_KEYS["$key_name"]="$existing_value"
+                continue
+            elif [[ $user_choice -eq 2 ]]; then
+                # Skip
+                COLLECTED_API_KEYS["$key_name"]=""
+                continue
+            fi
+            # If choice 1 (enter new), fall through to prompt
+        fi
+
+        # Check if this agent supports web authentication
+        local agent_base="${key_name%%_API_KEY}"
+        local auth_method="${AUTH_METHODS[$agent_base]:-api_key}"
+
+        if [[ "$auth_method" == "both" ]]; then
+            # Check for existing web auth
+            local web_auth
+            web_auth=$(detect_web_auth "$agent_base" 2>/dev/null || echo "")
+
+            if [[ -n "$web_auth" ]]; then
+                # Existing web auth detected
+                prompt_web_auth "$agent_base" "existing"
+                local web_choice=$?
+
+                if [[ $web_choice -eq 0 ]]; then
+                    # Use existing web auth
+                    COLLECTED_API_KEYS["$key_name"]=""
+                    COLLECTED_WEB_AUTH["$agent_base"]="existing"
+                    continue
+                fi
+            else
+                # Offer web auth option
+                prompt_web_auth "$agent_base" "new"
+                local web_choice=$?
+
+                if [[ $web_choice -eq 0 ]]; then
+                    # Use web auth
+                    COLLECTED_API_KEYS["$key_name"]=""
+                    COLLECTED_WEB_AUTH["$agent_base"]="new"
+                    continue
+                fi
+            fi
+        fi
+
+        # Prompt for new key
+        echo ""
+        echo -e "  ${CYAN}${description}${NC}"
+        echo -e "  Environment variable: ${key_name}"
+        echo -e "  ${YELLOW}(Leave empty to skip)${NC}"
+        read -p "  Enter ${key_name}: " key_value
+
+        COLLECTED_API_KEYS["$key_name"]="${key_value:-}"
+
+        if [[ -n "$key_value" ]]; then
+            echo -e "  ${GREEN}✓${NC} Configured ${key_name}"
+        else
+            echo -e "  ${YELLOW}○${NC} Skipped ${key_name}"
+        fi
+    done
+}
+
+# Save collected API keys to config and environment
+save_api_keys() {
+    local key_name
+
+    for key_name in "${!COLLECTED_API_KEYS[@]}"; do
+        local key_value="${COLLECTED_API_KEYS[$key_name]}"
+
+        if [[ -n "$key_value" ]]; then
+            # Store via config-manager
+            bash "$CONFIG_MGR" set "api_keys.$key_name" "$key_value" >/dev/null 2>&1 || true
+
+            # Add to .env file
+            local env_file="$PROJECT_ROOT/.env"
+            touch "$env_file"
+            # Remove existing entry if present
+            sed -i.bak "/^${key_name}=/d" "$env_file" 2>/dev/null || true
+            rm -f "${env_file}.bak" 2>/dev/null || true
+            echo "${key_name}=${key_value}" >> "$env_file"
+
+            # Export for current session
+            export "$key_name=$key_value"
+        fi
+    done
+
+    # Save web auth preferences
+    for agent_name in "${!COLLECTED_WEB_AUTH[@]}"; do
+        local auth_status="${COLLECTED_WEB_AUTH[$agent_name]}"
+        bash "$CONFIG_MGR" set "auth.${agent_name,,}" "$auth_status" >/dev/null 2>&1 || true
+    done
+}
+
+# ============================================
 # Helper Functions
 # ============================================
 
