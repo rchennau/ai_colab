@@ -231,21 +231,13 @@ get_hcom_db_path() {
     echo "${HCOM_DB_PATH:-$HOME/.hcom/hcom.db}"
 }
 
-# Extract value from compact JSON (key:value or key:"value" or key:bool)
+# Extract value from JSON string
+# Usage: extract_json_value "$json" "key"
 extract_json_value() {
     local json="$1"
     local key="$2"
-    # Try string value first
-    local val=$(echo "$json" | sed -n "s/.*\"$key\"[[:space:]]*:[[:space:]]*\"\([^\"]*\)\".*/\1/p")
-    if [[ -z "$val" ]]; then
-        # Try numeric value
-        val=$(echo "$json" | sed -n "s/.*\"$key\"[[:space:]]*:[[:space:]]*\([0-9]*\).*/\1/p")
-    fi
-    if [[ -z "$val" ]]; then
-        # Try boolean (true/false) or null value
-        val=$(echo "$json" | sed -n "s/.*\"$key\"[[:space:]]*:[[:space:]]*\([a-z]*\).*/\1/p")
-    fi
-    echo "$val"
+    if [[ -z "$json" || "$json" == "None" ]]; then echo ""; return; fi
+    python3 -c "import json, sys; d=json.loads(sys.argv[1]); print(d.get(sys.argv[2], ''))" "$json" "$key" 2>/dev/null
 }
 
 # Blackboard Helpers (hcom-kv)
@@ -253,18 +245,16 @@ extract_json_value() {
 blackboard_set() {
     local key="$1"
     local value="$2"
+    local expires_at="${3:-0}"
     local db_path="$(_bb_get_db_path)"
 
-    # Ensure directory exists
-    mkdir -p "$(dirname "$db_path")"
+    _bb_ensure_table
 
-    # Create basic structure if it doesn't exist
-    sqlite3 "$db_path" "CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT, expires_at INTEGER DEFAULT 0);" || {
-        echo -e "${RED}Error: Failed to access blackboard at $db_path${NC}" >&2
-        return 1
-    }
+    # Escape single quotes in value and key
+    local escaped_value="${value//\'/\'\'}"
+    local escaped_key="${key//\'/\'\'}"
 
-    sqlite3 "$db_path" ".timeout 5000" "INSERT OR REPLACE INTO kv (key, value, expires_at) VALUES ('$key', '$value', 0);"
+    sqlite3 "$db_path" ".timeout 5000" "INSERT OR REPLACE INTO kv (key, value, expires_at) VALUES ('$escaped_key', '$escaped_value', $expires_at);"
 }
 
 blackboard_get() {
@@ -275,9 +265,17 @@ blackboard_get() {
         return 0
     fi
 
+    # Cleanup expired keys occasionally (lazy cleanup)
+    if (( RANDOM % 10 == 0 )); then
+        bb_cleanup_expired
+    fi
+
+    # Escape single quotes in key
+    local escaped_key="${key//\'/\'\'}"
+
     local now
     now=$(date +%s)
-    sqlite3 "$db_path" ".timeout 5000" "SELECT value FROM kv WHERE key = '$key' AND (expires_at = 0 OR expires_at > $now);"
+    sqlite3 "$db_path" ".timeout 5000" "SELECT value FROM kv WHERE key = '$escaped_key' AND (expires_at = 0 OR expires_at > $now);"
 }
 
 # Usage: blackboard_list "pattern" (e.g. "fleet_health_")
@@ -491,7 +489,6 @@ bb_cleanup_expired() {
     sqlite3 "$db_path" "DELETE FROM kv WHERE expires_at > 0 AND expires_at < $now;"
 }
 
-# Set a value with schema validation
 # Usage: blackboard_set_validated <key> <value>
 blackboard_set_validated() {
     local key="$1"
@@ -519,48 +516,7 @@ blackboard_set_validated() {
     fi
 
     # Ensure table exists and write
-    _bb_ensure_table
-
-    local db_path="$(_bb_get_db_path)"
-    # Escape single quotes in value
-    local escaped_value="${value//\'/\'\'}"
-    local escaped_key="${key//\'/\'\'}"
-
-    sqlite3 "$db_path" ".timeout 5000" \
-        "INSERT OR REPLACE INTO kv (key, value, expires_at) VALUES ('$escaped_key', '$escaped_value', $expires_at);"
-
-    # Cleanup expired keys on write
-    if [[ "${BLACKBOARD_TTL_CLEANUP_ON_WRITE:-true}" == "true" ]]; then
-        bb_cleanup_expired
-    fi
-}
-
-# Get a value with TTL cleanup
-# Usage: blackboard_get <key>
-blackboard_get() {
-    local key="$1"
-    local db_path="$(_bb_get_db_path)"
-
-    if [[ ! -f "$db_path" ]]; then
-        return 0
-    fi
-
-    # Ensure table exists
-    _bb_ensure_table
-
-    # Cleanup expired keys on read
-    if [[ "${BLACKBOARD_TTL_CLEANUP_ON_READ:-true}" == "true" ]]; then
-        bb_cleanup_expired
-    fi
-
-    # Escape single quotes in key
-    local escaped_key="${key//\'/\'\'}"
-
-    # Get value, checking expiration
-    local now
-    now=$(date +%s)
-    sqlite3 "$db_path" ".timeout 5000" \
-        "SELECT value FROM kv WHERE key = '$escaped_key' AND (expires_at = 0 OR expires_at > $now);"
+    blackboard_set "$key" "$value" "$expires_at"
 }
 
 # Atomic multi-key set (all-or-nothing via SQLite transaction)
@@ -690,43 +646,32 @@ except Exception as e:
 # Returns: task_type,primary_capability (e.g., "code_heavy,coding")
 agent_analyze_task() {
     local task_description="$1"
-    local config_path="${2:-$(_bb_get_capabilities_path)}"
-
-    if [[ ! -f "$config_path" ]]; then
-        echo "default,coding"
-        return
-    fi
-
+    
+    # Use python for robust multi-pattern matching
     python3 -c "
-import json, sys
-
-config = json.load(open('$config_path'))
-task = '$task_description'.lower()
-keywords = config.get('task_keywords', {})
-
-# Score each task type by keyword matches
-scores = {}
-for task_type, words in keywords.items():
-    score = sum(1 for w in words if w in task)
-    scores[task_type] = score
-
-if not scores or max(scores.values()) == 0:
-    print('default,coding')
-    sys.exit(0)
-
-# Get the best-matching task type
-best_type = max(scores, key=scores.get)
+import re, sys, json
+desc = sys.argv[1].lower()
+patterns = {
+    'code_heavy': r'implement|refactor|fix|bug|feature|code|script|python|bash',
+    'architecture': r'design|architect|structure|diagram|roadmap|spec|plan',
+    'documentation': r'doc|readme|guide|manual|comment|changelog',
+    'optimization': r'perf|speed|optimize|memory|efficient|latency',
+    'quality': r'test|qa|gate|lint|security|audit|validate'
+}
+weights = {k: len(re.findall(p, desc)) for k, p in patterns.items()}
+best_type = max(weights, key=weights.get) if any(weights.values()) else 'code_heavy'
 
 # Map task type to primary capability
 capability_map = {
     'code_heavy': 'coding',
     'architecture': 'architecture',
-    'documentation': 'documentation'
+    'documentation': 'documentation',
+    'optimization': 'optimization',
+    'quality': 'review'
 }
 primary = capability_map.get(best_type, 'coding')
-
-print(f'{best_type},{primary}')
-" 2>/dev/null
+print(f\"{best_type},{primary}\")
+" "$task_description" 2>/dev/null || echo "code_heavy,coding"
 }
 
 # Select the best agent for a task based on capabilities
@@ -737,83 +682,46 @@ agent_select_best() {
     local available_agents_csv="$2"
     local config_path="${3:-$(_bb_get_capabilities_path)}"
 
-    # Handle empty available agents
-    if [[ -z "$available_agents_csv" ]]; then
-        return 0
-    fi
+    if [[ -z "$available_agents_csv" ]]; then return 0; fi
+    if [[ "$available_agents_csv" != *","* ]]; then echo "$available_agents_csv"; return 0; fi
 
-    # Handle single agent
-    if [[ "$available_agents_csv" != *","* ]]; then
-        echo "$available_agents_csv"
-        return 0
-    fi
-
-    # Analyze task to get required capability
-    local analysis
-    analysis=$(agent_analyze_task "$task_description" "$config_path")
-    local task_type="${analysis%%,*}"
-    local primary_cap="${analysis##*,}"
-
-    # Get capability weights for this task type
-    local weights_json
-    weights_json=$(python3 -c "
-import json
+    python3 -c "
+import json, sys, re
 config = json.load(open('$config_path'))
-weights = config.get('capability_weights', {}).get('$task_type', config.get('capability_weights', {}).get('default', {}))
-print(json.dumps(weights))
-" 2>/dev/null)
+task_desc = sys.argv[1].lower()
+available = [a.lower().strip() for a in sys.argv[2].split(',')]
 
-    # Select best agent
-    local best_agent
-    best_agent=$(python3 -c "
-import json, sys
+# 1. Analyze Task
+patterns = {
+    'code_heavy': r'implement|refactor|fix|bug|feature|code|script|python|bash',
+    'architecture': r'design|architect|structure|diagram|roadmap|spec|plan',
+    'documentation': r'doc|readme|guide|manual|comment|changelog',
+    'optimization': r'perf|speed|optimize|memory|efficient|latency',
+    'quality': r'test|qa|gate|lint|security|audit|validate'
+}
+weights_map = {k: len(re.findall(p, task_desc)) for k, p in patterns.items()}
+task_type = max(weights_map, key=weights_map.get) if any(weights_map.values()) else 'code_heavy'
 
-config = json.load(open('$config_path'))
-agents_config = config.get('agents', {})
-weights = json.loads('$weights_json')
-primary_cap = '$primary_cap'
-available = '$available_agents_csv'.split(',')
+# 2. Get Weights
+weights = config.get('capability_weights', {}).get(task_type, config.get('capability_weights', {}).get('default', {}))
 
-# Build available agents list
-available_lower = [a.lower().strip() for a in available]
-
-# Score each available agent
+# 3. Score Agents
 best_score = -1
 best_agent = ''
-
-for agent_name, agent_data in agents_config.items():
-    # Check if this agent is available
-    agent_match = False
-    if agent_name.lower() in available_lower:
-        agent_match = True
-    elif agent_data.get('cli_command', '').lower() in available_lower:
-        agent_match = True
-    elif agent_data.get('fallback_cli_command', '').lower() in available_lower:
-        agent_match = True
-
-    if not agent_match:
+for agent_name, agent_data in config.get('agents', {}).items():
+    if agent_name.lower() not in available and \
+       agent_data.get('cli_command', '').lower() not in available and \
+       agent_data.get('fallback_cli_command', '').lower() not in available:
         continue
-
-    # Calculate weighted score
+    
     caps = agent_data.get('capabilities', {})
-    score = 0
-    total_weight = 0
-    for cap, weight in weights.items():
-        cap_score = caps.get(cap, 0)
-        score += cap_score * weight
-        total_weight += weight
-
-    if total_weight > 0:
-        score /= total_weight
-
+    score = sum(caps.get(cap, 0) * weight for cap, weight in weights.items())
     if score > best_score:
         best_score = score
         best_agent = agent_name
 
-print(best_agent)
-" 2>/dev/null)
-
-    echo "$best_agent"
+print(best_agent or available[0])
+" "$task_description" "$available_agents_csv" 2>/dev/null
 }
 
 # Get all registered agents with their capabilities from blackboard
@@ -1217,6 +1125,10 @@ log_agent_analytics() {
 
 start_heartbeat() {
     local tool_name="${1:-agent}"
+    if [[ "${DRY_RUN:-}" == "true" ]]; then
+        log_info "Dry-run: skipping heartbeat for $tool_name"
+        return 0
+    fi
     if [ -n "${HCOM_NAME:-}" ]; then
         # Health 2.0 Heartbeat
         # Updates status and reports metrics (latency, load) to the Blackboard.
@@ -1224,15 +1136,15 @@ start_heartbeat() {
             while true; do
                 # 1. Update hcom status (presence)
                 hcom status --name "$HCOM_NAME" > /dev/null 2>&1 || true
-                
+
                 # 2. Measure latency (Blackboard round-trip)
-                local start_time=$(get_ms)
+                sb_time=$(date +%s%3N)
                 blackboard_get "fleet_health_${HCOM_NAME}" > /dev/null 2>&1 || true
-                local end_time=$(get_ms)
-                local latency=$((end_time - start_time))
+                eb_time=$(date +%s%3N)
+                lat=$((eb_time - sb_time))
 
                 # 3. Report health metrics
-                report_health "ready" "$latency" "0"
+                report_health "ready" "$lat" "0"
 
                 sleep 20
             done
@@ -1242,7 +1154,6 @@ start_heartbeat() {
     fi
     return 1
 }
-
 # ============================================================
 # Dynamic tmux Layouts (P17.1)
 # ============================================================

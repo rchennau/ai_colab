@@ -686,29 +686,32 @@ update_tmux_status_bar() {
     if [[ -z "${TMUX:-}" ]]; then return 0; fi
     
     local status_str=""
-    local current_time=$(date +%s)
+    local current_time=$1 # Pass time to avoid subshell
     
-    # Get all health keys
+    # Get all health keys in one go
+    local health_data
+    health_data=$(blackboard_list "fleet_health_")
+    
     while IFS='|' read -r key health_json; do
-        if [[ -n "$key" ]]; then
-            local agent_name=${key#fleet_health_}
-            local status=$(parse_json_value "$health_json" "status")
-            local last_ts=$(parse_json_value "$health_json" "ts")
-            
-            # Truncate/Shorten name
-            local short_name=$(echo "$agent_name" | cut -c1-3 | tr '[:lower:]' '[:upper:]')
-            
-            local icon="✓"
-            [[ "$status" == "busy" || "$status" == "coding" ]] && icon="⏳"
-            
-            # Check for staleness
-            if (( current_time - last_ts > 60 )); then
-                icon="✗"
-            fi
-            
-            status_str="$status_str [$icon $short_name]"
+        [[ -z "$key" ]] && continue
+        
+        local agent_name=${key#fleet_health_}
+        local status=$(extract_json_value "$health_json" "status")
+        local last_ts=$(extract_json_value "$health_json" "ts")
+        
+        # Truncate/Shorten name using shell slicing
+        local short_name=$(echo "${agent_name:0:3}" | tr '[:lower:]' '[:upper:]')
+        
+        local icon="✓"
+        [[ "$status" == "busy" || "$status" == "coding" ]] && icon="⏳"
+        
+        # Check for staleness
+        if (( current_time - last_ts > 60 )); then
+            icon="✗"
         fi
-    done < <(blackboard_list "fleet_health_")
+        
+        status_str="$status_str [$icon $short_name]"
+    done <<< "$health_data"
     
     if [[ -n "$status_str" ]]; then
         tmux set-option -g status-right "$status_str" > /dev/null 2>&1 || true
@@ -717,11 +720,14 @@ update_tmux_status_bar() {
 
 main() {
     while true; do
+        # Cache current time for the whole iteration
+        CURRENT_TIME=$(date +%s)
+
         # Render high-density dashboard
         bash "$SCRIPT_DIR/conductor-dashboard.sh"
 
         # Update tmux status bar with fleet health
-        update_tmux_status_bar
+        update_tmux_status_bar "$CURRENT_TIME"
 
         log_info "Syncing project status..."
         sync_blackboard_status "$TRACKS_FILE"
@@ -730,48 +736,43 @@ main() {
         spawn_workers "$TRACKS_FILE"
 ...
         # Check for periodic tests
-        CURRENT_TIME=$(date +%s)
         if (( CURRENT_TIME - LAST_TEST_RUN > TEST_INTERVAL )); then
             echo -e "[$(date +%T)] ${YELLOW}Running scheduled tests...${NC}"
             run_automated_tests
+            LAST_TEST_RUN=$CURRENT_TIME
         fi
 
         # 2. Fleet Watchdog & Autonomous Recovery
         log_info "Running Fleet Watchdog..."
+        local all_health
+        all_health=$(blackboard_list "fleet_health_")
+        
         while IFS='|' read -r key health_json; do
-            if [[ -n "$key" && -n "$health_json" ]]; then
-                local agent_name=${key#fleet_health_}
-                local last_ts=$(parse_json_value "$health_json" "ts")
-                local status=$(parse_json_value "$health_json" "status")
+            [[ -z "$key" || -z "$health_json" ]] && continue
+            
+            local agent_name=${key#fleet_health_}
+            local last_ts=$(extract_json_value "$health_json" "ts")
+            local status=$(extract_json_value "$health_json" "status")
+            
+            # Check for stale heartbeat (> 60 seconds)
+            if [[ "$status" != "stale" ]] && (( CURRENT_TIME - last_ts > 60 )); then
+                log_warn "Agent STALE: $agent_name (last seen: $((CURRENT_TIME - last_ts))s ago)"
                 
-                # Check for stale heartbeat (> 60 seconds)
-                if (( CURRENT_TIME - last_ts > 60 )); then
-                    log_warn "Agent STALE: $agent_name (last seen: $((CURRENT_TIME - last_ts))s ago)"
-                    
-                    # Attempt Recovery: Broadcast a 'heartbeat_lost' event
-                    hcom send -- "Watchdog: Agent $agent_name is unresponsive. Attempting recovery..." > /dev/null 2>&1 || true
-                    
-                    # Log recovery attempt to blackboard for persistence
-                    blackboard_set "recovery_attempt_${agent_name}" "$CURRENT_TIME"
-                    
-                    # Update status to 'stale' in blackboard to signal other agents
-                    local updated_json="{\"status\":\"stale\",\"latency\":0,\"load\":0,\"ts\":$last_ts}"
-                    blackboard_set "$key" "$updated_json"
-                    
-                    # Implement Basic Failover Routing
-                    # If this is a critical agent, re-assign its tasks
-                    case "$agent_name" in
-                        nemoclaw*)
-                            log_info "Critical Spoke Failed: nemoclaw. Diverting architectural tasks to Claude."
-                            blackboard_set "failover_architect" "claude"
-                            ;;
-                        *)
-                            log_info "No specific failover rule for $agent_name"
-                            ;;
-                    esac
+                # Attempt Recovery
+                hcom send -- "Watchdog: Agent $agent_name is unresponsive. Attempting recovery..." > /dev/null 2>&1 || true
+                blackboard_set "recovery_attempt_${agent_name}" "$CURRENT_TIME"
+                
+                # Update status to 'stale' in blackboard
+                local updated_json="{\"status\":\"stale\",\"latency\":0,\"load\":0,\"ts\":$last_ts}"
+                blackboard_set "$key" "$updated_json"
+                
+                # Critical failover logic
+                if [[ "$agent_name" == nemoclaw* ]]; then
+                    log_info "Critical Spoke Failed: nemoclaw. Diverting architectural tasks to Claude."
+                    blackboard_set "failover_architect" "claude"
                 fi
             fi
-        done < <(blackboard_list "fleet_health_")
+        done <<< "$all_health"
 
         # Check for periodic module hooks
         if [[ -f "$SCRIPT_DIR/module-manager.sh" ]]; then

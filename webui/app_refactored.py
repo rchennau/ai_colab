@@ -78,32 +78,18 @@ def create_app():
     socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
     
     # Initialize PTY manager for web terminals
-    from webui.api.terminal import PTYManager
+    from webui.api.terminal import PTYManager, init_terminal_events
     import webui.api.terminal as terminal_module
     terminal_module.pty_manager = PTYManager(socketio)
-    logger.info("PTY manager initialized for web terminals")
+    init_terminal_events(socketio)
+    logger.info("PTY manager and Socket.IO events initialized")
 
-    # Socket.IO Event Handlers
+    # App-level Socket.IO Event Handlers
     @socketio.on('connect')
     def handle_connect():
-        logger.info('Client connected to WebSocket')
+        logger.info('Client connected to main WebSocket')
         from flask_socketio import emit
         emit('connected', {'message': 'Connected to ai-colab Web UI'})
-
-    @socketio.on('terminal_input')
-    def handle_terminal_input(data):
-        terminal_id = data.get('id')
-        input_data = data.get('data', '')
-        if terminal_module.pty_manager and terminal_id:
-            terminal_module.pty_manager.write(terminal_id, input_data)
-
-    @socketio.on('terminal_resize')
-    def handle_terminal_resize(data):
-        terminal_id = data.get('id')
-        rows = data.get('rows', 24)
-        cols = data.get('cols', 80)
-        if terminal_module.pty_manager and terminal_id:
-            terminal_module.pty_manager.resize(terminal_id, rows, cols)
     
     # Add request logging middleware
     @app.before_request

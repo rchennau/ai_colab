@@ -182,6 +182,28 @@ class PTYManager:
         return False
 
 
+def init_terminal_events(socketio):
+    """Register Socket.IO events for terminal management"""
+    @socketio.on('terminal_input')
+    def handle_terminal_input(data):
+        terminal_id = data.get('id')
+        input_data = data.get('data', '')
+        if pty_manager and terminal_id:
+            pty_manager.write(terminal_id, input_data)
+
+    @socketio.on('terminal_resize')
+    def handle_terminal_resize(data):
+        terminal_id = data.get('id')
+        rows = data.get('rows', 24)
+        cols = data.get('cols', 80)
+        if pty_manager and terminal_id:
+            pty_manager.resize(terminal_id, rows, cols)
+
+    @socketio.on('connect')
+    def handle_connect():
+        logging.getLogger('ai_colab.webui.terminal').info('Client connected to Terminal WebSocket')
+
+
 @terminal_bp.route('/spawn', methods=['POST'])
 def spawn_terminal():
     """Spawn a new web terminal"""

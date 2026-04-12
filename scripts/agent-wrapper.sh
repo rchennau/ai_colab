@@ -5,70 +5,111 @@
 
 set -euo pipefail
 
-# Find script directory and source utils
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/utils.sh"
+# 0. Argument Parsing (must happen early)
+TOOL="${1:-}"
+shift || true
 
-TOOL="$1"
-shift
+# Flags
+RESTART_COUNT=0
+MAX_RESTARTS=20
+USE_DOCKER=false
+DRY_RUN=false
+VALID_ARGS=()
+MODEL_SET=false
+SYSTEM_PROMPT_SET=false
+SYSTEM_PROMPT_CONTENT=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --docker)
+            USE_DOCKER=true
+            shift
+            ;;
+        --dry-run)
+            DRY_RUN=true
+            shift
+            ;;
+        --name) 
+            export HCOM_NAME="$2"
+            shift 2 
+            ;;
+        -m|--model)
+            MODEL_SET=true
+            VALID_ARGS+=("--model" "$2")
+            shift 2
+            ;;
+        --system-prompt)
+            SYSTEM_PROMPT_SET=true
+            SYSTEM_PROMPT_CONTENT="$2"
+            shift 2
+            ;;
+        *)
+            VALID_ARGS+=("$1")
+            shift
+            ;;
+    esac
+done
+
+if [[ -z "$TOOL" ]]; then
+    echo "Usage: $0 <tool_name> [args...]"
+    exit 1
+fi
+
+# Find script directory and source utils
+SCRIPT_DIR="${SCRIPT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
+source "$SCRIPT_DIR/utils.sh"
 
 # 1. Configuration & Role Determination
 case "$TOOL" in
     gemini)
         DEFAULT_MODEL="gemini-3.0"
         ROLE_PROMPT="$SCRIPT_DIR/../system-prompts/gemini.md"
-        ;;
-    qwen)
-        DEFAULT_MODEL="qwen3-next-80b-a3b-instruct"
-        ROLE_PROMPT="$SCRIPT_DIR/../system-prompts/qwen.md"
-        ;;
-    deepseek)
-        DEFAULT_MODEL="deepseek-v3"
-        ROLE_PROMPT="$SCRIPT_DIR/../system-prompts/deepseek.md"
-        ;;
-    vllm)
-        DEFAULT_MODEL="DeepSeek-Code"
-        ROLE_PROMPT="$SCRIPT_DIR/../system-prompts/deepseek.md"
-        ;;
-    nemoclaw)
-        DEFAULT_MODEL="nvidia/llama-3.3-nemotron-super-49b-v1.5"
-        ROLE_PROMPT="$SCRIPT_DIR/../system-prompts/nemoclaw.md"
-        ;;
-    *)
-        DEFAULT_MODEL=""
-        ROLE_PROMPT=""
-        ;;
-esac
-
-# Check if tool is available before registering
-CMD=""
-case "$TOOL" in
-    gemini)
         if has_command gemini; then CMD="gemini";
         elif has_command gemini-cli; then CMD="gemini-cli"; fi
         ;;
     qwen)
+        DEFAULT_MODEL="qwen3-next-80b-a3b-instruct"
+        ROLE_PROMPT="$SCRIPT_DIR/../system-prompts/qwen.md"
         if has_command qwen; then CMD="qwen";
         elif has_command qwen-code; then CMD="qwen-code";
         elif has_command qwen-cli; then CMD="qwen-cli"; fi
         ;;
-    vllm) CMD="elc" ;;
-    nemo) CMD="python3 \"$SCRIPT_DIR/nemo-cli.py\"" ;;
-    nemoclaw) CMD="python3 \"$SCRIPT_DIR/nemo-cli.py\"" ;;
+    claude)
+        DEFAULT_MODEL="claude-3-5-sonnet-20241022"
+        ROLE_PROMPT="$SCRIPT_DIR/../system-prompts/claude.md"
+        if has_command claude; then CMD="claude";
+        elif has_command claude-code; then CMD="claude-code"; fi
+        ;;
     deepseek)
+        DEFAULT_MODEL="deepseek-v3"
+        ROLE_PROMPT="$SCRIPT_DIR/../system-prompts/deepseek.md"
         if has_command deepseek-cli; then CMD="deepseek-cli";
         else CMD="deepseek"; fi
         ;;
-    *) CMD="$TOOL" ;;
+    vllm)
+        DEFAULT_MODEL="DeepSeek-Code"
+        ROLE_PROMPT="$SCRIPT_DIR/../system-prompts/deepseek.md"
+        CMD="elc"
+        ;;
+    nemoclaw|nemo)
+        DEFAULT_MODEL="nvidia/llama-3.3-nemotron-super-49b-v1.5"
+        ROLE_PROMPT="$SCRIPT_DIR/../system-prompts/nemoclaw.md"
+        CMD="python3 \"$SCRIPT_DIR/nemo-cli.py\""
+        ;;
+    *)
+        DEFAULT_MODEL=""
+        ROLE_PROMPT=""
+        CMD="$TOOL"
+        ;;
 esac
 
-if [ -z "$CMD" ] && [ "$TOOL" != "nemo" ]; then
+if [[ "$USE_DOCKER" != "true" ]] && [ -z "$CMD" ] && [[ "$TOOL" != "nemo"* ]]; then
     echo "Error: Tool $TOOL not found. Please run ./install.sh"
     exit 1
 fi
 
 # 2. Project Detection
-PROJECT_ROOT=$(detect_project_root 2>/dev/null || dirname "$SCRIPT_DIR")
+PROJECT_ROOT="${PROJECT_ROOT:-$(detect_project_root 2>/dev/null || dirname "$SCRIPT_DIR")}"
 
 # 2.1 Load Active Modules
 # Load all active modules and their environment variables/MCPs
@@ -93,49 +134,25 @@ if [ -f "$CORE_DEV_MCP" ]; then
     # If the LLM CLI supports direct MCP injection via env vars
     export CORE_DEV_MCP_PATH="$CORE_DEV_MCP"
 fi
-
 # 3. vLLM specific config for ELC
 if [ "$TOOL" == "vllm" ]; then
     export USE_CUSTOM_LLM=true
     export CUSTOM_LLM_PROVIDER="openai"
     export CUSTOM_LLM_ENDPOINT="${VLLM_BASE_URL:-http://192.168.0.193:8000/v1}"
     export CUSTOM_LLM_API_KEY="${VLLM_API_KEY:-no-key}"
+    [ "$MODEL_SET" = true ] && export CUSTOM_LLM_MODEL_NAME="$DEFAULT_MODEL"
 fi
 
-# 4. Argument Parsing
-VALID_ARGS=()
-MODEL_SET=false
-SYSTEM_PROMPT_SET=false
-SYSTEM_PROMPT_CONTENT=""
-
-while [[ $# -gt 0 ]]; do
-    case "$1" in
-        --name) 
-            export HCOM_NAME="$2"
-            shift 2 
-            ;;
-        -m|--model)
-            MODEL_SET=true
-            VALID_ARGS+=("--model" "$2")
-            [ "$TOOL" == "vllm" ] && export CUSTOM_LLM_MODEL_NAME="$2"
-            shift 2
-            ;;
-        --system-prompt)
-            SYSTEM_PROMPT_SET=true
-            SYSTEM_PROMPT_CONTENT="$2"
-            shift 2
-            ;;
-        *) VALID_ARGS+=("$1") ; shift ;;
-    esac
-done
-
+# 5. Model & Role Injection
 # 5. Register with hcom and start heartbeat
-# This performs initial registration (uses HCOM_NAME if set by --name or environment)
-register_hcom "$TOOL"
+if [[ "$DRY_RUN" != "true" ]]; then
+    # This performs initial registration (uses HCOM_NAME if set by --name or environment)
+    register_hcom "$TOOL"
 
-# Start heartbeat to keep agent status fresh in hcom TUI
-# This prevents the "exit:timeout" cycling issue
-start_heartbeat "$TOOL"
+    # Start heartbeat to keep agent status fresh in hcom TUI
+    # This prevents the "exit:timeout" cycling issue
+    start_heartbeat "$TOOL"
+fi
 
 CLEANUP_FILES=()
 cleanup() {
@@ -212,81 +229,88 @@ if [ "$SYSTEM_PROMPT_SET" = true ]; then
     esac
 fi
 
-# Flags
-RESTART_COUNT=0
-MAX_RESTARTS=20
-USE_DOCKER=false
-
-while [[ $# -gt 0 ]]; do
-    case "$1" in
-        --docker) USE_DOCKER=true; shift ;;
-        *) VALID_ARGS+=("$1"); shift ;;
-    esac
-done
-
 # Run the command with automatic restart and real-time output parsing for progress
 run_agent() {
     local agent_cmd=""
     
+    # Safely escape all variables for use in eval
+    local escaped_name=$(printf "%q" "$HCOM_NAME")
+    local escaped_google_key=$(printf "%q" "${GOOGLE_API_KEY:-}")
+    local escaped_anthropic_key=$(printf "%q" "${ANTHROPIC_API_KEY:-}")
+    local escaped_args=()
+    for arg in "${VALID_ARGS[@]}"; do
+        escaped_args+=("$(printf "%q" "$arg")")
+    done
+
     if [[ "$USE_DOCKER" == "true" ]]; then
         # Containerized Execution
         local image="aicolab/agent-${TOOL}:latest"
         print_info "Spawning containerized agent: $image"
         
-        # Build Docker Run command
-        # Note: We map PROJECT_ROOT to /workspace and hcom config to /root/.hcom
-        # Use proper quoting for paths with spaces
+        # Build Docker Run command with safely escaped variables
         agent_cmd="docker run --rm -i \
-            -v \"$PROJECT_ROOT\":/workspace \
-            -v \"$HOME/.hcom\":/root/.hcom \
-            -e HCOM_NAME=\"$HCOM_NAME\" \
-            -e GOOGLE_API_KEY=\"${GOOGLE_API_KEY:-}\" \
-            -e ANTHROPIC_API_KEY=\"${ANTHROPIC_API_KEY:-}\" \
-            --name \"agent_${HCOM_NAME}_$(date +%s)\" \
-            $image $(printf " %q" "${VALID_ARGS[@]}")"
+            -v $(printf "%q" "$PROJECT_ROOT"):/workspace \
+            -v $(printf "%q" "$HOME")/.hcom:/root/.hcom \
+            -e HCOM_NAME=$escaped_name \
+            -e GOOGLE_API_KEY=$escaped_google_key \
+            -e ANTHROPIC_API_KEY=$escaped_anthropic_key \
+            --name $(printf "%q" "agent_${HCOM_NAME}_$(date +%s)") \
+            $image ${escaped_args[*]}"
     else
         # Local Execution
+        if [[ "$CMD" == *" "* ]]; then
+            # CMD might already contain escaped parts (e.g. python3 "path"), use carefully
+            agent_cmd="$CMD ${escaped_args[*]}"
+        else
+            agent_cmd="$(printf "%q" "$CMD") ${escaped_args[*]}"
+        fi
+    fi
+
+    # Execute and parse output using process substitution to avoid subshell issues
+    local line
+    local exit_code=0
+    
+    while read -r line; do
+        echo "$line"
+        
+        if [[ "$line" =~ PROGRESS:[[:space:]]*([0-9]+)%[[:space:]]*\|[[:space:]]*(.*) ]]; then
+            pct="${BASH_REMATCH[1]}"
+            step="${BASH_REMATCH[2]}"
+            report_progress "$pct" "$step" 2>/dev/null || true
+        fi
+    done < <(eval "$agent_cmd" 2>&1; echo "EXIT_CODE:$?")
+
+    # Extract exit code from the last line
+    if [[ "$line" =~ EXIT_CODE:([0-9]+) ]]; then
+        exit_code="${BASH_REMATCH[1]}"
+    fi
+    
+    return $exit_code
+}
+
+# Main loop: restart agent if it exits with exponential backoff and circuit breaker
+if [[ "$DRY_RUN" == "true" ]]; then
+    agent_cmd=""
+    if [[ "$USE_DOCKER" == "true" ]]; then
+        image="aicolab/agent-${TOOL}:latest"
+        agent_cmd="docker run --rm -i -v \"$PROJECT_ROOT\":/workspace -v \"$HOME/.hcom\":/root/.hcom -e HCOM_NAME=\"$HCOM_NAME\" -e GOOGLE_API_KEY=\"${GOOGLE_API_KEY:-}\" -e ANTHROPIC_API_KEY=\"${ANTHROPIC_API_KEY:-}\" --name \"agent_${HCOM_NAME}_dryrun\" $image $(printf " %q" "${VALID_ARGS[@]}")"
+    else
         if [[ "$CMD" == *" "* ]]; then
             agent_cmd="$CMD $(printf " %q" "${VALID_ARGS[@]}")"
         else
             agent_cmd="$CMD $(printf " %q" "${VALID_ARGS[@]}")"
         fi
     fi
+    echo "DRY_RUN_CMD: $agent_cmd"
+    exit 0
+fi
 
-    # Execute and pipe stdout to a parser loop while preserving stderr
-    # Pattern: PROGRESS: 50% | Step Name
-    local line
-    local exit_code=0
-    
-    # We use a named pipe to capture the exit code from the subshell
-    local pipe=$(mktemp -u)
-    mkfifo "$pipe"
-    exec 3<> "$pipe"
-    rm "$pipe"
-
-    (
-        eval "$agent_cmd" 2>&1
-        echo $? >&3
-    ) | while read -r line; do
-        echo "$line"
-        if [[ "$line" =~ PROGRESS:[[:space:]]*([0-9]+)%[[:space:]]*\|[[:space:]]*(.*) ]]; then
-            local pct="${BASH_REMATCH[1]}"
-            local step="${BASH_REMATCH[2]}"
-            report_progress "$pct" "$step" 2>/dev/null || true
-        fi
-    done
-
-    read -u 3 exit_code
-    return $exit_code
-}
-
-# Main loop: restart agent if it exits with exponential backoff and circuit breaker
 RESTART_COUNT=0
 MAX_RESTARTS=20  # Higher limit since backoff increases
 
 while true; do
     echo "[$(date '+%H:%M:%S')] Starting $TOOL agent (attempt $((RESTART_COUNT + 1)))..."
-    local start_ts=$(get_ms)
+    start_ts=$(get_ms)
 
     # Run the agent command
     set +e  # Don't exit on error - we want to restart
@@ -294,8 +318,8 @@ while true; do
     EXIT_CODE=$?
     set -e
     
-    local end_ts=$(get_ms)
-    local duration=$((end_ts - start_ts))
+    end_ts=$(get_ms)
+    duration=$((end_ts - start_ts))
 
     echo "[$(date '+%H:%M:%S')] $TOOL agent exited with code $EXIT_CODE"
     

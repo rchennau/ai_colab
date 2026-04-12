@@ -354,87 +354,43 @@ create_dashboard() {
         local component="${right_panes[$i]}"
         local pane_id="${agent_pane_ids[$i]}"
         local pane_idx=$(tmux display-message -p -t "$pane_id" "#{pane_index}")
-        local cmd=""
         local agent_name=""
         local title=""
 
+        # Determine agent name and title
         case $component in
-            conductor)
-                cmd="bash '$SCRIPT_DIR/conductor-workflow.sh'; echo ''; echo '=== Conductor Status Display (Read-Only) ==='; echo 'Press Ctrl+B to navigate away.'; echo 'Conductor workflow completed. Waiting for restart...'; while true; do sleep 60; done"
-                agent_name="conductor_dev"
-                title="Conductor"
-                ;;
-            qwen)
-                cmd="bash '$SCRIPT_DIR/qwen-hcom.sh'"
-                agent_name="qwen_dev"
-                title="Qwen"
-                ;;
-            gemini)
-                cmd="bash '$SCRIPT_DIR/gemini-hcom.sh'"
-                agent_name="gemini_dev"
-                title="Gemini"
-                ;;
-            vllm)
-                cmd="bash '$SCRIPT_DIR/vllm-hcom.sh'"
-                agent_name="vllm_dev"
-                title="vLLM"
-                ;;
-            deepseek)
-                cmd="bash '$SCRIPT_DIR/deepseek-hcom.sh'"
-                agent_name="deepseek_dev"
-                title="DeepSeek"
-                ;;
-            claude)
-                cmd="bash '$SCRIPT_DIR/claude-hcom.sh'"
-                agent_name="claude_dev"
-                title="Claude"
-                ;;
-            nemo)
-                cmd="bash '$SCRIPT_DIR/nemo-hcom.sh'"
-                agent_name="nemo_dev"
-                title="NeMo"
-                ;;
-            nemoclaw)
-                cmd="bash '$SCRIPT_DIR/nemoclaw-hcom.sh'"
-                agent_name="nemoclaw"
-                title="nemoclaw"
-                ;;
+            conductor) agent_name="conductor_dev"; title="Conductor" ;;
+            qwen)      agent_name="qwen_dev";      title="Qwen" ;;
+            gemini)    agent_name="gemini_dev";    title="Gemini" ;;
+            vllm)      agent_name="vllm_dev";      title="vLLM" ;;
+            deepseek)  agent_name="deepseek_dev";  title="DeepSeek" ;;
+            claude)    agent_name="claude_dev";    title="Claude" ;;
+            nemo)      agent_name="nemo_dev";      title="NeMo" ;;
+            nemoclaw)  agent_name="nemoclaw";      title="nemoclaw" ;;
+            *)         agent_name="${component}_dev"; title="$component" ;;
         esac
 
         print_info "Launching $title in pane $pane_idx..."
 
-        # Tag the agent
-        $hcom_bin config -i "$agent_name" tag "$component" > /dev/null 2>&1 || true
-
-        # Wait for pane to be ready
-        sleep 1.0
-
-        # Export HCOM_NAME first
+        # Export HCOM_NAME first for the wrapper
         tmux send-keys -t "$pane_id" "export HCOM_NAME=\"$agent_name\"" C-m
         sleep 0.5
 
-        # Create a wrapper script for the command to handle paths with spaces properly
-        local wrapper_script=$(mktemp /tmp/agent-launch-XXXXXX.sh)
-        cat > "$wrapper_script" << AGENT_EOF
-#!/usr/bin/env bash
-# Agent wrapper for $title
-exec $cmd
-AGENT_EOF
-        chmod +x "$wrapper_script"
+        # Launch using agent-wrapper.sh (Standardized)
+        local wrapper_cmd="bash '$SCRIPT_DIR/agent-wrapper.sh' '$component' --name '$agent_name'"
+        
+        # Add conductor-specific context flags if they exist (legacy support)
+        if [[ "$component" == "qwen" && -n "${QWEN_CONTEXT_FILE:-}" ]]; then
+            export QWEN_CONTEXT_FILE
+        elif [[ "$component" == "gemini" && -n "${GEMINI_CONTEXT_FILE:-}" ]]; then
+            export GEMINI_CONTEXT_FILE
+        fi
 
-        # Send the wrapper script execution
-        tmux send-keys -t "$pane_id" "bash '$wrapper_script'" C-m
-
-        # Clean up wrapper after a delay (the script will have been loaded into memory)
-        sleep 0.5
+        tmux send-keys -t "$pane_id" "$wrapper_cmd" C-m
 
         # Set pane metadata and title
         tmux set-option -t "$pane_id" -p @agent_name "$(tr '[:lower:]' '[:upper:]' <<< ${title})"
-        tmux set-option -t "$pane_id" -p @wrapper_script "$wrapper_script"
         tmux select-pane -t "$pane_id" -T "$title"
-
-        # Verify pane title was set after a brief delay
-        (sleep 2.0 && tmux select-pane -t "$pane_id" -T "$title") &
     done
 
     # Step 7: Finalize HCOM Pane
