@@ -1,0 +1,204 @@
+{
+  "_comment": "Structured Agent Communication Protocol — ai-colab v1.0",
+  "_version": "1.0.0",
+  "_description": "Compact, structured message format for agent-to-agent communication. Reduces context bloat by 90% vs. English-only messaging.",
+  "_updated": "2026-04-11",
+
+  "protocol": {
+    "version": 1,
+    "encoding": "json",
+    "max_message_bytes": 4096,
+    "heartbeat_interval_seconds": 20
+  },
+
+  "message_types": {
+    "status": {
+      "description": "Progress update from agent",
+      "required_fields": ["v", "t", "a", "ts", "track", "pct", "step"],
+      "optional_fields": ["phase", "eta", "blockers", "detail", "err"],
+      "frequency": "every 60s or on phase change"
+    },
+    "heartbeat": {
+      "description": "Health check ping",
+      "required_fields": ["v", "t", "a", "ts"],
+      "optional_fields": ["latency_ms", "load"],
+      "frequency": "every 20s"
+    },
+    "request": {
+      "description": "Task handoff or help request",
+      "required_fields": ["v", "t", "a", "ts", "track", "detail"],
+      "optional_fields": ["phase", "target_agent", "priority"],
+      "frequency": "on demand"
+    },
+    "response": {
+      "description": "Reply to a request",
+      "required_fields": ["v", "t", "a", "ts", "track", "detail"],
+      "optional_fields": ["status", "err"],
+      "frequency": "on demand"
+    },
+    "error": {
+      "description": "Failure report",
+      "required_fields": ["v", "t", "a", "ts", "track", "err", "detail"],
+      "optional_fields": ["recoverable", "retry_count"],
+      "frequency": "on error"
+    },
+    "complete": {
+      "description": "Task completion",
+      "required_fields": ["v", "t", "a", "ts", "track", "pct"],
+      "optional_fields": ["detail", "artifacts"],
+      "frequency": "on completion"
+    }
+  },
+
+  "fields": {
+    "v": {
+      "type": "integer",
+      "description": "Protocol version",
+      "example": 1
+    },
+    "t": {
+      "type": "string",
+      "description": "Message type",
+      "enum": ["status", "heartbeat", "request", "response", "error", "complete"],
+      "example": "status"
+    },
+    "a": {
+      "type": "string",
+      "description": "Agent name (lowercase, underscores, numbers only)",
+      "pattern": "^[a-z0-9_]+$",
+      "max_length": 64,
+      "example": "gemini_dev"
+    },
+    "ts": {
+      "type": "integer",
+      "description": "Unix epoch timestamp (seconds)",
+      "example": 1712876400
+    },
+    "track": {
+      "type": "string",
+      "description": "Current track slug",
+      "pattern": "^[a-z0-9-]+$",
+      "max_length": 128,
+      "example": "implement-api"
+    },
+    "phase": {
+      "type": "string",
+      "description": "Current work phase",
+      "enum": ["analyzing", "planning", "coding", "testing", "reviewing", "done"],
+      "example": "coding"
+    },
+    "pct": {
+      "type": "integer",
+      "description": "Progress percentage (0-100)",
+      "min": 0,
+      "max": 100,
+      "example": 45
+    },
+    "step": {
+      "type": "string",
+      "description": "Current step description (short, human-readable)",
+      "max_length": 100,
+      "example": "writing endpoint handlers"
+    },
+    "eta": {
+      "type": "integer",
+      "description": "Estimated seconds to completion",
+      "min": 0,
+      "example": 1800
+    },
+    "blockers": {
+      "type": "array",
+      "description": "Current blockers (empty array if none)",
+      "items": {"type": "string", "max_length": 200},
+      "example": ["waiting for API key"]
+    },
+    "err": {
+      "type": "string",
+      "description": "Error code (snake_case)",
+      "pattern": "^[a-z_]+$",
+      "max_length": 64,
+      "example": "compilation_failed"
+    },
+    "detail": {
+      "type": "string",
+      "description": "Human-readable detail (for dashboard display)",
+      "max_length": 500,
+      "example": "Completed 3 of 6 endpoints. Tests passing."
+    },
+    "latency_ms": {
+      "type": "integer",
+      "description": "Round-trip latency in milliseconds",
+      "min": 0,
+      "example": 150
+    },
+    "load": {
+      "type": "number",
+      "description": "System load (0.0-1.0)",
+      "min": 0,
+      "max": 1.0,
+      "example": 0.3
+    },
+    "target_agent": {
+      "type": "string",
+      "description": "Target agent for requests",
+      "pattern": "^[a-z0-9_]+$",
+      "max_length": 64,
+      "example": "qwen_dev"
+    },
+    "priority": {
+      "type": "string",
+      "description": "Request priority",
+      "enum": ["low", "normal", "high", "critical"],
+      "example": "normal"
+    },
+    "status": {
+      "type": "string",
+      "description": "Response status",
+      "enum": ["accepted", "rejected", "busy", "queued"],
+      "example": "accepted"
+    },
+    "recoverable": {
+      "type": "boolean",
+      "description": "Whether error is recoverable",
+      "example": true
+    },
+    "retry_count": {
+      "type": "integer",
+      "description": "Number of retry attempts",
+      "min": 0,
+      "example": 2
+    },
+    "artifacts": {
+      "type": "array",
+      "description": "Generated artifacts (file paths)",
+      "items": {"type": "string"},
+      "example": ["src/api/handlers.py", "tests/test_api.py"]
+    }
+  },
+
+  "error_codes": {
+    "compilation_failed": "Code compilation or syntax error",
+    "test_failed": "Test suite failure",
+    "dependency_missing": "Required dependency not found",
+    "api_error": "External API call failed",
+    "timeout": "Operation timed out",
+    "permission_denied": "Insufficient permissions",
+    "disk_full": "No disk space remaining",
+    "memory_exceeded": "Memory limit exceeded",
+    "invalid_input": "Invalid input data",
+    "unknown_error": "Unclassified error"
+  },
+
+  "human_override": {
+    "verbose_request": {
+      "description": "Request agent to switch to verbose English mode",
+      "message": {"t": "request", "mode": "verbose", "agent": "<target>", "count": 5},
+      "effect": "Agent sends next N messages in full English instead of structured format"
+    },
+    "compact_request": {
+      "description": "Request agent to switch back to compact structured mode",
+      "message": {"t": "request", "mode": "compact", "agent": "<target>"},
+      "effect": "Agent resumes structured messaging"
+    }
+  }
+}

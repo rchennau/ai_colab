@@ -107,8 +107,9 @@ The Hub connects to various backends for specialized agent deployment:
     *   Standardize the `ai-colab` module manifest (`module.toml`) (Done ✅)
     *   Develop the `ai-colab module install <name>` CLI registry and discovery (Done ✅)
     *   Sandboxed execution environments for third-party plugins (Done ✅)
-*   **Phase 22: Federated Intelligence** (In Progress 🔄)
+*   **Phase 22: Federated Intelligence** (DEFERRED)
     *   **Theme:** "Cross-Hub Collaboration"
+    *   **Blueprint:** See [`conductor/federated-intelligence-blueprint.md`](./federated-intelligence-blueprint.md)
     *   Hub-to-Hub messaging protocol over secured `hcom` relay
     *   Task negotiation, bidding, and distributed handoff
     *   Federated Fleet Health monitoring across multiple self-hosted hubs

@@ -152,6 +152,9 @@ if [[ "$DRY_RUN" != "true" ]]; then
     # Start heartbeat to keep agent status fresh in hcom TUI
     # This prevents the "exit:timeout" cycling issue
     start_heartbeat "$TOOL"
+
+    # Start structured protocol status reporter (sends compact status every 60s)
+    start_protocol_status "$TOOL"
 fi
 
 CLEANUP_FILES=()

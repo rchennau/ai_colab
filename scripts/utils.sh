@@ -1155,6 +1155,128 @@ start_heartbeat() {
     fi
     return 1
 }
+
+# ============================================================
+# Structured Protocol Status Reporter (P6.1)
+# ============================================================
+
+# Start structured protocol status reporter
+# Sends compact JSON status to blackboard every 60s
+# Usage: start_protocol_status <tool_name>
+start_protocol_status() {
+    local tool_name="${1:-agent}"
+    if [[ "${DRY_RUN:-}" == "true" ]]; then
+        return 0
+    fi
+    if [ -n "${HCOM_NAME:-}" ]; then
+        (
+            while true; do
+                # Get current progress from blackboard if available
+                local progress_data
+                progress_data=$(blackboard_get "agent_progress_${HCOM_NAME}" 2>/dev/null || echo "")
+
+                local pct=0
+                local step="idle"
+                local phase="analyzing"
+
+                # Parse progress data if available
+                if [[ -n "$progress_data" ]]; then
+                    pct=$(echo "$progress_data" | python3 -c "import json,sys; print(json.load(sys.stdin).get('pct', 0))" 2>/dev/null || echo "0")
+                    step=$(echo "$progress_data" | python3 -c "import json,sys; print(json.load(sys.stdin).get('step', 'idle'))" 2>/dev/null || echo "idle")
+                    phase=$(echo "$progress_data" | python3 -c "import json,sys; print(json.load(sys.stdin).get('phase', 'analyzing'))" 2>/dev/null || echo "analyzing")
+                fi
+
+                # Build structured status message
+                local status_msg="{\"v\":1,\"t\":\"status\",\"a\":\"$HCOM_NAME\",\"ts\":$(date +%s),\"track\":\"${CURRENT_TRACK:-}\",\"pct\":$pct,\"step\":\"$step\",\"phase\":\"$phase\"}"
+
+                # Store in blackboard for conductor consumption
+                blackboard_set "agent_protocol_${HCOM_NAME}" "$status_msg" 2>/dev/null || true
+
+                # Also send via hcom for event stream
+                hcom send "@all" --name "$HCOM_NAME" --intent inform --thread "protocol-status" -- "$status_msg" > /dev/null 2>&1 || true
+
+                sleep 60
+            done
+        ) &
+        PROTOCOL_STATUS_PID=$!
+        return 0
+    fi
+    return 1
+}
+
+# Update agent progress (called by agents to report progress)
+# Usage: report_progress_structured <pct> <step> [phase] [eta]
+report_progress_structured() {
+    local pct="${1:-0}"
+    local step="${2:-working}"
+    local phase="${3:-coding}"
+    local eta="${4:-0}"
+
+    if [ -n "${HCOM_NAME:-}" ]; then
+        local ts=$(date +%s)
+        local progress_data="{\"pct\":$pct,\"step\":\"$step\",\"phase\":\"$phase\",\"eta\":$eta,\"ts\":$ts}"
+
+        # Store in blackboard
+        blackboard_set "agent_progress_${HCOM_NAME}" "$progress_data" 2>/dev/null || true
+
+        # Build structured protocol message
+        local track="${CURRENT_TRACK:-}"
+        local protocol_msg="{\"v\":1,\"t\":\"status\",\"a\":\"$HCOM_NAME\",\"ts\":$ts,\"track\":\"$track\",\"pct\":$pct,\"step\":\"$step\",\"phase\":\"$phase\",\"eta\":$eta}"
+
+        # Store protocol message
+        blackboard_set "agent_protocol_${HCOM_NAME}" "$protocol_msg" 2>/dev/null || true
+
+        # Send via hcom
+        hcom send "@all" --name "$HCOM_NAME" --intent inform --thread "protocol-status" -- "$protocol_msg" > /dev/null 2>&1 || true
+    fi
+}
+
+# Send structured error report
+# Usage: report_error_structured <error_code> <detail> [recoverable]
+report_error_structured() {
+    local err_code="${1:-unknown_error}"
+    local detail="${2:-}"
+    local recoverable="${3:-true}"
+    local retry="${4:-0}"
+
+    if [ -n "${HCOM_NAME:-}" ]; then
+        local ts=$(date +%s)
+        local track="${CURRENT_TRACK:-}"
+        local protocol_msg="{\"v\":1,\"t\":\"error\",\"a\":\"$HCOM_NAME\",\"ts\":$ts,\"track\":\"$track\",\"err\":\"$err_code\",\"detail\":\"$detail\",\"recoverable\":$recoverable,\"retry_count\":$retry}"
+
+        # Store in blackboard
+        blackboard_set "agent_protocol_${HCOM_NAME}" "$protocol_msg" 2>/dev/null || true
+
+        # Add to error queue
+        blackboard_set "protocol_errors" "$protocol_msg" 2>/dev/null || true
+
+        # Send via hcom
+        hcom send "@all" --name "$HCOM_NAME" --intent inform --thread "protocol-errors" -- "$protocol_msg" > /dev/null 2>&1 || true
+    fi
+}
+
+# Send task completion message
+# Usage: report_complete_structured [detail] [artifacts_json]
+report_complete_structured() {
+    local detail="${1:-}"
+    local artifacts="${2:-[]}"
+
+    if [ -n "${HCOM_NAME:-}" ]; then
+        local ts=$(date +%s)
+        local track="${CURRENT_TRACK:-}"
+        local protocol_msg="{\"v\":1,\"t\":\"complete\",\"a\":\"$HCOM_NAME\",\"ts\":$ts,\"track\":\"$track\",\"pct\":100"
+        [[ -n "$detail" ]] && protocol_msg+=",\"detail\":\"$detail\""
+        [[ "$artifacts" != "[]" ]] && protocol_msg+=",\"artifacts\":$artifacts"
+        protocol_msg+="}"
+
+        # Store in blackboard
+        blackboard_set "agent_protocol_${HCOM_NAME}" "$protocol_msg" 2>/dev/null || true
+
+        # Send via hcom
+        hcom send "@all" --name "$HCOM_NAME" --intent inform --thread "protocol-completion" -- "$protocol_msg" > /dev/null 2>&1 || true
+    fi
+}
+
 # ============================================================
 # Dynamic tmux Layouts (P17.1)
 # ============================================================
