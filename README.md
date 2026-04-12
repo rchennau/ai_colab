@@ -2,38 +2,36 @@
 
 A unified, **project-agnostic** environment for coordinating multiple AI agents (Gemini, Claude, Qwen, DeepSeek, NeMo, etc.) on complex engineering tasks.
 
-**Latest Release:** Phase 22 In Progress 🔄 — Communication Protocol Optimization (P6.1) delivering 90% message size reduction with structured agent-to-agent messaging.
+**Latest Release:** Phase 22 In Progress 🔄 — Communication Protocol Optimization (90% message size reduction) + Environment Portability (fully self-contained, zero user environment dependency).
 
 ## 🌟 Vision
 To provide a seamless development experience where human oversight and AI autonomy work in harmony. ai-colab handles the "plumbing" of multi-agent systems—messaging, state synchronization, task tracking, and lifecycle management—allowing you to focus on the engineering. **Now with full local LLM support for zero-cloud deployments.**
 
 ## 🚀 Quick Start
 
-### Installation Pathways
+### Installation (Default: Global CLI)
 
-ai-colab supports multiple installation pathways to suit your workflow:
-
-#### **Option 1: Global CLI (Recommended)**
-
-Install ai-colab globally to manage any project on your system:
+ai-colab is designed to be installed once and used across all your projects.
 
 ```bash
 git clone https://github.com/ai-colab/ai-colab.git
 cd ai-colab
-./install.sh --global
+./install.sh
 ```
 
-This creates a global `ai-colab` command. You can now run `ai-colab` in any git repository to start managing it.
+**During installation, you will be prompted to:**
+1.  **Select Install Type:** Global (Central hub in `~/ai_colab`) or Local (Current folder).
+2.  **Choose Directory:** Customize where the hub is installed (defaults to `~/ai_colab`).
 
-#### **Option 2: Native/Local Install**
+### Standardized Logging
 
-Guided terminal-based setup for the current directory:
+For reliability and troubleshooting, all install and launch events are captured in standard Linux log locations:
+- **Install Logs:** `~/.local/state/ai-colab/install.log`
+- **Launch Logs:** `~/.local/state/ai-colab/launch.log`
 
-```bash
-./install.sh --wizard
-```
+### Alternative Pathways
 
-#### **Option 3: Docker & Web UI**
+#### **Option 2: Docker & Web UI**
 
 Browser-based setup and containerized management:
 
@@ -42,6 +40,12 @@ docker-compose up -d
 ```
 
 Then open: http://localhost:8080
+
+#### **Option 3: Quick/Auto Install (Non-interactive)**
+
+```bash
+./install.sh --auto
+```
 
 ### Portable Python & Isolation
 
@@ -97,6 +101,12 @@ ai-colab
 - Model download, health checks, and task-based recommendations
 - Zero-cloud deployment — run ai-colab with no external API keys
 - Usage: `bash scripts/local-models.sh list/download/health/recommend --task coding`
+
+**Environment Portability (P6.2):**
+- Fully self-contained — zero dependency on user's `~/.tmux.conf`, `.bashrc`, or aliases
+- Local tmux config at `.ai-colab/tmux.conf` with clean shell (`bash --norc --noprofile`)
+- Environment setup script (`scripts/ai-colab-env.sh`) for consistent agent execution
+- RAG installation now uses correct Python version (`$PYTHON_CMD -m pip install`)
 
 **Structured Communication Protocol (P6.1):**
 - 6 message types: status, heartbeat, request, response, error, complete

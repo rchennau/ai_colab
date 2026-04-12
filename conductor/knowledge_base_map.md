@@ -1,5 +1,5 @@
 # ai-colab Project Map (Semantic Knowledge Base)
-Last Updated: 2026-04-11 (Phase 22 In Progress 🔄 — Communication Protocol Optimization P6.1 delivering 90% message size reduction)
+Last Updated: 2026-04-11 (Phase 22 In Progress 🔄 — Communication Protocol + Environment Portability: fully self-contained, zero user dependency)
 
 ## Orchestration Core (Hub)
 - `launch.sh`: Unified launcher with **three launch modes** (Dashboard, WebUI, Debug) and **module enablement** (`-m/--module` flag). Auto-activates virtual environment. Supports **multi-project discovery**, global CLI model, and **modular marketplace access**.
@@ -27,6 +27,8 @@ Last Updated: 2026-04-11 (Phase 22 In Progress 🔄 — Communication Protocol O
 - `scripts/protocol-decoder.py`: **NEW (P6.1)** - Structured message decoder with human-readable summary generation and tmux status line rendering.
 - `config/message-protocol.json`: **NEW (P6.1)** - Protocol schema defining 6 message types, 15+ fields, validation rules, and error codes.
 - `conductor/communication-protocol-optimization.md`: **NEW** - Full analysis of English vs. structured communication efficiency with dual-layer protocol architecture.
+- `scripts/ai-colab-env.sh`: **NEW (P6.2)** - Self-contained environment setup. Cleans user aliases, sets strict mode, ensures consistent agent execution.
+- `.ai-colab/tmux.conf`: **NEW (P6.2)** - Local tmux config. Uses `bash --norc --noprofile` for clean shells, zero user environment dependency.
 
 ## AI Agent Integration (Spokes)
 - `docker/agents/`: Collection of specialized agent images (Gemini, Claude, Qwen, DeepSeek) for reproducible distributed execution.
@@ -37,6 +39,7 @@ Last Updated: 2026-04-11 (Phase 22 In Progress 🔄 — Communication Protocol O
 
 ## Testing & Quality Assurance
 - `tests/test_protocol.sh`: **NEW (P6.1)** - Communication protocol tests (44 tests: encoder, decoder, validation, summaries, tmux status line).
+- `tests/test_environment_portability.sh`: **NEW (P6.2)** - Environment portability tests (14 tests: local tmux config, no user references, clean shell, alias cleaning, dashboard integration).
 - `tests/test_container_agents.sh`: Verification harness for the containerized agent isolation system.
 - `tests/test_webui.sh`: Comprehensive Web UI test suite (8 automated tests).
 - `tests/test_workspace_manager.py`: Unit tests for git repository discovery and registry management.

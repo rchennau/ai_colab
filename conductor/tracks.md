@@ -84,8 +84,8 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - [x] Task P6.2: Module Registry Repository
   - [x] Task P6.3: CLI Installation Commands
   - [x] Task P6.4: Sandboxed Execution Environments
-- [ ] **Milestone 25: Federated Intelligence** (In Progress 🔄)
-  *Link: [./federated-intelligence-plan.md](./federated-intelligence-plan.md)*
+- [ ] **Milestone 25: Federated Intelligence** (DEFERRED)
+  *Link: [./federated-intelligence-blueprint.md](./federated-intelligence-blueprint.md)*
   - [ ] Task P7.1: Hub-to-Hub Messaging Protocol
   - [ ] Task P7.2: Task Negotiation & Bidding
   - [ ] Task P7.3: Distributed Fleet Health Dashboard
@@ -356,7 +356,7 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 
 ---
 
-## 📋 Engineering Plan - Phase 22: Federated Intelligence (Pending)
+## 📋 Engineering Plan - Phase 22: Federated Intelligence (DEFERRED)
 
 **Theme: "Cross-Hub Collaboration"**
 
@@ -504,6 +504,13 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - [x] Protocol encoder/decoder with human-readable summaries
   - [x] Agent wrapper integration with structured status reporting
   - [x] 44/44 tests passing
+
+- [x] **Track: Environment Portability** (Done ✅)
+  - [x] Local tmux config (`.ai-colab/tmux.conf`) — clean shell, no user dependency
+  - [x] Environment setup script (`scripts/ai-colab-env.sh`) — alias cleaning, strict mode
+  - [x] Dashboard integration — `tmux -f` flag, env sourcing in panes
+  - [x] RAG installation fix — correct Python version for pip install
+  - [x] 14/14 environment portability tests passing
 
 ---
 
