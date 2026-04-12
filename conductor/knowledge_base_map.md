@@ -40,6 +40,7 @@ Last Updated: 2026-04-11 (Phase 22 In Progress 🔄 — Communication Protocol +
 ## Testing & Quality Assurance
 - `tests/test_protocol.sh`: **NEW (P6.1)** - Communication protocol tests (44 tests: encoder, decoder, validation, summaries, tmux status line).
 - `tests/test_environment_portability.sh`: **NEW (P6.2)** - Environment portability tests (14 tests: local tmux config, no user references, clean shell, alias cleaning, dashboard integration).
+- `conductor/agent-analytics-plan.md`: **NEW** - Detailed implementation plan for surfaced agent performance metrics in the Web UI.
 - `tests/test_container_agents.sh`: Verification harness for the containerized agent isolation system.
 - `tests/test_webui.sh`: Comprehensive Web UI test suite (8 automated tests).
 - `tests/test_workspace_manager.py`: Unit tests for git repository discovery and registry management.

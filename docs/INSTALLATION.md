@@ -79,6 +79,20 @@ Best for: CI/CD or experienced users who want a standard setup without interacti
     ```
     *This will apply standard defaults and skip all interactive prompts.*
 
+## Pathway 4: Global CLI (Recommended)
+Best for: Users who want to manage multiple projects from any directory.
+
+1.  **Run the global installer:**
+    ```bash
+    ./install.sh --global
+    ```
+
+2.  **Choose your directory:**
+    The installer will prompt you for an installation directory (defaulting to `~/ai_colab`).
+
+3.  **Manage any project:**
+    Once installed, you can run the `ai-colab` command from any Git repository on your system to start managing it.
+
 ---
 
 ## Project Migration (v3.0)

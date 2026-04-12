@@ -452,6 +452,134 @@ run_automated_tests() {
     LAST_TEST_RUN=$(date +%s)
 }
 
+# ============================================================
+# Structured Protocol Message Handler (P6.3)
+# ============================================================
+
+# Process structured protocol messages from agents
+# Usage: process_protocol_message <event_json>
+# Handles: status, heartbeat, error, complete, request, response messages
+process_protocol_message() {
+    local event_json="$1"
+    local thread=$(extract_json_value "$event_json" "msg_thread")
+    local msg_text=$(extract_json_value "$event_json" "msg_text")
+
+    # Skip if message text is empty
+    if [[ -z "$msg_text" ]]; then
+        return 0
+    fi
+
+    # Check if message is structured JSON (starts with {)
+    if [[ "$msg_text" != \{* ]]; then
+        return 0
+    fi
+
+    # Parse the structured message
+    local msg_version msg_type msg_agent msg_ts msg_track msg_pct msg_step msg_phase
+    local msg_eta msg_err msg_detail msg_blockers msg_status
+
+    msg_version=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('v', 0))" 2>/dev/null || echo "0")
+    msg_type=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('t', ''))" 2>/dev/null || echo "")
+    msg_agent=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('a', ''))" 2>/dev/null || echo "")
+
+    # Skip if not a valid protocol message
+    if [[ -z "$msg_type" || "$msg_version" != "1" ]]; then
+        return 0
+    fi
+
+    log_info "Protocol message: type=$msg_type agent=$msg_agent"
+
+    case "$msg_type" in
+        status)
+            # Extract status fields
+            msg_track=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('track', ''))" 2>/dev/null || echo "")
+            msg_pct=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('pct', 0))" 2>/dev/null || echo "0")
+            msg_step=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('step', ''))" 2>/dev/null || echo "")
+            msg_phase=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('phase', ''))" 2>/dev/null || echo "")
+            msg_eta=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('eta', 0))" 2>/dev/null || echo "0")
+
+            # Update blackboard with structured progress
+            if [[ -n "$msg_agent" ]]; then
+                # Store latest protocol message for this agent
+                blackboard_set "agent_protocol_${msg_agent}" "$msg_text" 2>/dev/null || true
+
+                # Store progress data separately for easy access
+                local progress_data="{\"agent\":\"$msg_agent\",\"track\":\"$msg_track\",\"pct\":$msg_pct,\"step\":\"$msg_step\",\"phase\":\"$msg_phase\",\"eta\":$msg_eta,\"ts\":$(date +%s)}"
+                blackboard_set "agent_progress_${msg_agent}" "$progress_data" 2>/dev/null || true
+
+                log_info "Agent $msg_agent: $msg_pct% on $msg_track — $msg_step"
+            fi
+            ;;
+
+        error)
+            # Extract error fields
+            msg_track=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('track', ''))" 2>/dev/null || echo "")
+            msg_err=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('err', ''))" 2>/dev/null || echo "")
+            msg_detail=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('detail', ''))" 2>/dev/null || echo "")
+
+            # Log error immediately
+            log_warn "ERROR from $msg_agent: $msg_err on $msg_track — $msg_detail"
+
+            # Add to error queue
+            if [[ -n "$msg_agent" ]]; then
+                blackboard_set "agent_protocol_${msg_agent}" "$msg_text" 2>/dev/null || true
+
+                # Append to error queue (comma-separated)
+                local existing_errors
+                existing_errors=$(blackboard_get "protocol_errors" 2>/dev/null || echo "")
+                if [[ -n "$existing_errors" ]]; then
+                    blackboard_set "protocol_errors" "$existing_errors|||$msg_text" 2>/dev/null || true
+                else
+                    blackboard_set "protocol_errors" "$msg_text" 2>/dev/null || true
+                fi
+
+                # Update agent health to reflect error state
+                local err_health="{\"status\":\"error\",\"err\":\"$msg_err\",\"detail\":\"$msg_detail\",\"ts\":$(date +%s)}"
+                blackboard_set "fleet_health_${msg_agent}" "$err_health" 2>/dev/null || true
+            fi
+            ;;
+
+        complete)
+            # Extract completion fields
+            msg_track=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('track', ''))" 2>/dev/null || echo "")
+            msg_detail=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('detail', ''))" 2>/dev/null || echo "")
+
+            # Log completion
+            log_info "COMPLETED by $msg_agent: $msg_track — $msg_detail"
+
+            # Update blackboard
+            if [[ -n "$msg_agent" && -n "$msg_track" ]]; then
+                blackboard_set "agent_protocol_${msg_agent}" "$msg_text" 2>/dev/null || true
+
+                # Mark track as potentially complete
+                local track_slug=$(echo "$msg_track" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g;s/--\+/-/g;s/^-//;s/-$//')
+                if [[ -n "$track_slug" ]]; then
+                    blackboard_set "track_completed_by_${track_slug}" "$msg_agent" 2>/dev/null || true
+                fi
+            fi
+            ;;
+
+        heartbeat)
+            # Extract heartbeat fields
+            local msg_latency msg_load
+            msg_latency=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('latency_ms', 0))" 2>/dev/null || echo "0")
+            msg_load=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('load', 0))" 2>/dev/null || echo "0")
+
+            # Update heartbeat timestamp only (don't overwrite existing health data)
+            if [[ -n "$msg_agent" ]]; then
+                blackboard_set "agent_heartbeat_${msg_agent}" "$(date +%s)" 2>/dev/null || true
+            fi
+            ;;
+
+        request|response)
+            # Handle protocol-level requests/responses (verbose mode toggle, etc.)
+            if [[ -n "$msg_agent" ]]; then
+                blackboard_set "agent_protocol_${msg_agent}" "$msg_text" 2>/dev/null || true
+            fi
+            ;;
+    esac
+}
+
 process_commands() {
     local event_json="$1"
     local type=$(extract_json_value "$event_json" "type")

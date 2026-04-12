@@ -63,10 +63,13 @@ create_env() {
                 echo -e "${BLUE}Installing portable Python 3.11 with uv...${NC}"
                 uv python install 3.11
                 echo -e "${BLUE}Creating isolated virtual environment with uv...${NC}"
-                uv venv "$venv_path" --python 3.11
+                uv venv "$venv_path" --python 3.11 --seed
             else
                 echo -e "${BLUE}Creating environment with uv...${NC}"
-                uv venv "$venv_path"
+                # Use --clear if it exists to avoid conflicts
+                local clear_flag=""
+                [[ -d "$venv_path" ]] && clear_flag="--clear"
+                uv venv "$venv_path" $clear_flag --seed
             fi
             ;;
         pixi)
@@ -100,7 +103,9 @@ create_env() {
                 echo -e "${BLUE}Installing portable Python 3.11 with uv...${NC}"
                 uv python install 3.11
                 echo -e "${BLUE}Creating isolated virtual environment with uv...${NC}"
-                uv venv "$venv_path" --python 3.11
+                local clear_flag=""
+                [[ -d "$venv_path" ]] && clear_flag="--clear"
+                uv venv "$venv_path" $clear_flag --python 3.11 --seed
             else
                 echo -e "${RED}Failed to install uv. Falling back to system python (not recommended).${NC}"
             fi

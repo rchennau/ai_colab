@@ -118,6 +118,11 @@ The Hub connects to various backends for specialized agent deployment:
     *   Structured message protocol with 6 message types (status, heartbeat, request, response, error, complete)
     *   90% message size reduction vs. English-only (20-50 tokens vs. 200-500)
     *   Human-readable summaries auto-generated from structured data
+*   **Phase 24: Agent Analytics Web UI Integration** (Pending)
+    *   **Theme:** "Visualizing Fleet Efficiency"
+    *   Surfacing historical performance metrics from the Blackboard
+    *   Real-time aggregation of success rates and task durations
+    *   Actionable insights for fleet optimization via the Web UI dashboard
     *   **Analysis:** See [`conductor/communication-protocol-optimization.md`](./communication-protocol-optimization.md)
 *   **Phase 24: Environment Portability** (Done ✅)
     *   **Theme:** "Zero user environment dependency — fully self-contained"

@@ -1,21 +1,24 @@
-# Track Specification: The Plugin Economy (Phase 21)
+# Track Specification: Agent Analytics Web UI Integration
 
 ## Overview
-This track focuses on transforming the existing module system into a thriving "Plugin Economy." Currently, modules are manually copied into the `modules/` directory. This track will introduce a centralized registry, a dedicated CLI tool for discovery and installation (`ai-colab module install <name>`), and strict sandboxing for third-party plugins.
+While the orchestration core currently logs agent performance metrics (session duration, success rates, exit codes) to the SQLite blackboard via `log_agent_analytics()`, this data remains inaccessible to users. This track bridges that gap by creating a dedicated Web UI dashboard to visualize agent performance, providing engineering managers with critical insights into fleet efficiency.
 
 ## Goals
-1.  **Standardize Manifests**: Formalize the `module.toml` schema to support dependencies, permissions, and versioning.
-2.  **Module Registry**: Create a centralized index (e.g., a GitHub repo acting as a registry) where community developers can publish their plugins.
-3.  **CLI Integration**: Implement `ai-colab module search`, `install`, `update`, and `remove` commands.
-4.  **Sandboxed Execution**: Ensure that third-party plugins execute in isolated environments (e.g., using the portable Python `uv` environments or Docker containers) to prevent unauthorized system access or conflicts.
+1.  **API Data Exposure**: Create a new API endpoint to query and aggregate historical agent analytics from the Blackboard.
+2.  **Performance Visualization**: Develop a new section or dedicated sub-page in the Web UI to display key metrics (Avg Session Time, Crash Rate, Activity Distribution).
+3.  **Intelligent Insights**: Provide actionable data to help users determine if specific agents (e.g., Claude vs. Gemini) are underperforming on certain task types.
 
 ## Requirements
-- **Registry Schema**: Define the JSON/TOML format for the central registry.
-- **CLI Commands**: Extend `scripts/module-manager.py` or create `scripts/module-marketplace.sh` to handle remote fetching and dependency resolution.
-- **Security**: Implement a permission model in `module.toml` (e.g., `requires_network`, `requires_file_write`) that the user must explicitly approve upon installation.
+- **Backend (`webui/api/agents.py`)**: 
+  - Read from the `agent_analytics` SQLite table.
+  - Calculate aggregations (e.g., total executions, success rate, median duration per agent).
+- **Frontend (`webui/index.html`)**:
+  - Add a new "Analytics" tab or section within the "System" menu.
+  - Use simple HTML/CSS bar charts or a lightweight charting library (e.g., Chart.js via CDN) to render the data.
+- **Testing**:
+  - Add automated tests to `tests/test_webui.sh` to verify the new endpoint returns valid JSON data.
 
 ## Success Criteria
-- [ ] Users can run `ai-colab module search` to find available plugins.
-- [ ] Users can install a remote plugin via `ai-colab module install <plugin-name>`.
-- [ ] The system prompts for security permissions before activating a new plugin.
-- [ ] Plugins execute in an isolated `uv` virtual environment or Docker container.
+- [ ] The `/api/agents/analytics` endpoint successfully returns aggregated performance data.
+- [ ] The Web UI displays a table or chart comparing the success rates and average durations of all active agents.
+- [ ] The UI gracefully handles empty states (e.g., when no analytics data exists yet).

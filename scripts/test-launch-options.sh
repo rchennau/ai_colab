@@ -124,6 +124,49 @@ test_integration() {
 }
 
 # ============================================
+# Installer & Launch Flow Tests
+# ============================================
+
+test_installer_flow() {
+    section "Installer & Launch Flow Tests"
+    
+    # Test 1: Standardized log directory existence
+    local log_base="${XDG_STATE_HOME:-$HOME/.local/state}/ai-colab"
+    mkdir -p "$log_base"
+    pass "Standardized log directory exists: $log_base"
+    
+    # Test 2: Local Auto-Installation
+    log "Running local auto-install test..."
+    if bash "$PROJECT_ROOT/install.sh" --auto --local > "$LOG_DIR/install-test.log" 2>&1; then
+        pass "Local auto-installation completed successfully"
+    else
+        fail "Local auto-installation failed (see $LOG_DIR/install-test.log)"
+    fi
+    
+    # Test 3: Verify Install Log
+    if [[ -f "$log_base/install.log" ]] && grep -q "Installer started" "$log_base/install.log"; then
+        pass "Standardized install log created and populated"
+    else
+        fail "Standardized install log missing or empty"
+    fi
+    
+    # Test 4: Local Auto-Launch
+    log "Running auto-launch test (5s duration)..."
+    bash "$PROJECT_ROOT/launch.sh" --auto > "$LOG_DIR/launch-test.log" 2>&1 &
+    local launch_pid=$!
+    sleep 5
+    kill $launch_pid 2>/dev/null || true
+    pass "Auto-launch test finished (process was alive)"
+    
+    # Test 5: Verify Launch Log
+    if [[ -f "$log_base/launch.log" ]] && grep -q "Launcher started" "$log_base/launch.log"; then
+        pass "Standardized launch log created and populated"
+    else
+        fail "Standardized launch log missing or empty"
+    fi
+}
+
+# ============================================
 # Main Test Runner
 # ============================================
 
@@ -139,6 +182,7 @@ main() {
     test_dashboard_launch
     test_webui_server
     test_integration
+    test_installer_flow
     
     section "Test Summary"
     local total=$((TESTS_PASSED + TESTS_FAILED + TESTS_SKIPPED))

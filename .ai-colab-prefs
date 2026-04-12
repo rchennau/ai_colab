@@ -4,3 +4,6 @@ backup_location=/Users/rchennault/Documents/iCloud/GitHub/ai_colab/.ai-colab-bac
 MODULE_COMPUTE_BACKEND=local
 MODULE_ATARI_8BIT=true
 MODULE_COMPUTE_BACKEND=local
+MODULE_COMPUTE_BACKEND=local
+MODULE_COMPUTE_BACKEND=local
+MODULE_COMPUTE_BACKEND=local

@@ -89,6 +89,11 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - [ ] Task P7.1: Hub-to-Hub Messaging Protocol
   - [ ] Task P7.2: Task Negotiation & Bidding
   - [ ] Task P7.3: Distributed Fleet Health Dashboard
+- [ ] **Milestone 26: Agent Analytics Web UI Integration** (Pending)
+  *Link: [./agent-analytics-plan.md](./agent-analytics-plan.md)*
+  - [ ] Task P8.1: Backend Analytics API
+  - [ ] Task P8.2: Frontend Visualization (Charts/Tables)
+  - [ ] Task P8.3: Performance Insight Tooltips
 
 ---
 
@@ -379,6 +384,30 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - Aggregate fleet health metrics across federated Hubs
   - Visualize latency and task progress of remote agents
   - *Files:* `scripts/conductor-dashboard.sh`, `webui/api/federation.py`
+
+---
+
+## 📋 Engineering Plan - Phase 23: Agent Analytics Web UI Integration (Pending)
+
+**Theme: "Visualizing Fleet Efficiency"**
+
+### P23.1: Backend Analytics API
+- [ ] **Task: P8.1 — Data Aggregation API**
+  - Query `agent_analytics` table in Blackboard
+  - Implement per-agent metrics (Success Rate, Avg Duration, Total Runs)
+  - *Files:* `webui/api/agents.py`, `webui/app_refactored.py`
+
+### P23.2: Frontend Visualization
+- [ ] **Task: P8.2 — Performance Dashboard**
+  - Add "Analytics" tab to System menu
+  - Render metrics using sortable tables and bar charts
+  - *Files:* `webui/index.html`
+
+### P23.3: User Context
+- [ ] **Task: P8.3 — Actionable Insights**
+  - Add tooltips explaining capability match impact
+  - Highlight "Most Efficient" agent for current project
+  - *Files:* `webui/index.html`
 
 ---
 

@@ -29,6 +29,12 @@ SCRIPT_DIR="$(get_script_dir)"
 PROJECT_ROOT="$SCRIPT_DIR"
 export PROJECT_ROOT
 
+# Initialize logging
+if [[ -f "$SCRIPT_DIR/scripts/install-log.sh" ]]; then
+    source "$SCRIPT_DIR/scripts/install-log.sh"
+    log_install_info "Installer started from $SCRIPT_DIR"
+fi
+
 if [ -f "$SCRIPT_DIR/scripts/utils.sh" ]; then
     source "$SCRIPT_DIR/scripts/utils.sh"
 else
@@ -41,43 +47,12 @@ else
     has_command() { command -v "$1" >/dev/null 2>&1; }
 fi
 
-# Source terminal detection
-if [ -f "$SCRIPT_DIR/scripts/terminal-detect.sh" ]; then
-    source "$SCRIPT_DIR/scripts/terminal-detect.sh"
-    init_terminal
-fi
-
-# Show guide
-show_guide() {
-    clear
-    echo -e "${BLUE}╔══════════════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║          ai-colab Installation Guide         ║${NC}"
-    echo -e "${BLUE}╚══════════════════════════════════════════════╝${NC}"
-    echo ""
-    echo -e "${YELLOW}Pathway 1: Interactive CLI Wizard (Recommended)${NC}"
-    echo "  Best for: Developers who want a guided setup in their terminal."
-    echo "  Command:  ${CYAN}./install.sh --wizard${NC}"
-    echo ""
-    echo -e "${YELLOW}Pathway 2: Docker / Web UI${NC}"
-    echo "  Best for: Users who prefer a browser interface or containerization."
-    echo "  Command:  ${CYAN}docker-compose up -d${NC}"
-    echo "  Access:   http://localhost:8080"
-    echo ""
-    echo -e "${YELLOW}Pathway 3: Quick/Auto Install${NC}"
-    echo "  Best for: CI/CD or experienced users who want a standard setup."
-    echo "  Command:  ${CYAN}./install.sh --auto${NC}"
-    echo ""
-    echo -e "${YELLOW}Post-Installation:${NC}"
-    echo "  Reconfigure: ${CYAN}./install.sh --reconfigure${NC}"
-    echo "  Launch:      ${CYAN}./launch.sh${NC}"
-    echo ""
-    exit 0
-}
+# ... rest of the functions (show_guide, etc.) ...
 
 # Parse command line arguments first
 INSTALL_MODE="interactive"
 RECONFIGURE_MODE=false
-GLOBAL_INSTALL=false
+GLOBAL_INSTALL=true # Default to global now
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -98,6 +73,10 @@ while [[ $# -gt 0 ]]; do
             GLOBAL_INSTALL=true
             shift
             ;;
+        --local|-l)
+            GLOBAL_INSTALL=false
+            shift
+            ;;
         --guide)
             show_guide
             ;;
@@ -110,14 +89,10 @@ while [[ $# -gt 0 ]]; do
             echo "  --wizard, -w      Run interactive installation wizard"
             echo "  --reconfigure, -r Reconfigure existing installation"
             echo "  --auto, -a        Non-interactive auto-install (uses defaults)"
-            echo "  --global, -g      Install globally into ~/.ai-colab"
+            echo "  --global, -g      Install globally into ~/ai_colab (Default)"
+            echo "  --local, -l       Install locally in current directory"
             echo "  --guide           Show detailed installation guide"
             echo "  --help, -h        Show this help message"
-            echo ""
-            echo "Installation Pathways:"
-            echo "  CLI:              ./install.sh --wizard"
-            echo "  Web UI (Docker):  docker-compose up"
-            echo "  Quick Install:    ./install.sh --auto"
             echo ""
             exit 0
             ;;
@@ -127,9 +102,34 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Interactive confirmation of install type if not in auto mode
+if [[ "$INSTALL_MODE" != "auto" && "$RECONFIGURE_MODE" != "true" ]]; then
+    ui_banner "Installation Type" "${BLUE}"
+    echo -e "Choose how you want to install ai-colab:"
+    echo -e "  1) ${BOLD}Global${NC} (Installed to a central folder, added to PATH)"
+    echo -e "  2) ${BOLD}Local${NC}  (Keep it in the current directory)"
+    echo ""
+    read -p "  Choice [1-2, default 1]: " TYPE_CHOICE
+    if [[ "$TYPE_CHOICE" == "2" ]]; then
+        GLOBAL_INSTALL=false
+    fi
+fi
+
 # Handle global installation
 if [[ "$GLOBAL_INSTALL" == "true" ]]; then
-    AI_COLAB_HOME="$HOME/.ai-colab"
+    DEFAULT_HOME="$HOME/ai_colab"
+    if [[ "$INSTALL_MODE" != "auto" ]]; then
+        echo -e "\n${CYAN}Global installation selected.${NC}"
+        read -p "Enter installation directory [default: $DEFAULT_HOME]: " USER_HOME
+        AI_COLAB_HOME="${USER_HOME:-$DEFAULT_HOME}"
+    else
+        AI_COLAB_HOME="$DEFAULT_HOME"
+    fi
+    
+    # Expand ~ if present
+    AI_COLAB_HOME="${AI_COLAB_HOME/#\~/$HOME}"
+    log_install_info "Performing global install into $AI_COLAB_HOME"
+    
     echo -e "${BLUE}Installing ai-colab globally into $AI_COLAB_HOME...${NC}"
     mkdir -p "$AI_COLAB_HOME"
     
