@@ -271,11 +271,30 @@ create_dashboard() {
 
     # Step 2: Create session with hcom TUI
     print_step "Creating tmux session..."
-    if ! tmux new-session -d -s $SESSION -n "dashboard" "$hcom_bin" 2>&1; then
-        print_error "Failed to create tmux session"
-        rm -f "$SESSION_LOCK"
-        return 1
+
+    # Create a minimal tmux config to avoid loading user's incompatible ~/.tmux.conf
+    # This prevents "unknown flag" errors from user config while preserving our bindings
+    local tmux_conf_file="/tmp/ai-colab-tmux-$$.conf"
+    cat > "$tmux_conf_file" << 'TMUX_CONF'
+# ai-colab minimal tmux config
+set -g mouse on
+set -g pane-border-status top
+set -g pane-border-format "#P: #{pane_title}"
+set -g allow-rename off
+TMUX_CONF
+
+    # Start tmux with our minimal config to avoid user config conflicts
+    if ! tmux -f "$tmux_conf_file" new-session -d -s "$SESSION" -n "dashboard" "$hcom_bin" 2>&1; then
+        # Fallback: try without custom config (user config may be compatible)
+        if ! tmux new-session -d -s "$SESSION" -n "dashboard" "$hcom_bin" >/dev/null 2>&1; then
+            print_error "Failed to create tmux session"
+            rm -f "$SESSION_LOCK" "$tmux_conf_file"
+            return 1
+        fi
     fi
+
+    # Clean up temp config
+    rm -f "$tmux_conf_file"
 
     if ! tmux has-session -t $SESSION 2>/dev/null; then
         print_error "Session creation failed"

@@ -294,9 +294,9 @@ if [[ "$RAG_AVAILABLE" == "false" && "$INTERACTIVE" == "true" ]]; then
         if [[ $REPLY =~ ^[Yy]$ || -z $REPLY ]]; then
             echo -e "\n${BLUE}Installing RAG system...${NC}"
             if [[ -f "$INSTALL_SCRIPT" ]]; then
-                # Install RAG requirements
-                $PIP_CMD install -r "$PROJECT_ROOT/requirements-rag.txt" 2>/dev/null || \
-                $PIP_CMD install sentence-transformers faiss-cpu watchdog
+                # Install RAG requirements using the correct Python to avoid version mismatch
+                $PYTHON_CMD -m pip install -r "$PROJECT_ROOT/requirements-rag.txt" 2>/dev/null || \
+                $PYTHON_CMD -m pip install sentence-transformers faiss-cpu watchdog 2>/dev/null
 
                 if $PYTHON_CMD -c "import sentence_transformers" 2>/dev/null; then
                     echo -e "\n${GREEN}✓ RAG system installed successfully${NC}"
@@ -304,14 +304,19 @@ if [[ "$RAG_AVAILABLE" == "false" && "$INTERACTIVE" == "true" ]]; then
                     bash "$CONFIG_MGR" set "rag.installed" "true" 2>/dev/null || true
                 else
                     echo -e "\n${YELLOW}⚠ RAG installation incomplete. Run manually:${NC}"
-                    echo -e "  ${BLUE}$PIP_CMD install -r requirements-rag.txt${NC}"
+                    echo -e "  ${BLUE}$PYTHON_CMD -m pip install -r requirements-rag.txt${NC}"
                 fi
             else
-                $PIP_CMD install sentence-transformers faiss-cpu watchdog
+                $PYTHON_CMD -m pip install sentence-transformers faiss-cpu watchdog 2>/dev/null
+                if $PYTHON_CMD -c "import sentence_transformers" 2>/dev/null; then
+                    echo -e "\n${GREEN}✓ RAG system installed successfully${NC}"
+                    RAG_AVAILABLE=true
+                    bash "$CONFIG_MGR" set "rag.installed" "true" 2>/dev/null || true
+                fi
             fi
         else
             echo -e "\n${CYAN}RAG installation skipped. Install later with:${NC}"
-            echo -e "  ${BLUE}$PIP_CMD install -r requirements-rag.txt${NC}"
+            echo -e "  ${BLUE}$PYTHON_CMD -m pip install -r requirements-rag.txt${NC}"
         fi
         # Mark that we've prompted the user so we don't ask again
         bash "$CONFIG_MGR" set "rag.prompted" "true" 2>/dev/null || true
