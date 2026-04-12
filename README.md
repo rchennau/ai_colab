@@ -2,7 +2,7 @@
 
 A unified, **project-agnostic** environment for coordinating multiple AI agents (Gemini, Claude, Qwen, DeepSeek, NeMo, etc.) on complex engineering tasks.
 
-**Latest Release:** Phase 21 Complete ✅ — The Plugin Economy is now live. Phase 22 (Federated Intelligence) in progress.
+**Latest Release:** Phase 22 In Progress 🔄 — Communication Protocol Optimization (P6.1) delivering 90% message size reduction with structured agent-to-agent messaging.
 
 ## 🌟 Vision
 To provide a seamless development experience where human oversight and AI autonomy work in harmony. ai-colab handles the "plumbing" of multi-agent systems—messaging, state synchronization, task tracking, and lifecycle management—allowing you to focus on the engineering. **Now with full local LLM support for zero-cloud deployments.**
@@ -97,6 +97,13 @@ ai-colab
 - Model download, health checks, and task-based recommendations
 - Zero-cloud deployment — run ai-colab with no external API keys
 - Usage: `bash scripts/local-models.sh list/download/health/recommend --task coding`
+
+**Structured Communication Protocol (P6.1):**
+- 6 message types: status, heartbeat, request, response, error, complete
+- 90% message size reduction vs. English-only (20-50 tokens vs. 200-500)
+- Human-readable summaries auto-generated from structured data
+- Usage: `bash scripts/protocol-encoder.sh status --track my-track --pct 45 --step "coding"`
+- Decode: `echo '{"v":1,"t":"status","a":"gemini","pct":45}' | python3 scripts/protocol-decoder.py`
 
 **Module System v2.0 (Phase 21 Complete ✅):**
 - **Standardized Schema:** Formalized `module.toml` with versioning, author, dependencies, and permissions.

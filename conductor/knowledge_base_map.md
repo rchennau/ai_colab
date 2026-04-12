@@ -1,5 +1,5 @@
 # ai-colab Project Map (Semantic Knowledge Base)
-Last Updated: 2026-04-11 (Phase 21: Plugin Economy Complete)
+Last Updated: 2026-04-11 (Phase 22 In Progress 🔄 — Communication Protocol Optimization P6.1 delivering 90% message size reduction)
 
 ## Orchestration Core (Hub)
 - `launch.sh`: Unified launcher with **three launch modes** (Dashboard, WebUI, Debug) and **module enablement** (`-m/--module` flag). Auto-activates virtual environment. Supports **multi-project discovery**, global CLI model, and **modular marketplace access**.
@@ -23,6 +23,10 @@ Last Updated: 2026-04-11 (Phase 21: Plugin Economy Complete)
 - `webui/app_refactored.py`: Modular Flask-based API server (v3.0) using blueprints for core services (terminal, system, config, kb, models).
 - `webui/index.html`: Single-page application featuring **xterm.js web terminals**, **multi-project switcher**, real-time monitoring, and module configuration.
 - `scripts/agent-wrapper.sh`: Unified core for registering agents with `hcom`. Includes **Docker support (P19.1)** for containerized agent isolation, **real-time stdout parsing for progress tracking**, and **performance analytics logging**.
+- `scripts/protocol-encoder.sh`: **NEW (P6.1)** - Structured message encoder for agent-to-agent communication. Reduces message size by 90% vs. English-only.
+- `scripts/protocol-decoder.py`: **NEW (P6.1)** - Structured message decoder with human-readable summary generation and tmux status line rendering.
+- `config/message-protocol.json`: **NEW (P6.1)** - Protocol schema defining 6 message types, 15+ fields, validation rules, and error codes.
+- `conductor/communication-protocol-optimization.md`: **NEW** - Full analysis of English vs. structured communication efficiency with dual-layer protocol architecture.
 
 ## AI Agent Integration (Spokes)
 - `docker/agents/`: Collection of specialized agent images (Gemini, Claude, Qwen, DeepSeek) for reproducible distributed execution.
@@ -32,6 +36,7 @@ Last Updated: 2026-04-11 (Phase 21: Plugin Economy Complete)
 - `system-prompts/`: High-power role definitions for Gemini, Qwen, DeepSeek, and nemoclaw.
 
 ## Testing & Quality Assurance
+- `tests/test_protocol.sh`: **NEW (P6.1)** - Communication protocol tests (44 tests: encoder, decoder, validation, summaries, tmux status line).
 - `tests/test_container_agents.sh`: Verification harness for the containerized agent isolation system.
 - `tests/test_webui.sh`: Comprehensive Web UI test suite (8 automated tests).
 - `tests/test_workspace_manager.py`: Unit tests for git repository discovery and registry management.

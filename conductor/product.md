@@ -113,6 +113,12 @@ The Hub connects to various backends for specialized agent deployment:
     *   Hub-to-Hub messaging protocol over secured `hcom` relay
     *   Task negotiation, bidding, and distributed handoff
     *   Federated Fleet Health monitoring across multiple self-hosted hubs
+*   **Phase 23: Communication Protocol Optimization** (In Progress 🔄)
+    *   **Theme:** "Eliminate context bloat, optimize agent-to-agent communication"
+    *   Structured message protocol with 6 message types (status, heartbeat, request, response, error, complete)
+    *   90% message size reduction vs. English-only (20-50 tokens vs. 200-500)
+    *   Human-readable summaries auto-generated from structured data
+    *   **Analysis:** See [`conductor/communication-protocol-optimization.md`](./communication-protocol-optimization.md)
 
 ## Future Considerations
 - Federated Agent Learning (Skill-sharing across distributed fleets).
