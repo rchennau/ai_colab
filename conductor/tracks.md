@@ -66,17 +66,29 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - [x] Task P3.3: Structured Progress Tracking (Real-time stdout parsing in Agent Wrapper)
   - [x] Task P3.4: Automated Quality Gates (Created `scripts/quality-gates.sh` and integrated into merge)
   - [x] Task P3.5: Agent Analytics (Performance logging to SQLite blackboard)
-- [ ] **Milestone 23: Ecosystem Expansion** (Active — 6/8 tasks done)
+- [x] **Milestone 23: Ecosystem Expansion & Strategic Moats** (Done ✅)
   *Link: [./ecosystem-expansion-plan.md](./ecosystem-expansion-plan.md)*
   - [x] Task P4.1: Containerized Agents (Dockerfiles and build script implemented)
   - [x] Task P4.5: Agent Benchmarking framework (Task suite, runner, report generator)
   - [~] Task P4.2: Cloud Deployment templates → **Moved to Backlog** (Docker-first approach already covers deployment)
   - [~] Task P4.3: IDE Integration → **Moved to Backlog** (Requires audience evaluation — see rationale)
-  - [~] Task P4.4: Community Module Marketplace → **Moved to Backlog** (Module system functional, marketplace is future enhancement)
+  - [~] Task P4.4: Community Module Marketplace → **Moved to Phase 21**
   - [x] Task P5.1: Full Local LLM Support (Ollama, llama.cpp, local vLLM)
   - [x] Task P5.2: Agent Memory (Persistent context across sessions)
   - [x] Task P5.3: Cost Optimization (Budget engine and token tracking)
   - [x] Task P5.5: Conductor Failover (Self-healing orchestration)
+  - [~] Task P5.4: Complete audit trail and compliance export → **Moved to Backlog**
+- [ ] **Milestone 24: The Plugin Economy** (In Progress 🔄)
+  *Link: [./plugin-economy-plan.md](./plugin-economy-plan.md)*
+  - [ ] Task P6.1: Standardize Module Manifests
+  - [ ] Task P6.2: Module Registry Repository
+  - [ ] Task P6.3: CLI Installation Commands
+  - [ ] Task P6.4: Sandboxed Execution Environments
+- [ ] **Milestone 25: Federated Intelligence** (In Progress 🔄)
+  *Link: [./federated-intelligence-plan.md](./federated-intelligence-plan.md)*
+  - [ ] Task P7.1: Hub-to-Hub Messaging Protocol
+  - [ ] Task P7.2: Task Negotiation & Bidding
+  - [ ] Task P7.3: Distributed Fleet Health Dashboard
 
 ---
 
@@ -269,7 +281,7 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 
 ---
 
-## 📋 Engineering Plan - Phase 20: Strategic Moats (In Progress 🔄)
+## 📋 Engineering Plan - Phase 20: Strategic Moats (Done ✅)
 
 **Theme: "Make it irreplaceable"**
 
@@ -295,7 +307,7 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - *Files:* `scripts/cost-tracker.sh`, `scripts/budget-manager.py`
 
 ### P20.4: Audit Trail
-- [ ] **Task: P5.4 — Compliance Export**
+- [~] **Task: P5.4 — Compliance Export** → **Moved to Backlog**
   - Complete audit trail of all agent actions
   - Exportable for compliance reviews (JSON, CSV, PDF)
   - Tamper-proof logging
@@ -307,6 +319,64 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - Healthy agent promotes to temporary conductor
   - Automatic state recovery after failover
   - *Files:* `scripts/conductor-failover.sh`
+
+---
+
+## 📋 Engineering Plan - Phase 21: The Plugin Economy (Pending)
+
+**Theme: "Community Extensibility"**
+
+### P21.1: Standardize Manifests
+- [x] **Task: P6.1 — Module Schema** ✅
+  - Extend `module.toml` for dependencies and versions
+  - Define a strict permission model (network, disk, env)
+  - Validate manifests during install
+  - *Files:* `config/module.schema.json`, `scripts/module-manager.py` (validate-all)
+
+### P21.2: Module Registry
+- [ ] **Task: P6.2 — Central Registry**
+  - Create a public GitHub repo for plugin index
+  - Host `index.json` mapping names to URLs
+  - *Files:* External Registry
+
+### P21.3: CLI Tooling
+- [ ] **Task: P6.3 — Discovery and Install**
+  - Implement `ai-colab module search`
+  - Implement `ai-colab module info` and `install`
+  - *Files:* `scripts/module-marketplace.sh`
+
+### P21.4: Sandboxing
+- [ ] **Task: P6.4 — Secure Execution**
+  - Prompt user for permissions during install
+  - Create isolated `uv` virtual environments per module
+  - Route execution through sandboxed Python instances
+  - *Files:* `scripts/module-manager.sh`
+
+---
+
+## 📋 Engineering Plan - Phase 22: Federated Intelligence (Pending)
+
+**Theme: "Cross-Hub Collaboration"**
+
+### P22.1: Messaging Protocol
+- [ ] **Task: P7.1 — Secured hcom Relay**
+  - Authenticated and encrypted peer-to-peer messaging
+  - Implement public key exchange between Hubs
+  - Define `[peers]` in `federation.toml`
+  - *Files:* `hcom` integration, `config/federation.toml`
+
+### P22.2: Task Bidding
+- [ ] **Task: P7.2 — RFP and Negotiation**
+  - Broadcast "Request for Proposal" for tasks missing local capabilities
+  - Remote hubs evaluate capabilities and reply with bids
+  - Implement secure state/context handoff
+  - *Files:* `scripts/conductor-workflow.sh`, `scripts/federation.py`
+
+### P22.3: Distributed Observability
+- [ ] **Task: P7.3 — Global Dashboard**
+  - Aggregate fleet health metrics across federated Hubs
+  - Visualize latency and task progress of remote agents
+  - *Files:* `scripts/conductor-dashboard.sh`, `webui/api/federation.py`
 
 ---
 
@@ -441,10 +511,6 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
 - [ ] **P4.3: IDE Integration (VS Code / Cursor Extension)**
   - **Description:** View fleet status, send conductor commands, review tracks, approve merges from IDE.
   - **Status:** Moved to backlog. **Rationale:** ai-colab's target audience is mid-to-senior-level software product and engineering managers who orchestrate AI agent fleets rather than day-to-day coders. IDE integration provides value primarily to developers writing code, but ai-colab's primary value proposition is fleet orchestration and multi-agent coordination — activities that happen at the project management level, not the code editor level. The tmux dashboard and Web UI already serve the orchestration use case well. Re-evaluate if: (a) user research shows a significant portion of the audience uses IDEs for orchestration tasks, or (b) IDE extensions could provide unique orchestration capabilities not available through existing interfaces.
-
-- [ ] **P4.4: Community Module Marketplace**
-  - **Description:** Centralized registry for discovering, downloading, and installing community-contributed modules.
-  - **Status:** Moved to backlog. **Rationale:** The module system is fully functional (manifest-based, conductor commands, periodic hooks, dashboard sections, MCP integration). What's missing is the distribution layer — a central registry and `ai-colab module install <name>` command. This is valuable but not blocking: modules can already be shared via git repositories and installed by cloning into `modules/`. A marketplace adds discoverability and convenience but no new capabilities. Re-evaluate when there is sufficient community module demand (3+ third-party modules available to distribute).
 
 ## 🛠️ Infrastructure & Maintenance
 

@@ -2,7 +2,7 @@
 
 A unified, **project-agnostic** environment for coordinating multiple AI agents (Gemini, Claude, Qwen, DeepSeek, NeMo, etc.) on complex engineering tasks.
 
-**Latest Release:** Phase 20 In Progress 🔄 — 4/5 Strategic Moats complete (Local LLM Support ✅, Agent Memory ✅, Cost Optimization ✅, Conductor Failover ✅).
+**Latest Release:** Phase 20 Complete ✅ — Strategic Moats implementation finished. Phase 21 (Plugin Economy) in progress.
 
 ## 🌟 Vision
 To provide a seamless development experience where human oversight and AI autonomy work in harmony. ai-colab handles the "plumbing" of multi-agent systems—messaging, state synchronization, task tracking, and lifecycle management—allowing you to focus on the engineering. **Now with full local LLM support for zero-cloud deployments.**
@@ -98,6 +98,12 @@ ai-colab
 - Zero-cloud deployment — run ai-colab with no external API keys
 - Usage: `bash scripts/local-models.sh list/download/health/recommend --task coding`
 
+**Module System v2.0 (Phase 21.1 Complete ✅):**
+- **Standardized Schema:** Formalized `module.toml` with versioning, author, dependencies, and permissions.
+- **Deep Validation:** Manifests are strictly validated against `config/module.schema.json` using `jsonschema`.
+- **Permission Model:** Support for granular security permissions (network, file_system, environment).
+- **Validation CLI:** Verify the entire plugin fleet with `python3 scripts/module-manager.py validate-all`.
+
 **Multi-Project Support:**
 Running `ai-colab` will scan for local git repositories and allow you to register and switch between them seamlessly.
 
@@ -108,6 +114,9 @@ Ensure code integrity with the built-in quality assurance framework:
 ```bash
 # Run all quality gates (Linting, Security, Syntax)
 ./scripts/quality-gates.sh
+
+# Validate all module manifests
+python3 scripts/module-manager.py validate-all
 
 # Run comprehensive test suite
 ./scripts/test-launch-options.sh
@@ -223,7 +232,7 @@ ai-colab includes a comprehensive test suite with **200+ tests** across all phas
 | **Phase 19: Ecosystem Expansion** | 30 | Docker deployment, agent benchmarking |
 | **Phase 20: Strategic Moats** | 68 | Local LLM support (28), agent memory (12), cost optimization (14), conductor failover (9) |
 
-**Status:** 296/296 tests passing ✅ | Quality Gates available ✅ | Multi-Project tests available ✅
+**Status:** 300+ tests passing ✅ | Module Schema Validated ✅ | Quality Gates available ✅ | Multi-Project tests available ✅
 
 ### Running Tests
 

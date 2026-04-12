@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ai-colab Module Manifest Schema",
+  "type": "object",
+  "required": ["module"],
+  "properties": {
+    "module": {
+      "type": "object",
+      "required": ["id", "name", "version"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9_-]+$" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "author": { "type": "string" },
+        "repository": { "type": "string", "format": "uri" }
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "properties": {
+        "python": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "system": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "modules": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "permissions": {
+      "type": "object",
+      "properties": {
+        "network": { "type": "boolean", "default": false },
+        "file_system": { "type": "boolean", "default": false },
+        "environment": { "type": "boolean", "default": false },
+        "process": { "type": "boolean", "default": false }
+      }
+    },
+    "env": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "hooks": {
+      "type": "object",
+      "properties": {
+        "conductor_commands": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["trigger", "script"],
+            "properties": {
+              "trigger": { "type": "string", "pattern": "^![a-z0-9_-]+$" },
+              "script": { "type": "string" }
+            }
+          }
+        },
+        "periodic_hooks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "script", "interval"],
+            "properties": {
+              "name": { "type": "string" },
+              "script": { "type": "string" },
+              "interval": { "type": "integer", "minimum": 1 }
+            }
+          }
+        },
+        "init_script": { "type": "string" },
+        "dashboard_sections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "type", "source"],
+            "properties": {
+              "name": { "type": "string" },
+              "type": { "enum": ["sql", "file", "command"] },
+              "source": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "mcp": {
+      "type": "object",
+      "required": ["server", "args", "name"],
+      "properties": {
+        "server": { "type": "string" },
+        "args": { "type": "array", "items": { "type": "string" } },
+        "name": { "type": "string" }
+      }
+    }
+  }
+}

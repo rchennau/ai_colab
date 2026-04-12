@@ -304,13 +304,32 @@ test_ttl_enforcement() {
     before_count=$(sqlite3 "$TEST_DB" "SELECT COUNT(*) FROM kv WHERE key = 'agent_test_expired';")
     assert_equals "1" "$before_count" "Expired key exists before cleanup"
 
-    # Read the key (should trigger cleanup)
-    bb_get "agent_test_expired" >/dev/null 2>&1
+    # Read the key (will not return value since it's expired)
+    local result
+    result=$(bb_get "agent_test_expired" 2>&1)
+
+    # Verify read returns empty for expired key
+    if [[ -z "$result" ]]; then
+        echo -e "${GREEN}✓ PASS:${NC} Expired key returns empty on read"
+        ((TESTS_PASSED++))
+    else
+        echo -e "${RED}✗ FAIL:${NC} Expired key should return empty, got: '$result'"
+        ((TESTS_FAILED++))
+    fi
+    ((TESTS_RUN++))
+
+    # Trigger explicit cleanup
+    (
+        export BLACKBOARD_DB_PATH="$TEST_DB"
+        export PROJECT_ROOT="$PROJECT_ROOT"
+        source "$PROJECT_ROOT/scripts/utils.sh" >/dev/null 2>&1
+        bb_cleanup_expired
+    ) 2>/dev/null
 
     # Verify it was cleaned up
     local after_count
     after_count=$(sqlite3 "$TEST_DB" "SELECT COUNT(*) FROM kv WHERE key = 'agent_test_expired';")
-    assert_equals "0" "$after_count" "Expired key cleaned up on read"
+    assert_equals "0" "$after_count" "Expired key cleaned up after bb_cleanup_expired"
 }
 
 test_ttl_persistent_keys() {

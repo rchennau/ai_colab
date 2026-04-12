@@ -3,6 +3,7 @@ id = "mock-test"
 name = "Mock Test Module"
 description = "Test module for verifying plugin system functionality. Safe to enable/disable."
 version = "1.0.0"
+author = "ai-colab team"
 
 [env]
 ENABLE_MOCK_TEST = "true"
@@ -15,5 +16,5 @@ conductor_commands = [
 ]
 
 dashboard_sections = [
-    { name = "Mock Test Status", type = "text", source = "modules/mock-test/status.txt" }
+    { name = "Mock Test Status", type = "file", source = "modules/mock-test/status.txt" }
 ]

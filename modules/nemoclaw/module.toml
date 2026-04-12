@@ -3,6 +3,7 @@ id = "nemoclaw"
 name = "nemoclaw NVIDIA Architect"
 description = "High-power architectural reasoning via NVIDIA NIM API."
 version = "1.0.0"
+author = "ai-colab team"
 
 [hooks]
 conductor_commands = [

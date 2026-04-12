@@ -3,6 +3,16 @@ id = "atari-8bit"
 name = "Atari 8-Bit Development"
 description = "Specialized tools for 6502 assembly and Atari 8-bit hardware development."
 version = "1.0.0"
+author = "ai-colab team"
+
+[dependencies]
+python = ["numpy", "matplotlib"]
+system = ["stella"]
+
+[permissions]
+file_system = true
+network = false
+environment = true
 
 [env]
 ENABLE_ATARI_8BIT = "true"
