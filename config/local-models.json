@@ -1,0 +1,120 @@
+{
+  "_comment": "Local Model Registry — P5.1",
+  "_version": "1.0.0",
+  "_description": "Available local models with download URLs, sizes, and quantization info",
+  "_updated": "2026-04-11",
+
+  "runtimes": {
+    "ollama": {
+      "display_name": "Ollama",
+      "install_command": "curl -fsSL https://ollama.com/install.sh | sh",
+      "pull_command": "ollama pull {model}",
+      "run_command": "ollama run {model}",
+      "list_command": "ollama list",
+      "health_check": "curl -f http://localhost:11434/api/tags"
+    },
+    "llamacpp": {
+      "display_name": "llama.cpp",
+      "install_command": "git clone https://github.com/ggerganov/llama.cpp && cd llama.cpp && make",
+      "download_command": "wget -O {output} {url}",
+      "run_command": "./main -m {model} -p {prompt}",
+      "health_check": "test -f {model}"
+    },
+    "vllm_local": {
+      "display_name": "Local vLLM",
+      "install_command": "pip install vllm",
+      "run_command": "vllm serve {model}",
+      "health_check": "curl -f http://localhost:8000/v1/models"
+    }
+  },
+
+  "models": {
+    "qwen2.5-coder-7b": {
+      "display_name": "Qwen 2.5 Coder 7B",
+      "runtime": "ollama",
+      "size_gb": 4.7,
+      "quantization": "Q4_K_M",
+      "capabilities": ["coding", "reasoning"],
+      "recommended_for": ["code_generation", "debugging"],
+      "min_ram_gb": 8,
+      "download_url": "ollama pull qwen2.5-coder:7b"
+    },
+    "qwen2.5-coder-14b": {
+      "display_name": "Qwen 2.5 Coder 14B",
+      "runtime": "ollama",
+      "size_gb": 9.0,
+      "quantization": "Q4_K_M",
+      "capabilities": ["coding", "reasoning", "architecture"],
+      "recommended_for": ["complex_coding", "code_review"],
+      "min_ram_gb": 16,
+      "download_url": "ollama pull qwen2.5-coder:14b"
+    },
+    "llama3.1-8b": {
+      "display_name": "Llama 3.1 8B",
+      "runtime": "ollama",
+      "size_gb": 4.9,
+      "quantization": "Q4_K_M",
+      "capabilities": ["reasoning", "documentation"],
+      "recommended_for": ["general_tasks", "documentation"],
+      "min_ram_gb": 8,
+      "download_url": "ollama pull llama3.1:8b"
+    },
+    "llama3.1-70b": {
+      "display_name": "Llama 3.1 70B",
+      "runtime": "ollama",
+      "size_gb": 39,
+      "quantization": "Q4_K_M",
+      "capabilities": ["reasoning", "coding", "architecture", "documentation"],
+      "recommended_for": ["complex_reasoning", "architecture_design"],
+      "min_ram_gb": 48,
+      "download_url": "ollama pull llama3.1:70b"
+    },
+    "mistral-7b": {
+      "display_name": "Mistral 7B",
+      "runtime": "ollama",
+      "size_gb": 4.1,
+      "quantization": "Q4_K_M",
+      "capabilities": ["reasoning", "coding"],
+      "recommended_for": ["lightweight_tasks"],
+      "min_ram_gb": 8,
+      "download_url": "ollama pull mistral:7b"
+    },
+    "deepseek-coder-6.7b": {
+      "display_name": "DeepSeek Coder 6.7B",
+      "runtime": "ollama",
+      "size_gb": 4.1,
+      "quantization": "Q4_K_M",
+      "capabilities": ["coding"],
+      "recommended_for": ["code_generation", "debugging"],
+      "min_ram_gb": 8,
+      "download_url": "ollama pull deepseek-coder:6.7b"
+    },
+    "codellama-34b": {
+      "display_name": "CodeLlama 34B",
+      "runtime": "ollama",
+      "size_gb": 19,
+      "quantization": "Q4_K_M",
+      "capabilities": ["coding", "reasoning"],
+      "recommended_for": ["code_generation", "code_review"],
+      "min_ram_gb": 32,
+      "download_url": "ollama pull codellama:34b"
+    },
+    "phi3-mini": {
+      "display_name": "Phi-3 Mini",
+      "runtime": "ollama",
+      "size_gb": 2.3,
+      "quantization": "Q4_K_M",
+      "capabilities": ["reasoning", "documentation"],
+      "recommended_for": ["lightweight_tasks", "low_resource_env"],
+      "min_ram_gb": 4,
+      "download_url": "ollama pull phi3:mini"
+    }
+  },
+
+  "defaults": {
+    "default_runtime": "ollama",
+    "recommended_model": "qwen2.5-coder-7b",
+    "download_timeout_seconds": 3600,
+    "max_concurrent_downloads": 2
+  }
+}
