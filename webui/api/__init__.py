@@ -14,6 +14,7 @@ from .conductor import conductor_bp
 from .kb import kb_bp
 from .analytics import analytics_bp
 from .insights import insights_bp
+from .export import export_bp
 
 __all__ = [
     'inference_bp',
@@ -26,5 +27,6 @@ __all__ = [
     'conductor_bp',
     'kb_bp',
     'analytics_bp',
-    'insights_bp'
+    'insights_bp',
+    'export_bp'
 ]

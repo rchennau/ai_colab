@@ -527,13 +527,13 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - **Assigned:** @architect
   - **Description:** Multi-agent collaboration patterns, quality gates, and performance analytics.
 
-- [x] **Track: Agent Analytics Web UI Integration** (In Progress 🔄 — 2/4 tasks)
+- [x] **Track: Agent Analytics Web UI Integration** (Done ✅)
   *Link: [./agent_analytics_webui_20260411/spec.md](./agent_analytics_webui_20260411/spec.md)*
   - [x] P24.1: Performance Metrics API (7 endpoints, analytics DB, blackboard integration)
   - [x] P24.2: Real-Time Aggregation Dashboard (HTML, JS, CSS, navigation, auto-refresh)
-  - [ ] P24.3: Actionable Insights Engine
-  - [ ] P24.4: Historical Trending & Export
-  - [x] 29/29 tests passing (15 API + 14 dashboard)
+  - [x] P24.3: Actionable Insights Engine (5 endpoints, routing/cost/capacity recommendations)
+  - [x] P24.4: Historical Trending & Export (CSV/JSON export, fleet state, error log)
+  - [x] 58/58 tests passing (15 API + 14 dashboard + 15 insights + 14 export)
 
 - [x] **Track: Communication Protocol Optimization** (Done ✅)
   *Link: [./communication-protocol-optimization.md](./communication-protocol-optimization.md)*
