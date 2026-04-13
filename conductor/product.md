@@ -119,11 +119,12 @@ The Hub connects to various backends for specialized agent deployment:
     *   90% message size reduction vs. English-only (20-50 tokens vs. 200-500)
     *   Human-readable summaries auto-generated from structured data
     *   Conductor protocol handler with instant error detection and automated workflow (P6.3) (Done ✅)
-*   **Phase 24: Agent Analytics Web UI Integration** (Deferred)
+*   **Phase 24: Agent Analytics Web UI Integration** (In Progress 🔄 — 1/4 tasks)
     *   **Theme:** "Visualizing Fleet Efficiency"
-    *   Surfacing historical performance metrics from the Blackboard
-    *   Real-time aggregation of success rates and task durations
-    *   Actionable insights for fleet optimization via the Web UI dashboard
+    *   Performance metrics API with 7 endpoints (P24.1) (Done ✅)
+    *   Real-time aggregation dashboard (P24.2)
+    *   Actionable insights engine (P24.3)
+    *   Historical trending and export (P24.4)
 *   **Phase 24: Environment Portability** (Done ✅)
     *   **Theme:** "Zero user environment dependency — fully self-contained"
     *   Local tmux config (`.ai-colab/tmux.conf`) with clean shell (`bash --norc --noprofile`)
