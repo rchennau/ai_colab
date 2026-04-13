@@ -13,6 +13,7 @@ from .config import config_bp
 from .conductor import conductor_bp
 from .kb import kb_bp
 from .analytics import analytics_bp
+from .insights import insights_bp
 
 __all__ = [
     'inference_bp',
@@ -24,5 +25,6 @@ __all__ = [
     'config_bp',
     'conductor_bp',
     'kb_bp',
-    'analytics_bp'
+    'analytics_bp',
+    'insights_bp'
 ]

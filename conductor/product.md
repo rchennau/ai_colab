@@ -119,10 +119,10 @@ The Hub connects to various backends for specialized agent deployment:
     *   90% message size reduction vs. English-only (20-50 tokens vs. 200-500)
     *   Human-readable summaries auto-generated from structured data
     *   Conductor protocol handler with instant error detection and automated workflow (P6.3) (Done ✅)
-*   **Phase 24: Agent Analytics Web UI Integration** (In Progress 🔄 — 1/4 tasks)
+*   **Phase 24: Agent Analytics Web UI Integration** (In Progress 🔄 — 2/4 tasks)
     *   **Theme:** "Visualizing Fleet Efficiency"
     *   Performance metrics API with 7 endpoints (P24.1) (Done ✅)
-    *   Real-time aggregation dashboard (P24.2)
+    *   Real-time aggregation dashboard with auto-refresh (P24.2) (Done ✅)
     *   Actionable insights engine (P24.3)
     *   Historical trending and export (P24.4)
 *   **Phase 24: Environment Portability** (Done ✅)

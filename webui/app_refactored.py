@@ -117,7 +117,7 @@ def create_app():
     from webui.api import (
         inference_bp, models_bp, federation_bp,
         vision_bp, system_bp, terminal_bp, config_bp,
-        conductor_bp, kb_bp, analytics_bp
+        conductor_bp, kb_bp, analytics_bp, insights_bp
     )
     app.register_blueprint(inference_bp)
     app.register_blueprint(models_bp)
@@ -129,6 +129,7 @@ def create_app():
     app.register_blueprint(conductor_bp)
     app.register_blueprint(kb_bp)
     app.register_blueprint(analytics_bp)
+    app.register_blueprint(insights_bp)
     
     # Serve main HTML page
     @app.route('/')
