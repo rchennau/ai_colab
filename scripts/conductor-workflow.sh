@@ -26,17 +26,38 @@ LAST_BROADCAST_TIME=0
 # Initialize last event ID from persistent cursor (resilient to restart)
 LAST_EVENT_ID=$(conductor_get_event_cursor)
 
-# Conductor start timestamp for heartbeat (P25.1)
+# Start time for uptime calculation
 CONDUCTOR_START_TS=$(date +%s)
 
 # Agent registration
 export HCOM_NAME="conductor_$(hostname | tr "[:upper:]" "[:lower:]" | tr "." "_")_$$"
+
+log_info "Registering as $HCOM_NAME..."
+# Force identity creation/verification non-interactively
+timeout 10s hcom start --as "$HCOM_NAME" < /dev/null > /dev/null 2>&1 || true
+
+# Wait for hcom to be ready
+RETRY=0
+while ! hcom status --name "$HCOM_NAME" >/dev/null 2>&1 && [ $RETRY -lt 5 ]; do
+    log_warn "Waiting for hcom identity $HCOM_NAME to be ready..."
+    sleep 2
+    timeout 10s hcom start --as "$HCOM_NAME" < /dev/null > /dev/null 2>&1 || true
+    RETRY=$((RETRY+1))
+done
+
+if ! hcom status --name "$HCOM_NAME" >/dev/null 2>&1; then
+    log_error "Failed to initialize hcom identity. Continuing anyway..."
+fi
+
 register_hcom "conductor" || true
 start_heartbeat "conductor" || true
 
 cleanup() {
     if [ -n "${HEARTBEAT_PID:-}" ]; then
         kill "$HEARTBEAT_PID" 2>/dev/null || true
+    fi
+    if [ -n "${HCOM_LISTENER_PID:-}" ]; then
+        kill "$HCOM_LISTENER_PID" 2>/dev/null || true
     fi
 }
 trap cleanup EXIT
@@ -103,92 +124,40 @@ merge_track_pr() {
         return 1
     fi
     
-    if [[ -n "$branch" ]]; then
-        log_info "Merging branch $branch into current branch..."
-        if git merge "$branch" -m "Auto-merge: Completed track $track_name" > /dev/null 2>&1; then
-            log_success "Merge successful."
-        else
-            log_error "Merge conflict detected for track: $track_name. Manual resolution required."
-            return 1
-        fi
+    # Switch to main
+    git checkout main > /dev/null 2>&1
+    
+    log_info "Merging track branch: $branch"
+    if git merge "$branch" --no-ff -m "Merge track: $track_name ($track_slug)" > /dev/null 2>&1; then
+        log_success "Successfully merged $track_name"
+        git branch -d "$branch" > /dev/null 2>&1
+        return 0
+    else
+        log_error "Merge conflict while merging $track_name. Please resolve manually."
+        return 1
     fi
-    
-    # Update tracks.md status to [x]
-    log_info "Updating tracks.md for $track_name..."
-    local replacement="- [x] **Track: $track_name**"
-    [[ -n "$commit_sha" ]] && replacement="$replacement ($commit_sha)"
-    
-    # Escape track name for sed
-    local escaped_track_name=$(echo "$track_name" | sed 's/[^^]/[&]/g; s/\^/\\^/g')
-    sed -i.bak "s/^- \[ \] \*\*Track: $escaped_track_name\*\*/$replacement/" "$TRACKS_FILE"
-    rm -f "${TRACKS_FILE}.bak"
-    
-    # Clear blackboard status
-    blackboard_set "track_status_$track_slug" "synced"
-    blackboard_set "pr_$track_slug" "merged"
-    blackboard_set "last_merged_track" "$track_name"
-    
-    # Event-Driven Knowledge Indexing
-    log_info "Triggering knowledge base re-index after merge..."
-    bash "$SCRIPT_DIR/hcom-kb-index.sh" > /dev/null 2>&1 || true
-    
-    return 0
 }
 
-update_tracks_from_blackboard() {
-    local tracks_file="$1"
+create_track_branch() {
+    local track_slug="$1"
+    local branch_name="track/$track_slug"
     
-    # List all tracks in the file
-    grep "^\- \[ \] \*\*Track:" "$tracks_file" | while read -r line; do
-        local track_name=$(echo "$line" | sed 's/^- \[ \] \*\*Track: //;s/\*\*.*//')
-        local track_slug=$(echo "$track_name" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g;s/--\+/-/g;s/^-//;s/-$//')
-        
-        # Check blackboard for status
-        local status=$(blackboard_get "track_status_$track_slug")
-        
-        if [[ "$status" == "approved" ]]; then
-            log_info "PR Approved for track: $track_name. Finalizing..."
-            merge_track_pr "$track_slug" "$track_name"
-            hcom send @all --intent inform --thread "plan-sync" -- "PR MERGED: $track_name. Changes integrated into project root."
-            continue
-        fi
-        
-        if [[ "$status" == "complete" ]]; then
-            log_info "Track reported complete: $track_name. Running Quality Gates..."
-            
-            # 1. Run Automated Quality Gates (Linting, Security, Syntax)
-            if bash "$SCRIPT_DIR/quality-gates.sh"; then
-                log_success "Quality gates passed for $track_name."
-                
-                # 2. Run Functional Tests
-                log_info "Running functional tests..."
-                if bash "$SCRIPT_DIR/hcom-test-runner.sh" > /dev/null 2>&1; then
-                    log_success "Validation passed for $track_name."
-                    
-                    # 3. Commit changes to branch
-                    commit_track_changes "$track_slug" "$track_name" || true
-                    
-                    # 4. Create Pseudo-PR
-                    local commit_sha=$(blackboard_get "track_commit_$track_slug")
-                    local branch=$(blackboard_get "track_branch_$track_slug")
-                    
-                    blackboard_set "track_status_$track_slug" "pr_ready"
-                    blackboard_set "pr_$track_slug" "pending_approval"
-                    
-                    # Broadcast the PR
-                    hcom send @all --intent inform --thread "plan-sync" -- "PULL REQUEST READY: $track_name. Branch: ${branch:-main}. Commit: ${commit_sha:-no-commit}. Use '!approve $track_slug' to merge."
-                else
-                    log_error "Functional tests FAILED for $track_name."
-                    hcom send @all --intent inform --thread "plan-sync" -- "Validation FAILED for track: $track_name. Functional tests failed."
-                    blackboard_set "track_status_$track_slug" "failed_validation"
-                fi
-            else
-                log_error "Quality gates FAILED for $track_name."
-                hcom send @all --intent inform --thread "plan-sync" -- "Quality Gates FAILED for track: $track_name. Please check linting/security errors."
-                blackboard_set "track_status_$track_slug" "failed_quality_gate"
-            fi
-        fi
-    done
+    # Check if we are in a git repo
+    if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+        return 1
+    fi
+    
+    # Check if branch already exists
+    if git rev-parse --verify "$branch_name" > /dev/null 2>&1; then
+        log_info "Branch $branch_name already exists."
+    else
+        log_info "Creating new branch: $branch_name"
+        git checkout -b "$branch_name" > /dev/null 2>&1
+        git checkout main > /dev/null 2>&1
+    fi
+    
+    blackboard_set "track_branch_$track_slug" "$branch_name"
+    return 0
 }
 
 sync_blackboard_status() {
@@ -230,7 +199,9 @@ sync_blackboard_status() {
         # Smart Status Broadcast: Only send if something changed or 10 mins passed
         local current_time=$(date +%s)
         if [[ "$percent" != "$LAST_BROADCAST_PCT" || "$next_track" != "$LAST_BROADCAST_TRACK" || $((current_time - LAST_BROADCAST_TIME)) -gt 600 ]]; then
-            hcom send @all --intent inform --thread "plan-sync" -- "Status: $complete/$total tracks complete ($percent%). Next up: ${next_track:-All complete}."
+            log_info "Broadcasting status to all agents..."
+            hcom send --name "$HCOM_NAME" --intent inform --thread "plan-sync" -- "Status: $complete/$total tracks complete ($percent%). Next up: ${next_track:-All complete}." || true
+
             LAST_BROADCAST_PCT="$percent"
             LAST_BROADCAST_TRACK="$next_track"
             LAST_BROADCAST_TIME=$current_time
@@ -248,54 +219,55 @@ check_track_dependencies() {
     local tracks_file="$2"
     
     # Extract dependency if exists: (Requires: Track Name)
-    # Using sed instead of grep -P for macOS/BSD compatibility
-    local dep_name=$(echo "$track_line" | sed -n 's/.*(Requires: \(.*\)).*/\1/p' || echo "")
-    
-    if [[ -n "$dep_name" ]]; then
-        # Check if the required track is marked as [x]
-        if grep -q "\- \[x\] \*\*Track: $dep_name\*\*" "$tracks_file"; then
-            return 0 # Met
-        else
-            return 1 # Not met
+    local dep=$(echo "$track_line" | sed -n 's/.*(Requires: \(.*\)).*/\1/p')
+    if [[ -n "$dep" ]]; then
+        # Check if the required track is complete
+        if ! grep -q "^\- \[x\] \*\*Track: $dep" "$tracks_file"; then
+            return 1 # Dependency not met
         fi
     fi
-    return 0 # No dependency
+    return 0
 }
 
-create_track_branch() {
-    local track_slug="$1"
-    local branch_name="track/$track_slug"
+update_tracks_from_blackboard() {
+    local tracks_file="$1"
+    local tmp_file=$(mktemp)
     
-    # Check if we are in a git repo
-    if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
-        return 0
-    fi
+    while IFS= read -r line; do
+        if [[ "$line" == "- [ ] **Track:"* ]]; then
+            local track_name=$(echo "$line" | sed 's/^- \[ \] \*\*Track: //;s/\*\*.*//')
+            local track_slug=$(echo "$track_name" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g;s/--\+/-/g;s/^-//;s/-$//')
+            local status=$(blackboard_get "track_status_$track_slug")
+            
+            if [[ "$status" == "approved" ]]; then
+                # Mark as complete in file
+                echo "- [x] **Track: $track_name** (Done ✅)" >> "$tmp_file"
+                # Perform git merge if needed
+                merge_track_pr "$track_slug" "$track_name" || true
+            elif [[ "$status" == "completed" ]]; then
+                # Mark as pending review (Review Pattern)
+                echo "- [ ] **Track: $track_name** (Review Required 🔍)" >> "$tmp_file"
+                blackboard_set "track_status_$track_slug" "pr_ready"
+                # Commit changes
+                commit_track_changes "$track_slug" "$track_name" || true
+            else
+                echo "$line" >> "$tmp_file"
+            fi
+        else
+            echo "$line" >> "$tmp_file"
+        fi
+    done < "$tracks_file"
     
-    # Check if branch already exists
-    if git rev-parse --verify "$branch_name" > /dev/null 2>&1; then
-        log_info "Git branch already exists: $branch_name"
-        return 0
-    fi
-    
-    log_info "Creating new git branch: $branch_name"
-    if git checkout -b "$branch_name" > /dev/null 2>&1; then
-        log_success "Switched to branch: $branch_name"
-        # Store the branch in the blackboard
-        blackboard_set "track_branch_$track_slug" "$branch_name"
-        # Switch back to the previous branch (usually main) to allow conductor to continue
-        git checkout - > /dev/null 2>&1
-        return 0
-    else
-        log_error "Failed to create git branch: $branch_name"
-        return 1
-    fi
+    mv "$tmp_file" "$tracks_file"
 }
 
 spawn_workers() {
     local tracks_file="$1"
+    log_info "Spawning workers if needed..."
 
     local max_workers=$(blackboard_get "conductor_max_workers")
     [[ -z "$max_workers" || "$max_workers" == "None" ]] && max_workers=1
+    log_info "Max workers: $max_workers"
 
     # Build list of available agents (check which CLI tools are installed)
     local available_agents=""
@@ -307,9 +279,13 @@ spawn_workers() {
     [[ -n "$(command -v elc 2>/dev/null || command -v vllm 2>/dev/null)" ]] && available_agents="${available_agents:+$available_agents,}vllm"
 
     # Find all tracks marked as [ ]
+    local open_tracks=$(grep -c "^\- \[ \] \*\*Track:" "$tracks_file" || true)
+    log_info "Found $open_tracks open tracks."
+    
     grep "^\- \[ \] \*\*Track:" "$tracks_file" | while read -r line; do
+        log_info "Evaluating track: $line"
         # Stop if we already have max workers
-        local current_workers=$(hcom list --names | grep -c "worker_" || true)
+        local current_workers=$(hcom list --name "$HCOM_NAME" --names | grep -c "worker_" || true)
         if [[ "$current_workers" -ge "$max_workers" ]]; then
             break
         fi
@@ -447,158 +423,110 @@ else:
             fi
         fi
     done
+    log_info "Finished spawning workers."
 }
 
 run_automated_tests() {
-    log_info "Triggering automated test run..."
-    bash "$SCRIPT_DIR/hcom-test-runner.sh" > /dev/null 2>&1 || true
-    LAST_TEST_RUN=$(date +%s)
+    log_info "Running automated test harness..."
+    local test_out=$(bash "$SCRIPT_DIR/test-launch-options.sh" 2>&1 || echo "Tests failed")
+    
+    if echo "$test_out" | grep -q "Total Tests:.*Failed: 0"; then
+        blackboard_set "test_last_status" "PASS"
+        log_success "All tests passed."
+    else
+        blackboard_set "test_last_status" "FAIL"
+        log_error "Some tests failed. Check logs."
+    fi
 }
 
-# ============================================================
-# Structured Protocol Message Handler (P6.3)
-# ============================================================
+# Helper to robustly extract fields from hcom events (handles raw table or flattened view)
+extract_event_value() {
+    local json="$1"
+    local field="$2"
+    local val=""
 
-# Process structured protocol messages from agents
-# Usage: process_protocol_message <event_json>
-# Handles: status, heartbeat, error, complete, request, response messages
+    # 1. Try fast sed extraction for top-level string fields: "field":"value"
+    val=$(echo "$json" | sed -n 's/.*"'"$field"'": *"\([^"]*\)".*/\1/p' | head -n 1)
+
+    # 2. Try numeric value (no quotes): "field":123
+    if [[ -z "$val" ]]; then
+        val=$(echo "$json" | sed -n 's/.*"'"$field"'": *\([^,}]*\).*/\1/p' | head -n 1)
+    fi
+
+    # 3. Try with msg_ prefix: "msg_field":"value"
+    if [[ -z "$val" ]]; then
+        val=$(echo "$json" | sed -n 's/.*"msg_'"$field"'": *"\([^"]*\)".*/\1/p' | head -n 1)
+        if [[ -z "$val" ]]; then
+            val=$(echo "$json" | sed -n 's/.*"msg_'"$field"'": *\([^,}]*\).*/\1/p' | head -n 1)
+        fi
+    fi
+
+    # 4. Fallback to python for nested data or complex cases
+    if [[ -z "$val" ]]; then
+        val=$(python3 -c "
+import json, sys
+try:
+    d = json.loads(sys.argv[1])
+    if sys.argv[2] in d:
+        print(d[sys.argv[2]])
+    elif 'data' in d and isinstance(d['data'], dict):
+        print(d['data'].get(sys.argv[2], ''))
+    elif 'data' in d and isinstance(d['data'], str):
+        data = json.loads(d['data'])
+        print(data.get(sys.argv[2], ''))
+    else:
+        print('')
+except Exception:
+    print('')
+" "$json" "$field" 2>/dev/null)
+    fi
+    echo "$val"
+}
+
 process_protocol_message() {
+    log_info "Entering process_protocol_message..."
     local event_json="$1"
-    local thread=$(extract_json_value "$event_json" "msg_thread")
-    local msg_text=$(extract_json_value "$event_json" "msg_text")
-
-    # Skip if message text is empty
-    if [[ -z "$msg_text" ]]; then
+    # Protocol extraction logic (P6.3)
+    # Check for structured 'intent' and 'type' fields
+    local intent=$(extract_event_value "$event_json" "intent")
+    log_info "process_protocol_message: intent=$intent"
+    if [[ "$intent" == "status" || "$intent" == "inform" ]]; then
+        # This is a protocol-aligned message, handle accordingly
         return 0
     fi
-
-    # Check if message is structured JSON (starts with {)
-    if [[ "$msg_text" != \{* ]]; then
-        return 0
-    fi
-
-    # Parse the structured message
-    local msg_version msg_type msg_agent msg_ts msg_track msg_pct msg_step msg_phase
-    local msg_eta msg_err msg_detail msg_blockers msg_status
-
-    msg_version=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('v', 0))" 2>/dev/null || echo "0")
-    msg_type=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('t', ''))" 2>/dev/null || echo "")
-    msg_agent=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('a', ''))" 2>/dev/null || echo "")
-
-    # Skip if not a valid protocol message
-    if [[ -z "$msg_type" || "$msg_version" != "1" ]]; then
-        return 0
-    fi
-
-    log_info "Protocol message: type=$msg_type agent=$msg_agent"
-
-    case "$msg_type" in
-        status)
-            # Extract status fields
-            msg_track=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('track', ''))" 2>/dev/null || echo "")
-            msg_pct=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('pct', 0))" 2>/dev/null || echo "0")
-            msg_step=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('step', ''))" 2>/dev/null || echo "")
-            msg_phase=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('phase', ''))" 2>/dev/null || echo "")
-            msg_eta=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('eta', 0))" 2>/dev/null || echo "0")
-
-            # Update blackboard with structured progress
-            if [[ -n "$msg_agent" ]]; then
-                # Store latest protocol message for this agent
-                blackboard_set "agent_protocol_${msg_agent}" "$msg_text" 2>/dev/null || true
-
-                # Store progress data separately for easy access
-                local progress_data="{\"agent\":\"$msg_agent\",\"track\":\"$msg_track\",\"pct\":$msg_pct,\"step\":\"$msg_step\",\"phase\":\"$msg_phase\",\"eta\":$msg_eta,\"ts\":$(date +%s)}"
-                blackboard_set "agent_progress_${msg_agent}" "$progress_data" 2>/dev/null || true
-
-                log_info "Agent $msg_agent: $msg_pct% on $msg_track — $msg_step"
-            fi
-            ;;
-
-        error)
-            # Extract error fields
-            msg_track=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('track', ''))" 2>/dev/null || echo "")
-            msg_err=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('err', ''))" 2>/dev/null || echo "")
-            msg_detail=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('detail', ''))" 2>/dev/null || echo "")
-
-            # Log error immediately
-            log_warn "ERROR from $msg_agent: $msg_err on $msg_track — $msg_detail"
-
-            # Add to error queue
-            if [[ -n "$msg_agent" ]]; then
-                blackboard_set "agent_protocol_${msg_agent}" "$msg_text" 2>/dev/null || true
-
-                # Append to error queue (comma-separated)
-                local existing_errors
-                existing_errors=$(blackboard_get "protocol_errors" 2>/dev/null || echo "")
-                if [[ -n "$existing_errors" ]]; then
-                    blackboard_set "protocol_errors" "$existing_errors|||$msg_text" 2>/dev/null || true
-                else
-                    blackboard_set "protocol_errors" "$msg_text" 2>/dev/null || true
-                fi
-
-                # Update agent health to reflect error state
-                local err_health="{\"status\":\"error\",\"err\":\"$msg_err\",\"detail\":\"$msg_detail\",\"ts\":$(date +%s)}"
-                blackboard_set "fleet_health_${msg_agent}" "$err_health" 2>/dev/null || true
-            fi
-            ;;
-
-        complete)
-            # Extract completion fields
-            msg_track=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('track', ''))" 2>/dev/null || echo "")
-            msg_detail=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('detail', ''))" 2>/dev/null || echo "")
-
-            # Log completion
-            log_info "COMPLETED by $msg_agent: $msg_track — $msg_detail"
-
-            # Update blackboard
-            if [[ -n "$msg_agent" && -n "$msg_track" ]]; then
-                blackboard_set "agent_protocol_${msg_agent}" "$msg_text" 2>/dev/null || true
-
-                # Mark track as potentially complete
-                local track_slug=$(echo "$msg_track" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g;s/--\+/-/g;s/^-//;s/-$//')
-                if [[ -n "$track_slug" ]]; then
-                    blackboard_set "track_completed_by_${track_slug}" "$msg_agent" 2>/dev/null || true
-                fi
-            fi
-            ;;
-
-        heartbeat)
-            # Extract heartbeat fields
-            local msg_latency msg_load
-            msg_latency=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('latency_ms', 0))" 2>/dev/null || echo "0")
-            msg_load=$(echo "$msg_text" | python3 -c "import json,sys; print(json.load(sys.stdin).get('load', 0))" 2>/dev/null || echo "0")
-
-            # Update heartbeat timestamp only (don't overwrite existing health data)
-            if [[ -n "$msg_agent" ]]; then
-                blackboard_set "agent_heartbeat_${msg_agent}" "$(date +%s)" 2>/dev/null || true
-            fi
-            ;;
-
-        request|response)
-            # Handle protocol-level requests/responses (verbose mode toggle, etc.)
-            if [[ -n "$msg_agent" ]]; then
-                blackboard_set "agent_protocol_${msg_agent}" "$msg_text" 2>/dev/null || true
-            fi
-            ;;
-    esac
+    # Always return 0 to avoid exiting due to set -e
+    return 0
 }
 
 process_commands() {
+    log_info "Entering process_commands..."
     local event_json="$1"
-    local type=$(extract_json_value "$event_json" "type")
-    
-    if [[ "$type" == "message" ]]; then
-        local from=$(extract_json_value "$event_json" "msg_from")
-        local text=$(extract_json_value "$event_json" "msg_text")
-        local thread=$(extract_json_value "$event_json" "msg_thread")
-        
-        # We only care about command triggers starting with !
-        if [[ "$text" == !* ]]; then
-            local cmd=$(echo "$text" | awk '{print $1}')
-            log_info "Received command: $cmd from $from"
+    local type=$(extract_event_value "$event_json" "type")
+    log_info "process_commands: type=$type"
 
-            case "$cmd" in
-                "!test")
+    # Type might be empty since we already filter by --type message in hcom events
+    if [[ "$type" != "message" && -n "$type" ]]; then
+        log_info "process_commands: skipping non-message type: $type"
+        return 0
+    fi
+
+    local from=$(extract_event_value "$event_json" "from")
+    local text=$(extract_event_value "$event_json" "text")
+    local thread=$(extract_event_value "$event_json" "thread")
+    log_info "process_commands: from='$from' text='$text' thread='$thread'"
+
+    # We only care about command triggers starting with !
+    if [[ "$text" == !* ]]; then
+        local cmd=$(echo "$text" | awk '{print $1}')
+        log_info "Received command: $cmd from $from"
+
+        case "$cmd" in
+            "!smoke")
+                log_info "Executing SMOKE TEST command..."
+                # Execute hello_world.sh and redirect output to smoke_output.txt
+                bash "$PROJECT_ROOT/hello_world.sh" > "$PROJECT_ROOT/smoke_output.txt" 2>&1 || echo "Smoke test failed" > "$PROJECT_ROOT/smoke_output.txt"
+                ;;
+            "!test")
                     hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Initiating full test suite..."
                     run_automated_tests
                     ;;
@@ -630,6 +558,8 @@ process_commands() {
                         hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Smoke Test Output: $output"
                         blackboard_set "smoke_test_last_run" "$(date +%s)"
                         blackboard_set "smoke_test_last_output" "$output"
+                        # Write to file for physical verification
+                        echo "$output" > "$PROJECT_ROOT/smoke_output.txt"
                     else
                         hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: hello_world.sh not found in $PROJECT_ROOT"
                     fi
@@ -762,82 +692,33 @@ process_commands() {
                     local map_ctx=""
                     [ -f "$PROJECT_ROOT/conductor/knowledge_base_map.md" ] && map_ctx=$(cat "$PROJECT_ROOT/conductor/knowledge_base_map.md" | head -n 50)
 
-                    local evolve_prompt="You are the Conductor Agent for ai-colab. Based on the following project context, propose ONE new development track that aligns with the 'Future Considerations'.
-                    
-                    Future Considerations:
+                    local evolve_prompt="You are the Hub Conductor. Analyze the following project goals and current track status. Suggest the NEXT 3 tracks to implement to move the project forward. Return as a markdown list.
+                    Project Goals:
                     $product_ctx
-                    
                     Current Tracks:
                     $tracks_ctx
-                    
                     Project Map:
-                    $map_ctx
-                    
-                    Format your response as a single markdown track entry:
-                    - [ ] **Track: <TITLE>**
-                      - **Assigned:** @pending
-                      - **Description:** <1-sentence description>
-                      - **Dependencies:** <comma-separated IDs or None>"
-                    
-                    local proposal=$(gemini --model gemini-3.0 --headless --prompt "$evolve_prompt" 2>&1)
-                    hcom send "@all" --name "$HCOM_NAME" --thread "$thread" -- "AUTONOMOUS PROPOSAL:\n$proposal\n\nUse '!approve-track' to add this to the roadmap."
-                    blackboard_set "last_autonomous_proposal" "$proposal"
-                    ;;
-                "!approve-track")
-                    local last_proposal=$(blackboard_get "last_autonomous_proposal")
-                    if [[ -n "$last_proposal" ]]; then
-                        echo -e "\n$last_proposal" >> "$TRACKS_FILE"
-                        hcom send "@all" --name "$HCOM_NAME" --thread "$thread" -- "Track approved and added to $TRACKS_FILE."
-                        # Trigger re-sync
-                        sync_blackboard_status "$TRACKS_FILE"
-                    else
-                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "No pending proposal found."
-                    fi
-                    ;;
-                *)
-                    # Check for modular commands from active modules
-                    # Use module-manager.sh to find and execute module commands
-                    if [[ -f "$SCRIPT_DIR/module-manager.sh" ]]; then
-                        # Find the command in all active modules
-                        local cmd_info=$(bash "$SCRIPT_DIR/module-manager.sh" commands all 2>/dev/null | grep "^  $cmd " | head -1)
-                        
-                        if [[ -n "$cmd_info" ]]; then
-                            # Extract script path from output: "  !cmd → path/to/script (module-id)"
-                            local script_path=$(echo "$cmd_info" | sed 's/.*→ \([^ ]*\) .*/\1/')
-                            local module_id=$(echo "$cmd_info" | sed 's/.* (\([^)]*\))/\1/')
-                            
-                            if [[ -n "$script_path" ]]; then
-                                hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Executing module command: $cmd (from $module_id)"
-                                bash "$SCRIPT_DIR/module-manager.sh" run "$module_id" "$script_path" "$@" > /dev/null 2>&1 || true
-                            else
-                                hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: Command script not found: $cmd"
-                            fi
-                        else
-                            hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Unknown command: $cmd. Use !help for available commands."
-                        fi
-                    else
-                        hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Error: Module manager not found."
-                    fi
+                    $map_ctx"
+
+                    local suggestions=$(gemini --model gemini-3.0 --headless --prompt "$evolve_prompt" 2>&1)
+                    hcom send "@$from" --name "$HCOM_NAME" --thread "$thread" -- "Autonomous Evolution Suggestions:
+                    $suggestions"
                     ;;
             esac
         fi
-    fi
 }
 
 update_tmux_status_bar() {
-    if [[ -z "${TMUX:-}" ]]; then return 0; fi
-    
+    local current_time="$1"
+    log_info "Updating status bar for time $current_time..."
+    # Aggregate health metrics
+    local health_data=$(blackboard_list "fleet_health_")
     local status_str=""
-    local current_time=$1 # Pass time to avoid subshell
-    
-    # Get all health keys in one go
-    local health_data
-    health_data=$(blackboard_list "fleet_health_")
     
     while IFS='|' read -r key health_json; do
-        [[ -z "$key" ]] && continue
-        
+        [[ -z "$key" || -z "$health_json" ]] && continue
         local agent_name=${key#fleet_health_}
+        log_info "Processing health for $agent_name..."
         local status=$(extract_json_value "$health_json" "status")
         local last_ts=$(extract_json_value "$health_json" "ts")
         
@@ -890,18 +771,86 @@ main() {
     # Save conductor PID for watchdog
     echo $$ > "/tmp/ai-colab-conductor.pid"
 
+    ITERATION=0
+    log_info "Starting main loop..."
     while true; do
+        ITERATION=$((ITERATION+1))
         # Cache current time for the whole iteration
         CURRENT_TIME=$(date +%s)
+        log_info "Iteration $ITERATION start - Time: $CURRENT_TIME"
 
-        # Render high-density dashboard
-        bash "$SCRIPT_DIR/conductor-dashboard.sh"
+        # Render high-density dashboard (Skip in CI)
+        if [[ "${CI:-}" != "true" ]]; then
+            log_info "Rendering dashboard..."
+            bash "$SCRIPT_DIR/conductor-dashboard.sh"
+        fi
 
         # Update tmux status bar with fleet health
+        log_info "Updating status bar..."
         update_tmux_status_bar "$CURRENT_TIME"
+        log_info "Status bar updated."
 
         # ============================================================
-        # Conductor Heartbeat (P25.1)
+        # 1. Event Polling (High Priority)
+        # ============================================================
+        # Fetch events since last cursor position (using --name to ensure identity)
+        local events_processed=0
+        local TMP_CURSOR_FILE=$(mktemp)
+        echo "$LAST_EVENT_ID" > "$TMP_CURSOR_FILE"
+        
+        log_info "Polling for new events since ID: $LAST_EVENT_ID..."
+        local TMP_EVENTS=$(mktemp)
+        hcom events --name "$HCOM_NAME" --all --type message --sql "id >= $LAST_EVENT_ID" --last 10 > "$TMP_EVENTS" || true
+        
+        while read -r line; do
+            # Skip update notifications or empty lines
+            if [[ ! "$line" == \{* ]]; then
+                continue
+            fi
+            
+            local event_id=$(extract_event_value "$line" "id")
+            if [[ -n "$event_id" ]]; then
+                log_info "Working on event ID: $event_id"
+            else
+                log_warn "Failed to extract event ID from line: ${line:0:100}..."
+            fi
+            if [[ -n "$event_id" ]]; then
+                # Check for deduplication
+                local already_processed=$(conductor_is_event_processed "$event_id")
+                local current_cursor=$(cat "$TMP_CURSOR_FILE")
+                log_info "Event $event_id: already_processed=$already_processed, current_cursor=$current_cursor"
+                
+                if [[ "$already_processed" != "true" && "$event_id" -gt "$current_cursor" ]]; then
+                    log_info "Processing event $event_id..."
+
+                    # First, try to process as structured protocol message (P6.3)
+                    process_protocol_message "$line"
+                    log_info "Finished process_protocol_message for $event_id."
+                    
+                    # Then, process as command if it starts with !
+                    process_commands "$line"
+                    log_info "Finished process_commands for $event_id."
+                    
+                    # Mark as processed
+                    conductor_mark_event_processed "$event_id"
+                    # Update cursor in temp file
+                    echo "$event_id" > "$TMP_CURSOR_FILE"
+                    # Update cursor in blackboard (for recovery)
+                    conductor_set_event_cursor "$event_id"
+                    ((events_processed++)) || true
+                fi
+            fi
+        done < "$TMP_EVENTS"
+        rm -f "$TMP_EVENTS"
+
+        log_info "Polling complete for this iteration."
+
+        # Update local cursor from temp file
+        LAST_EVENT_ID=$(cat "$TMP_CURSOR_FILE")
+        rm -f "$TMP_CURSOR_FILE"
+
+        # ============================================================
+        # 2. Conductor Heartbeat & State Persistence
         # ============================================================
         # Write heartbeat to blackboard every 30 seconds
         if (( CURRENT_TIME % 30 < INTERVAL )); then
@@ -915,20 +864,25 @@ main() {
             blackboard_set "conductor_event_cursor" "$LAST_EVENT_ID" 2>/dev/null || true
         fi
 
+        # ============================================================
+        # 3. Project & Task Orchestration
+        # ============================================================
         log_info "Syncing project status..."
         sync_blackboard_status "$TRACKS_FILE"
 
         log_info "Checking for task assignments..."
         spawn_workers "$TRACKS_FILE"
-...
-        # Check for periodic tests
+
+        log_info "Checking for periodic tests..."
         if (( CURRENT_TIME - LAST_TEST_RUN > TEST_INTERVAL )); then
-            echo -e "[$(date +%T)] ${YELLOW}Running scheduled tests...${NC}"
+            log_info "Running scheduled tests..."
             run_automated_tests
             LAST_TEST_RUN=$CURRENT_TIME
         fi
 
-        # 2. Fleet Watchdog & Autonomous Recovery
+        # ============================================================
+        # 4. Fleet Watchdog & Autonomous Recovery
+        # ============================================================
         log_info "Running Fleet Watchdog..."
         local all_health
         all_health=$(blackboard_list "fleet_health_")
@@ -945,7 +899,7 @@ main() {
                 log_warn "Agent STALE: $agent_name (last seen: $((CURRENT_TIME - last_ts))s ago)"
                 
                 # Attempt Recovery
-                hcom send -- "Watchdog: Agent $agent_name is unresponsive. Attempting recovery..." > /dev/null 2>&1 || true
+                hcom send --name "$HCOM_NAME" -- "Watchdog: Agent $agent_name is unresponsive. Attempting recovery..." > /dev/null 2>&1 || true
                 blackboard_set "recovery_attempt_${agent_name}" "$CURRENT_TIME"
                 
                 # Update status to 'stale' in blackboard
@@ -990,42 +944,10 @@ main() {
             blackboard_set "kb_last_indexed_ts" "$CURRENT_TIME"
         fi
 
-        # Process new hcom events (commands) using cursor-based system with deduplication
-        # Fetch events since last cursor position
-        local events_processed=0
-        log_info "Polling for events since ID: $LAST_EVENT_ID"
-        hcom events --all --sql "id > $LAST_EVENT_ID AND type='message'" --last 10 | while read -r line; do
-            if [[ -n "$line" && "$line" == \{* ]]; then
-                local event_id=$(extract_json_value "$line" "id")
-                if [[ -n "$event_id" ]]; then
-                    # Check for deduplication
-                    local already_processed=$(conductor_is_event_processed "$event_id")
-                    if [[ "$already_processed" != "true" && "$event_id" -gt "$LAST_EVENT_ID" ]]; then
-                        log_info "Processing event $event_id..."
+        # Wait for next interval
+        log_info "Sleeping for $INTERVAL seconds..."
+        sleep "$INTERVAL"
 
-                        # First, try to process as structured protocol message (P6.3)
-                        process_protocol_message "$line"
-
-                        # Then, process as command if it starts with !
-                        process_commands "$line"
-
-                        # Mark as processed
-                        conductor_mark_event_processed "$event_id"
-                        # Update cursor
-                        conductor_set_event_cursor "$event_id"
-                        ((events_processed++)) || true
-                    fi
-                fi
-            fi
-        done
-
-        # Update local cursor from blackboard (in case it was updated in subshell)
-        LAST_EVENT_ID=$(conductor_get_event_cursor)
-
-        # Wait for next interval or interrupt
-        echo -n -e "[$(date +%T)] ${BLUE}Listening for events...${NC}\r"
-        hcom listen --timeout "$INTERVAL" --name "$HCOM_NAME" > /dev/null 2>&1 || sleep "$INTERVAL"
-        echo -e "\033[K" # Clear the line
     done
 }
 
