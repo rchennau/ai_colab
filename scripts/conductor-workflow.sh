@@ -26,6 +26,9 @@ LAST_BROADCAST_TIME=0
 # Initialize last event ID from persistent cursor (resilient to restart)
 LAST_EVENT_ID=$(conductor_get_event_cursor)
 
+# Conductor start timestamp for heartbeat (P25.1)
+CONDUCTOR_START_TS=$(date +%s)
+
 # Agent registration
 export HCOM_NAME="conductor_$(hostname | tr "[:upper:]" "[:lower:]" | tr "." "_")_$$"
 register_hcom "conductor" || true
@@ -858,6 +861,35 @@ update_tmux_status_bar() {
 }
 
 main() {
+    # ============================================================
+    # State Recovery (P25.3)
+    # ============================================================
+    log_info "Recovering conductor state..."
+
+    # Recover event cursor from blackboard
+    local saved_cursor
+    saved_cursor=$(blackboard_get "conductor_event_cursor" 2>/dev/null || echo "")
+    if [[ -n "$saved_cursor" ]]; then
+        LAST_EVENT_ID="$saved_cursor"
+        log_info "Recovered event cursor: $LAST_EVENT_ID"
+    fi
+
+    # Recover active track from blackboard
+    local saved_track
+    saved_track=$(blackboard_get "active_track" 2>/dev/null || echo "")
+    if [[ -n "$saved_track" ]]; then
+        log_info "Recovered active track: $saved_track"
+    fi
+
+    # Validate blackboard state
+    log_info "Validating blackboard state..."
+    local progress
+    progress=$(blackboard_get "project_progress" 2>/dev/null || echo "0%")
+    log_info "Project progress: $progress"
+
+    # Save conductor PID for watchdog
+    echo $$ > "/tmp/ai-colab-conductor.pid"
+
     while true; do
         # Cache current time for the whole iteration
         CURRENT_TIME=$(date +%s)
@@ -867,6 +899,21 @@ main() {
 
         # Update tmux status bar with fleet health
         update_tmux_status_bar "$CURRENT_TIME"
+
+        # ============================================================
+        # Conductor Heartbeat (P25.1)
+        # ============================================================
+        # Write heartbeat to blackboard every 30 seconds
+        if (( CURRENT_TIME % 30 < INTERVAL )); then
+            local heartbeat_data="{\"ts\":$CURRENT_TIME,\"status\":\"running\",\"pid\":$$,\"uptime\":$((CURRENT_TIME - CONDUCTOR_START_TS))}"
+            blackboard_set "conductor_heartbeat" "$heartbeat_data" 2>/dev/null || true
+            log_info "Conductor heartbeat written"
+        fi
+
+        # Save event cursor to blackboard for recovery (P25.3)
+        if [[ -n "${LAST_EVENT_ID:-}" ]]; then
+            blackboard_set "conductor_event_cursor" "$LAST_EVENT_ID" 2>/dev/null || true
+        fi
 
         log_info "Syncing project status..."
         sync_blackboard_status "$TRACKS_FILE"
