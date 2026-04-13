@@ -536,6 +536,12 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - [x] Dashboard verbose toggle (Ctrl+b v) — compact/verbose display modes (P6.4)
   - [x] 72/72 tests passing (44 protocol + 15 conductor + 13 verbose toggle)
 
+- [x] **Track: Conductor Self-Monitoring** (Done ✅)
+  - [x] Conductor heartbeat to blackboard every 30s
+  - [x] Watchdog with auto-restart and exponential backoff
+  - [x] State recovery (event cursor, active track, blackboard validation)
+  - [x] 13/13 tests passing
+
 - [x] **Track: Environment Portability** (Done ✅)
   - [x] Local tmux config (`.ai-colab/tmux.conf`) — clean shell, no user dependency
   - [x] Environment setup script (`scripts/ai-colab-env.sh`) — alias cleaning, strict mode
