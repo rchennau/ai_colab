@@ -130,12 +130,12 @@ The Hub connects to various backends for specialized agent deployment:
     *   Environment setup script (`scripts/ai-colab-env.sh`) for consistent agent execution
     *   RAG installation fixed to use correct Python version (`$PYTHON_CMD -m pip install`)
     *   No dependency on user's `~/.tmux.conf`, `.bashrc`, `.zshrc`, aliases, or environment variables
-*   **Phase 25: Conductor Self-Monitoring** (In Progress 🔄 — 3/4 tasks complete)
+*   **Phase 25: Conductor Self-Monitoring** (Done ✅)
     *   **Theme:** "The conductor watches its own pulse"
     *   Conductor heartbeat to blackboard every 30s (P25.1) (Done ✅)
     *   Watchdog with auto-restart and exponential backoff (P25.2) (Done ✅)
     *   State recovery after restart (P25.3) (Done ✅)
-    *   Secondary agent detection (P25.4)
+    *   Secondary agent detection with stale conductor alerting (P25.4) (Done ✅)
 
 ## Future Considerations
 - Federated Agent Learning (Skill-sharing across distributed fleets).

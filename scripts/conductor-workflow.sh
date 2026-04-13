@@ -993,6 +993,7 @@ main() {
         # Process new hcom events (commands) using cursor-based system with deduplication
         # Fetch events since last cursor position
         local events_processed=0
+        log_info "Polling for events since ID: $LAST_EVENT_ID"
         hcom events --all --sql "id > $LAST_EVENT_ID AND type='message'" --last 10 | while read -r line; do
             if [[ -n "$line" && "$line" == \{* ]]; then
                 local event_id=$(extract_json_value "$line" "id")

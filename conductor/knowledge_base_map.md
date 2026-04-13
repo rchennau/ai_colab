@@ -1,5 +1,5 @@
 # ai-colab Project Map (Semantic Knowledge Base)
-Last Updated: 2026-04-11 (Phase 22 In Progress 🔄 — Conductor Protocol Handler P6.3: structured message processing, instant error detection)
+Last Updated: 2026-04-11 (Phase 25 Complete ✅ — Conductor Self-Monitoring with heartbeat, watchdog, state recovery, and secondary agent detection)
 
 ## Orchestration Core (Hub)
 - `launch.sh`: Unified launcher with **three launch modes** (Dashboard, WebUI, Debug) and **module enablement** (`-m/--module` flag). Auto-activates virtual environment. Supports **multi-project discovery**, global CLI model, and **modular marketplace access**.
@@ -17,7 +17,9 @@ Last Updated: 2026-04-11 (Phase 22 In Progress 🔄 — Conductor Protocol Handl
 - `scripts/workspace_manager.py`: Logic for scanning directories for Git repositories and managing the global `workspace.json` registry.
 - `scripts/message-queue.sh`: SQLite-based message queue layer providing **reliable message delivery**, offline queuing, and exponential backoff retry.
 - `scripts/utils.sh`: Shared utilities including 80-column ANSI UI helpers, **Health 2.0** reporting, **blackboard schema validation**, **intelligent agent selection**, **agent analytics logging**, and **progress reporting**.
-- `scripts/conductor-workflow.sh`: The heart of the orchestration logic. Includes **capability-based routing**, **multi-agent collaboration patterns (Review Pattern)**, **real-time tmux status bar updates**, **Autonomous Fleet Watchdog**, and **structured protocol message handling (P6.3)**.
+- `scripts/conductor-workflow.sh`: The heart of the orchestration logic. Includes **capability-based routing**, **multi-agent collaboration patterns (Review Pattern)**, **real-time tmux status bar updates**, **Autonomous Fleet Watchdog**, **structured protocol message handling (P6.3)**, and **conductor self-monitoring (Phase 25)**.
+- `scripts/conductor-watchdog.sh`: **NEW (P25.2)** - Conductor watchdog with auto-restart, exponential backoff (5s→15s→30s→60s), and max restart limit.
+- `scripts/verbose-toggle.sh`: **NEW (P6.4)** - Dashboard verbose toggle between compact summaries and full protocol messages (Ctrl+b v).
 - `scripts/protocol-handler.py`: **NEW (P6.3)** - Standalone protocol handler for efficient message parsing and blackboard updates. Handles status, error, complete, heartbeat messages.
 - `scripts/conductor-dashboard.sh`: High-density TUI for real-time project monitoring. Features a **Fleet Status** section with **real-time agent progress and task steps**.
 - `scripts/dashboard-launch.sh`: Enhanced dashboard launcher (v3.0) with **adaptive tmux layouts (grid/overflow)**, **focus mode**, and **session configuration persistence**.
@@ -41,6 +43,9 @@ Last Updated: 2026-04-11 (Phase 22 In Progress 🔄 — Conductor Protocol Handl
 ## Testing & Quality Assurance
 - `tests/test_protocol.sh`: **NEW (P6.1)** - Communication protocol tests (44 tests: encoder, decoder, validation, summaries, tmux status line).
 - `tests/test_conductor_protocol.sh`: **NEW (P6.3)** - Conductor protocol handler tests (15 tests: message parsing, validation, blackboard updates, conductor integration).
+- `tests/test_verbose_toggle.sh`: **NEW (P6.4)** - Dashboard verbose toggle tests (13 tests: toggle commands, key binding, compact/verbose rendering).
+- `tests/test_conductor_self_monitoring.sh`: **NEW (P25.1-P25.3)** - Conductor self-monitoring tests (13 tests: watchdog, heartbeat, state recovery).
+- `tests/test_secondary_agent_detection.sh`: **NEW (P25.4)** - Secondary agent detection tests (12 tests: stale detection, alerting, blackboard updates).
 - `tests/test_environment_portability.sh`: **NEW (P6.2)** - Environment portability tests (14 tests: local tmux config, no user references, clean shell, alias cleaning, dashboard integration).
 - `conductor/agent-analytics-plan.md`: **NEW** - Detailed implementation plan for surfaced agent performance metrics in the Web UI.
 - `tests/test_container_agents.sh`: Verification harness for the containerized agent isolation system.

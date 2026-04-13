@@ -237,6 +237,21 @@ extract_json_value() {
     local json="$1"
     local key="$2"
     if [[ -z "$json" || "$json" == "None" ]]; then echo ""; return; fi
+
+    # FAST PATH: Simple flat JSON with double quotes (covers 99% of blackboard keys)
+    # Match "key":"value" or "key":value
+    local val=$(echo "$json" | sed -n "s/.*\"$key\"[[:space:]]*:[[:space:]]*\"\([^\"]*\)\".*/\1/p")
+    if [[ -z "$val" ]]; then
+        # Try numeric/boolean value (no quotes)
+        val=$(echo "$json" | sed -n "s/.*\"$key\"[[:space:]]*:[[:space:]]*\([^,}]*\).*/\1/p" | tr -d '[:space:]')
+    fi
+
+    if [[ -n "$val" ]]; then
+        echo "$val"
+        return
+    fi
+
+    # SLOW PATH: Fallback to python for complex/nested JSON
     python3 -c "import json, sys; d=json.loads(sys.argv[1]); print(d.get(sys.argv[2], ''))" "$json" "$key" 2>/dev/null
 }
 
@@ -1275,6 +1290,113 @@ report_complete_structured() {
         # Send via hcom
         hcom send "@all" --name "$HCOM_NAME" --intent inform --thread "protocol-completion" -- "$protocol_msg" > /dev/null 2>&1 || true
     fi
+}
+
+# ============================================================
+# Conductor Monitoring (P25.4)
+# ============================================================
+
+# Start conductor monitoring background process
+# Agents check conductor heartbeat every 30s and alert if stale (>90s)
+# Usage: start_conductor_monitor <tool_name>
+start_conductor_monitor() {
+    local tool_name="${1:-agent}"
+    if [[ "${DRY_RUN:-}" == "true" ]]; then
+        return 0
+    fi
+    if [ -n "${HCOM_NAME:-}" ]; then
+        (
+            local last_conductor_status="unknown"
+            local alert_cooldown=0
+
+            while true; do
+                sleep 30
+
+                # Get conductor heartbeat
+                local conductor_hb
+                conductor_hb=$(blackboard_get "conductor_heartbeat" 2>/dev/null || echo "")
+
+                local now
+                now=$(date +%s)
+                local conductor_status="unknown"
+                local conductor_age=0
+
+                if [[ -n "$conductor_hb" ]]; then
+                    local hb_ts
+                    hb_ts=$(echo "$conductor_hb" | python3 -c "import json,sys; print(json.load(sys.stdin).get('ts', 0))" 2>/dev/null || echo "0")
+                    conductor_age=$((now - hb_ts))
+
+                    if [[ $conductor_age -gt 90 ]]; then
+                        conductor_status="stale"
+                    else
+                        conductor_status="healthy"
+                    fi
+                else
+                    conductor_status="no_heartbeat"
+                    conductor_age=999
+                fi
+
+                # Detect status change
+                if [[ "$conductor_status" != "$last_conductor_status" ]]; then
+                    last_conductor_status="$conductor_status"
+
+                    if [[ "$conductor_status" == "stale" || "$conductor_status" == "no_heartbeat" ]]; then
+                        # Alert: conductor is unresponsive
+                        echo "[WARNING] Conductor heartbeat $conductor_status (${conductor_age}s ago)" >&2
+
+                        # Report conductor status to blackboard
+                        local status_data="{\"agent\":\"$HCOM_NAME\",\"conductor_status\":\"$conductor_status\",\"conductor_age\":$conductor_age,\"ts\":$now}"
+                        blackboard_set "agent_conductor_status_${HCOM_NAME}" "$status_data" 2>/dev/null || true
+
+                        # Update agent health to reflect conductor issue
+                        local agent_health="{\"status\":\"warning\",\"conductor\":\"$conductor_status\",\"conductor_age\":$conductor_age,\"ts\":$now}"
+                        blackboard_set "fleet_health_${HCOM_NAME}" "$agent_health" 2>/dev/null || true
+                    else
+                        # Conductor is healthy again
+                        echo "[INFO] Conductor heartbeat healthy again" >&2
+
+                        # Report conductor status to blackboard
+                        local status_data="{\"agent\":\"$HCOM_NAME\",\"conductor_status\":\"healthy\",\"conductor_age\":$conductor_age,\"ts\":$now}"
+                        blackboard_set "agent_conductor_status_${HCOM_NAME}" "$status_data" 2>/dev/null || true
+                    fi
+                fi
+
+                # Periodic status update (every 5 minutes)
+                if (( now % 300 < 30 )); then
+                    local status_data="{\"agent\":\"$HCOM_NAME\",\"conductor_status\":\"$conductor_status\",\"conductor_age\":$conductor_age,\"ts\":$now}"
+                    blackboard_set "agent_conductor_status_${HCOM_NAME}" "$status_data" 2>/dev/null || true
+                fi
+            done
+        ) &
+        CONDUCTOR_MONITOR_PID=$!
+        return 0
+    fi
+    return 1
+}
+
+# Check conductor status (can be called by agents to make decisions)
+# Returns: healthy, stale, no_heartbeat
+check_conductor_status() {
+    local conductor_hb
+    conductor_hb=$(blackboard_get "conductor_heartbeat" 2>/dev/null || echo "")
+
+    if [[ -z "$conductor_hb" ]]; then
+        echo "no_heartbeat"
+        return 1
+    fi
+
+    local now hb_ts conductor_age
+    now=$(date +%s)
+    hb_ts=$(echo "$conductor_hb" | python3 -c "import json,sys; print(json.load(sys.stdin).get('ts', 0))" 2>/dev/null || echo "0")
+    conductor_age=$((now - hb_ts))
+
+    if [[ $conductor_age -gt 90 ]]; then
+        echo "stale:$conductor_age"
+        return 1
+    fi
+
+    echo "healthy:$conductor_age"
+    return 0
 }
 
 # ============================================================

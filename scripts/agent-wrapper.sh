@@ -155,6 +155,9 @@ if [[ "$DRY_RUN" != "true" ]]; then
 
     # Start structured protocol status reporter (sends compact status every 60s)
     start_protocol_status "$TOOL"
+
+    # Start conductor monitoring (P25.4) — agents detect conductor absence
+    start_conductor_monitor "$TOOL"
 fi
 
 CLEANUP_FILES=()
@@ -164,10 +167,15 @@ cleanup() {
         kill "$HEARTBEAT_PID" 2>/dev/null || true
     fi
 
-    # 2. Fix for Bash 3.2 on macOS: handle empty arrays with set -u
+    # 2. Kill conductor monitor process if exists
+    if [ -n "${CONDUCTOR_MONITOR_PID:-}" ]; then
+        kill "$CONDUCTOR_MONITOR_PID" 2>/dev/null || true
+    fi
+
+    # 3. Fix for Bash 3.2 on macOS: handle empty arrays with set -u
     for f in ${CLEANUP_FILES[@]+"${CLEANUP_FILES[@]}"}; do rm -f "$f" 2>/dev/null || true; done
-    
-    # 3. Notify hcom of exit if possible
+
+    # 4. Notify hcom of exit if possible
     if [ -n "${HCOM_NAME:-}" ]; then
         hcom stop --name "$HCOM_NAME" > /dev/null 2>&1 || true
     fi

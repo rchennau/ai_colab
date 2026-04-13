@@ -2,7 +2,7 @@
 
 A unified, **project-agnostic** environment for coordinating multiple AI agents (Gemini, Claude, Qwen, DeepSeek, NeMo, etc.) on complex engineering tasks.
 
-**Latest Release:** Phase 22 In Progress 🔄 — Conductor Protocol Handler (P6.3) delivering structured message processing, instant error detection, and automated workflow triggers.
+**Latest Release:** Phase 25 Complete ✅ — Conductor Self-Monitoring with heartbeat, watchdog, state recovery, and secondary agent detection.
 
 ## 🌟 Vision
 To provide a seamless development experience where human oversight and AI autonomy work in harmony. ai-colab handles the "plumbing" of multi-agent systems—messaging, state synchronization, task tracking, and lifecycle management—allowing you to focus on the engineering. **Now with full local LLM support for zero-cloud deployments.**
@@ -114,6 +114,13 @@ ai-colab
 - Automated workflow triggers on task completion
 - Updates blackboard with progress data for dashboard display
 - Backward compatible — English commands still work alongside structured messages
+
+**Conductor Self-Monitoring (Phase 25):**
+- Conductor heartbeat every 30s to blackboard (P25.1)
+- Watchdog with auto-restart and exponential backoff (P25.2)
+- State recovery after restart — event cursor, active track, blackboard validation (P25.3)
+- Secondary agents detect conductor absence and alert (P25.4)
+- Usage: `bash scripts/conductor-watchdog.sh start/status/stop`
 
 **Structured Communication Protocol (P6.1):**
 - 6 message types: status, heartbeat, request, response, error, complete

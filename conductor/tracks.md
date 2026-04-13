@@ -537,10 +537,11 @@ This file is the Source of Truth for the project state. The Conductor Agent moni
   - [x] 72/72 tests passing (44 protocol + 15 conductor + 13 verbose toggle)
 
 - [x] **Track: Conductor Self-Monitoring** (Done ✅)
-  - [x] Conductor heartbeat to blackboard every 30s
-  - [x] Watchdog with auto-restart and exponential backoff
-  - [x] State recovery (event cursor, active track, blackboard validation)
-  - [x] 13/13 tests passing
+  - [x] Conductor heartbeat to blackboard every 30s (P25.1)
+  - [x] Watchdog with auto-restart and exponential backoff (P25.2)
+  - [x] State recovery (event cursor, active track, blackboard validation) (P25.3)
+  - [x] Secondary agent detection with stale conductor alerting (P25.4)
+  - [x] 25/25 tests passing (13 self-monitoring + 12 secondary detection)
 
 - [x] **Track: Environment Portability** (Done ✅)
   - [x] Local tmux config (`.ai-colab/tmux.conf`) — clean shell, no user dependency
