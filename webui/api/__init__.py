@@ -12,6 +12,7 @@ from .terminal import terminal_bp
 from .config import config_bp
 from .conductor import conductor_bp
 from .kb import kb_bp
+from .analytics import analytics_bp
 
 __all__ = [
     'inference_bp',
@@ -22,5 +23,6 @@ __all__ = [
     'terminal_bp',
     'config_bp',
     'conductor_bp',
-    'kb_bp'
+    'kb_bp',
+    'analytics_bp'
 ]
