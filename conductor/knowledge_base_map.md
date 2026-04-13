@@ -1,5 +1,5 @@
 # ai-colab Project Map (Semantic Knowledge Base)
-Last Updated: 2026-04-11 (Phase 25 Complete ✅ — Conductor Self-Monitoring with heartbeat, watchdog, state recovery, and secondary agent detection)
+Last Updated: 2026-04-11 (Phase 24 Complete ✅ — Agent Analytics Web UI with 58 tests across 4 tasks)
 
 ## Orchestration Core (Hub)
 - `launch.sh`: Unified launcher with **three launch modes** (Dashboard, WebUI, Debug) and **module enablement** (`-m/--module` flag). Auto-activates virtual environment. Supports **multi-project discovery**, global CLI model, and **modular marketplace access**.
@@ -21,6 +21,10 @@ Last Updated: 2026-04-11 (Phase 25 Complete ✅ — Conductor Self-Monitoring wi
 - `scripts/conductor-watchdog.sh`: **NEW (P25.2)** - Conductor watchdog with auto-restart, exponential backoff (5s→15s→30s→60s), and max restart limit.
 - `scripts/verbose-toggle.sh`: **NEW (P6.4)** - Dashboard verbose toggle between compact summaries and full protocol messages (Ctrl+b v).
 - `scripts/protocol-handler.py`: **NEW (P6.3)** - Standalone protocol handler for efficient message parsing and blackboard updates. Handles status, error, complete, heartbeat messages.
+- `webui/api/analytics.py`: **NEW (P24.1)** - Analytics API with 7 endpoints for performance metrics, trends, cost.
+- `webui/api/insights.py`: **NEW (P24.3)** - Insights API with 5 endpoints for routing, cost, capacity recommendations.
+- `webui/api/export.py`: **NEW (P24.4)** - Export API with CSV/JSON export for historical analytics data.
+- `webui/static/js/analytics.js`: **NEW (P24.2)** - Analytics dashboard JavaScript with auto-refresh and chart rendering.
 - `scripts/conductor-dashboard.sh`: High-density TUI for real-time project monitoring. Features a **Fleet Status** section with **real-time agent progress and task steps**.
 - `scripts/dashboard-launch.sh`: Enhanced dashboard launcher (v3.0) with **adaptive tmux layouts (grid/overflow)**, **focus mode**, and **session configuration persistence**.
 - `webui/app_refactored.py`: Modular Flask-based API server (v3.0) using blueprints for core services (terminal, system, config, kb, models).

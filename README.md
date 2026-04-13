@@ -2,7 +2,7 @@
 
 A unified, **project-agnostic** environment for coordinating multiple AI agents (Gemini, Claude, Qwen, DeepSeek, NeMo, etc.) on complex engineering tasks.
 
-**Latest Release:** Phase 25 Complete ✅ — Conductor Self-Monitoring with heartbeat, watchdog, state recovery, and secondary agent detection.
+**Latest Release:** Phase 24 Complete ✅ — Agent Analytics Web UI with performance metrics, real-time dashboard, actionable insights, and CSV/JSON export.
 
 ## 🌟 Vision
 To provide a seamless development experience where human oversight and AI autonomy work in harmony. ai-colab handles the "plumbing" of multi-agent systems—messaging, state synchronization, task tracking, and lifecycle management—allowing you to focus on the engineering. **Now with full local LLM support for zero-cloud deployments.**
@@ -114,6 +114,14 @@ ai-colab
 - Automated workflow triggers on task completion
 - Updates blackboard with progress data for dashboard display
 - Backward compatible — English commands still work alongside structured messages
+
+**Agent Analytics (Phase 24 Complete ✅):**
+- Performance metrics API with 7 endpoints (summary, agents, tasks, errors, cost, trends)
+- Real-time Web UI dashboard with auto-refresh (30s), agent cards, error distribution, cost tables
+- Actionable insights engine with routing, cost, and capacity recommendations
+- CSV/JSON export for historical data analysis
+- Usage: `curl http://localhost:8080/api/analytics/summary`
+- Export: `curl http://localhost:8080/api/export/csv?days=7 -o analytics.csv`
 
 **Conductor Self-Monitoring (Phase 25):**
 - Conductor heartbeat every 30s to blackboard (P25.1)
