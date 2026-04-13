@@ -437,6 +437,225 @@
             background: var(--error);
             animation: none;
         }
+
+        /* Analytics Dashboard Styles (P24.2) */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .summary-card {
+            background: var(--bg-tertiary);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .summary-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--accent-blue);
+        }
+
+        .agent-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .agent-card {
+            background: var(--bg-tertiary);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .agent-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .agent-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .agent-status {
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .agent-progress {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 8px;
+            background: var(--bg-primary);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent-blue);
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            min-width: 40px;
+            text-align: right;
+        }
+
+        .agent-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            padding: 0.25rem 0;
+        }
+
+        .detail-row span:first-child {
+            color: var(--text-secondary);
+        }
+
+        .detail-row span:last-child {
+            color: var(--text-primary);
+        }
+
+        .error-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .error-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .error-type {
+            min-width: 150px;
+            font-size: 0.85rem;
+        }
+
+        .error-bar {
+            flex: 1;
+            height: 20px;
+            background: var(--bg-primary);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .error-fill {
+            height: 100%;
+            background: var(--accent-red);
+            transition: width 0.3s ease;
+        }
+
+        .error-count {
+            min-width: 40px;
+            text-align: right;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .cost-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .cost-card {
+            background: var(--bg-tertiary);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .cost-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .cost-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-green);
+        }
+
+        .cost-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .cost-table th,
+        .cost-table td {
+            padding: 0.5rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .cost-table th {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .trend-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .trend-row {
+            display: grid;
+            grid-template-columns: 100px 1fr 1fr 1fr 120px;
+            gap: 1rem;
+            align-items: center;
+            padding: 0.5rem;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+        }
+
+        .trend-day {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .trend-completed,
+        .trend-failed,
+        .trend-errors,
+        .trend-duration {
+            font-size: 0.85rem;
+        }
+
+        .trend-completed { color: var(--accent-green); }
+        .trend-failed { color: var(--accent-red); }
+        .trend-errors { color: var(--accent-yellow); }
+        .trend-duration { color: var(--accent-blue); text-align: right; }
     </style>
 </head>
 <body>
@@ -461,6 +680,7 @@
     <nav>
         <button class="nav-btn active" data-page="dashboard">Dashboard</button>
         <button class="nav-btn" data-page="ai-command">Collaboration</button>
+        <button class="nav-btn" data-page="analytics">Analytics</button>
         <button class="nav-btn" data-page="system">System</button>
     </nav>
 
@@ -668,6 +888,51 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Page - Performance Metrics, Trends, Cost -->
+        <div class="page" id="analytics-page">
+            <h1 style="margin-bottom: 1.5rem;">📊 Agent Analytics</h1>
+
+            <!-- Summary Section -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <h2>Fleet Summary</h2>
+                <div id="analytics-summary">
+                    <p>Loading summary...</p>
+                </div>
+            </div>
+
+            <!-- Agent Cards Section -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <h2>Agent Performance</h2>
+                <div id="analytics-agents">
+                    <p>Loading agent metrics...</p>
+                </div>
+            </div>
+
+            <!-- Error Distribution Section -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <h2>Error Distribution</h2>
+                <div id="analytics-errors">
+                    <p>Loading error distribution...</p>
+                </div>
+            </div>
+
+            <!-- Cost Metrics Section -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <h2>Cost Efficiency</h2>
+                <div id="analytics-cost">
+                    <p>Loading cost metrics...</p>
+                </div>
+            </div>
+
+            <!-- Trends Section -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <h2>Historical Trends</h2>
+                <div id="analytics-trends">
+                    <p>Loading trends...</p>
                 </div>
             </div>
         </div>
@@ -1186,6 +1451,9 @@
                     break;
                 case 'ai-command':
                     showAISubmenu('console');
+                    break;
+                case 'analytics':
+                    // Analytics dashboard auto-initializes via analytics.js
                     break;
                 case 'system':
                     showSystemSubmenu('monitor');
@@ -3208,5 +3476,6 @@
             }
         }
     </script>
+    <script src="/static/js/analytics.js"></script>
 </body>
 </html>
