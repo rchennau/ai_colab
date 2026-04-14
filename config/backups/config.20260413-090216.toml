@@ -31,4 +31,4 @@ enabled = "true"
 
 [module.chat_bridge]
 enabled = "false"
-test.key = "test_value"
+test.key = "test_value_1776096135"

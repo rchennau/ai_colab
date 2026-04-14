@@ -184,10 +184,38 @@ fi
 # Check for tmux
 echo -ne "  ${BLUE}Checking tmux...${NC}\r"
 if ! has_command tmux; then
-    ui_banner "Dependency Error" "${RED}"
-    echo -e "${RED}Error: tmux is not installed.${NC}"
-    echo -e "Please run ./install.sh first."
-    exit 1
+    echo -e "  ${YELLOW}⚠ Missing: tmux                 ${NC}"
+    
+    if [[ "$INTERACTIVE" == "false" ]]; then
+        echo -e "${BLUE}Auto mode: Installing tmux...${NC}"
+        INSTALL_SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/install.sh"
+        if [[ -f "$INSTALL_SCRIPT" ]]; then
+            bash "$INSTALL_SCRIPT" --auto
+        fi
+    else
+        read -p "  tmux is required for the dashboard. Install now? [Y/n] " -n 1 -r
+        echo ""
+        if [[ $REPLY =~ ^[Yy]$ || -z $REPLY ]]; then
+            INSTALL_SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/install.sh"
+            if [[ -f "$INSTALL_SCRIPT" ]]; then
+                bash "$INSTALL_SCRIPT" --auto
+            fi
+        else
+            ui_banner "Dependency Error" "${RED}"
+            echo -e "${RED}Error: tmux is required but not installed.${NC}"
+            exit 1
+        fi
+    fi
+    
+    # Re-check after attempt
+    if ! has_command tmux; then
+        ui_banner "Dependency Error" "${RED}"
+        echo -e "${RED}Error: tmux is not installed.${NC}"
+        echo -e "Please install tmux manually and try again."
+        exit 1
+    else
+        echo -e "  ${GREEN}✓ tmux available              ${NC}"
+    fi
 else
     echo -e "  ${GREEN}✓ tmux available              ${NC}"
 fi

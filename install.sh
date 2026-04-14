@@ -241,6 +241,15 @@ if ! has_command sqlite3; then
     if [[ "$IS_MACOS" == true ]] && has_command brew; then
         echo "Installing sqlite3 via brew..."
         brew install sqlite3
+    elif has_command apt-get; then
+        echo "Installing sqlite3 via apt-get..."
+        sudo apt-get update && sudo apt-get install -y sqlite3
+    elif has_command yum; then
+        echo "Installing sqlite3 via yum..."
+        sudo yum install -y sqlite
+    elif has_command pacman; then
+        echo "Installing sqlite3 via pacman..."
+        sudo pacman -S --noconfirm sqlite
     fi
 fi
 
@@ -250,6 +259,17 @@ if ! has_command tmux; then
     if [[ "$IS_MACOS" == true ]] && has_command brew; then
         echo "Installing tmux via brew..."
         brew install tmux
+    elif has_command apt-get; then
+        echo "Installing tmux via apt-get..."
+        # If we already updated apt-get for sqlite3, we don't need to do it again
+        # but for simplicity and robustness we just do it here too if needed
+        sudo apt-get update && sudo apt-get install -y tmux
+    elif has_command yum; then
+        echo "Installing tmux via yum..."
+        sudo yum install -y tmux
+    elif has_command pacman; then
+        echo "Installing tmux via pacman..."
+        sudo pacman -S --noconfirm tmux
     fi
 fi
 
