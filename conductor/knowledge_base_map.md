@@ -50,6 +50,8 @@ Last Updated: 2026-04-13 (Phase 24 Complete ✅ — Agent Analytics Web UI + Smo
 - `tests/test_verbose_toggle.sh`: **NEW (P6.4)** - Dashboard verbose toggle tests (13 tests: toggle commands, key binding, compact/verbose rendering).
 - `tests/test_conductor_self_monitoring.sh`: **NEW (P25.1-P25.3)** - Conductor self-monitoring tests (13 tests: watchdog, heartbeat, state recovery).
 - `tests/test_secondary_agent_detection.sh`: **NEW (P25.4)** - Secondary agent detection tests (12 tests: stale detection, alerting, blackboard updates).
+- `tests/smoke_test_fast.sh`: **NEW** - Fast smoke test for conductor event processing, verifies `!smoke` command execution end-to-end. Integrated into CI/CD Stage 2.
+- `.github/workflows/ci-cd.yml`: Updated with **Smoke Test Stage (Stage 2)** — runs after lint, before unit tests and shell tests.
 - `tests/test_environment_portability.sh`: **NEW (P6.2)** - Environment portability tests (14 tests: local tmux config, no user references, clean shell, alias cleaning, dashboard integration).
 - `conductor/agent-analytics-plan.md`: **NEW** - Detailed implementation plan for surfaced agent performance metrics in the Web UI.
 - `tests/test_container_agents.sh`: Verification harness for the containerized agent isolation system.

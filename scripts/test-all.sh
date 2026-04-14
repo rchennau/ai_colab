@@ -102,6 +102,41 @@ record_result() {
 # Test Suites
 # ============================================================
 
+run_smoke_test() {
+    print_header "Fast Smoke Test"
+
+    local start_time=$(date +%s)
+
+    # Skip if no conductor setup or hcom not available
+    if ! command -v hcom >/dev/null 2>&1; then
+        print_test_skip "hcom not installed (smoke test requires hcom)"
+        record_result "smoke-test" "SKIP" "0" "hcom not installed"
+        return 0
+    fi
+
+    local smoke_test="$TEST_DIR/smoke_test_fast.sh"
+    if [[ ! -f "$smoke_test" ]]; then
+        print_test_skip "Smoke test script not found"
+        record_result "smoke-test" "SKIP" "0" "smoke_test_fast.sh not found"
+        return 0
+    fi
+
+    print_test_start "Running fast smoke test (conductor event processing)..."
+    chmod +x "$smoke_test"
+
+    if bash "$smoke_test" 2>&1 | tee "$RESULTS_DIR/smoke-test.log"; then
+        local end_time=$(date +%s)
+        local duration=$((end_time - start_time))
+        print_test_pass "Fast smoke test passed (${duration}s)"
+        record_result "smoke-test" "PASS" "$duration" "Conductor event processing verified"
+    else
+        local end_time=$(date +%s)
+        local duration=$((end_time - start_time))
+        print_test_fail "Fast smoke test failed (${duration}s)"
+        record_result "smoke-test" "FAIL" "$duration" "Conductor event processing failed"
+    fi
+}
+
 run_unit_tests() {
     print_header "Python Unit Tests"
 
@@ -482,6 +517,7 @@ main() {
     local start_time=$(date +%s)
 
     # Run test suites
+    run_smoke_test
     run_unit_tests
     run_shell_tests
     run_webui_tests

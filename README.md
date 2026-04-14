@@ -159,15 +159,31 @@ Ensure code integrity with the built-in quality assurance framework:
 # Validate all module manifests against the schema
 python3 scripts/module-manager.py validate-all
 
-# Run comprehensive test suite
-./scripts/test-launch-options.sh
+# Run comprehensive test suite (includes smoke test, unit tests, shell tests)
+bash scripts/test-all.sh
+
+# Run with CI mode (machine-readable output, no interactive prompts)
+bash scripts/test-all.sh --ci
+
+# Run only smoke test (conductor event processing verification)
+bash tests/smoke_test_fast.sh
 ```
 
 **Quality Gates:**
+- ✅ **Smoke Test**: Conductor event processing, hcom message handling, `!smoke` command
 - ✅ **Python Syntax**: Recursive validation across all project files.
 - ✅ **Linting**: Strict `flake8` enforcement for clean code.
 - ✅ **Security**: `bandit` scanning for potential vulnerabilities.
 - ✅ **Functional**: Conductor-integrated test runs before any merge.
+
+**CI/CD Pipeline (GitHub Actions):**
+- **Stage 1**: Lint & Static Analysis (flake8, black, shellcheck)
+- **Stage 2**: Smoke Test (conductor event processing verification)
+- **Stage 3**: Unit Tests (Python pytest with coverage)
+- **Stage 4**: Shell Script Tests (all shell test suites)
+- **Stage 5**: Web UI Tests (Flask API + frontend)
+- **Stage 6**: Docker Build & Verification
+- **Stage 7**: Integration Tests (optional, manual trigger)
 
 📖 **Full Documentation:** See [`docs/INSTALLATION.md`](docs/INSTALLATION.md) for detailed installation guide.
 📖 **Web Terminal Guide:** See [`docs/WEB_TERMINAL_GUIDE.md`](docs/WEB_TERMINAL_GUIDE.md) for browser-based workflow.
