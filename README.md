@@ -2,7 +2,7 @@
 
 A unified, **project-agnostic** environment for coordinating multiple AI agents (Gemini, Claude, Qwen, DeepSeek, NeMo, etc.) on complex engineering tasks.
 
-**Latest Release:** Phase 24 Complete ✅ — Agent Analytics Web UI with performance metrics, real-time dashboard, actionable insights, and CSV/JSON export.
+**Latest Release:** Phase 24 Complete ✅ — Agent Analytics Web UI + Smoke Test Fix (conductor event processing, macOS sed compatibility).
 
 ## 🌟 Vision
 To provide a seamless development experience where human oversight and AI autonomy work in harmony. ai-colab handles the "plumbing" of multi-agent systems—messaging, state synchronization, task tracking, and lifecycle management—allowing you to focus on the engineering. **Now with full local LLM support for zero-cloud deployments.**
