@@ -65,31 +65,36 @@ case "$TOOL" in
         DEFAULT_MODEL="gemini-3.0"
         ROLE_PROMPT="$SCRIPT_DIR/../system-prompts/gemini.md"
         if has_command gemini; then CMD="gemini";
-        elif has_command gemini-cli; then CMD="gemini-cli"; fi
+        elif has_command gemini-cli; then CMD="gemini-cli";
+        elif has_command npx; then CMD="npx -p @google/gemini-cli gemini"; fi
         ;;
     qwen)
         DEFAULT_MODEL="qwen3-next-80b-a3b-instruct"
         ROLE_PROMPT="$SCRIPT_DIR/../system-prompts/qwen.md"
         if has_command qwen; then CMD="qwen";
         elif has_command qwen-code; then CMD="qwen-code";
-        elif has_command qwen-cli; then CMD="qwen-cli"; fi
+        elif has_command qwen-cli; then CMD="qwen-cli";
+        elif has_command npx; then CMD="npx -p @qwen-code/qwen-code qwen"; fi
         ;;
     claude)
         DEFAULT_MODEL="claude-3-5-sonnet-20241022"
         ROLE_PROMPT="$SCRIPT_DIR/../system-prompts/claude.md"
         if has_command claude; then CMD="claude";
-        elif has_command claude-code; then CMD="claude-code"; fi
+        elif has_command claude-code; then CMD="claude-code";
+        elif has_command npx; then CMD="npx -p @anthropic-ai/claude-code claude"; fi
         ;;
     deepseek)
         DEFAULT_MODEL="deepseek-v3"
         ROLE_PROMPT="$SCRIPT_DIR/../system-prompts/deepseek.md"
         if has_command deepseek-cli; then CMD="deepseek-cli";
-        else CMD="deepseek"; fi
+        elif has_command deepseek; then CMD="deepseek";
+        elif has_command npx; then CMD="npx -p run-deepseek-cli deepseek"; fi
         ;;
     vllm)
         DEFAULT_MODEL="DeepSeek-Code"
         ROLE_PROMPT="$SCRIPT_DIR/../system-prompts/deepseek.md"
-        CMD="elc"
+        if has_command elc; then CMD="elc";
+        elif has_command npx; then CMD="npx -p easy-llm-cli elc"; fi
         ;;
     nemoclaw|nemo)
         DEFAULT_MODEL="nvidia/llama-3.3-nemotron-super-49b-v1.5"

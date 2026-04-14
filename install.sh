@@ -159,8 +159,21 @@ if [[ "$GLOBAL_INSTALL" == "true" ]]; then
     esac
     
     if [[ -f "$SHELL_CONFIG" ]] && ! grep -q "$BIN_DIR" "$SHELL_CONFIG"; then
-        echo -e "${YELLOW}Adding $BIN_DIR to PATH in $SHELL_CONFIG...${NC}"
-        echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$SHELL_CONFIG"
+        if [[ "$INSTALL_MODE" != "auto" ]]; then
+            echo -e "\n${CYAN}Add $BIN_DIR to PATH in $SHELL_CONFIG?${NC}"
+            echo -e "This allows you to run 'ai-colab' from any directory."
+            read -p "  Add to PATH? [y/N] " -n 1 -r
+            echo ""
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                echo -e "${YELLOW}Adding $BIN_DIR to PATH in $SHELL_CONFIG...${NC}"
+                echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$SHELL_CONFIG"
+            else
+                echo -e "${CYAN}○ Skipping PATH modification. You may need to add $BIN_DIR to your PATH manually.${NC}"
+            fi
+        else
+            echo -e "${YELLOW}Auto-mode: Adding $BIN_DIR to PATH in $SHELL_CONFIG...${NC}"
+            echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$SHELL_CONFIG"
+        fi
     fi
 fi
 
@@ -241,15 +254,21 @@ if ! has_command sqlite3; then
     if [[ "$IS_MACOS" == true ]] && has_command brew; then
         echo "Installing sqlite3 via brew..."
         brew install sqlite3
-    elif has_command apt-get; then
-        echo "Installing sqlite3 via apt-get..."
-        sudo apt-get update && sudo apt-get install -y sqlite3
-    elif has_command yum; then
-        echo "Installing sqlite3 via yum..."
-        sudo yum install -y sqlite
-    elif has_command pacman; then
-        echo "Installing sqlite3 via pacman..."
-        sudo pacman -S --noconfirm sqlite
+    elif [[ "$INSTALL_MODE" != "auto" ]]; then
+        read -p "  sqlite3 is required. Install via system package manager? (requires sudo) [y/N] " -n 1 -r
+        echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            if has_command apt-get; then
+                sudo apt-get update && sudo apt-get install -y sqlite3
+            elif has_command yum; then
+                sudo yum install -y sqlite
+            elif has_command pacman; then
+                sudo pacman -S --noconfirm sqlite
+            fi
+        fi
+    else
+        echo -e "${YELLOW}  Skipping sqlite3 installation in auto-mode (requires sudo).${NC}"
+        echo -e "  Please install sqlite3 manually for full functionality."
     fi
 fi
 
@@ -259,17 +278,21 @@ if ! has_command tmux; then
     if [[ "$IS_MACOS" == true ]] && has_command brew; then
         echo "Installing tmux via brew..."
         brew install tmux
-    elif has_command apt-get; then
-        echo "Installing tmux via apt-get..."
-        # If we already updated apt-get for sqlite3, we don't need to do it again
-        # but for simplicity and robustness we just do it here too if needed
-        sudo apt-get update && sudo apt-get install -y tmux
-    elif has_command yum; then
-        echo "Installing tmux via yum..."
-        sudo yum install -y tmux
-    elif has_command pacman; then
-        echo "Installing tmux via pacman..."
-        sudo pacman -S --noconfirm tmux
+    elif [[ "$INSTALL_MODE" != "auto" ]]; then
+        read -p "  tmux is required for the dashboard. Install via system package manager? (requires sudo) [y/N] " -n 1 -r
+        echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            if has_command apt-get; then
+                sudo apt-get update && sudo apt-get install -y tmux
+            elif has_command yum; then
+                sudo yum install -y tmux
+            elif has_command pacman; then
+                sudo pacman -S --noconfirm tmux
+            fi
+        fi
+    else
+        echo -e "${YELLOW}  Skipping tmux installation in auto-mode (requires sudo).${NC}"
+        echo -e "  Please install tmux manually to use the dashboard."
     fi
 fi
 
@@ -452,36 +475,60 @@ fi
 for llm in $LLMS_TO_INSTALL; do
     case $llm in
         gemini)
-            if ! has_command gemini; then
-                echo -e "\n${BLUE}Installing Gemini CLI...${NC}"
-                if [[ "$IS_MACOS" == true ]] && has_command brew; then
-                    brew install gemini-cli
+            if ! has_command gemini && ! has_command gemini-cli; then
+                echo -e "\n${BLUE}Gemini CLI not found.${NC}"
+                if [[ "$INSTALL_MODE" != "auto" ]]; then
+                    read -p "  Install globally via npm? (otherwise agent will use npx) [y/N] " -n 1 -r
+                    echo ""
+                    if [[ $REPLY =~ ^[Yy]$ ]]; then
+                        if [[ "$IS_MACOS" == true ]] && has_command brew; then
+                            brew install gemini-cli
+                        else
+                            npm install -g @google/gemini-cli
+                        fi
+                    fi
                 else
-                    npm install -g @google/gemini-cli
+                    echo -e "  ${CYAN}○ Will use npx for Gemini at runtime.${NC}"
                 fi
             else
                 echo -e "  ✓ Gemini CLI is already installed."
             fi
             ;;
         claude)
-            if ! has_command claude; then
-                echo -e "\n${BLUE}Installing Claude CLI...${NC}"
-                if [[ "$IS_MACOS" == true ]] && has_command brew; then
-                    brew install --cask claude-code
+            if ! has_command claude && ! has_command claude-code; then
+                echo -e "\n${BLUE}Claude CLI not found.${NC}"
+                if [[ "$INSTALL_MODE" != "auto" ]]; then
+                    read -p "  Install globally via npm? (otherwise agent will use npx) [y/N] " -n 1 -r
+                    echo ""
+                    if [[ $REPLY =~ ^[Yy]$ ]]; then
+                        if [[ "$IS_MACOS" == true ]] && has_command brew; then
+                            brew install --cask claude-code
+                        else
+                            npm install -g @anthropic-ai/claude-code
+                        fi
+                    fi
                 else
-                    npm install -g @anthropic-ai/claude-code
+                    echo -e "  ${CYAN}○ Will use npx for Claude at runtime.${NC}"
                 fi
             else
                 echo -e "  ✓ Claude CLI is already installed."
             fi
             ;;
         qwen)
-            if ! has_command qwen; then
-                echo -e "\n${BLUE}Installing Qwen CLI...${NC}"
-                if [[ "$IS_MACOS" == true ]] && has_command brew; then
-                    brew install qwen-code
+            if ! has_command qwen && ! has_command qwen-code; then
+                echo -e "\n${BLUE}Qwen CLI not found.${NC}"
+                if [[ "$INSTALL_MODE" != "auto" ]]; then
+                    read -p "  Install globally via npm? (otherwise agent will use npx) [y/N] " -n 1 -r
+                    echo ""
+                    if [[ $REPLY =~ ^[Yy]$ ]]; then
+                        if [[ "$IS_MACOS" == true ]] && has_command brew; then
+                            brew install qwen-code
+                        else
+                            npm install -g @qwen-code/qwen-code
+                        fi
+                    fi
                 else
-                    npm install -g @qwen-code/qwen-code
+                    echo -e "  ${CYAN}○ Will use npx for Qwen at runtime.${NC}"
                 fi
             else
                 echo -e "  ✓ Qwen CLI is already installed."
@@ -489,50 +536,60 @@ for llm in $LLMS_TO_INSTALL; do
             ;;
         ollama)
             if ! has_command ollama; then
-                echo -e "\n${BLUE}Installing Ollama...${NC}"
-                if [[ "$IS_MACOS" == true ]] && has_command brew; then
-                    brew install ollama
-                else
-                    # SECURE: Download, verify, then execute (not curl | bash)
-                    OLLAMA_INSTALL_SCRIPT=$(mktemp /tmp/ollama-install.XXXXXX.sh)
-                    trap "rm -f $OLLAMA_INSTALL_SCRIPT" EXIT
-                    
-                    echo "  Downloading Ollama installer..."
-                    if curl -fsSL -o "$OLLAMA_INSTALL_SCRIPT" https://ollama.com/install.sh; then
-                        echo "  Verifying installer..."
-                        if head -1 "$OLLAMA_INSTALL_SCRIPT" | grep -q "^#!"; then
-                            echo "  Running installer..."
-                            bash "$OLLAMA_INSTALL_SCRIPT"
-                            echo -e "${GREEN}✓ Ollama installed successfully${NC}"
+                echo -e "\n${BLUE}Ollama not found.${NC}"
+                if [[ "$INSTALL_MODE" != "auto" ]]; then
+                    read -p "  Install Ollama? [y/N] " -n 1 -r
+                    echo ""
+                    if [[ $REPLY =~ ^[Yy]$ ]]; then
+                        if [[ "$IS_MACOS" == true ]] && has_command brew; then
+                            brew install ollama
                         else
-                            print_error "Installer verification failed: invalid script format"
-                            exit 1
+                            OLLAMA_INSTALL_SCRIPT=$(mktemp /tmp/ollama-install.XXXXXX.sh)
+                            trap "rm -f $OLLAMA_INSTALL_SCRIPT" EXIT
+                            if curl -fsSL -o "$OLLAMA_INSTALL_SCRIPT" https://ollama.com/install.sh; then
+                                bash "$OLLAMA_INSTALL_SCRIPT"
+                            fi
                         fi
-                    else
-                        print_error "Failed to download Ollama installer"
-                        exit 1
                     fi
+                else
+                    echo -e "  ${YELLOW}○ Skipping Ollama installation in auto-mode.${NC}"
                 fi
             else
                 echo -e "  ✓ Ollama is already installed."
             fi
             ;;
         nemo)
-            echo -e "\n${BLUE}Installing NeMo dependencies...${NC}"
+            echo -e "\n${BLUE}Setting up NeMo support...${NC}"
             $PIP_CMD install openai
             ;;
         deepseek)
-            if ! has_command deepseek; then
-                echo -e "\n${BLUE}Installing DeepSeek CLI...${NC}"
-                npm install -g run-deepseek-cli
+            if ! has_command deepseek && ! has_command deepseek-cli; then
+                echo -e "\n${BLUE}DeepSeek CLI not found.${NC}"
+                if [[ "$INSTALL_MODE" != "auto" ]]; then
+                    read -p "  Install globally via npm? (otherwise agent will use npx) [y/N] " -n 1 -r
+                    echo ""
+                    if [[ $REPLY =~ ^[Yy]$ ]]; then
+                        npm install -g run-deepseek-cli
+                    fi
+                else
+                    echo -e "  ${CYAN}○ Will use npx for DeepSeek at runtime.${NC}"
+                fi
             else
                 echo -e "  ✓ DeepSeek CLI is already installed."
             fi
             ;;
         elc)
             if ! has_command elc; then
-                echo -e "\n${BLUE}Installing easy-llm-cli...${NC}"
-                npm install -g easy-llm-cli
+                echo -e "\n${BLUE}easy-llm-cli not found.${NC}"
+                if [[ "$INSTALL_MODE" != "auto" ]]; then
+                    read -p "  Install globally via npm? (otherwise agent will use npx) [y/N] " -n 1 -r
+                    echo ""
+                    if [[ $REPLY =~ ^[Yy]$ ]]; then
+                        npm install -g easy-llm-cli
+                    fi
+                else
+                    echo -e "  ${CYAN}○ Will use npx (elc) for vLLM at runtime.${NC}"
+                fi
             else
                 echo -e "  ✓ easy-llm-cli is already installed."
             fi
