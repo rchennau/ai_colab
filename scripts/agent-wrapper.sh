@@ -340,20 +340,20 @@ while true; do
     echo "[$(date '+%H:%M:%S')] $TOOL agent exited with code $EXIT_CODE"
     
     # Log analytics
-    local success="true"
+    success="true"
     [[ $EXIT_CODE -ne 0 ]] && success="false"
-    log_agent_analytics "session" "$duration" "$success" "Exit code: $EXIT_CODE, Tool: $TOOL"
+    log_agent_analytics "session" "$duration" "$success" "Exit code: $EXIT_CODE, Tool: $TOOL" || true
 
     # Report exit to Blackboard for Fleet Autonomy
     if [ $EXIT_CODE -ne 0 ]; then
-        report_health "crashed" "0" "$EXIT_CODE"
+        report_health "crashed" "0" "$EXIT_CODE" || true
 
         # Record failure for circuit breaker (only for crashes, not normal exits)
         if [ -n "${HCOM_NAME:-}" ]; then
             agent_record_failure "$HCOM_NAME" 2>/dev/null || true
         fi
     else
-        report_health "exited" "0" "0"
+        report_health "exited" "0" "0" || true
     fi
 
     # Check circuit breaker before retrying
@@ -371,7 +371,6 @@ while true; do
     fi
 
     # Calculate backoff delay using exponential backoff
-    local backoff_delay
     backoff_delay=$(agent_calc_backoff $RESTART_COUNT 2>/dev/null || echo "10")
 
     # Increment restart counter and wait before restarting
